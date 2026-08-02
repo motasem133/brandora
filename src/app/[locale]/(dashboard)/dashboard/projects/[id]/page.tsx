@@ -56,28 +56,29 @@ export default async function ProjectDetailPage({
   const websiteAsset = website[0]
   const socialAsset = social[0]
 
-  // A tab only appears once its assets exist.
+  const job = await getLatestJobForProject(project.id)
+  const sections = sectionsForProject(project)
+  const plan = await getOrgPlan(org.id)
+
+  // The assistant only makes sense once there is a brand to refine, and it is
+  // a paid feature — so the tab appears only when both are true.
+  const canAssist = Boolean(plan?.brandAssistant) && Boolean(brandingAsset)
+
+  /*
+   * Built in one pass and never mutated afterwards. Pushing a tab in later left
+   * `active` derived from a shorter list, so the assistant tab rendered but
+   * could never be selected — it always fell back to the first tab.
+   */
   const available: ProjectTab[] = [
     ...(brandingAsset ? (['branding'] as const) : []),
     ...(websiteAsset ? (['website'] as const) : []),
     ...(socialAsset ? (['social'] as const) : []),
+    ...(canAssist ? (['assistant'] as const) : []),
   ]
 
+  const requested = tab as ProjectTab | undefined
   const active: ProjectTab =
-    tab === 'website' || tab === 'social' || tab === 'branding' || tab === 'assistant'
-      ? available.includes(tab)
-        ? tab
-        : (available[0] ?? 'branding')
-      : (available[0] ?? 'branding')
-
-  const job = await getLatestJobForProject(project.id)
-  const sections = sectionsForProject(project)
-
-  // The assistant only makes sense once there is a brand to refine, and it is
-  // a paid feature — so the tab appears only when both are true.
-  const plan = await getOrgPlan(org.id)
-  const canAssist = Boolean(plan?.brandAssistant) && Boolean(brandingAsset)
-  if (canAssist) available.push('assistant')
+    requested && available.includes(requested) ? requested : (available[0] ?? 'branding')
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
