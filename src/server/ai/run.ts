@@ -1,0 +1,161 @@
+import 'server-only'
+
+import { createOpenRouter } from '@openrouter/ai-sdk-provider'
+import { generateObject } from 'ai'
+import type { z } from 'zod'
+
+import { AppError } from '@/lib/errors'
+import { env } from '@/lib/env'
+import { db } from '@/server/db'
+import { aiUsage } from '@/server/db/schema'
+import { estimateCost, modelChain, type ModelTask } from './models'
+
+const openrouter = createOpenRouter({
+  apiKey: env.OPENROUTER_API_KEY ?? '',
+  headers: {
+    // Attribution on OpenRouter's public leaderboards.
+    'HTTP-Referer': env.NEXT_PUBLIC_APP_URL,
+    'X-Title': 'Brandora',
+  },
+})
+
+type UsageContext = {
+  organizationId: string
+  projectId?: string
+  generationJobId?: string
+  feature: 'branding' | 'website' | 'social' | 'logo' | 'assistant' | 'vectorize'
+}
+
+type RunOptions<T extends z.ZodType> = {
+  task: ModelTask
+  schema: T
+  system: string
+  prompt: string
+  temperature?: number
+  context: UsageContext
+}
+
+/**
+ * Every text generation goes through here.
+ *
+ * Walks the task's model chain until one returns schema-valid output, records
+ * a row in `ai_usage` for each attempt (success or failure), and throws only
+ * when the whole chain is exhausted.
+ */
+export async function runModel<T extends z.ZodType>(options: RunOptions<T>): Promise<z.infer<T>> {
+  if (!env.OPENROUTER_API_KEY) {
+    throw new AppError('AI_PROVIDER_ERROR', 'OPENROUTER_API_KEY is not configured.')
+  }
+
+  const chain = modelChain(options.task)
+  let lastError: unknown
+
+  for (const [attempt, model] of chain.entries()) {
+    const startedAt = Date.now()
+
+    try {
+      const result = await generateObject({
+        model: openrouter(model),
+        schema: options.schema,
+        system: options.system,
+        prompt: options.prompt,
+        temperature: options.temperature ?? 0.8,
+        // One retry inside the SDK for transient network errors; anything
+        // structural falls through to the next model instead.
+        maxRetries: 1,
+      })
+
+      const inputTokens = result.usage?.inputTokens ?? 0
+      const outputTokens = result.usage?.outputTokens ?? 0
+
+      await recordUsage({
+        ...options.context,
+        model,
+        inputTokens,
+        outputTokens,
+        cachedTokens: result.usage?.inputTokenDetails?.cacheReadTokens ?? 0,
+        // OpenRouter returns true upstream cost; estimation is the fallback.
+        costUsd: extractCost(result.providerMetadata) ?? estimateCost(model, inputTokens, outputTokens),
+        latencyMs: Date.now() - startedAt,
+        status: 'success',
+      })
+
+      // generateObject's return type widens through the generic; the schema
+      // already guarantees the shape.
+      return result.object as z.infer<T>
+    } catch (error) {
+      lastError = error
+
+      await recordUsage({
+        ...options.context,
+        model,
+        inputTokens: 0,
+        outputTokens: 0,
+        cachedTokens: 0,
+        costUsd: 0,
+        latencyMs: Date.now() - startedAt,
+        status: 'error',
+      })
+
+      console.warn(
+        `[ai] ${options.task} failed on ${model} (attempt ${attempt + 1}/${chain.length})`,
+        error instanceof Error ? error.message : error,
+      )
+    }
+  }
+
+  throw new AppError(
+    'AI_PROVIDER_ERROR',
+    `All models failed for ${options.task}: ${lastError instanceof Error ? lastError.message : 'unknown error'}`,
+  )
+}
+
+/** OpenRouter reports real cost in provider metadata; shape is loosely typed. */
+function extractCost(metadata: unknown): number | null {
+  if (!metadata || typeof metadata !== 'object') return null
+  const openrouterMeta = (metadata as Record<string, unknown>).openrouter
+  if (!openrouterMeta || typeof openrouterMeta !== 'object') return null
+
+  const usage = (openrouterMeta as Record<string, unknown>).usage
+  if (usage && typeof usage === 'object') {
+    const cost = (usage as Record<string, unknown>).cost
+    if (typeof cost === 'number') return cost
+  }
+
+  const direct = (openrouterMeta as Record<string, unknown>).cost
+  return typeof direct === 'number' ? direct : null
+}
+
+async function recordUsage(row: {
+  organizationId: string
+  projectId?: string
+  generationJobId?: string
+  feature: UsageContext['feature']
+  model: string
+  inputTokens: number
+  outputTokens: number
+  cachedTokens: number
+  costUsd: number
+  latencyMs: number
+  status: 'success' | 'error' | 'timeout'
+}) {
+  try {
+    await db.insert(aiUsage).values({
+      organizationId: row.organizationId,
+      projectId: row.projectId ?? null,
+      generationJobId: row.generationJobId ?? null,
+      feature: row.feature,
+      provider: 'openrouter',
+      model: row.model,
+      inputTokens: row.inputTokens,
+      outputTokens: row.outputTokens,
+      cachedTokens: row.cachedTokens,
+      costUsd: row.costUsd.toFixed(6),
+      latencyMs: row.latencyMs,
+      status: row.status,
+    })
+  } catch (error) {
+    // Telemetry must never take down a generation that otherwise succeeded.
+    console.error('[ai] failed to record usage', error)
+  }
+}

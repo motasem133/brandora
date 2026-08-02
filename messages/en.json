@@ -158,5 +158,28 @@
       "audienceTooShort": "Please add a little more detail (at least 10 characters).",
       "styleRequired": "Please choose a brand style."
     }
+  },
+  "Generation": {
+    "title": "Generate your brand",
+    "body": "Runs the AI pipeline and creates your identity. Costs {credits} credits.",
+    "running": "Generating your brand",
+    "runningBody": "This usually takes 30-60 seconds. You can safely leave this page.",
+    "generate": "Generate",
+    "retry": "Try again",
+    "insufficientCredits": "This needs {needed} credits but you have {balance}.",
+    "steps": {
+      "branding": "Brand identity — names, slogan, palette, fonts, story",
+      "website": "Website content — four pages of copy",
+      "social": "Social media kit — bio, 9 posts, hashtags, ads"
+    }
+  },
+  "Branding": {
+    "nameIdeas": "Name ideas",
+    "slogan": "Slogan",
+    "palette": "Colour palette",
+    "fonts": "Typography",
+    "story": "Brand story",
+    "values": "Brand values",
+    "voice": "Brand voice"
   }
 }

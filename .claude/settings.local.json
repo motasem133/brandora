@@ -19,7 +19,12 @@
       "Bash(git symbolic-ref *)",
       "Bash(rm -f /tmp/brandora-cookies.txt)",
       "Bash(curl -s -c /tmp/brandora-cookies.txt -X POST http://localhost:3000/api/auth/sign-up/email -H 'Content-Type: application/json' -d '{\"name\":\"Test Founder\",\"email\":\"test@brandora.local\",\"password\":\"testpassword123\",\"locale\":\"en\"}' -w '\\\\nHTTP %{http_code}\\\\n')",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(npm view *)",
+      "Bash(pnpm add *)",
+      "Bash(node -e \"console.log\\(Object.keys\\(require\\('inngest'\\)\\).join\\(', '\\)\\)\")",
+      "Bash(python3 -)",
+      "Bash(pnpm build *)"
     ]
   }
 }

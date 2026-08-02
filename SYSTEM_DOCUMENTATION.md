@@ -1333,9 +1333,12 @@ Arabic swaps branding to Qwen3.7 Max: **≈ $0.32**.
 
 1 credit ≈ $0.05 of upstream cost.
 
+Costs are charged per section and summed, so a partial run only ever costs what it produced.
+
 | Operation | Credits | Upstream cost |
 |---|---|---|
-| Full generation (4 logos) | 8 | ~$0.31 |
+| Full generation (4 logos) | 9 | ~$0.31 |
+| Text-only generation (no logos) | 3 | ~$0.012 |
 | Branding text only | 1 | ~$0.003 |
 | Logo pack (4 concepts) | 6 | ~$0.30 |
 | Single logo re-roll | 2 | ~$0.075 |

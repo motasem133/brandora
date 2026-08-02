@@ -1,11 +1,18 @@
+import { eq } from 'drizzle-orm'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 
+import { BrandingView } from '@/components/features/projects/branding-view'
 import { DeleteProjectButton } from '@/components/features/projects/delete-project-button'
+import { GenerationPanel } from '@/components/features/projects/generation-panel'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardDescription, CardTitle } from '@/components/ui/card'
+import { Card, CardTitle } from '@/components/ui/card'
 import { formatDate } from '@/lib/utils'
+import { creditsForSections } from '@/server/billing/credits'
+import { db } from '@/server/db'
 import { getProject } from '@/server/db/queries/projects'
+import { brandingAssets } from '@/server/db/schema'
+import { getLatestJobForProject, sectionsForProject } from '@/server/services/generation'
 import { requireOrg } from '@/server/session'
 
 export default async function ProjectDetailPage({
@@ -23,6 +30,15 @@ export default async function ProjectDetailPage({
   const project = await getProject(org.id, id)
   if (!project) notFound()
 
+  const [branding] = await db
+    .select()
+    .from(brandingAssets)
+    .where(eq(brandingAssets.projectId, project.id))
+    .limit(1)
+
+  const job = await getLatestJobForProject(project.id)
+  const sections = sectionsForProject(project)
+
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div className="flex items-start justify-between gap-4">
@@ -38,34 +54,39 @@ export default async function ProjectDetailPage({
         <DeleteProjectButton projectId={project.id} />
       </div>
 
-      <Card className="space-y-4">
-        <CardTitle>Brief</CardTitle>
-        <dl className="grid gap-4 sm:grid-cols-2">
-          {[
-            ['Industry', project.industry],
-            ['Country', project.country],
-            ['Style', project.brandStyle],
-            ['Language', project.language === 'ar' ? 'Arabic' : 'English'],
-          ].map(([label, value]) => (
-            <div key={label}>
-              <dt className="text-xs uppercase tracking-wide text-fg-muted">{label}</dt>
-              <dd className="mt-0.5 text-sm capitalize">{value}</dd>
-            </div>
-          ))}
-          <div className="sm:col-span-2">
-            <dt className="text-xs uppercase tracking-wide text-fg-muted">Target audience</dt>
-            <dd className="mt-0.5 text-sm">{project.targetAudience}</dd>
-          </div>
-        </dl>
-      </Card>
+      <GenerationPanel
+        projectId={project.id}
+        sections={sections}
+        initialStatus={project.status}
+        initialProgress={job?.progress ?? {}}
+        creditBalance={org.creditBalance}
+        creditCost={creditsForSections(sections)}
+      />
 
-      {/* Generation lands in Phase 3 — see Appendix C of the system documentation. */}
-      <Card className="text-center">
-        <CardTitle>Generation coming in Phase 3</CardTitle>
-        <CardDescription className="mt-1">
-          The AI pipeline, live progress stream and generated assets attach here.
-        </CardDescription>
-      </Card>
+      {branding ? (
+        <BrandingView branding={branding} />
+      ) : (
+        <Card className="space-y-4">
+          <CardTitle>Brief</CardTitle>
+          <dl className="grid gap-4 sm:grid-cols-2">
+            {[
+              ['Industry', project.industry],
+              ['Country', project.country],
+              ['Style', project.brandStyle],
+              ['Language', project.language === 'ar' ? 'Arabic' : 'English'],
+            ].map(([label, value]) => (
+              <div key={label}>
+                <dt className="text-xs uppercase tracking-wide text-fg-muted">{label}</dt>
+                <dd className="mt-0.5 text-sm capitalize">{value}</dd>
+              </div>
+            ))}
+            <div className="sm:col-span-2">
+              <dt className="text-xs uppercase tracking-wide text-fg-muted">Target audience</dt>
+              <dd className="mt-0.5 text-sm">{project.targetAudience}</dd>
+            </div>
+          </dl>
+        </Card>
+      )}
     </div>
   )
 }
