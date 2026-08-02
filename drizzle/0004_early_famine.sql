@@ -1,0 +1,1 @@
+ALTER TABLE "branding_assets" ADD COLUMN "primary_logo_file_id" uuid;

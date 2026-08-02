@@ -54,6 +54,8 @@ export async function startGeneration(params: {
   userId: string
   projectId: string
   emailVerified: boolean
+  /** Overrides the default plan, e.g. regenerating only the logos. */
+  only?: GenerationSection[]
 }) {
   const [project] = await db
     .select()
@@ -73,14 +75,14 @@ export async function startGeneration(params: {
     throw new AppError('EMAIL_NOT_VERIFIED', 'Please verify your email address to generate.')
   }
 
-  const sections = sectionsForProject(project)
+  const sections = params.only?.length ? params.only : sectionsForProject(project)
   const cost = creditsForSections(sections)
 
   const [job] = await db
     .insert(generationJobs)
     .values({
       projectId: project.id,
-      trigger: 'initial',
+      trigger: params.only?.length ? 'retry_section' : 'initial',
       sections,
       progress: Object.fromEntries(sections.map((s) => [s, { status: 'pending' }])),
       status: 'queued',

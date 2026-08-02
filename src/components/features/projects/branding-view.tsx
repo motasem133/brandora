@@ -3,15 +3,24 @@ import { getTranslations } from 'next-intl/server'
 import { Card, CardTitle } from '@/components/ui/card'
 import type { BrandingAsset, GeneratedFile } from '@/server/db/schema'
 import { LogoGrid } from './logo-grid'
+import { NamePicker } from './name-picker'
 
 export async function BrandingView({
   branding,
   logos = [],
   kit,
+  projectId,
+  chosenName,
+  creditBalance,
+  logoCost,
 }: {
   branding: BrandingAsset
   logos?: GeneratedFile[]
   kit?: GeneratedFile
+  projectId: string
+  chosenName: string | null
+  creditBalance: number
+  logoCost: number
 }) {
   const t = await getTranslations('Branding')
   const palette = branding.colorPalette
@@ -19,19 +28,26 @@ export async function BrandingView({
 
   return (
     <div className="space-y-6">
-      <LogoGrid logos={logos} kit={kit} />
+      <LogoGrid
+        logos={logos}
+        kit={kit}
+        projectId={projectId}
+        primaryLogoFileId={branding.primaryLogoFileId}
+        creditBalance={creditBalance}
+        logoCost={logoCost}
+      />
 
       {branding.businessNameIdeas.length > 0 && (
         <Card className="space-y-4">
-          <CardTitle>{t('nameIdeas')}</CardTitle>
-          <ul className="space-y-3">
-            {branding.businessNameIdeas.map((idea) => (
-              <li key={idea.name} className="border-s-2 border-brand/40 ps-4">
-                <p className="font-display font-semibold">{idea.name}</p>
-                <p className="mt-0.5 text-sm text-fg-secondary">{idea.rationale}</p>
-              </li>
-            ))}
-          </ul>
+          <div>
+            <CardTitle>{t('nameIdeas')}</CardTitle>
+            <p className="mt-1 text-sm text-fg-secondary">{t('nameIdeasHint')}</p>
+          </div>
+          <NamePicker
+            projectId={projectId}
+            ideas={branding.businessNameIdeas}
+            selected={chosenName}
+          />
         </Card>
       )}
 

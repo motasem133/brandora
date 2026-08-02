@@ -456,6 +456,14 @@ export const brandingAssets = pgTable('branding_assets', {
     .$type<{ fileId: string; prompt: string; style: string }[]>()
     .notNull()
     .default([]),
+  /**
+   * The concept the customer chose as their logo.
+   *
+   * Null means undecided, in which case the first concept is shown. Everything
+   * derived — favicon, avatars, the OG card — is built from whichever concept
+   * this points at.
+   */
+  primaryLogoFileId: uuid('primary_logo_file_id'),
 
   /** Provenance — which model and prompt version produced this. */
   modelUsed: text('model_used'),

@@ -138,6 +138,33 @@ export const generateBrand = inngest.createFunction(
       }
     }
 
+    /*
+     * A partial run — regenerating only the logos, say — never produced a
+     * branding object in this execution, so load the stored one. Without this
+     * the run would find nothing to ground itself in and quietly do nothing.
+     */
+    if (!branding && !requested.includes('branding')) {
+      branding = await step.run('load-branding', async () => {
+        const [stored] = await db
+          .select()
+          .from(brandingAssets)
+          .where(eq(brandingAssets.projectId, projectId))
+          .limit(1)
+
+        if (!stored) throw new Error('This project has no branding to build on.')
+
+        return {
+          businessNameIdeas: stored.businessNameIdeas,
+          slogan: stored.slogan ?? '',
+          brandStory: stored.brandStory ?? '',
+          colorPalette: stored.colorPalette!,
+          fontRecommendations: stored.fontRecommendations!,
+          brandValues: stored.brandValues,
+          brandVoice: stored.brandVoice ?? '',
+        } as BrandingOutput
+      })
+    }
+
     // Without branding there is nothing to ground the other sections in.
     if (branding) {
       if (requested.includes('logos')) {

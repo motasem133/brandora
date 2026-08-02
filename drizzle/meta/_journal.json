@@ -29,6 +29,13 @@
       "when": 1785686722845,
       "tag": "0003_cooing_supernaut",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1785697977617,
+      "tag": "0004_early_famine",
+      "breakpoints": true
     }
   ]
 }

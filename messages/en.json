@@ -199,7 +199,14 @@
     "voice": "Brand voice",
     "logos": "Logo concepts",
     "download": "Download",
-    "downloadKit": "Download brand kit"
+    "downloadKit": "Download brand kit",
+    "nameIdeasHint": "Choose the name to use everywhere — logos, website and social copy follow it.",
+    "useThisName": "Use this name",
+    "chosen": "Chosen",
+    "logosHint": "Pick your logo. The favicon, avatars and brand kit are rebuilt from it.",
+    "useThisLogo": "Use this logo",
+    "regenerateLogos": "Regenerate logos ({credits} credits)",
+    "notEnoughCredits": "Not enough credits"
   },
   "Social": {
     "bio": "Instagram bio",

@@ -12,7 +12,7 @@ import { WebsiteView } from '@/components/features/projects/website-view'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardTitle } from '@/components/ui/card'
 import { formatDate } from '@/lib/utils'
-import { creditsForSections } from '@/server/billing/credits'
+import { CREDIT_COSTS, creditsForSections } from '@/server/billing/credits'
 import { db } from '@/server/db'
 import { getThreadMessages } from '@/server/db/queries/assistant'
 import { getOrgPlan } from '@/server/db/queries/plans'
@@ -111,7 +111,15 @@ export default async function ProjectDetailPage({
       )}
 
       {active === 'branding' && brandingAsset && (
-        <BrandingView branding={brandingAsset} logos={logoFiles} kit={kitFile} />
+        <BrandingView
+          branding={brandingAsset}
+          logos={logoFiles}
+          kit={kitFile}
+          projectId={project.id}
+          chosenName={project.businessName}
+          creditBalance={org.creditBalance}
+          logoCost={CREDIT_COSTS.logos}
+        />
       )}
       {active === 'website' && websiteAsset && <WebsiteView website={websiteAsset} />}
       {active === 'social' && socialAsset && <SocialView social={socialAsset} />}
