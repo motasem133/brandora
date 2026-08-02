@@ -14,6 +14,7 @@ import { Card, CardTitle } from '@/components/ui/card'
 import { formatDate } from '@/lib/utils'
 import { creditsForSections } from '@/server/billing/credits'
 import { db } from '@/server/db'
+import { getThreadMessages } from '@/server/db/queries/assistant'
 import { getOrgPlan } from '@/server/db/queries/plans'
 import { getProject } from '@/server/db/queries/projects'
 import { brandingAssets, generatedFiles, socialMediaAssets, websiteAssets } from '@/server/db/schema'
@@ -63,6 +64,7 @@ export default async function ProjectDetailPage({
   // The assistant only makes sense once there is a brand to refine, and it is
   // a paid feature — so the tab appears only when both are true.
   const canAssist = Boolean(plan?.brandAssistant) && Boolean(brandingAsset)
+  const history = canAssist ? await getThreadMessages(project.id) : []
 
   /*
    * Built in one pass and never mutated afterwards. Pushing a tab in later left
@@ -113,7 +115,9 @@ export default async function ProjectDetailPage({
       )}
       {active === 'website' && websiteAsset && <WebsiteView website={websiteAsset} />}
       {active === 'social' && socialAsset && <SocialView social={socialAsset} />}
-      {active === 'assistant' && canAssist && <AssistantPanel projectId={project.id} />}
+      {active === 'assistant' && canAssist && (
+        <AssistantPanel projectId={project.id} initialMessages={history as never} />
+      )}
 
       {available.length === 0 && (
         <Card className="space-y-4">

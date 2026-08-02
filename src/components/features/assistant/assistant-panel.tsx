@@ -1,10 +1,10 @@
 'use client'
 
 import { useChat } from '@ai-sdk/react'
-import { DefaultChatTransport } from 'ai'
+import { DefaultChatTransport, type UIMessage } from 'ai'
 import { ArrowUp, Check, Loader2, Sparkles, Wrench } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -13,15 +13,25 @@ import { cn } from '@/lib/utils'
 
 const SUGGESTIONS = ['warmerPalette', 'shorterSlogan', 'punchierStory', 'arabicFonts'] as const
 
-export function AssistantPanel({ projectId }: { projectId: string }) {
+export function AssistantPanel({
+  projectId,
+  initialMessages,
+}: {
+  projectId: string
+  initialMessages: UIMessage[]
+}) {
   const t = useTranslations('Assistant')
   const router = useRouter()
 
-  const [input, setInput] = useState('')
   const endRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
   const appliedRef = useRef(0)
+  const draftKey = `brandora:assistant-draft:${projectId}`
 
   const { messages, sendMessage, status, error } = useChat({
+    // Seeded from the database, so leaving the tab and coming back resumes the
+    // conversation rather than starting a new one.
+    messages: initialMessages,
     transport: new DefaultChatTransport({
       api: '/api/assistant',
       body: { projectId },
@@ -33,6 +43,22 @@ export function AssistantPanel({ projectId }: { projectId: string }) {
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
+
+  /*
+   * Restore anything typed but not sent before navigating away — losing a
+   * half-written request to a tab click is small and feels terrible.
+   *
+   * The textarea is uncontrolled and restored by writing to the DOM node. Held
+   * in React state it would either need setState inside an effect, which costs
+   * a cascading render, or a lazy initialiser that reads sessionStorage during
+   * SSR where it does not exist.
+   */
+  useEffect(() => {
+    const field = inputRef.current
+    if (!field) return
+    const saved = sessionStorage.getItem(draftKey)
+    if (saved) field.value = saved
+  }, [draftKey])
 
   /*
    * Tool calls mutate the brand in the database, so the surrounding
@@ -54,11 +80,23 @@ export function AssistantPanel({ projectId }: { projectId: string }) {
     }
   }, [messages, busy, router])
 
+  function saveDraft(value: string) {
+    try {
+      if (value) sessionStorage.setItem(draftKey, value)
+      else sessionStorage.removeItem(draftKey)
+    } catch {
+      // Private browsing with storage disabled — the draft simply is not kept.
+    }
+  }
+
   function submit(text: string) {
     const trimmed = text.trim()
     if (!trimmed || busy) return
+
     sendMessage({ text: trimmed })
-    setInput('')
+
+    if (inputRef.current) inputRef.current.value = ''
+    saveDraft('')
   }
 
   return (
@@ -149,26 +187,26 @@ export function AssistantPanel({ projectId }: { projectId: string }) {
       <form
         onSubmit={(event) => {
           event.preventDefault()
-          submit(input)
+          submit(inputRef.current?.value ?? '')
         }}
         className="flex items-end gap-2 border-t border-line p-3"
       >
         <textarea
-          value={input}
-          onChange={(event) => setInput(event.target.value)}
+          ref={inputRef}
+          onChange={(event) => saveDraft(event.target.value)}
           onKeyDown={(event) => {
             // Enter sends, Shift+Enter breaks the line — the convention every
             // chat UI has trained people to expect.
             if (event.key === 'Enter' && !event.shiftKey) {
               event.preventDefault()
-              submit(input)
+              submit(event.currentTarget.value)
             }
           }}
           rows={1}
           placeholder={t('placeholder')}
           className="max-h-32 min-h-11 flex-1 resize-none rounded-lg border border-line bg-surface px-3.5 py-3 text-sm focus:border-brand focus:outline-none"
         />
-        <Button type="submit" size="icon" disabled={busy || !input.trim()} aria-label={t('send')}>
+        <Button type="submit" size="icon" disabled={busy} aria-label={t('send')}>
           {busy ? <Loader2 className="animate-spin" /> : <ArrowUp />}
         </Button>
       </form>
