@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 
+import { AssistantPanel } from '@/components/features/assistant/assistant-panel'
 import { BrandingView } from '@/components/features/projects/branding-view'
 import { DeleteProjectButton } from '@/components/features/projects/delete-project-button'
 import { GenerationPanel } from '@/components/features/projects/generation-panel'
@@ -13,6 +14,7 @@ import { Card, CardTitle } from '@/components/ui/card'
 import { formatDate } from '@/lib/utils'
 import { creditsForSections } from '@/server/billing/credits'
 import { db } from '@/server/db'
+import { getOrgPlan } from '@/server/db/queries/plans'
 import { getProject } from '@/server/db/queries/projects'
 import { brandingAssets, generatedFiles, socialMediaAssets, websiteAssets } from '@/server/db/schema'
 import { getLatestJobForProject, sectionsForProject } from '@/server/services/generation'
@@ -62,7 +64,7 @@ export default async function ProjectDetailPage({
   ]
 
   const active: ProjectTab =
-    tab === 'website' || tab === 'social' || tab === 'branding'
+    tab === 'website' || tab === 'social' || tab === 'branding' || tab === 'assistant'
       ? available.includes(tab)
         ? tab
         : (available[0] ?? 'branding')
@@ -70,6 +72,12 @@ export default async function ProjectDetailPage({
 
   const job = await getLatestJobForProject(project.id)
   const sections = sectionsForProject(project)
+
+  // The assistant only makes sense once there is a brand to refine, and it is
+  // a paid feature — so the tab appears only when both are true.
+  const plan = await getOrgPlan(org.id)
+  const canAssist = Boolean(plan?.brandAssistant) && Boolean(brandingAsset)
+  if (canAssist) available.push('assistant')
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -104,6 +112,7 @@ export default async function ProjectDetailPage({
       )}
       {active === 'website' && websiteAsset && <WebsiteView website={websiteAsset} />}
       {active === 'social' && socialAsset && <SocialView social={socialAsset} />}
+      {active === 'assistant' && canAssist && <AssistantPanel projectId={project.id} />}
 
       {available.length === 0 && (
         <Card className="space-y-4">

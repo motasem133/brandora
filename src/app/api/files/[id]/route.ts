@@ -2,6 +2,7 @@ import { and, eq } from 'drizzle-orm'
 
 import { db } from '@/server/db'
 import { generatedFiles, projects } from '@/server/db/schema'
+import { toErrorResponse } from '@/server/api-error'
 import { requireOrg } from '@/server/session'
 import { signedDownloadUrl } from '@/server/storage/r2'
 
@@ -13,6 +14,14 @@ import { signedDownloadUrl } from '@/server/storage/r2'
  * so the bucket itself is never public for private assets.
  */
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    return await handle(params)
+  } catch (error) {
+    return toErrorResponse(error)
+  }
+}
+
+async function handle(params: Promise<{ id: string }>) {
   const { id } = await params
   const { org } = await requireOrg()
 

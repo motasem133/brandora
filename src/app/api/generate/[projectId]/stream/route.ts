@@ -1,5 +1,6 @@
 import { getProject } from '@/server/db/queries/projects'
 import { getLatestJobForProject } from '@/server/services/generation'
+import { toErrorResponse } from '@/server/api-error'
 import { requireOrg } from '@/server/session'
 
 export const dynamic = 'force-dynamic'
@@ -15,6 +16,14 @@ export const maxDuration = 300
  * different machines. Swap in Redis only if concurrent jobs reach the hundreds.
  */
 export async function GET(_request: Request, { params }: { params: Promise<{ projectId: string }> }) {
+  try {
+    return await handle(params)
+  } catch (error) {
+    return toErrorResponse(error)
+  }
+}
+
+async function handle(params: Promise<{ projectId: string }>) {
   const { projectId } = await params
 
   // Route handlers are not covered by the action middleware, so the tenant

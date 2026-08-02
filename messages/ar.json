@@ -98,7 +98,8 @@
     "tabs": {
       "branding": "الهوية",
       "website": "الموقع",
-      "social": "السوشيال ميديا"
+      "social": "السوشيال ميديا",
+      "assistant": "المساعد"
     },
     "brief": "الملخص",
     "briefIndustry": "المجال",
@@ -300,5 +301,20 @@
     "refresh": "تحديث",
     "currency": "العملة",
     "approx": "≈ {price}"
+  },
+  "Assistant": {
+    "emptyTitle": "حسّن علامتك التجارية",
+    "emptyBody": "اطلب التعديلات بلغتك الطبيعية وسيتم تطبيقها على علامتك.",
+    "placeholder": "اطلب تعديلاً…",
+    "send": "إرسال",
+    "thinking": "جاري التفكير…",
+    "applying": "جاري تطبيق التعديل…",
+    "error": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+    "suggestions": {
+      "warmerPalette": "اجعل الألوان أكثر دفئاً",
+      "shorterSlogan": "أعطني شعاراً أقصر",
+      "punchierStory": "اجعل قصة العلامة أقوى",
+      "arabicFonts": "اقترح خطوطاً تدعم العربية"
+    }
   }
 }

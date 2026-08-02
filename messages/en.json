@@ -98,7 +98,8 @@
     "tabs": {
       "branding": "Branding",
       "website": "Website",
-      "social": "Social media"
+      "social": "Social media",
+      "assistant": "Assistant"
     },
     "brief": "Brief",
     "briefIndustry": "Industry",
@@ -300,5 +301,20 @@
     "refresh": "Refresh",
     "currency": "Currency",
     "approx": "≈ {price}"
+  },
+  "Assistant": {
+    "emptyTitle": "Refine your brand",
+    "emptyBody": "Ask for changes in plain language and they are applied to your brand.",
+    "placeholder": "Ask for a change…",
+    "send": "Send",
+    "thinking": "Thinking…",
+    "applying": "Applying change…",
+    "error": "Something went wrong. Please try again.",
+    "suggestions": {
+      "warmerPalette": "Make the palette warmer",
+      "shorterSlogan": "Give me a shorter slogan",
+      "punchierStory": "Make the brand story punchier",
+      "arabicFonts": "Suggest fonts with Arabic support"
+    }
   }
 }
