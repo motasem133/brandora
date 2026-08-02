@@ -2,7 +2,7 @@ import { and, eq } from 'drizzle-orm'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
-import { PageRenderer, fontHref, resolveTheme } from '@/components/blocks/block-renderer'
+import { PageRenderer, resolveTheme } from '@/components/blocks/block-renderer'
 import { PAGE_KEYS, type Block, type PageKey, type Theme } from '@/lib/blocks'
 import { db } from '@/server/db'
 import { brandingAssets, projects, websiteAssets, type BrandingAsset } from '@/server/db/schema'
@@ -86,13 +86,11 @@ export default async function PublishedSite({
   const nav = PAGE_KEYS.filter((key) => pages[key]?.length)
 
   const name = site.project.businessName || site.project.title
-  const fonts = fontHref(theme)
 
+  // Fonts are linked from the layout's <head>, where React can resolve their
+  // precedence without being told.
   return (
-    <>
-      {fonts && <link rel="stylesheet" href={fonts} />}
-
-      <div style={{ backgroundColor: theme.backgroundColor, minHeight: '100dvh' }}>
+    <div style={{ backgroundColor: theme.backgroundColor, minHeight: '100dvh' }}>
         <header
           className="flex flex-wrap items-center justify-between gap-4 px-8 py-5"
           style={{ borderBottom: `1px solid ${theme.primaryColor}1a` }}
@@ -140,8 +138,7 @@ export default async function PublishedSite({
           }}
         >
           © {new Date().getFullYear()} {name}
-        </footer>
-      </div>
-    </>
+      </footer>
+    </div>
   )
 }

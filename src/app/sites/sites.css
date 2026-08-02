@@ -1,0 +1,17 @@
+@import 'tailwindcss';
+
+/*
+ * Stylesheet for published customer sites.
+ *
+ * Deliberately separate from the app's globals.css: a customer's site must not
+ * inherit Brandora's dark theme tokens or fonts. Only Tailwind's utilities and
+ * a neutral baseline, with all colour coming from the brand's own palette.
+ */
+@layer base {
+  body {
+    margin: 0;
+    background-color: #ffffff;
+    color: #111827;
+    -webkit-font-smoothing: antialiased;
+  }
+}
