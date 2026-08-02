@@ -6,7 +6,8 @@ import { CheckoutButton } from '@/components/features/billing/checkout-button'
 import { CancelSubscriptionButton } from '@/components/features/billing/cancel-button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardDescription, CardTitle } from '@/components/ui/card'
-import { formatDate, formatPrice } from '@/lib/utils'
+import { CurrencySwitch } from '@/components/features/billing/currency-switch'
+import { formatDate, formatPrice, isCurrency, pickPrice, type Currency } from '@/lib/utils'
 import { db } from '@/server/db'
 import { getOrgPlan } from '@/server/db/queries/plans'
 import { creditPacks, creditTransactions, orders, plans, subscriptions } from '@/server/db/schema'
@@ -17,11 +18,15 @@ export default async function BillingPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>
-  searchParams: Promise<{ checkout?: string }>
+  searchParams: Promise<{ checkout?: string; currency?: string }>
 }) {
   const { locale } = await params
-  const { checkout } = await searchParams
+  const { checkout, currency: requested } = await searchParams
   setRequestLocale(locale)
+
+  // Arabic readers are almost always billing in the UAE, so default to dirhams
+  // there and dollars elsewhere. The switch overrides either way.
+  const currency: Currency = isCurrency(requested) ? requested : locale === 'ar' ? 'aed' : 'usd'
 
   const t = await getTranslations('Billing')
   const { org, orgRole } = await requireOrg()
@@ -50,9 +55,12 @@ export default async function BillingPage({
 
   return (
     <div className="mx-auto max-w-5xl space-y-8">
-      <div>
-        <h1 className="font-display text-2xl font-semibold">{t('title')}</h1>
-        <p className="mt-1 text-sm text-fg-secondary">{t('subtitle')}</p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="font-display text-2xl font-semibold">{t('title')}</h1>
+          <p className="mt-1 text-sm text-fg-secondary">{t('subtitle')}</p>
+        </div>
+        <CurrencySwitch active={currency} />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -111,10 +119,32 @@ export default async function BillingPage({
                   {isCurrent && <Badge tone="brand">{t('current')}</Badge>}
                 </div>
 
-                <p className="mt-2 font-display text-2xl font-semibold">
-                  {formatPrice(plan.priceMonthly, locale)}
-                  <span className="text-sm font-normal text-fg-muted">{t('perMonth')}</span>
-                </p>
+                {(() => {
+                  const shown = pickPrice(currency, {
+                    usd: plan.priceMonthly,
+                    aed: plan.priceMonthlyAed,
+                  })
+                  return (
+                    <>
+                      <p className="mt-2 font-display text-2xl font-semibold">
+                        {formatPrice(shown.amount, shown.currency, locale)}
+                        <span className="text-sm font-normal text-fg-muted">{t('perMonth')}</span>
+                      </p>
+                      {/* The other currency, so what Polar charges is never a surprise. */}
+                      {shown.alternate && (
+                        <p className="text-xs text-fg-muted">
+                          {t('approx', {
+                            price: formatPrice(
+                              shown.alternate.amount,
+                              shown.alternate.currency,
+                              locale,
+                            ),
+                          })}
+                        </p>
+                      )}
+                    </>
+                  )
+                })()}
                 <p className="mt-1 text-sm text-fg-secondary">
                   {t('creditsPerMonth', { credits: plan.monthlyCredits })}
                 </p>
@@ -146,7 +176,23 @@ export default async function BillingPage({
             <Card key={pack.id} className="flex items-center justify-between gap-4 p-5">
               <div>
                 <p className="font-display font-semibold">{pack.credits} {t('credits')}</p>
-                <p className="text-sm text-fg-secondary">{formatPrice(pack.price, locale)}</p>
+                {(() => {
+                  const shown = pickPrice(currency, { usd: pack.price, aed: pack.priceAed })
+                  return (
+                    <>
+                      <p className="text-sm text-fg-secondary">
+                        {formatPrice(shown.amount, shown.currency, locale)}
+                      </p>
+                      {shown.alternate && (
+                        <p className="text-xs text-fg-muted">
+                          {t('approx', {
+                            price: formatPrice(shown.alternate.amount, shown.alternate.currency, locale),
+                          })}
+                        </p>
+                      )}
+                    </>
+                  )
+                })()}
               </div>
               {isOwner && <CheckoutButton kind="pack" slug={pack.slug} label={t('buy')} />}
             </Card>
@@ -186,7 +232,7 @@ export default async function BillingPage({
                     {formatDate(order.createdAt, locale)}
                   </span>
                   <span className="flex items-center gap-2">
-                    {formatPrice(order.amount, locale)}
+                    {formatPrice(order.amount, isCurrency(order.currency.toLowerCase()) ? (order.currency.toLowerCase() as Currency) : 'usd', locale)}
                     <Badge tone={order.status === 'refunded' ? 'warning' : 'success'}>
                       {t(`orderStatus.${order.status}`)}
                     </Badge>

@@ -252,9 +252,18 @@ export const plans = pgTable('plans', {
   name: text('name').notNull(),
   slug: text('slug').notNull().unique(),
 
-  /** Money is always integer cents. Never float. */
+  /**
+   * Money is always integer minor units. Never float.
+   *
+   * Both currencies are stored rather than converted: AED is pegged to USD at
+   * 3.6725, but the prices actually configured in Polar are rounded to
+   * marketable numbers, so a computed figure would not match what the customer
+   * is charged.
+   */
   priceMonthly: integer('price_monthly').notNull().default(0),
   priceYearly: integer('price_yearly').notNull().default(0),
+  priceMonthlyAed: integer('price_monthly_aed').notNull().default(0),
+  priceYearlyAed: integer('price_yearly_aed').notNull().default(0),
 
   polarProductIdMonthly: text('polar_product_id_monthly'),
   polarProductIdYearly: text('polar_product_id_yearly'),
@@ -285,8 +294,9 @@ export const creditPacks = pgTable('credit_packs', {
   id: uuid('id').primaryKey().defaultRandom(),
   slug: text('slug').notNull().unique(),
   name: text('name').notNull(),
-  /** Integer cents. */
+  /** Integer minor units, in each supported currency. */
   price: integer('price').notNull(),
+  priceAed: integer('price_aed').notNull().default(0),
   credits: integer('credits').notNull(),
   polarProductId: text('polar_product_id'),
   isActive: boolean('is_active').notNull().default(true),

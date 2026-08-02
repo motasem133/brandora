@@ -1398,6 +1398,18 @@ The ~1.1% premium buys tax compliance. That is a good trade at this stage.
 
 Annual = 10 months' price (2 months free), credits granted monthly, not upfront.
 
+### Currencies
+
+Plans and packs are priced in both **USD and AED**, and both amounts are stored
+rather than converted. AED is pegged to USD at 3.6725, but the prices actually
+configured in Polar are rounded to marketable figures, so a computed conversion
+would not match what the customer is charged.
+
+The billing page shows one currency at a time with the other beneath it, chosen
+by `?currency=`, defaulting to AED for Arabic readers and USD otherwise. Where a
+product is priced in only one currency, the display falls back to the currency
+that has a price — showing "AED 0" for a paid plan would advertise it as free.
+
 **Unit economics at list price:**
 
 | Plan | Revenue | Max upstream AI cost | Polar fee | Gross margin |

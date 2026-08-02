@@ -29,6 +29,7 @@ const PLANS = [
     name: 'Free',
     priceMonthly: 0,
     priceYearly: 0,
+    priceMonthlyAed: 0,
     monthlyCredits: 10, // one-time grant, not renewed — enforced in billing logic
     seats: 1,
     maxProjects: 3,
@@ -49,6 +50,7 @@ const PLANS = [
     name: 'Basic',
     priceMonthly: 2900,
     priceYearly: 29000,
+    priceMonthlyAed: 11000,
     monthlyCredits: 120,
     seats: 2,
     maxProjects: -1,
@@ -69,6 +71,7 @@ const PLANS = [
     name: 'Pro',
     priceMonthly: 7900,
     priceYearly: 79000,
+    priceMonthlyAed: 28900,
     monthlyCredits: 400,
     seats: 5,
     maxProjects: -1,
@@ -89,6 +92,7 @@ const PLANS = [
     name: 'Business',
     priceMonthly: 19900,
     priceYearly: 199000,
+    priceMonthlyAed: 72900,
     monthlyCredits: 1200,
     seats: -1,
     maxProjects: -1,
@@ -107,9 +111,9 @@ const PLANS = [
 ] satisfies (typeof plans.$inferInsert)[]
 
 const CREDIT_PACKS = [
-  { slug: 'pack_small', name: 'Small', price: 1500, credits: 100, sortOrder: 0 },
-  { slug: 'pack_medium', name: 'Medium', price: 3900, credits: 300, sortOrder: 1 },
-  { slug: 'pack_large', name: 'Large', price: 11000, credits: 1000, sortOrder: 2 },
+  { priceAed: 5499, slug: 'pack_small', name: 'Small', price: 1500, credits: 100, sortOrder: 0 },
+  { priceAed: 14499, slug: 'pack_medium', name: 'Medium', price: 3900, credits: 300, sortOrder: 1 },
+  { priceAed: 40999, slug: 'pack_large', name: 'Large', price: 11000, credits: 1000, sortOrder: 2 },
 ] satisfies (typeof creditPacks.$inferInsert)[]
 
 async function seedPlans() {

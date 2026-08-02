@@ -297,6 +297,8 @@
       "paid": "Paid",
       "refunded": "Refunded"
     },
-    "refresh": "Refresh"
+    "refresh": "Refresh",
+    "currency": "Currency",
+    "approx": "≈ {price}"
   }
 }
