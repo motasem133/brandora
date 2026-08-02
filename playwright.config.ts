@@ -30,7 +30,12 @@ export default defineConfig({
   webServer: {
     command: 'pnpm build && pnpm start --port 3100',
     url: 'http://localhost:3100/en',
-    reuseExistingServer: !process.env.CI,
+    /*
+     * Always reuse a server that is already answering. CI starts the app
+     * itself so the system tests and fixture seeding can share it; starting a
+     * second one here would just fight for the port.
+     */
+    reuseExistingServer: true,
     timeout: 240_000,
     stdout: 'ignore',
     stderr: 'pipe',

@@ -19,7 +19,8 @@
     "auth:generate": "npx @better-auth/cli generate --config src/server/auth.ts",
     "test:system": "node scripts/system-test.mjs",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "db:seed:test": "node scripts/seed-test-data.mjs"
   },
   "dependencies": {
     "@ai-sdk/react": "^4.0.50",

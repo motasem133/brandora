@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-import { sql } from './fixtures/db'
+import { firstGeneratedProjectId, sql } from './fixtures/db'
 
 /**
  * The website builder.
@@ -13,9 +13,9 @@ test.describe('website builder', () => {
   let projectId: string
 
   test.beforeAll(async () => {
-    const [row] = await sql`SELECT project_id FROM website_assets LIMIT 1`
-    if (!row) throw new Error('No website to test against.')
-    projectId = row.project_id as string
+    projectId = await firstGeneratedProjectId()
+    const [website] = await sql`SELECT id FROM website_assets WHERE project_id = ${projectId}`
+    if (!website) throw new Error('The fixture project has no website.')
   })
 
   test.beforeEach(async ({ page }) => {

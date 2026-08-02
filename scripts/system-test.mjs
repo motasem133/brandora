@@ -14,6 +14,14 @@ import postgres from 'postgres'
  */
 
 const BASE = process.env.TEST_BASE_URL ?? 'http://localhost:3000'
+
+/*
+ * Better Auth validates Origin against the app's own baseURL, not against
+ * wherever it happens to be reachable. Sending the request URL as the Origin
+ * fails whenever a build is served on a different port than it was configured
+ * for, which is exactly the case in CI.
+ */
+const ORIGIN = process.env.BETTER_AUTH_URL ?? BASE
 const sql = postgres(process.env.DATABASE_URL, { max: 4 })
 
 let passed = 0
@@ -62,7 +70,7 @@ async function request(path, { cookies, method = 'GET', body, redirect = 'manual
     headers: {
       // Better Auth rejects state-changing requests without an Origin as CSRF
       // protection, so the test must present one the way a browser would.
-      Origin: BASE,
+      Origin: ORIGIN,
       ...(body ? { 'Content-Type': 'application/json' } : {}),
       ...(cookies?.size ? { Cookie: cookies.header() } : {}),
     },

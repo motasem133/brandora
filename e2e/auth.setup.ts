@@ -12,7 +12,7 @@ const AUTH_FILE = 'e2e/.auth/user.json'
 setup('authenticate', async ({ page }) => {
   await page.goto('/en/login')
 
-  await page.getByLabel('Email').fill(process.env.E2E_EMAIL ?? 'test@brandora.local')
+  await page.getByLabel('Email').fill(process.env.E2E_EMAIL ?? 'e2e@brandora-test.com')
   await page.getByLabel('Password').fill(process.env.E2E_PASSWORD ?? 'testpassword123')
   await page.getByRole('button', { name: 'Sign in' }).click()
 
