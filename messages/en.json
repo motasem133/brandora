@@ -211,7 +211,8 @@
     "briefHint": "Describe what you want and the next generation follows it.",
     "briefPlaceholder": "e.g. a simple crescent-moon mark above the name, no coffee cups, lots of white space",
     "saveBrief": "Save direction",
-    "briefSaved": "Saved"
+    "briefSaved": "Saved",
+    "regenerating": "Generating logos…"
   },
   "Social": {
     "bio": "Instagram bio",

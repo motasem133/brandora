@@ -59,6 +59,14 @@ export default async function ProjectDetailPage({
 
   const job = await getLatestJobForProject(project.id)
   const sections = sectionsForProject(project)
+
+  /*
+   * While a job is running, show the steps that job is actually doing.
+   * Regenerating only the logos otherwise rendered four steps with three stuck
+   * on "pending" forever, which reads as a stalled generation.
+   */
+  const isJobActive = job?.status === 'queued' || job?.status === 'running'
+  const panelSections = isJobActive && job.sections.length ? job.sections : sections
   const plan = await getOrgPlan(org.id)
 
   // The assistant only makes sense once there is a brand to refine, and it is
@@ -99,7 +107,7 @@ export default async function ProjectDetailPage({
 
       <GenerationPanel
         projectId={project.id}
-        sections={sections}
+        sections={panelSections}
         initialStatus={project.status}
         initialProgress={job?.progress ?? {}}
         creditBalance={org.creditBalance}
@@ -120,6 +128,7 @@ export default async function ProjectDetailPage({
           creditBalance={org.creditBalance}
           logoCost={CREDIT_COSTS.logos}
           logoBrief={project.logoBrief}
+          isGenerating={isJobActive}
         />
       )}
       {active === 'website' && websiteAsset && <WebsiteView website={websiteAsset} />}

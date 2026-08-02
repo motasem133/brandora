@@ -16,6 +16,7 @@ export async function LogoGrid({
   creditBalance,
   logoCost,
   logoBrief,
+  isGenerating,
 }: {
   logos: GeneratedFile[]
   kit?: GeneratedFile
@@ -24,6 +25,7 @@ export async function LogoGrid({
   creditBalance: number
   logoCost: number
   logoBrief: string | null
+  isGenerating: boolean
 }) {
   const t = await getTranslations('Branding')
   if (logos.length === 0) return null
@@ -44,6 +46,7 @@ export async function LogoGrid({
             projectId={projectId}
             cost={logoCost}
             affordable={creditBalance >= logoCost}
+            isRunning={isGenerating}
           />
           {kit && (
             <a
