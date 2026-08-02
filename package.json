@@ -16,7 +16,8 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx src/server/db/seed.ts",
-    "auth:generate": "npx @better-auth/cli generate --config src/server/auth.ts"
+    "auth:generate": "npx @better-auth/cli generate --config src/server/auth.ts",
+    "test:system": "node scripts/system-test.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1101.0",
