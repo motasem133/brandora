@@ -38,7 +38,7 @@ export const createCheckout = orgAction
 
     const polar = getPolar()
 
-    const checkout = await polar.checkouts.create({
+    const base = {
       products: [productId],
       successUrl: `${env.NEXT_PUBLIC_APP_URL}/en/dashboard/billing?checkout=success`,
       // Read back by the webhook — never trusted from the redirect.
@@ -46,9 +46,21 @@ export const createCheckout = orgAction
         organizationId: ctx.orgId,
         userId: ctx.user.id,
       },
-      customerEmail: ctx.user.email,
-      ...(ctx.orgId ? { externalCustomerId: ctx.orgId } : {}),
-    })
+    }
+
+    /*
+     * Prefilling the email saves the customer a field, but Polar validates the
+     * domain with an MX lookup and rejects anything that cannot receive mail.
+     * Our own sign-up accepts such addresses, so a prefill failure must not
+     * block the purchase — fall back to letting Polar collect the address.
+     */
+    let checkout
+    try {
+      checkout = await polar.checkouts.create({ ...base, customerEmail: ctx.user.email })
+    } catch (error) {
+      console.warn('[billing] checkout with prefilled email failed, retrying without', error)
+      checkout = await polar.checkouts.create(base)
+    }
 
     return { url: checkout.url }
   })
