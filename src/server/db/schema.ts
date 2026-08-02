@@ -1,4 +1,5 @@
 import {
+  bigint,
   boolean,
   index,
   integer,
@@ -177,7 +178,10 @@ export const rateLimits = pgTable('rate_limits', {
   id: text('id').primaryKey(),
   key: text('key').notNull(),
   count: integer('count').notNull().default(0),
-  lastRequest: integer('last_request').notNull().default(0),
+  /**
+   * Millisecond epoch, which overflows int4 — must be bigint.
+   */
+  lastRequest: bigint('last_request', { mode: 'number' }).notNull().default(0),
 })
 
 /* ------------------------------ organizations ----------------------------- */

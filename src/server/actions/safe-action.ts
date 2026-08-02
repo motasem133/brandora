@@ -9,6 +9,7 @@ import { AppError, isAppError } from '@/lib/errors'
 import { auth } from '@/server/auth'
 import { db } from '@/server/db'
 import { members } from '@/server/db/schema'
+import { resolveActiveOrganization } from '@/server/services/organizations'
 
 /**
  * Server Actions are publicly callable HTTP endpoints. Every mutation is built
@@ -39,8 +40,12 @@ export const authedAction = actionClient.use(async ({ next }) => {
 
 /** Requires membership in the caller's active organization. */
 export const orgAction = authedAction.use(async ({ next, ctx }) => {
-  const orgId = ctx.session.activeOrganizationId
-  if (!orgId) throw new AppError('NO_ORG', 'No active organization selected.')
+  // Heals a session stamped before its organization existed.
+  const orgId = await resolveActiveOrganization({
+    id: ctx.session.id,
+    userId: ctx.user.id,
+    activeOrganizationId: ctx.session.activeOrganizationId,
+  })
 
   const [membership] = await db
     .select()

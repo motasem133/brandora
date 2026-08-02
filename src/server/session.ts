@@ -8,6 +8,7 @@ import { AppError } from '@/lib/errors'
 import { auth } from '@/server/auth'
 import { db } from '@/server/db'
 import { members, organizations } from '@/server/db/schema'
+import { resolveActiveOrganization } from '@/server/services/organizations'
 
 /**
  * Session helpers for React Server Components.
@@ -37,8 +38,14 @@ export async function requireAdmin() {
 /** Resolves the active organization and asserts the caller is a member of it. */
 export const requireOrg = cache(async () => {
   const session = await requireSession()
-  const orgId = session.session.activeOrganizationId
-  if (!orgId) throw new AppError('NO_ORG', 'No active organization selected.')
+
+  // Heals a session stamped before its organization existed — see
+  // resolveActiveOrganization for why that happens on the first signup.
+  const orgId = await resolveActiveOrganization({
+    id: session.session.id,
+    userId: session.user.id,
+    activeOrganizationId: session.session.activeOrganizationId,
+  })
 
   const [row] = await db
     .select({ org: organizations, role: members.role })

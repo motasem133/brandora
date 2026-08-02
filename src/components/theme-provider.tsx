@@ -3,8 +3,12 @@
 import { ThemeProvider as NextThemesProvider } from 'next-themes'
 
 /**
- * Dark is the default. `value` maps next-themes' class names onto our tokens —
- * dark needs no class (it lives on :root), light adds `.light`.
+ * Dark is the default.
+ *
+ * Both themes must map to a non-empty class name: next-themes calls
+ * `classList.remove(previous)` when switching, and DOMTokenList throws on an
+ * empty token. The dark token values live on `:root` so server-rendered HTML is
+ * already dark before any JS runs; `.dark` is therefore just a marker class.
  */
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   return (
@@ -13,7 +17,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       defaultTheme="dark"
       enableSystem={false}
       disableTransitionOnChange
-      value={{ light: 'light', dark: '' }}
+      value={{ light: 'light', dark: 'dark' }}
     >
       {children}
     </NextThemesProvider>

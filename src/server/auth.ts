@@ -8,54 +8,10 @@ import { asc, eq } from 'drizzle-orm'
 
 import { env } from '@/lib/env'
 import { db, schema } from './db'
-import { members, organizations } from './db/schema'
+import { members } from './db/schema'
+import { createPersonalOrganization } from './services/organizations'
 
 const hasGoogle = Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET)
-
-/** Free plan grant. Kept here so a new signup is immediately usable. */
-const FREE_STARTING_CREDITS = 10
-
-function slugify(input: string) {
-  return (
-    input
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-      .slice(0, 32) || 'workspace'
-  )
-}
-
-/**
- * Every user gets a personal organization at sign-up.
- *
- * The whole authorization model is org-scoped (`orgAction`, `requireOrg`), so a
- * user without one would be locked out of their own dashboard.
- */
-async function createPersonalOrganization(user: { id: string; name: string; email: string }) {
-  const base = slugify(user.name || user.email.split('@')[0])
-  // Short random suffix keeps the unique slug constraint from colliding on
-  // common names without needing a retry loop.
-  const slug = `${base}-${crypto.randomUUID().slice(0, 6)}`
-
-  const [org] = await db
-    .insert(organizations)
-    .values({
-      id: crypto.randomUUID(),
-      name: user.name ? `${user.name}'s workspace` : 'My workspace',
-      slug,
-      creditBalance: FREE_STARTING_CREDITS,
-    })
-    .returning()
-
-  await db.insert(members).values({
-    id: crypto.randomUUID(),
-    organizationId: org.id,
-    userId: user.id,
-    role: 'owner',
-  })
-
-  return org
-}
 
 export const auth = betterAuth({
   appName: 'Brandora',
@@ -101,7 +57,9 @@ export const auth = betterAuth({
   rateLimit: {
     enabled: true,
     storage: 'database',
-    modelName: 'rateLimits',
+    // No modelName here on purpose: the default is `rateLimit`, and the
+    // adapter's usePlural option turns it into the `rateLimits` table. Setting
+    // it explicitly would be pluralised a second time into `rateLimitss`.
     window: 60,
     max: 20,
     customRules: {
