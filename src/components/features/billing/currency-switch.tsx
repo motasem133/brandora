@@ -10,7 +10,13 @@ import { CURRENCIES, type Currency } from '@/lib/utils'
  * The choice lives in the URL, so prices are server-rendered, the page is
  * shareable with a currency already applied, and no JavaScript is needed.
  */
-export async function CurrencySwitch({ active }: { active: Currency }) {
+export async function CurrencySwitch({
+  active,
+  href = '/dashboard/billing',
+}: {
+  active: Currency
+  href?: string
+}) {
   const t = await getTranslations('Billing')
 
   return (
@@ -18,7 +24,7 @@ export async function CurrencySwitch({ active }: { active: Currency }) {
       {CURRENCIES.map((currency) => (
         <Link
           key={currency}
-          href={`/dashboard/billing?currency=${currency}`}
+          href={`${href}?currency=${currency}`}
           scroll={false}
           className={cn(
             'rounded-md px-3 py-1.5 text-xs font-medium uppercase transition-colors',

@@ -55,7 +55,18 @@
     "passwordMismatch": "Passwords do not match.",
     "passwordTooShort": "Password must be at least 8 characters.",
     "nameRequired": "Please enter your name.",
-    "emailInvalid": "Please enter a valid email address."
+    "emailInvalid": "Please enter a valid email address.",
+    "forgotTitle": "Reset your password",
+    "forgotSubtitle": "We'll email you a link to set a new one.",
+    "sendResetLink": "Send reset link",
+    "resetSent": "If that address has an account, a reset link is on its way. The link expires in an hour.",
+    "backToSignIn": "Back to sign in",
+    "resetTitle": "Choose a new password",
+    "resetSubtitle": "Pick something you haven't used elsewhere.",
+    "newPassword": "New password",
+    "setNewPassword": "Save new password",
+    "resetLinkInvalid": "This link has expired or has already been used.",
+    "requestNewLink": "Request a new link"
   },
   "Nav": {
     "overview": "Overview",
@@ -438,5 +449,47 @@
       "created": "Created",
       "none": "No projects match."
     }
+  },
+  "Pricing": {
+    "title": "Simple pricing",
+    "subtitle": "Every plan includes the full brand identity. Bigger plans generate more of them.",
+    "signIn": "Sign in",
+    "start": "Start free",
+    "popular": "Most popular",
+    "perMonth": "/month",
+    "credits": "{credits} credits a month",
+    "startFree": "Start free",
+    "choose": "Choose {plan}",
+    "packsTitle": "Need more?",
+    "packsBody": "One-off credit packs. They never expire and are used after your monthly credits.",
+    "creditsWord": "credits"
+  },
+  "Settings": {
+    "title": "Settings",
+    "subtitle": "Your account, workspace and preferences",
+    "profile": "Profile",
+    "name": "Name",
+    "email": "Email",
+    "verified": "Verified",
+    "unverified": "Unverified",
+    "language": "Language",
+    "languageHint": "Sets the interface language and the language new brands are generated in.",
+    "save": "Save",
+    "saved": "Saved",
+    "password": "Password",
+    "passwordHint": "Changing it signs you out everywhere else.",
+    "currentPassword": "Current password",
+    "changePassword": "Change password",
+    "passwordChanged": "Password changed",
+    "wrongPassword": "That current password is not right.",
+    "organization": "Workspace",
+    "workspaceName": "Workspace name",
+    "ownerOnly": "Only the workspace owner can rename it.",
+    "credits": "Credits remaining",
+    "manageBilling": "Manage billing",
+    "teamComingSoon": "Inviting teammates is not available yet — seats on paid plans are reserved for it.",
+    "appearance": "Appearance",
+    "appearanceHint": "Applies to this browser.",
+    "toggleTheme": "Switch theme"
   }
 }
