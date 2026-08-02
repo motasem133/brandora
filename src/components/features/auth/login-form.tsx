@@ -64,7 +64,12 @@ export function LoginForm() {
         <div className="h-px flex-1 bg-line" />
       </div>
 
-      <form onSubmit={onSubmit} className="space-y-4">
+      {/*
+        method="post" is defensive. If hydration fails, the browser falls back to
+        submitting the form natively, and the default GET would put the password
+        in the URL and the browser history.
+      */}
+      <form method="post" onSubmit={onSubmit} className="space-y-4">
         <div>
           <Label htmlFor="email">{t('email')}</Label>
           <Input

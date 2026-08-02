@@ -74,7 +74,12 @@ export function RegisterForm() {
         <div className="h-px flex-1 bg-line" />
       </div>
 
-      <form onSubmit={onSubmit} className="space-y-4" noValidate>
+      {/*
+        method="post" is defensive. If hydration fails, the browser falls back to
+        submitting the form natively, and the default GET would put the password
+        in the URL and the browser history.
+      */}
+      <form method="post" onSubmit={onSubmit} className="space-y-4" noValidate>
         <div>
           <Label htmlFor="name">{t('name')}</Label>
           <Input

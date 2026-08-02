@@ -147,7 +147,7 @@ export function Builder({
   return (
     <div className="flex h-dvh flex-col">
       <header className="flex shrink-0 flex-wrap items-center gap-3 border-b border-line px-4 py-3">
-        <div className="flex gap-1">
+        <div className="flex gap-1" data-testid="page-tabs">
           {PAGE_KEYS.map((key) => (
             <button
               key={key}
@@ -190,7 +190,11 @@ export function Builder({
             </button>
           </div>
 
-          <span className="text-xs text-fg-muted">
+          <span
+            className="text-xs text-fg-muted"
+            data-testid="save-status"
+            data-state={saving ? 'saving' : dirty ? 'dirty' : 'saved'}
+          >
             {saving ? t('saving') : dirty ? t('unsaved') : t('saved')}
           </span>
 
@@ -204,7 +208,10 @@ export function Builder({
       </header>
 
       <div className="flex min-h-0 flex-1">
-        <aside className="hidden w-48 shrink-0 overflow-y-auto border-e border-line p-3 lg:block">
+        <aside
+          className="hidden w-48 shrink-0 overflow-y-auto border-e border-line p-3 lg:block"
+          data-testid="block-library"
+        >
           <p className="mb-2 px-1 text-xs font-medium uppercase tracking-wide text-fg-muted">
             {t('addSection')}
           </p>
@@ -223,7 +230,7 @@ export function Builder({
           ))}
         </aside>
 
-        <main className="min-w-0 flex-1 overflow-y-auto bg-elevated/30 p-4">
+        <main className="min-w-0 flex-1 overflow-y-auto bg-elevated/30 p-4" data-testid="canvas">
           <div
             className={cn(
               'mx-auto overflow-hidden rounded-xl border border-line bg-white transition-all',
@@ -263,7 +270,10 @@ export function Builder({
           </div>
         </main>
 
-        <aside className="hidden w-80 shrink-0 overflow-y-auto border-s border-line p-4 xl:block">
+        <aside
+          className="hidden w-80 shrink-0 overflow-y-auto border-s border-line p-4 xl:block"
+          data-testid="inspector"
+        >
           {selected !== null && blocks[selected] ? (
             <Inspector
               block={blocks[selected]}
@@ -298,6 +308,7 @@ function SortableBlock({
   return (
     <div
       ref={setNodeRef}
+      data-testid="canvas-block"
       style={{ transform: CSS.Transform.toString(transform), transition }}
       onClick={onSelect}
       className={cn(
