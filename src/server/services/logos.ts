@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { eq } from 'drizzle-orm'
+import sharp from 'sharp'
 
 import { generateLogoImage, LOGO_STYLES, logoPrompt, type LogoStyle } from '@/server/ai/image'
 import type { ProjectBrief } from '@/server/ai/prompts'
@@ -50,6 +51,9 @@ export async function generateLogos(params: {
 
       const slug = style.replace(/\s+/g, '-')
 
+      // Measure rather than assume: the provider decides final dimensions.
+      const meta = await sharp(raster).metadata()
+
       const pngKey = objectKey(params.projectId, `logo-${slug}.png`)
       await uploadObject({ key: pngKey, body: raster, contentType: 'image/png' })
 
@@ -61,8 +65,8 @@ export async function generateLogos(params: {
           r2Key: pngKey,
           mimeType: 'image/png',
           sizeBytes: raster.byteLength,
-          width: 1024,
-          height: 1024,
+          width: meta.width ?? null,
+          height: meta.height ?? null,
           metadata: { style, prompt },
         })
         .returning()

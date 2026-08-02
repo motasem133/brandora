@@ -17,8 +17,22 @@ import type { BrandingOutput } from './schemas'
  *
  * fal rather than BytePlus direct because it is the same ByteDance model at a
  * slightly lower price, without business-verification signup.
+ *
+ * Note the missing `fal-ai/` prefix below: Seedream v4 and v4.5 are published
+ * under `fal-ai/bytedance/...`, but v5 is under `bytedance/...`. Getting this
+ * wrong returns a 404 that only surfaces once the account has balance, because
+ * fal checks billing before routing.
  */
-const DEFAULT_MODEL = 'fal-ai/bytedance/seedream/v5/pro/text-to-image'
+const DEFAULT_MODEL = 'bytedance/seedream/v5/pro/text-to-image'
+
+/**
+ * Output dimensions, requested explicitly.
+ *
+ * The named `square_hd` preset resolves to 2048x2048 on Seedream v5, which
+ * crosses fal's 1536x1536 threshold and doubles the price to $0.135. 1024 is
+ * ample for a logo that gets vectorised immediately afterwards.
+ */
+const IMAGE_SIZE = { width: 1024, height: 1024 } as const
 
 /** USD per generated image at or below 1536x1536. */
 const COST_PER_IMAGE = 0.0675
@@ -93,7 +107,7 @@ export async function generateLogoImage(params: {
       },
       body: JSON.stringify({
         prompt: params.prompt,
-        image_size: 'square_hd',
+        image_size: IMAGE_SIZE,
         num_images: 1,
         output_format: 'png',
         enable_safety_checker: true,

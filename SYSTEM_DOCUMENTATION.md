@@ -1697,7 +1697,7 @@ Each PR produces a Vercel preview deploy bound to a fresh Neon branch, so migrat
 | `GOOGLE_CLIENT_SECRET` | ✅ | Google Cloud Console |
 | `OPENROUTER_API_KEY` | ✅ | All text generation |
 | `FAL_KEY` | ✅ | fal API key — Seedream 5.0 Pro images |
-| `FAL_IMAGE_MODEL` | — | Override the default `fal-ai/bytedance/seedream/v5/pro/text-to-image` |
+| `FAL_IMAGE_MODEL` | — | Override the default `bytedance/seedream/v5/pro/text-to-image` |
 | `INNGEST_EVENT_KEY` | ✅ | Job enqueueing |
 | `INNGEST_SIGNING_KEY` | ✅ | Verifies inbound worker calls |
 | `R2_ACCOUNT_ID` | ✅ | Cloudflare account |
