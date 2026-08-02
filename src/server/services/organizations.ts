@@ -2,6 +2,7 @@ import 'server-only'
 
 import { asc, eq } from 'drizzle-orm'
 
+import { writeLedgerEntry } from '@/server/billing/credits'
 import { db } from '@/server/db'
 import { members, organizations, sessions, users } from '@/server/db/schema'
 
@@ -38,7 +39,10 @@ export async function createPersonalOrganization(user: {
       id: crypto.randomUUID(),
       name: user.name ? `${user.name}'s workspace` : 'My workspace',
       slug,
-      creditBalance: FREE_STARTING_CREDITS,
+      // Starts at zero: the grant below is what moves it, so the ledger stays
+      // the single source of truth. Setting the balance directly here would
+      // make it unreconstructable, and reconcileBalance would erase the grant.
+      creditBalance: 0,
     })
     .returning()
 
@@ -47,6 +51,14 @@ export async function createPersonalOrganization(user: {
     organizationId: org.id,
     userId: user.id,
     role: 'owner',
+  })
+
+  await writeLedgerEntry({
+    organizationId: org.id,
+    amount: FREE_STARTING_CREDITS,
+    reason: 'subscription_grant',
+    idempotencyKey: `signup-grant:${org.id}`,
+    metadata: { kind: 'free_plan_signup_grant' },
   })
 
   return org

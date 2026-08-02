@@ -117,7 +117,15 @@ Established brand:
 - Values: ${branding.brandValues.join(', ')}
 
 Produce four pages: home, about, services and contact.
-The home page should open with a hero and build a persuasive sequence from there.
+
+Each page must use a different block type for every section — never repeat the
+same block type within one page.
+
+Use roughly this structure:
+- home: hero, then features, then services or a richText section, then cta
+- about: richText, optionally followed by features
+- services: services, optionally followed by cta
+- contact: contact
 `.trim()
 }
 

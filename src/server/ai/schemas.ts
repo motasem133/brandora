@@ -113,11 +113,24 @@ export const websiteBlockSchema = z.discriminatedUnion('type', [
   contactBlock,
 ])
 
+/**
+ * A page may not repeat a block type.
+ *
+ * Without this, a model can satisfy `.min(3)` by emitting the same hero three
+ * times — which is exactly what GLM-5.2 did on the first real run. Enforcing it
+ * in the schema turns that into a validation failure and a retry rather than a
+ * page of duplicates reaching the database.
+ */
+const distinctBlocks = (blocks: { type: string }[]) =>
+  new Set(blocks.map((block) => block.type)).size === blocks.length
+
+const DISTINCT_MESSAGE = 'Each block type may appear at most once per page'
+
 export const websiteSchema = z.object({
-  home: z.array(websiteBlockSchema).min(3).max(5),
-  about: z.array(websiteBlockSchema).min(1).max(3),
-  services: z.array(websiteBlockSchema).min(1).max(3),
-  contact: z.array(websiteBlockSchema).min(1).max(2),
+  home: z.array(websiteBlockSchema).min(3).max(5).refine(distinctBlocks, DISTINCT_MESSAGE),
+  about: z.array(websiteBlockSchema).min(1).max(3).refine(distinctBlocks, DISTINCT_MESSAGE),
+  services: z.array(websiteBlockSchema).min(1).max(3).refine(distinctBlocks, DISTINCT_MESSAGE),
+  contact: z.array(websiteBlockSchema).min(1).max(2).refine(distinctBlocks, DISTINCT_MESSAGE),
 })
 
 export type WebsiteOutput = z.infer<typeof websiteSchema>

@@ -122,8 +122,13 @@ export async function reserveCredits(params: {
 }
 
 /**
- * Settles a reservation, refunding the difference between what was held and
- * what the job actually used. Sections that failed are never charged for.
+ * Settles a reservation against what the job actually used.
+ *
+ * Sections that failed are never charged for, so the usual case is a refund.
+ * The overspend branch should be unreachable — `startGeneration` reserves for
+ * exactly the sections it dispatches — but it is handled rather than ignored:
+ * silently absorbing the difference would hand out free credits and leave the
+ * ledger disagreeing with what was delivered.
  */
 export async function settleCredits(params: {
   organizationId: string
@@ -132,13 +137,20 @@ export async function settleCredits(params: {
   projectId: string
   generationJobId: string
 }) {
-  const refund = params.reserved - params.used
-  if (refund <= 0) return null
+  const delta = params.reserved - params.used
+  if (delta === 0) return null
+
+  if (delta < 0) {
+    console.warn(
+      `[credits] job ${params.generationJobId} used ${params.used} credits but reserved ${params.reserved}; charging the difference`,
+    )
+  }
 
   return writeLedgerEntry({
     organizationId: params.organizationId,
-    amount: refund,
-    reason: 'refund',
+    // Positive refunds the unused hold; negative charges the overspend.
+    amount: delta,
+    reason: delta > 0 ? 'refund' : 'generation',
     projectId: params.projectId,
     generationJobId: params.generationJobId,
     idempotencyKey: `settle:${params.generationJobId}`,
