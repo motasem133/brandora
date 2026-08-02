@@ -2,12 +2,12 @@
 
 import { LogOut, Moon, Plus, Sun } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
-import { useTheme } from 'next-themes'
 
 
 import { Button } from '@/components/ui/button'
 import { Link, usePathname, useRouter } from '@/i18n/navigation'
 import { authClient } from '@/lib/auth-client'
+import { toggleTheme } from '@/lib/theme'
 import { locales } from '@/i18n/routing'
 
 export function Topbar({ user }: { user: { name: string; email: string } }) {
@@ -16,7 +16,6 @@ export function Topbar({ user }: { user: { name: string; email: string } }) {
   const router = useRouter()
   const pathname = usePathname()
   const locale = useLocale()
-  const { setTheme, resolvedTheme } = useTheme()
 
   const otherLocale = locales.find((l) => l !== locale) ?? 'en'
 
@@ -46,7 +45,7 @@ export function Topbar({ user }: { user: { name: string; email: string } }) {
           variant="ghost"
           size="icon"
           aria-label={tc('theme')}
-          onClick={() => setTheme(resolvedTheme === 'light' ? 'dark' : 'light')}
+          onClick={() => toggleTheme()}
         >
           <Sun className="icon-when-dark" />
           <Moon className="icon-when-light" />

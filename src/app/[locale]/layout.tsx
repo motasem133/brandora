@@ -4,8 +4,8 @@ import { setRequestLocale } from 'next-intl/server'
 import { IBM_Plex_Sans_Arabic, Inter, Syne } from 'next/font/google'
 import { notFound } from 'next/navigation'
 
-import { ThemeProvider } from '@/components/theme-provider'
 import { isRtl, routing } from '@/i18n/routing'
+import { themeInitScript } from '@/lib/theme'
 import '../globals.css'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' })
@@ -46,10 +46,16 @@ export default async function LocaleLayout({
       suppressHydrationWarning
       className={`${inter.variable} ${syne.variable} ${arabic.variable}`}
     >
+      <head>
+        {/*
+          Rendered by a Server Component so it ships in the initial HTML and runs
+          before first paint. A <script> created inside a client component would
+          never execute, which is what React 19 warns about.
+        */}
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body>
-        <ThemeProvider>
-          <NextIntlClientProvider>{children}</NextIntlClientProvider>
-        </ThemeProvider>
+        <NextIntlClientProvider>{children}</NextIntlClientProvider>
       </body>
     </html>
   )
