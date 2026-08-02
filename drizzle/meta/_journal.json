@@ -15,6 +15,13 @@
       "when": 1785675015850,
       "tag": "0001_eager_nightshade",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1785680947378,
+      "tag": "0002_classy_sister_grimm",
+      "breakpoints": true
     }
   ]
 }

@@ -4,21 +4,24 @@ import { env } from '@/lib/env'
 import { AppError } from '@/lib/errors'
 import { db } from '@/server/db'
 import { aiUsage } from '@/server/db/schema'
-import type { BrandingOutput } from './schemas'
 import type { ProjectBrief } from './prompts'
+import type { BrandingOutput } from './schemas'
 
 /**
- * Seedream 5.0 on BytePlus ModelArk.
+ * Seedream 5.0 Pro, served through fal.
  *
- * Chosen over the Gemini and GPT image models on OpenRouter for one reason
- * that dominates logo work: text-in-image fidelity. A logo is usually a
- * wordmark, and most image models still mangle letterforms — Arabic script
- * especially, where incorrect letter joining makes output unusable.
+ * Seedream is chosen over the Gemini and GPT image models for one reason that
+ * dominates logo work: text-in-image fidelity. A logo is usually a wordmark,
+ * and most image models still mangle letterforms — Arabic script especially,
+ * where incorrect letter joining makes the output unusable.
+ *
+ * fal rather than BytePlus direct because it is the same ByteDance model at a
+ * slightly lower price, without business-verification signup.
  */
-export const SEEDREAM_MODEL = 'seedream-5-0-pro'
+const DEFAULT_MODEL = 'fal-ai/bytedance/seedream/v5/pro/text-to-image'
 
-/** USD per generated image at or below 2.36 megapixels. */
-const COST_PER_IMAGE = 0.075
+/** USD per generated image at or below 1536x1536. */
+const COST_PER_IMAGE = 0.0675
 
 export const LOGO_STYLES = [
   'wordmark',
@@ -48,21 +51,23 @@ export function logoPrompt(params: {
 
   return [
     `A professional ${style} logo for "${name}", a ${project.industry} business.`,
-    `The text must read exactly: ${name.split('').join(' ')} — spelled "${name}".`,
+    // Spelling it out letter by letter measurably reduces invented lookalike words.
+    `The text must read exactly "${name}", spelled ${name.split('').join('-')}.`,
     `Brand style: ${project.brandStyle}. Brand values: ${branding.brandValues.join(', ')}.`,
-    `Use these colours: ${palette.primary} as the primary and ${palette.secondary} as the secondary, on a plain ${palette.background} background.`,
+    `Use ${palette.primary} as the primary colour and ${palette.secondary} as the secondary, on a plain ${palette.background} background.`,
     'Flat vector design, solid fills, no gradients, no shading, no photorealism, no 3D.',
     'Centred with generous margins, plain background, clean silhouette.',
     'No mockup, no business card, no packaging, no hands, no room, no watermark.',
     isArabic
-      ? 'Arabic script with correct letter joining and diacritics, Kufic or Naskh influence, typographically accurate.'
+      ? 'Arabic script with correct letter joining, Kufic or Naskh influence, typographically accurate.'
       : 'Clean Latin typography, correctly spelled, evenly spaced letterforms.',
   ].join(' ')
 }
 
-type SeedreamResponse = {
-  data?: { url?: string; b64_json?: string }[]
-  error?: { message?: string; code?: string }
+type FalResponse = {
+  images?: { url?: string; content_type?: string }[]
+  detail?: string | { msg?: string }[]
+  error?: string
 }
 
 /** Generates one image and returns its bytes. */
@@ -72,47 +77,54 @@ export async function generateLogoImage(params: {
   projectId: string
   generationJobId: string
 }): Promise<Buffer> {
-  if (!env.BYTEPLUS_API_KEY) {
-    throw new AppError('AI_PROVIDER_ERROR', 'BYTEPLUS_API_KEY is not configured.')
+  if (!env.FAL_KEY) {
+    throw new AppError('AI_PROVIDER_ERROR', 'FAL_KEY is not configured.')
   }
 
+  const model = env.FAL_IMAGE_MODEL || DEFAULT_MODEL
   const startedAt = Date.now()
 
   try {
-    const response = await fetch(`${env.BYTEPLUS_BASE_URL}/images/generations`, {
+    const response = await fetch(`https://fal.run/${model}`, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${env.BYTEPLUS_API_KEY}`,
+        Authorization: `Key ${env.FAL_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: SEEDREAM_MODEL,
         prompt: params.prompt,
-        size: '1024x1024',
-        response_format: 'url',
-        watermark: false,
+        image_size: 'square_hd',
+        num_images: 1,
+        output_format: 'png',
+        enable_safety_checker: true,
       }),
     })
 
     if (!response.ok) {
       const text = await response.text()
-      throw new Error(`Seedream returned ${response.status}: ${text.slice(0, 300)}`)
+      throw new Error(`fal returned ${response.status}: ${text.slice(0, 300)}`)
     }
 
-    const payload = (await response.json()) as SeedreamResponse
-    if (payload.error) throw new Error(payload.error.message ?? 'Seedream returned an error')
+    const payload = (await response.json()) as FalResponse
+    const url = payload.images?.[0]?.url
 
-    const image = payload.data?.[0]
-    if (!image) throw new Error('Seedream returned no image')
+    if (!url) {
+      const detail =
+        typeof payload.detail === 'string'
+          ? payload.detail
+          : (payload.error ?? JSON.stringify(payload).slice(0, 200))
+      throw new Error(`fal returned no image: ${detail}`)
+    }
 
-    const bytes = image.b64_json
-      ? Buffer.from(image.b64_json, 'base64')
-      : Buffer.from(await (await fetch(image.url!)).arrayBuffer())
+    const image = await fetch(url)
+    if (!image.ok) throw new Error(`Could not download generated image (${image.status})`)
 
-    await recordImageUsage({ ...params, latencyMs: Date.now() - startedAt, status: 'success' })
+    const bytes = Buffer.from(await image.arrayBuffer())
+
+    await recordImageUsage({ ...params, model, latencyMs: Date.now() - startedAt, status: 'success' })
     return bytes
   } catch (error) {
-    await recordImageUsage({ ...params, latencyMs: Date.now() - startedAt, status: 'error' })
+    await recordImageUsage({ ...params, model, latencyMs: Date.now() - startedAt, status: 'error' })
     throw error
   }
 }
@@ -121,6 +133,7 @@ async function recordImageUsage(params: {
   organizationId: string
   projectId: string
   generationJobId: string
+  model: string
   latencyMs: number
   status: 'success' | 'error'
 }) {
@@ -130,8 +143,8 @@ async function recordImageUsage(params: {
       projectId: params.projectId,
       generationJobId: params.generationJobId,
       feature: 'logo',
-      provider: 'byteplus',
-      model: SEEDREAM_MODEL,
+      provider: 'fal',
+      model: params.model,
       imagesGenerated: params.status === 'success' ? 1 : 0,
       costUsd: (params.status === 'success' ? COST_PER_IMAGE : 0).toFixed(6),
       latencyMs: params.latencyMs,

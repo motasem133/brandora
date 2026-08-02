@@ -82,7 +82,7 @@ export const aiFeatureEnum = pgEnum('ai_feature', [
   'assistant',
   'vectorize',
 ])
-export const aiProviderEnum = pgEnum('ai_provider', ['openrouter', 'byteplus'])
+export const aiProviderEnum = pgEnum('ai_provider', ['openrouter', 'byteplus', 'fal'])
 export const aiStatusEnum = pgEnum('ai_status', ['success', 'error', 'timeout'])
 
 export const messageRoleEnum = pgEnum('message_role', ['user', 'assistant', 'tool'])

@@ -11,7 +11,7 @@
 | Database | Neon Postgres + Drizzle ORM |
 | Auth | Better Auth (email/password + Google, org plugin) |
 | AI — text | OpenRouter → DeepSeek V4 Pro · Qwen3.7 Max/Plus/Flash · GLM-5.2 |
-| AI — images | BytePlus ModelArk → Seedream 5.0 Pro |
+| AI — images | fal → Seedream 5.0 Pro |
 | Jobs | Inngest (step functions) + SSE progress |
 | Storage | Cloudflare R2 |
 | Payments | Polar (Merchant of Record) |
@@ -68,7 +68,7 @@ Brandora is a SaaS platform that lets entrepreneurs and businesses generate a co
 | Database | MySQL + Eloquent | Postgres + Drizzle ORM |
 | Auth | Laravel JWT + localStorage | Better Auth + httpOnly session cookies |
 | AI text | OpenAI GPT-4o | OpenRouter → DeepSeek V4 / Qwen3.7 / GLM-5.2 |
-| AI images | DALL·E 3 | Seedream 5.0 (BytePlus ModelArk) |
+| AI images | DALL·E 3 | Seedream 5.0 Pro (via fal) |
 | Generation | Synchronous 60s HTTP block | Queued background job + SSE live progress |
 | Payments | Stripe (self-billed) | Polar (Merchant of Record) |
 | Hosting | Hostinger shared, no SSH | Vercel |
@@ -985,7 +985,7 @@ React Email templates, rendered per locale with RTL support for Arabic.
 
 ## 7. AI Generation Engine
 
-**Text**: OpenRouter (single key, all Chinese models) · **Images**: BytePlus ModelArk (Seedream 5.0) · **Orchestration**: Inngest · **SDK**: Vercel AI SDK v5
+**Text**: OpenRouter (single key, all Chinese models) · **Images**: fal (Seedream 5.0 Pro) · **Orchestration**: Inngest · **SDK**: Vercel AI SDK v5
 
 ### Providers
 
@@ -1005,7 +1005,7 @@ export const openrouter = createOpenRouter({
 | Provider | Base URL | Used for |
 |---|---|---|
 | OpenRouter | `https://openrouter.ai/api/v1` | All text generation and the assistant |
-| BytePlus ModelArk | `https://ark.ap-southeast.bytepluses.com/api/v3` | Seedream 5.0 image generation |
+| fal | `https://fal.run/{model}` | Seedream 5.0 Pro image generation |
 
 ---
 
@@ -1035,7 +1035,7 @@ export const MODELS = {
 | **Social captions** | `qwen/qwen3.7-plus` | 0.32 / 1.28 | Short punchy copy with emoji and hashtag instincts; strong bilingual. 4x cheaper than Max for content where flagship reasoning adds nothing. |
 | **Utility** (hashtags, tags, titles, moderation) | `qwen/qwen3.7-flash` | 0.03 / 0.13 | Effectively free. Never spend a flagship model on a classification task. |
 | **Brand Assistant** | `z-ai/glm-5.2` | 0.28 / 0.89 | Most reliable tool-calling among the Chinese models and purpose-built for agentic loops. Cheap enough that chat can be unmetered. |
-| **Logo concepts** | `seedream-5-0-pro` | $0.075/image | Best-in-class **text-in-image** rendering. This is the whole argument: a logo is usually a wordmark, and most image models still mangle letterforms — especially Arabic script. |
+| **Logo concepts** | `seedream-5-0-pro` (via fal) | $0.0675/image | Best-in-class **text-in-image** rendering. This is the whole argument: a logo is usually a wordmark, and most image models still mangle letterforms — especially Arabic script. Served through fal rather than BytePlus direct: same ByteDance model, lower price, no business-verification signup. |
 
 > **Deliberately not chosen:** Kimi K3 (excellent, but 3.00/15.00 is unjustifiable when no task needs long-horizon agentic reasoning) and MiniMax M3 (fine generalist, but never the best at any single task here).
 
@@ -1315,13 +1315,13 @@ Measured per full generation (branding + 4 logos + website + social), English:
 | Website | GLM-5.2 | 2K in / 4K out | $0.0041 |
 | Social | Qwen3.7 Plus | 2K in / 3.5K out | $0.0051 |
 | Utility | Qwen3.7 Flash | ~1K | $0.0002 |
-| **Logos** | **Seedream 5.0 Pro** | **4 images** | **$0.3000** |
+| **Logos** | **Seedream 5.0 Pro (fal)** | **4 images** | **$0.2700** |
 | Vectorize + ZIP | VTracer / sharp | — | $0.0000 |
-| **Total** | | | **≈ $0.312** |
+| **Total** | | | **≈ $0.282** |
 
-Arabic swaps branding to Qwen3.7 Max: **≈ $0.32**.
+Arabic swaps branding to Qwen3.7 Max: **≈ $0.29**.
 
-> **The headline finding: images are 96% of the cost. Text is ~$0.012.**
+> **The headline finding: images are ~96% of the cost. Text is ~$0.015 measured on a real run.**
 >
 > Two consequences drive the whole architecture:
 > 1. **Never economize on text models.** Using flagship Chinese models for every text task costs about a penny per generation. Downgrading to save $0.004 would be irrational.
@@ -1337,11 +1337,11 @@ Costs are charged per section and summed, so a partial run only ever costs what 
 
 | Operation | Credits | Upstream cost |
 |---|---|---|
-| Full generation (4 logos) | 9 | ~$0.31 |
-| Text-only generation (no logos) | 3 | ~$0.012 |
+| Full generation (4 logos) | 9 | ~$0.28 |
+| Text-only generation (no logos) | 3 | ~$0.015 |
 | Branding text only | 1 | ~$0.003 |
-| Logo pack (4 concepts) | 6 | ~$0.30 |
-| Single logo re-roll | 2 | ~$0.075 |
+| Logo pack (4 concepts) | 6 | ~$0.27 |
+| Single logo re-roll | 2 | ~$0.068 |
 | Website regenerate | 1 | ~$0.004 |
 | Social regenerate | 1 | ~$0.005 |
 | Brand kit ZIP rebuild | 0 | ~$0 |
@@ -1575,7 +1575,7 @@ Deployment is now a git push. The old browser-based installer, `setup_bridge.php
 | Inngest | AI job orchestration | Free (50k runs/mo) |
 | Cloudflare R2 | Asset storage | Free (10 GB, zero egress) |
 | OpenRouter | All text models | Pay-as-you-go |
-| BytePlus ModelArk | Seedream 5.0 images | Pay-as-you-go |
+| fal | Seedream 5.0 Pro images | Pay-as-you-go |
 | Polar | Payments (MoR) | 4% + 40¢ |
 | Resend | Transactional email | Free (3k/mo) |
 | Sentry / PostHog | Errors / product analytics | Free tiers |
@@ -1696,8 +1696,8 @@ Each PR produces a Vercel preview deploy bound to a fresh Neon branch, so migrat
 | `GOOGLE_CLIENT_ID` | ✅ | Google Cloud Console |
 | `GOOGLE_CLIENT_SECRET` | ✅ | Google Cloud Console |
 | `OPENROUTER_API_KEY` | ✅ | All text generation |
-| `BYTEPLUS_API_KEY` | ✅ | Seedream 5.0 images |
-| `BYTEPLUS_BASE_URL` | ✅ | `https://ark.ap-southeast.bytepluses.com/api/v3` |
+| `FAL_KEY` | ✅ | fal API key — Seedream 5.0 Pro images |
+| `FAL_IMAGE_MODEL` | — | Override the default `fal-ai/bytedance/seedream/v5/pro/text-to-image` |
 | `INNGEST_EVENT_KEY` | ✅ | Job enqueueing |
 | `INNGEST_SIGNING_KEY` | ✅ | Verifies inbound worker calls |
 | `R2_ACCOUNT_ID` | ✅ | Cloudflare account |

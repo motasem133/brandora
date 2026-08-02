@@ -23,8 +23,9 @@ export const env = createEnv({
 
     // --- Phase 3+: AI ---
     OPENROUTER_API_KEY: z.string().min(1).optional(),
-    BYTEPLUS_API_KEY: z.string().min(1).optional(),
-    BYTEPLUS_BASE_URL: z.string().url().default('https://ark.ap-southeast.bytepluses.com/api/v3'),
+    /** fal serves Seedream 5.0 Pro for logo generation. */
+    FAL_KEY: z.string().min(1).optional(),
+    FAL_IMAGE_MODEL: z.string().min(1).optional(),
 
     INNGEST_EVENT_KEY: z.string().min(1).optional(),
     INNGEST_SIGNING_KEY: z.string().min(1).optional(),
@@ -66,8 +67,8 @@ export const env = createEnv({
     GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
     OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY,
-    BYTEPLUS_API_KEY: process.env.BYTEPLUS_API_KEY,
-    BYTEPLUS_BASE_URL: process.env.BYTEPLUS_BASE_URL,
+    FAL_KEY: process.env.FAL_KEY,
+    FAL_IMAGE_MODEL: process.env.FAL_IMAGE_MODEL,
     INNGEST_EVENT_KEY: process.env.INNGEST_EVENT_KEY,
     INNGEST_SIGNING_KEY: process.env.INNGEST_SIGNING_KEY,
     R2_ACCOUNT_ID: process.env.R2_ACCOUNT_ID,

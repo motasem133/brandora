@@ -29,7 +29,7 @@ export function sectionsForProject(project: {
 }
 
 export function isLogoGenerationAvailable() {
-  return Boolean(env.BYTEPLUS_API_KEY) && isStorageConfigured()
+  return Boolean(env.FAL_KEY) && isStorageConfigured()
 }
 
 export async function getLatestJobForProject(projectId: string) {
