@@ -119,6 +119,7 @@ export default async function ProjectDetailPage({
           chosenName={project.businessName}
           creditBalance={org.creditBalance}
           logoCost={CREDIT_COSTS.logos}
+          logoBrief={project.logoBrief}
         />
       )}
       {active === 'website' && websiteAsset && <WebsiteView website={websiteAsset} />}

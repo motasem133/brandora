@@ -206,7 +206,12 @@
     "logosHint": "Pick your logo. The favicon, avatars and brand kit are rebuilt from it.",
     "useThisLogo": "Use this logo",
     "regenerateLogos": "Regenerate logos ({credits} credits)",
-    "notEnoughCredits": "Not enough credits"
+    "notEnoughCredits": "Not enough credits",
+    "briefTitle": "Logo direction",
+    "briefHint": "Describe what you want and the next generation follows it.",
+    "briefPlaceholder": "e.g. a simple crescent-moon mark above the name, no coffee cups, lots of white space",
+    "saveBrief": "Save direction",
+    "briefSaved": "Saved"
   },
   "Social": {
     "bio": "Instagram bio",

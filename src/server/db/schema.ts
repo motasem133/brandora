@@ -411,6 +411,15 @@ export const projects = pgTable(
     /** Array of hex strings, max 3. */
     preferredColors: jsonb('preferred_colors').$type<string[]>().notNull().default([]),
 
+    /**
+     * Free-text direction for the logo, written by the customer.
+     *
+     * Appended to the generated prompt, so someone who knows what they want —
+     * "a crescent moon mark", "no icon, wordmark only" — can say so rather than
+     * regenerating until chance produces it.
+     */
+    logoBrief: text('logo_brief'),
+
     needsWebsite: boolean('needs_website').notNull().default(false),
     needsSocialMedia: boolean('needs_social_media').notNull().default(false),
 

@@ -13,6 +13,7 @@ export async function BrandingView({
   chosenName,
   creditBalance,
   logoCost,
+  logoBrief,
 }: {
   branding: BrandingAsset
   logos?: GeneratedFile[]
@@ -21,6 +22,7 @@ export async function BrandingView({
   chosenName: string | null
   creditBalance: number
   logoCost: number
+  logoBrief: string | null
 }) {
   const t = await getTranslations('Branding')
   const palette = branding.colorPalette
@@ -35,6 +37,7 @@ export async function BrandingView({
         primaryLogoFileId={branding.primaryLogoFileId}
         creditBalance={creditBalance}
         logoCost={logoCost}
+        logoBrief={logoBrief}
       />
 
       {branding.businessNameIdeas.length > 0 && (

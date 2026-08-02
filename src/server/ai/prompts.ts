@@ -34,6 +34,8 @@ export type ProjectBrief = {
   businessName?: string | null
   preferredColors: string[]
   language: Locale
+  /** Free-text logo direction from the customer, used only by logo prompts. */
+  logoBrief?: string | null
 }
 
 function languageRule(locale: Locale) {

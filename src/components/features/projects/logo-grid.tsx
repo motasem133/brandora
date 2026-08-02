@@ -5,6 +5,7 @@ import { Card, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import type { GeneratedFile } from '@/server/db/schema'
 import { publicUrl } from '@/server/storage/r2'
+import { LogoBrief } from './logo-brief'
 import { RegenerateLogosButton, SelectLogoButton } from './logo-actions'
 
 export async function LogoGrid({
@@ -14,6 +15,7 @@ export async function LogoGrid({
   primaryLogoFileId,
   creditBalance,
   logoCost,
+  logoBrief,
 }: {
   logos: GeneratedFile[]
   kit?: GeneratedFile
@@ -21,6 +23,7 @@ export async function LogoGrid({
   primaryLogoFileId: string | null
   creditBalance: number
   logoCost: number
+  logoBrief: string | null
 }) {
   const t = await getTranslations('Branding')
   if (logos.length === 0) return null
@@ -53,6 +56,8 @@ export async function LogoGrid({
           )}
         </div>
       </div>
+
+      <LogoBrief projectId={projectId} brief={logoBrief} />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {logos.map((logo) => {

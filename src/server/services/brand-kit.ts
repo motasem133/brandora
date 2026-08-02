@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import JSZip from 'jszip'
 
 import { db } from '@/server/db'
@@ -62,6 +62,12 @@ export async function buildBrandKit(projectId: string, files: Map<string, Buffer
     // The kit is rebuilt whenever assets change, so it must not be cached hard.
     cacheControl: 'private, max-age=0, must-revalidate',
   })
+
+  // The key is deterministic so R2 overwrites the object; without clearing the
+  // previous row each rebuild would leave another row pointing at the same zip.
+  await db
+    .delete(generatedFiles)
+    .where(and(eq(generatedFiles.projectId, projectId), eq(generatedFiles.kind, 'brand_kit_zip')))
 
   await db
     .insert(generatedFiles)

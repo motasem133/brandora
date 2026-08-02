@@ -38,6 +38,29 @@ export async function generateLogos(params: {
   const kitFiles = new Map<string, Buffer>()
   const results: LogoResult[] = []
 
+  /*
+   * Clear the previous concepts first.
+   *
+   * Object keys are deterministic, so R2 overwrites the images — but inserting
+   * a row per run left one row per generation all pointing at the same object,
+   * which rendered as eight identical tiles after a single regeneration.
+   * Replacing keeps the row count equal to the number of concepts on offer.
+   */
+  await db
+    .delete(generatedFiles)
+    .where(
+      and(
+        eq(generatedFiles.projectId, params.projectId),
+        inArray(generatedFiles.kind, ['logo_raster', 'logo_svg', 'favicon', 'social_avatar']),
+      ),
+    )
+
+  // A selection pointing at a deleted row would leave nothing marked as chosen.
+  await db
+    .update(brandingAssets)
+    .set({ primaryLogoFileId: null })
+    .where(eq(brandingAssets.projectId, params.projectId))
+
   const settled = await Promise.allSettled(
     LOGO_STYLES.slice(0, LOGO_COUNT).map(async (style) => {
       const prompt = logoPrompt({ style, name, project: params.project, branding: params.branding })

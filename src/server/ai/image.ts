@@ -60,6 +60,7 @@ export function logoPrompt(params: {
   branding: BrandingOutput
 }) {
   const { style, name, project, branding } = params
+  const brief = project.logoBrief?.trim()
   const palette = branding.colorPalette
   const isArabic = project.language === 'ar'
 
@@ -75,7 +76,11 @@ export function logoPrompt(params: {
     isArabic
       ? 'Arabic script with correct letter joining, Kufic or Naskh influence, typographically accurate.'
       : 'Clean Latin typography, correctly spelled, evenly spaced letterforms.',
-  ].join(' ')
+    // Last, so an explicit instruction outweighs the generic direction above.
+    brief ? `Follow this direction from the client closely: ${brief}` : null,
+  ]
+    .filter(Boolean)
+    .join(' ')
 }
 
 type FalResponse = {
