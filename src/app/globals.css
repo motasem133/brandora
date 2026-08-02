@@ -1,26 +1,123 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+
+/*
+ * Tailwind v4 tokens. Dark is the default theme; `.light` on <html> flips it.
+ * Colours are OKLCH so lightness steps stay perceptually even across hues.
+ */
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-arabic: var(--font-arabic), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-syne), var(--font-inter), ui-sans-serif, sans-serif;
+
+  --radius-card: 0.875rem;
+}
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-base: oklch(0.16 0.012 275);
+  --bg-surface: oklch(0.2 0.014 275);
+  --bg-elevated: oklch(0.25 0.016 275);
+  --text-primary: oklch(0.97 0.004 275);
+  --text-secondary: oklch(0.72 0.014 275);
+  --text-muted: oklch(0.56 0.014 275);
+  --border: oklch(0.3 0.016 275);
+  --border-strong: oklch(0.38 0.018 275);
+
+  --brand-primary: oklch(0.62 0.21 295);
+  --brand-secondary: oklch(0.75 0.13 205);
+  --brand-fg: oklch(0.99 0 0);
+  --brand-gradient: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+
+  --success: oklch(0.72 0.17 155);
+  --warning: oklch(0.79 0.16 80);
+  --danger: oklch(0.63 0.21 25);
+}
+
+.light {
+  --bg-base: oklch(0.99 0.002 275);
+  --bg-surface: oklch(1 0 0);
+  --bg-elevated: oklch(0.97 0.004 275);
+  --text-primary: oklch(0.21 0.014 275);
+  --text-secondary: oklch(0.44 0.014 275);
+  --text-muted: oklch(0.58 0.012 275);
+  --border: oklch(0.9 0.006 275);
+  --border-strong: oklch(0.83 0.008 275);
+
+  --brand-primary: oklch(0.53 0.22 295);
+  --brand-secondary: oklch(0.62 0.14 205);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-base: var(--bg-base);
+  --color-surface: var(--bg-surface);
+  --color-elevated: var(--bg-elevated);
+  --color-fg: var(--text-primary);
+  --color-fg-secondary: var(--text-secondary);
+  --color-fg-muted: var(--text-muted);
+  --color-line: var(--border);
+  --color-line-strong: var(--border-strong);
+  --color-brand: var(--brand-primary);
+  --color-brand-2: var(--brand-secondary);
+  --color-brand-fg: var(--brand-fg);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Arabic gets its own family and slightly looser leading for legibility. */
+  [lang='ar'] body,
+  [lang='ar'] input,
+  [lang='ar'] textarea,
+  [lang='ar'] button {
+    font-family: var(--font-arabic);
+    line-height: 1.85;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--brand-primary);
+    outline-offset: 2px;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/*
+ * Theme-toggle icons swap in CSS rather than JS. Doing this with a `mounted`
+ * flag would cost a cascading render on every page load just to pick an icon.
+ */
+@layer components {
+  .icon-when-dark {
+    display: block;
+  }
+  .icon-when-light {
+    display: none;
+  }
+  .light .icon-when-dark {
+    display: none;
+  }
+  .light .icon-when-light {
+    display: block;
+  }
+}
+
+@utility gradient-text {
+  background: var(--brand-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility surface-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
 }

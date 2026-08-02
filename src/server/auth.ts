@@ -4,11 +4,58 @@ import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { nextCookies } from 'better-auth/next-js'
 import { organization } from 'better-auth/plugins'
+import { asc, eq } from 'drizzle-orm'
 
 import { env } from '@/lib/env'
 import { db, schema } from './db'
+import { members, organizations } from './db/schema'
 
 const hasGoogle = Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET)
+
+/** Free plan grant. Kept here so a new signup is immediately usable. */
+const FREE_STARTING_CREDITS = 10
+
+function slugify(input: string) {
+  return (
+    input
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 32) || 'workspace'
+  )
+}
+
+/**
+ * Every user gets a personal organization at sign-up.
+ *
+ * The whole authorization model is org-scoped (`orgAction`, `requireOrg`), so a
+ * user without one would be locked out of their own dashboard.
+ */
+async function createPersonalOrganization(user: { id: string; name: string; email: string }) {
+  const base = slugify(user.name || user.email.split('@')[0])
+  // Short random suffix keeps the unique slug constraint from colliding on
+  // common names without needing a retry loop.
+  const slug = `${base}-${crypto.randomUUID().slice(0, 6)}`
+
+  const [org] = await db
+    .insert(organizations)
+    .values({
+      id: crypto.randomUUID(),
+      name: user.name ? `${user.name}'s workspace` : 'My workspace',
+      slug,
+      creditBalance: FREE_STARTING_CREDITS,
+    })
+    .returning()
+
+  await db.insert(members).values({
+    id: crypto.randomUUID(),
+    organizationId: org.id,
+    userId: user.id,
+    role: 'owner',
+  })
+
+  return org
+}
 
 export const auth = betterAuth({
   appName: 'Brandora',
@@ -69,6 +116,37 @@ export const auth = betterAuth({
     expiresIn: 60 * 60 * 24 * 30, // 30 days
     updateAge: 60 * 60 * 24, // rolling refresh once per day
     cookieCache: { enabled: true, maxAge: 300 },
+  },
+
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (user) => {
+          await createPersonalOrganization(user)
+        },
+      },
+    },
+    session: {
+      create: {
+        /**
+         * Stamp the active organization onto the session at creation, so RSC
+         * pages and Server Actions can resolve the tenant without an extra
+         * lookup on every request.
+         */
+        before: async (session) => {
+          const [membership] = await db
+            .select({ organizationId: members.organizationId })
+            .from(members)
+            .where(eq(members.userId, session.userId))
+            .orderBy(asc(members.createdAt))
+            .limit(1)
+
+          return {
+            data: { ...session, activeOrganizationId: membership?.organizationId ?? null },
+          }
+        },
+      },
+    },
   },
 
   user: {

@@ -13,7 +13,10 @@
       "Bash(pnpm install *)",
       "Bash(SKIP_ENV_VALIDATION=true pnpm typecheck)",
       "Bash(grep -n \"Plural\\\\|+ \\\\\"s\\\\\"\\\\|+ 's'\\\\|\\\\`\\\\${.*}s\\\\`\" dist/index.mjs)",
-      "Bash(DATABASE_URL=\"postgresql://placeholder:placeholder@localhost:5432/brandora\" pnpm db:generate)"
+      "Bash(DATABASE_URL=\"postgresql://placeholder:placeholder@localhost:5432/brandora\" pnpm db:generate)",
+      "Bash(git commit *)",
+      "Bash(git checkout *)",
+      "Bash(git symbolic-ref *)"
     ]
   }
 }

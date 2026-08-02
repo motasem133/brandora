@@ -19,14 +19,23 @@
     "auth:generate": "npx @better-auth/cli generate --config src/server/auth.ts"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.6.0",
+    "@next-safe-action/adapter-react-hook-form": "^2.1.0",
     "@t3-oss/env-nextjs": "^0.13.11",
     "better-auth": "^1.6.25",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.2",
+    "lucide-react": "^1.28.0",
     "next": "16.2.12",
+    "next-intl": "^4.13.4",
     "next-safe-action": "^8.6.0",
+    "next-themes": "^0.4.6",
     "postgres": "^3.4.9",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "react-hook-form": "^7.84.0",
+    "tailwind-merge": "^3.6.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {

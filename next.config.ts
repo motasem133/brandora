@@ -1,7 +1,13 @@
-import type { NextConfig } from "next";
+import createNextIntlPlugin from 'next-intl/plugin'
+import type { NextConfig } from 'next'
+
+const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts')
 
 const nextConfig: NextConfig = {
-  /* config options here */
-};
+  experimental: {
+    // Server Actions are public endpoints; keep payloads small on purpose.
+    serverActions: { bodySizeLimit: '2mb' },
+  },
+}
 
-export default nextConfig;
+export default withNextIntl(nextConfig)
