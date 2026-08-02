@@ -13,6 +13,8 @@ import {
 import { runModel } from '@/server/ai/run'
 import { brandingSchema, socialSchema, websiteSchema, type BrandingOutput } from '@/server/ai/schemas'
 import { CREDIT_COSTS, settleCredits, type GenerationSection } from '@/server/billing/credits'
+import { generateLogos } from '@/server/services/logos'
+import { isStorageConfigured } from '@/server/storage/r2'
 import { db } from '@/server/db'
 import {
   brandingAssets,
@@ -138,6 +140,34 @@ export const generateBrand = inngest.createFunction(
 
     // Without branding there is nothing to ground the other sections in.
     if (branding) {
+      if (requested.includes('logos')) {
+        try {
+          await step.run('logos', async () => {
+            await markStep(jobId, 'logos', 'running')
+
+            if (!isStorageConfigured()) {
+              throw new Error('R2 storage is not configured, so logos cannot be stored.')
+            }
+
+            const result = await generateLogos({
+              projectId,
+              organizationId,
+              generationJobId: jobId,
+              project,
+              branding,
+            })
+
+            await markStep(jobId, 'logos', 'done')
+            return result
+          })
+
+          completed.push('logos')
+        } catch (error) {
+          await markStep(jobId, 'logos', 'failed', errorMessage(error))
+          failed.push('logos')
+        }
+      }
+
       if (requested.includes('website') && project.needsWebsite) {
         try {
           await step.run('website', async () => {

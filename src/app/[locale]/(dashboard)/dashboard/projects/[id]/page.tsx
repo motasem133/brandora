@@ -14,7 +14,7 @@ import { formatDate } from '@/lib/utils'
 import { creditsForSections } from '@/server/billing/credits'
 import { db } from '@/server/db'
 import { getProject } from '@/server/db/queries/projects'
-import { brandingAssets, socialMediaAssets, websiteAssets } from '@/server/db/schema'
+import { brandingAssets, generatedFiles, socialMediaAssets, websiteAssets } from '@/server/db/schema'
 import { getLatestJobForProject, sectionsForProject } from '@/server/services/generation'
 import { requireOrg } from '@/server/session'
 
@@ -41,6 +41,14 @@ export default async function ProjectDetailPage({
     db.select().from(websiteAssets).where(eq(websiteAssets.projectId, project.id)).limit(1),
     db.select().from(socialMediaAssets).where(eq(socialMediaAssets.projectId, project.id)).limit(1),
   ])
+
+  const files = await db
+    .select()
+    .from(generatedFiles)
+    .where(eq(generatedFiles.projectId, project.id))
+
+  const logoFiles = files.filter((file) => file.kind === 'logo_raster')
+  const kitFile = files.find((file) => file.kind === 'brand_kit_zip')
 
   const brandingAsset = branding[0]
   const websiteAsset = website[0]
@@ -91,7 +99,9 @@ export default async function ProjectDetailPage({
         <ProjectTabs projectId={project.id} active={active} available={available} />
       )}
 
-      {active === 'branding' && brandingAsset && <BrandingView branding={brandingAsset} />}
+      {active === 'branding' && brandingAsset && (
+        <BrandingView branding={brandingAsset} logos={logoFiles} kit={kitFile} />
+      )}
       {active === 'website' && websiteAsset && <WebsiteView website={websiteAsset} />}
       {active === 'social' && socialAsset && <SocialView social={socialAsset} />}
 

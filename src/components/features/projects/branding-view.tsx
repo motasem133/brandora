@@ -1,15 +1,26 @@
 import { getTranslations } from 'next-intl/server'
 
 import { Card, CardTitle } from '@/components/ui/card'
-import type { BrandingAsset } from '@/server/db/schema'
+import type { BrandingAsset, GeneratedFile } from '@/server/db/schema'
+import { LogoGrid } from './logo-grid'
 
-export async function BrandingView({ branding }: { branding: BrandingAsset }) {
+export async function BrandingView({
+  branding,
+  logos = [],
+  kit,
+}: {
+  branding: BrandingAsset
+  logos?: GeneratedFile[]
+  kit?: GeneratedFile
+}) {
   const t = await getTranslations('Branding')
   const palette = branding.colorPalette
   const fonts = branding.fontRecommendations
 
   return (
     <div className="space-y-6">
+      <LogoGrid logos={logos} kit={kit} />
+
       {branding.businessNameIdeas.length > 0 && (
         <Card className="space-y-4">
           <CardTitle>{t('nameIdeas')}</CardTitle>

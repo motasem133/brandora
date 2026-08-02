@@ -184,7 +184,8 @@
     "steps": {
       "branding": "Brand identity — names, slogan, palette, fonts, story",
       "website": "Website content — four pages of copy",
-      "social": "Social media kit — bio, 9 posts, hashtags, ads"
+      "social": "Social media kit — bio, 9 posts, hashtags, ads",
+      "logos": "Logo concepts — 4 designs, vectorised to SVG"
     }
   },
   "Branding": {
@@ -194,7 +195,10 @@
     "fonts": "Typography",
     "story": "Brand story",
     "values": "Brand values",
-    "voice": "Brand voice"
+    "voice": "Brand voice",
+    "logos": "Logo concepts",
+    "download": "Download",
+    "downloadKit": "Download brand kit"
   },
   "Social": {
     "bio": "Instagram bio",

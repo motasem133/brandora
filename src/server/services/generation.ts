@@ -2,23 +2,34 @@ import 'server-only'
 
 import { and, desc, eq } from 'drizzle-orm'
 
+import { env } from '@/lib/env'
 import { AppError } from '@/lib/errors'
 import { creditsForSections, reserveCredits, type GenerationSection } from '@/server/billing/credits'
 import { db } from '@/server/db'
 import { generationJobs, projects } from '@/server/db/schema'
 import { inngest } from '@/server/inngest/client'
+import { isStorageConfigured } from '@/server/storage/r2'
 
-/** Steps that can still run before logo generation lands in Phase 4. */
-export const AVAILABLE_SECTIONS = ['branding', 'website', 'social'] as const
-
+/**
+ * Which steps a generation will run.
+ *
+ * Logos are included only when image generation and storage are both
+ * configured — otherwise the step would reserve six credits and then fail,
+ * and a refund the user never asked for is worse than not offering it.
+ */
 export function sectionsForProject(project: {
   needsWebsite: boolean
   needsSocialMedia: boolean
 }): GenerationSection[] {
   const sections: GenerationSection[] = ['branding']
+  if (isLogoGenerationAvailable()) sections.push('logos')
   if (project.needsWebsite) sections.push('website')
   if (project.needsSocialMedia) sections.push('social')
   return sections
+}
+
+export function isLogoGenerationAvailable() {
+  return Boolean(env.BYTEPLUS_API_KEY) && isStorageConfigured()
 }
 
 export async function getLatestJobForProject(projectId: string) {
