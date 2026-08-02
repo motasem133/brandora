@@ -1885,6 +1885,11 @@ SEED_ADMIN_PASSWORD=<generated, changed on first login>
 | 8 | Admin panel + AI cost dashboard |
 | 9 | Data migration, cutover, Stripe wind-down |
 
+All eight build phases are complete. Two test suites guard them: `pnpm
+test:system` drives the app over HTTP and asserts against the database, and
+`pnpm test:e2e` drives a browser for the surfaces HTTP cannot reach. Both run in
+CI on every push.
+
 ---
 
 *Brandora — System Documentation v2.0 · Next.js 16 · Last updated 2026-08-02*

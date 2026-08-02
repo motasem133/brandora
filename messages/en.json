@@ -329,5 +329,114 @@
       "punchierStory": "Make the brand story punchier",
       "arabicFonts": "Suggest fonts with Arabic support"
     }
+  },
+  "Admin": {
+    "nav": {
+      "overview": "Overview",
+      "ai": "AI cost",
+      "users": "Users",
+      "plans": "Plans",
+      "projects": "Projects"
+    },
+    "backToApp": "Back to app",
+    "overview": {
+      "title": "Platform overview",
+      "subtitle": "Revenue, usage and what it is costing",
+      "mrr": "MRR",
+      "mrrHint": "{count} active subscriptions",
+      "users": "Users",
+      "newThisMonth": "{count} in the last 30 days",
+      "projects": "Projects",
+      "completed": "{count} completed",
+      "creditsOutstanding": "Credits outstanding",
+      "creditsHint": "Work paid for, not yet done",
+      "byPlan": "Subscriptions by plan",
+      "plan": "Plan",
+      "subscribers": "Subscribers",
+      "orgs": "{count} organizations"
+    },
+    "ai": {
+      "title": "AI cost and margin",
+      "subtitle": "What generation costs, and which customers it costs the most on",
+      "days": "{days}d",
+      "inRange": "last {days} days",
+      "totalSpend": "Total spend",
+      "perGeneration": "Cost per generation",
+      "perGenerationHint": "Most recent day with activity",
+      "imageShare": "Images",
+      "imageShareHint": "Share of spend — expected around 95%",
+      "unprofitable": "Unprofitable customers",
+      "unprofitableHint": "AI cost above plan revenue",
+      "byFeature": "Spend by feature",
+      "byFeatureHint": "Images dominate; a shift means prompts grew or something is retrying",
+      "models": "Model performance",
+      "modelsHint": "Errors push work onto fallbacks, which costs more and reads as a quality drop",
+      "model": "Model",
+      "calls": "calls",
+      "errorRate": "Errors",
+      "latency": "Latency",
+      "avgCost": "Avg cost",
+      "spend": "Spend",
+      "margin": "Margin by organization",
+      "marginHint": "Plan revenue against what their generations actually consumed",
+      "organization": "Organization",
+      "plan": "Plan",
+      "revenue": "Revenue",
+      "cost": "AI cost",
+      "marginColumn": "Margin",
+      "free": "Free",
+      "noData": "No usage recorded in this range."
+    },
+    "users": {
+      "title": "Users",
+      "subtitle": "Accounts, organizations and access",
+      "search": "Search name or email",
+      "filters": {
+        "all": "All",
+        "active": "Active",
+        "suspended": "Suspended"
+      },
+      "user": "User",
+      "organization": "Organization",
+      "projects": "Projects",
+      "status": "Status",
+      "actions": "Actions",
+      "suspend": "Suspend",
+      "activate": "Activate",
+      "promote": "Make admin",
+      "demote": "Remove admin",
+      "admin": "Admin",
+      "unverified": "Unverified",
+      "you": "You",
+      "none": "No users match."
+    },
+    "plans": {
+      "title": "Plans",
+      "subtitle": "Credits and feature access. Prices are set in Polar.",
+      "monthlyCredits": "Monthly credits",
+      "active": "Visible on pricing",
+      "save": "Save",
+      "saved": "Saved",
+      "connected": "Connected to Polar",
+      "notConnected": "No Polar product",
+      "flags": {
+        "websiteBuilder": "Website builder",
+        "socialMediaKit": "Social media kit",
+        "vectorExport": "SVG export",
+        "brandAssistant": "Brand assistant",
+        "customDomain": "Custom domain"
+      }
+    },
+    "projects": {
+      "title": "Projects",
+      "subtitle": "Every project across all organizations",
+      "all": "All",
+      "project": "Project",
+      "organization": "Organization",
+      "status": "Status",
+      "aiCost": "AI cost",
+      "created": "Created",
+      "none": "No projects match."
+    }
   }
 }

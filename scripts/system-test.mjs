@@ -323,6 +323,21 @@ async function main() {
     WHERE status IN ('queued','running') AND created_at < now() - interval '30 minutes'`
   check('no job stuck running for over 30 minutes', stuck.length === 0, `${stuck.length} stuck`)
 
+  /* ---------------------------------------------------------------- admin */
+  section('Administration is closed to ordinary accounts')
+
+  for (const path of ['/en/admin', '/en/admin/ai', '/en/admin/users']) {
+    const res = await request(path, { cookies: intruder })
+    check(
+      `a normal user is refused ${path}`,
+      res.status === 307 && !(res.headers.get('location') ?? '').includes('/admin'),
+      `got ${res.status} -> ${res.headers.get('location')}`,
+    )
+  }
+
+  const anonAdmin = await request('/en/admin')
+  check('unauthenticated /admin redirects', anonAdmin.status === 307, `got ${anonAdmin.status}`)
+
   /* ----------------------------------------------------------- rate limit */
   section('Abuse protection')
 

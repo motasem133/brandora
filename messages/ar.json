@@ -329,5 +329,114 @@
       "punchierStory": "اجعل قصة العلامة أقوى",
       "arabicFonts": "اقترح خطوطاً تدعم العربية"
     }
+  },
+  "Admin": {
+    "nav": {
+      "overview": "نظرة عامة",
+      "ai": "تكلفة الذكاء الاصطناعي",
+      "users": "المستخدمون",
+      "plans": "الباقات",
+      "projects": "المشاريع"
+    },
+    "backToApp": "العودة للتطبيق",
+    "overview": {
+      "title": "نظرة عامة على المنصة",
+      "subtitle": "الإيرادات والاستخدام والتكلفة",
+      "mrr": "الإيراد الشهري",
+      "mrrHint": "{count} اشتراك نشط",
+      "users": "المستخدمون",
+      "newThisMonth": "{count} خلال ٣٠ يوماً",
+      "projects": "المشاريع",
+      "completed": "{count} مكتمل",
+      "creditsOutstanding": "الرصيد غير المستخدم",
+      "creditsHint": "عمل مدفوع ولم يُنفّذ بعد",
+      "byPlan": "الاشتراكات حسب الباقة",
+      "plan": "الباقة",
+      "subscribers": "المشتركون",
+      "orgs": "{count} مؤسسة"
+    },
+    "ai": {
+      "title": "التكلفة والهامش",
+      "subtitle": "تكلفة التوليد، وعلى أي عملاء تتركز",
+      "days": "{days} يوم",
+      "inRange": "آخر {days} يوماً",
+      "totalSpend": "إجمالي الإنفاق",
+      "perGeneration": "التكلفة لكل توليد",
+      "perGenerationHint": "آخر يوم به نشاط",
+      "imageShare": "الصور",
+      "imageShareHint": "نسبة الإنفاق — المتوقع نحو ٩٥٪",
+      "unprofitable": "عملاء غير مربحين",
+      "unprofitableHint": "التكلفة تتجاوز إيراد الباقة",
+      "byFeature": "الإنفاق حسب الميزة",
+      "byFeatureHint": "الصور تهيمن؛ أي تغيّر يعني تضخم النصوص أو إعادة محاولات",
+      "models": "أداء النماذج",
+      "modelsHint": "الأخطاء تحوّل العمل إلى البدائل، فترتفع التكلفة وتنخفض الجودة",
+      "model": "النموذج",
+      "calls": "استدعاء",
+      "errorRate": "الأخطاء",
+      "latency": "الاستجابة",
+      "avgCost": "متوسط التكلفة",
+      "spend": "الإنفاق",
+      "margin": "الهامش حسب المؤسسة",
+      "marginHint": "إيراد الباقة مقابل ما استهلكته فعلاً",
+      "organization": "المؤسسة",
+      "plan": "الباقة",
+      "revenue": "الإيراد",
+      "cost": "التكلفة",
+      "marginColumn": "الهامش",
+      "free": "مجاني",
+      "noData": "لا يوجد استخدام في هذه الفترة."
+    },
+    "users": {
+      "title": "المستخدمون",
+      "subtitle": "الحسابات والمؤسسات والصلاحيات",
+      "search": "ابحث بالاسم أو البريد",
+      "filters": {
+        "all": "الكل",
+        "active": "نشط",
+        "suspended": "موقوف"
+      },
+      "user": "المستخدم",
+      "organization": "المؤسسة",
+      "projects": "المشاريع",
+      "status": "الحالة",
+      "actions": "إجراءات",
+      "suspend": "إيقاف",
+      "activate": "تفعيل",
+      "promote": "ترقية لمشرف",
+      "demote": "إزالة الإشراف",
+      "admin": "مشرف",
+      "unverified": "غير موثّق",
+      "you": "أنت",
+      "none": "لا يوجد مستخدمون مطابقون."
+    },
+    "plans": {
+      "title": "الباقات",
+      "subtitle": "الرصيد والمزايا. الأسعار تُضبط في Polar.",
+      "monthlyCredits": "الرصيد الشهري",
+      "active": "ظاهرة في الأسعار",
+      "save": "حفظ",
+      "saved": "تم الحفظ",
+      "connected": "متصلة بـ Polar",
+      "notConnected": "لا يوجد منتج",
+      "flags": {
+        "websiteBuilder": "منشئ المواقع",
+        "socialMediaKit": "حزمة السوشيال ميديا",
+        "vectorExport": "تصدير SVG",
+        "brandAssistant": "مساعد العلامة",
+        "customDomain": "نطاق مخصص"
+      }
+    },
+    "projects": {
+      "title": "المشاريع",
+      "subtitle": "كل المشاريع في جميع المؤسسات",
+      "all": "الكل",
+      "project": "المشروع",
+      "organization": "المؤسسة",
+      "status": "الحالة",
+      "aiCost": "التكلفة",
+      "created": "تاريخ الإنشاء",
+      "none": "لا توجد مشاريع مطابقة."
+    }
   }
 }
