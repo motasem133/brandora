@@ -125,6 +125,14 @@ async function main() {
   /* --------------------------------------------------------------- signup */
   section('Sign-up and organization bootstrap')
 
+  /*
+   * Sign-up is rate limited to five per hour, which is correct for the product
+   * and fatal for a suite that signs up every run. The counter is cleared so
+   * the flow below is deterministic; the limiter itself is asserted separately
+   * at the end rather than left untested.
+   */
+  await sql`DELETE FROM rate_limits WHERE key LIKE '%/sign-up/email'`
+
   const intruder = jar()
   const signup = await request('/api/auth/sign-up/email', {
     cookies: intruder,
@@ -307,8 +315,43 @@ async function main() {
     WHERE status IN ('queued','running') AND created_at < now() - interval '30 minutes'`
   check('no job stuck running for over 30 minutes', stuck.length === 0, `${stuck.length} stuck`)
 
+  /* ----------------------------------------------------------- rate limit */
+  section('Abuse protection')
+
+  const noOrigin = await fetch(`${BASE}/api/auth/sign-up/email`, {
+    method: 'POST',
+    redirect: 'manual',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: 'No Origin',
+      email: `no-origin-${stamp}@brandora-test.com`,
+      password: 'testpassword123',
+    }),
+  })
+  check('sign-up without an Origin header is refused', noOrigin.status === 403, `got ${noOrigin.status}`)
+
+  // Six attempts against a limit of five: the last must be refused.
+  let limited = false
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const res = await request('/api/auth/sign-up/email', {
+      method: 'POST',
+      body: {
+        name: 'Flood',
+        email: `flood-${stamp}-${attempt}@brandora-test.com`,
+        password: 'testpassword123',
+      },
+    })
+    if (res.status === 429) {
+      limited = true
+      break
+    }
+  }
+  check('repeated sign-ups are rate limited', limited)
+
   /* ------------------------------------------------------------- teardown */
   await sql`DELETE FROM users WHERE email = ${intruderEmail}`
+  await sql`DELETE FROM users WHERE email LIKE ${'flood-' + stamp + '%'}`
+  await sql`DELETE FROM rate_limits WHERE key LIKE '%/sign-up/email'`
 
   console.log(`\n\x1b[1mResult\x1b[0m  ${passed} passed, ${failed} failed`)
   if (failures.length) {
