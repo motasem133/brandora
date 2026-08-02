@@ -102,6 +102,7 @@ async function handle(request: Request) {
       branding: branding[0] ?? null,
       social: social[0] ?? null,
       hasSocial: Boolean(social[0]),
+      chosenName: project.businessName,
     }),
     // Twenty turns keeps cost predictable while staying long enough that the
     // assistant remembers what it just changed.

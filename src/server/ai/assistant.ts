@@ -5,7 +5,13 @@ import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 
 import { db } from '@/server/db'
-import { brandingAssets, socialMediaAssets, type BrandingAsset, type SocialMediaAsset } from '@/server/db/schema'
+import {
+  brandingAssets,
+  projects,
+  socialMediaAssets,
+  type BrandingAsset,
+  type SocialMediaAsset,
+} from '@/server/db/schema'
 
 /**
  * Brand Assistant tools.
@@ -131,7 +137,7 @@ export function buildAssistantTools(context: AssistantContext) {
 
     proposeNames: tool({
       description:
-        'Replace the five business name ideas. Use when the user wants a different naming direction.',
+        'Replace the five business name ideas. Use when the user wants a different naming direction. If they have already chosen a name and want to keep it, include it among the five.',
       inputSchema: z.object({
         businessNameIdeas: z
           .array(
@@ -144,9 +150,63 @@ export function buildAssistantTools(context: AssistantContext) {
       }),
       execute: async ({ businessNameIdeas }): Promise<ToolResult> => {
         const ok = await patchBranding(projectId, { businessNameIdeas })
-        return ok
-          ? { ok: true, summary: `New names: ${businessNameIdeas.map((i) => i.name).join(', ')}` }
-          : { ok: false, reason: 'This project has no branding yet.' }
+        if (!ok) return { ok: false, reason: 'This project has no branding yet.' }
+
+        const names = businessNameIdeas.map((idea) => idea.name)
+
+        /*
+         * Replacing the ideas can orphan an existing choice: the logos, website
+         * copy and brand kit would keep carrying a name that is no longer on
+         * offer, with nothing in the UI showing it as chosen. Clearing the
+         * selection makes that visible and asks for a fresh decision rather
+         * than leaving the brand quietly inconsistent.
+         */
+        const [project] = await db
+          .select({ businessName: projects.businessName })
+          .from(projects)
+          .where(eq(projects.id, projectId))
+          .limit(1)
+
+        const chosen = project?.businessName
+        const orphaned = Boolean(chosen) && !names.includes(chosen!)
+
+        if (orphaned) {
+          await db
+            .update(projects)
+            .set({ businessName: null, updatedAt: new Date() })
+            .where(eq(projects.id, projectId))
+        }
+
+        return {
+          ok: true,
+          summary: orphaned
+            ? `New names: ${names.join(', ')}. "${chosen}" is no longer among them, so no name is selected — choose one.`
+            : `New names: ${names.join(', ')}`,
+        }
+      },
+    }),
+
+    selectName: tool({
+      description:
+        'Choose the business name for this brand. Use when the user picks one of the ideas or gives their own. Everything downstream — logo prompts, website copy, the brand kit — follows this name.',
+      inputSchema: z.object({
+        name: z.string().min(2).max(60).describe('The exact name to commit to'),
+      }),
+      execute: async ({ name }): Promise<ToolResult> => {
+        const [updated] = await db
+          .update(projects)
+          .set({ businessName: name, updatedAt: new Date() })
+          .where(eq(projects.id, projectId))
+          .returning({ id: projects.id })
+
+        if (!updated) return { ok: false, reason: 'Project not found.' }
+
+        // Existing logo images still carry whatever name they were drawn with,
+        // and redrawing them costs credits, so the customer decides.
+        return {
+          ok: true,
+          summary: `Name set to "${name}". Regenerate the logos to have them carry it.`,
+        }
       },
     }),
 
@@ -212,12 +272,14 @@ export function assistantSystemPrompt(params: {
   branding: BrandingAsset | null
   social: SocialMediaAsset | null
   hasSocial: boolean
+  chosenName: string | null
 }) {
   const { branding } = params
 
   const brand = branding
     ? [
         `Name ideas: ${branding.businessNameIdeas.map((i) => i.name).join(', ') || '—'}`,
+        `Chosen name: ${params.chosenName ?? 'none yet — the customer has not picked one'}`,
         `Slogan: ${branding.slogan ?? '—'}`,
         `Voice: ${branding.brandVoice ?? '—'}`,
         `Values: ${branding.brandValues.join(', ') || '—'}`,
@@ -246,6 +308,12 @@ How to work:
 - After a tool succeeds, confirm in one short sentence what changed. Do not
   repeat the full asset back.
 - If a request needs an asset the project does not have, say so plainly.
+- When the customer settles on a name, commit it with selectName. Proposing new
+  ideas does not choose one.
+- If new ideas replace a name they had already chosen, tell them the selection
+  was cleared and ask which they want.
+- Changing the name does not redraw existing logos, because that costs credits.
+  Say they can regenerate the logos when they are happy with the name.
 - You cannot regenerate logo images; that costs credits and lives behind the
   Generate button. Say so if asked.
 - Never mention tools, schemas or that you are an AI.
