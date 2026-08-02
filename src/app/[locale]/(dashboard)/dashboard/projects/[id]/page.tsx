@@ -5,22 +5,28 @@ import { notFound } from 'next/navigation'
 import { BrandingView } from '@/components/features/projects/branding-view'
 import { DeleteProjectButton } from '@/components/features/projects/delete-project-button'
 import { GenerationPanel } from '@/components/features/projects/generation-panel'
+import { ProjectTabs, type ProjectTab } from '@/components/features/projects/project-tabs'
+import { SocialView } from '@/components/features/projects/social-view'
+import { WebsiteView } from '@/components/features/projects/website-view'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardTitle } from '@/components/ui/card'
 import { formatDate } from '@/lib/utils'
 import { creditsForSections } from '@/server/billing/credits'
 import { db } from '@/server/db'
 import { getProject } from '@/server/db/queries/projects'
-import { brandingAssets } from '@/server/db/schema'
+import { brandingAssets, socialMediaAssets, websiteAssets } from '@/server/db/schema'
 import { getLatestJobForProject, sectionsForProject } from '@/server/services/generation'
 import { requireOrg } from '@/server/session'
 
 export default async function ProjectDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; id: string }>
+  searchParams: Promise<{ tab?: string }>
 }) {
   const { locale, id } = await params
+  const { tab } = await searchParams
   setRequestLocale(locale)
 
   const t = await getTranslations('Projects')
@@ -30,11 +36,29 @@ export default async function ProjectDetailPage({
   const project = await getProject(org.id, id)
   if (!project) notFound()
 
-  const [branding] = await db
-    .select()
-    .from(brandingAssets)
-    .where(eq(brandingAssets.projectId, project.id))
-    .limit(1)
+  const [branding, website, social] = await Promise.all([
+    db.select().from(brandingAssets).where(eq(brandingAssets.projectId, project.id)).limit(1),
+    db.select().from(websiteAssets).where(eq(websiteAssets.projectId, project.id)).limit(1),
+    db.select().from(socialMediaAssets).where(eq(socialMediaAssets.projectId, project.id)).limit(1),
+  ])
+
+  const brandingAsset = branding[0]
+  const websiteAsset = website[0]
+  const socialAsset = social[0]
+
+  // A tab only appears once its assets exist.
+  const available: ProjectTab[] = [
+    ...(brandingAsset ? (['branding'] as const) : []),
+    ...(websiteAsset ? (['website'] as const) : []),
+    ...(socialAsset ? (['social'] as const) : []),
+  ]
+
+  const active: ProjectTab =
+    tab === 'website' || tab === 'social' || tab === 'branding'
+      ? available.includes(tab)
+        ? tab
+        : (available[0] ?? 'branding')
+      : (available[0] ?? 'branding')
 
   const job = await getLatestJobForProject(project.id)
   const sections = sectionsForProject(project)
@@ -63,17 +87,23 @@ export default async function ProjectDetailPage({
         creditCost={creditsForSections(sections)}
       />
 
-      {branding ? (
-        <BrandingView branding={branding} />
-      ) : (
+      {available.length > 0 && (
+        <ProjectTabs projectId={project.id} active={active} available={available} />
+      )}
+
+      {active === 'branding' && brandingAsset && <BrandingView branding={brandingAsset} />}
+      {active === 'website' && websiteAsset && <WebsiteView website={websiteAsset} />}
+      {active === 'social' && socialAsset && <SocialView social={socialAsset} />}
+
+      {available.length === 0 && (
         <Card className="space-y-4">
-          <CardTitle>Brief</CardTitle>
+          <CardTitle>{t('brief')}</CardTitle>
           <dl className="grid gap-4 sm:grid-cols-2">
             {[
-              ['Industry', project.industry],
-              ['Country', project.country],
-              ['Style', project.brandStyle],
-              ['Language', project.language === 'ar' ? 'Arabic' : 'English'],
+              [t('briefIndustry'), project.industry],
+              [t('briefCountry'), project.country],
+              [t('briefStyle'), project.brandStyle],
+              [t('briefLanguage'), project.language === 'ar' ? 'العربية' : 'English'],
             ].map(([label, value]) => (
               <div key={label}>
                 <dt className="text-xs uppercase tracking-wide text-fg-muted">{label}</dt>
@@ -81,7 +111,7 @@ export default async function ProjectDetailPage({
               </div>
             ))}
             <div className="sm:col-span-2">
-              <dt className="text-xs uppercase tracking-wide text-fg-muted">Target audience</dt>
+              <dt className="text-xs uppercase tracking-wide text-fg-muted">{t('briefAudience')}</dt>
               <dd className="mt-0.5 text-sm">{project.targetAudience}</dd>
             </div>
           </dl>

@@ -94,7 +94,18 @@
       "completed": "مكتمل",
       "failed": "فشل",
       "partial": "مكتمل جزئياً"
-    }
+    },
+    "tabs": {
+      "branding": "الهوية",
+      "website": "الموقع",
+      "social": "السوشيال ميديا"
+    },
+    "brief": "الملخص",
+    "briefIndustry": "المجال",
+    "briefCountry": "الدولة",
+    "briefStyle": "الأسلوب",
+    "briefLanguage": "اللغة",
+    "briefAudience": "الجمهور المستهدف"
   },
   "Onboarding": {
     "title": "لنبنِ علامتك التجارية",
@@ -184,5 +195,28 @@
     "story": "قصة العلامة",
     "values": "قيم العلامة",
     "voice": "نبرة العلامة"
+  },
+  "Social": {
+    "bio": "نبذة إنستغرام",
+    "posts": "{count} منشورات إنستغرام",
+    "stories": "قوالب الستوري",
+    "adCopy": "النصوص الإعلانية",
+    "hashtags": "مجموعة الهاشتاغات",
+    "ad": {
+      "headline": "العنوان",
+      "body": "النص",
+      "cta": "دعوة لاتخاذ إجراء",
+      "facebookAd": "إعلان فيسبوك",
+      "googleAd": "إعلان جوجل"
+    }
+  },
+  "Website": {
+    "blockCount": "{count} أقسام",
+    "pages": {
+      "home": "الرئيسية",
+      "about": "من نحن",
+      "services": "الخدمات",
+      "contact": "اتصل بنا"
+    }
   }
 }

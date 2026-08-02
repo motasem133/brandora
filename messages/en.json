@@ -94,7 +94,18 @@
       "completed": "Completed",
       "failed": "Failed",
       "partial": "Partly complete"
-    }
+    },
+    "tabs": {
+      "branding": "Branding",
+      "website": "Website",
+      "social": "Social media"
+    },
+    "brief": "Brief",
+    "briefIndustry": "Industry",
+    "briefCountry": "Country",
+    "briefStyle": "Style",
+    "briefLanguage": "Language",
+    "briefAudience": "Target audience"
   },
   "Onboarding": {
     "title": "Let's build your brand",
@@ -184,5 +195,28 @@
     "story": "Brand story",
     "values": "Brand values",
     "voice": "Brand voice"
+  },
+  "Social": {
+    "bio": "Instagram bio",
+    "posts": "{count} Instagram posts",
+    "stories": "Story templates",
+    "adCopy": "Ad copy",
+    "hashtags": "Hashtag set",
+    "ad": {
+      "headline": "Headline",
+      "body": "Body",
+      "cta": "Call to action",
+      "facebookAd": "Facebook ad",
+      "googleAd": "Google ad"
+    }
+  },
+  "Website": {
+    "blockCount": "{count} sections",
+    "pages": {
+      "home": "Home",
+      "about": "About",
+      "services": "Services",
+      "contact": "Contact"
+    }
   }
 }
