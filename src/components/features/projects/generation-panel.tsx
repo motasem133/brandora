@@ -45,10 +45,6 @@ export function GenerationPanel({
 
   const isRunning = status === 'queued' || status === 'generating' || status === 'running'
 
-  const { execute, isPending, result } = useAction(generateProject, {
-    onSuccess: () => setStatus('queued'),
-  })
-
   /** Opens the SSE stream and mirrors job state into local state. */
   const subscribe = useCallback(() => {
     if (sourceRef.current) return
@@ -77,16 +73,38 @@ export function GenerationPanel({
     })
   }, [projectId, router])
 
+  const { execute, isPending, result } = useAction(generateProject, {
+    onSuccess: () => {
+      setStatus('queued')
+      subscribe()
+    },
+  })
+
+  /*
+   * Always check live state on mount rather than trusting what the page was
+   * rendered with.
+   *
+   * Moving between tabs is a client navigation, so Next can serve a cached RSC
+   * payload from before a job started — the generation then appears to have
+   * vanished until a hard refresh. The stream answers immediately and closes
+   * when nothing is running, so this costs one indexed read for a project that
+   * is idle, and self-corrects one that is not.
+   */
   useEffect(() => {
-    if (isRunning) subscribe()
+    subscribe()
     return () => {
       sourceRef.current?.close()
       sourceRef.current = null
     }
-  }, [isRunning, subscribe])
+  }, [subscribe])
 
   const canAfford = creditBalance >= creditCost
 
+  /*
+   * Hidden rather than unmounted: returning null still runs the effect above,
+   * which is what lets a stale "completed" correct itself into showing a run
+   * that is actually in progress.
+   */
   if (status === 'completed') return null
 
   return (

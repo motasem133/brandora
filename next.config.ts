@@ -15,6 +15,13 @@ const nextConfig: NextConfig = {
   experimental: {
     // Server Actions are public endpoints; keep payloads small on purpose.
     serverActions: { bodySizeLimit: '2mb' },
+
+    /*
+     * Never reuse a cached payload for a dynamic page on navigation. Moving
+     * between project tabs otherwise re-showed state from before a generation
+     * started, so work in progress appeared to have vanished.
+     */
+    staleTimes: { dynamic: 0, static: 180 },
   },
 }
 
