@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { blockSchema } from '@/lib/blocks'
+
 /**
  * Structured output contracts.
  *
@@ -44,82 +46,13 @@ export const brandingSchema = z.object({
 export type BrandingOutput = z.infer<typeof brandingSchema>
 
 /**
- * Website content is emitted as typed blocks so the builder and the published
- * renderer share one shape. See the Block union in §5 of the documentation.
- */
-const heroBlock = z.object({
-  type: z.literal('hero'),
-  title: z.string().max(90),
-  subtitle: z.string().max(200),
-  cta: z.string().max(30),
-})
-
-const featuresBlock = z.object({
-  type: z.literal('features'),
-  heading: z.string().max(80),
-  items: z
-    .array(
-      z.object({
-        title: z.string().max(60),
-        body: z.string().max(220),
-      }),
-    )
-    .min(3)
-    .max(4),
-})
-
-const richTextBlock = z.object({
-  type: z.literal('richText'),
-  heading: z.string().max(80),
-  body: z.string().max(900),
-})
-
-const servicesBlock = z.object({
-  type: z.literal('services'),
-  heading: z.string().max(80),
-  services: z
-    .array(
-      z.object({
-        title: z.string().max(60),
-        body: z.string().max(220),
-        price: z.string().max(30).optional(),
-      }),
-    )
-    .min(3)
-    .max(4),
-})
-
-const ctaBlock = z.object({
-  type: z.literal('cta'),
-  heading: z.string().max(80),
-  body: z.string().max(220),
-  cta: z.string().max(30),
-})
-
-const contactBlock = z.object({
-  type: z.literal('contact'),
-  heading: z.string().max(80),
-  body: z.string().max(300),
-  email: z.string().max(80),
-  phone: z.string().max(40).optional(),
-})
-
-export const websiteBlockSchema = z.discriminatedUnion('type', [
-  heroBlock,
-  featuresBlock,
-  richTextBlock,
-  servicesBlock,
-  ctaBlock,
-  contactBlock,
-])
-
-/**
- * A page may not repeat a block type.
+ * Website content reuses the shared block contract from `@/lib/blocks`, so the
+ * AI, the builder and the published renderer cannot drift apart.
  *
- * Without this, a model can satisfy `.min(3)` by emitting the same hero three
- * times — which is exactly what GLM-5.2 did on the first real run. Enforcing it
- * in the schema turns that into a validation failure and a retry rather than a
- * page of duplicates reaching the database.
+ * A page may not repeat a block type. Without this, a model can satisfy
+ * `.min(3)` by emitting the same hero three times — which is exactly what
+ * GLM-5.2 did on the first real run. Enforcing it here turns that into a
+ * validation failure and a retry rather than duplicates reaching the database.
  */
 const distinctBlocks = (blocks: { type: string }[]) =>
   new Set(blocks.map((block) => block.type)).size === blocks.length
@@ -127,10 +60,10 @@ const distinctBlocks = (blocks: { type: string }[]) =>
 const DISTINCT_MESSAGE = 'Each block type may appear at most once per page'
 
 export const websiteSchema = z.object({
-  home: z.array(websiteBlockSchema).min(3).max(5).refine(distinctBlocks, DISTINCT_MESSAGE),
-  about: z.array(websiteBlockSchema).min(1).max(3).refine(distinctBlocks, DISTINCT_MESSAGE),
-  services: z.array(websiteBlockSchema).min(1).max(3).refine(distinctBlocks, DISTINCT_MESSAGE),
-  contact: z.array(websiteBlockSchema).min(1).max(2).refine(distinctBlocks, DISTINCT_MESSAGE),
+  home: z.array(blockSchema).min(3).max(5).refine(distinctBlocks, DISTINCT_MESSAGE),
+  about: z.array(blockSchema).min(1).max(3).refine(distinctBlocks, DISTINCT_MESSAGE),
+  services: z.array(blockSchema).min(1).max(3).refine(distinctBlocks, DISTINCT_MESSAGE),
+  contact: z.array(blockSchema).min(1).max(2).refine(distinctBlocks, DISTINCT_MESSAGE),
 })
 
 export type WebsiteOutput = z.infer<typeof websiteSchema>

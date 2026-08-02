@@ -187,12 +187,11 @@ export const generateBrand = inngest.createFunction(
                 projectId,
                 template: 'modern',
                 pages: output,
-                customStyles: {
-                  primaryColor: branding.colorPalette.primary,
-                  secondaryColor: branding.colorPalette.secondary,
-                  fontHeading: branding.fontRecommendations.heading,
-                  fontBody: branding.fontRecommendations.body,
-                },
+                // customStyles is deliberately left empty: it holds only explicit
+                // builder overrides. Copying the palette here would freeze the
+                // site on colours that go stale the moment branding is
+                // regenerated.
+                customStyles: {},
               })
               .onConflictDoUpdate({
                 target: websiteAssets.projectId,

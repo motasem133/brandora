@@ -221,6 +221,43 @@
       "about": "About",
       "services": "Services",
       "contact": "Contact"
-    }
+    },
+    "edit": "Edit website",
+    "liveAt": "Live at",
+    "notPublished": "Not published yet"
+  },
+  "Builder": {
+    "pages": {
+      "home": "Home",
+      "about": "About",
+      "services": "Services",
+      "contact": "Contact"
+    },
+    "blocks": {
+      "hero": "Hero",
+      "features": "Features",
+      "richText": "Text section",
+      "services": "Services",
+      "cta": "Call to action",
+      "contact": "Contact"
+    },
+    "addSection": "Add section",
+    "selectPrompt": "Select a section to edit it.",
+    "emptyPage": "This page is empty. Add a section from the left.",
+    "undo": "Undo",
+    "redo": "Redo",
+    "desktop": "Desktop",
+    "mobile": "Mobile",
+    "saving": "Saving…",
+    "saved": "All changes saved",
+    "unsaved": "Unsaved changes",
+    "publish": "Publish",
+    "published": "Published",
+    "update": "Update",
+    "unpublish": "Unpublish",
+    "address": "Site address",
+    "willBeLiveAt": "Will be live at",
+    "viewSite": "View live site",
+    "publishLocked": "Publishing needs Basic or above"
   }
 }

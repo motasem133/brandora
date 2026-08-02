@@ -1,0 +1,58 @@
+import { eq } from 'drizzle-orm'
+import { setRequestLocale } from 'next-intl/server'
+import { notFound } from 'next/navigation'
+
+import { Builder } from '@/components/features/builder/builder'
+import { PAGE_KEYS, type Pages, type Theme } from '@/lib/blocks'
+import { db } from '@/server/db'
+import { getOrgPlan } from '@/server/db/queries/plans'
+import { getProject } from '@/server/db/queries/projects'
+import { websiteAssets } from '@/server/db/schema'
+import { requireOrg } from '@/server/session'
+
+/**
+ * Content is normalised here rather than trusted.
+ *
+ * Rows written before a block type existed, or by an older generation, may be
+ * missing pages entirely — the builder should open on those rather than crash.
+ */
+function normalisePages(raw: unknown): Pages {
+  const source = (raw ?? {}) as Record<string, unknown>
+  return Object.fromEntries(
+    PAGE_KEYS.map((key) => [key, Array.isArray(source[key]) ? source[key] : []]),
+  ) as Pages
+}
+
+export default async function BuilderPage({
+  params,
+}: {
+  params: Promise<{ locale: string; id: string }>
+}) {
+  const { locale, id } = await params
+  setRequestLocale(locale)
+
+  const { org } = await requireOrg()
+  const project = await getProject(org.id, id)
+  if (!project) notFound()
+
+  const [website] = await db
+    .select()
+    .from(websiteAssets)
+    .where(eq(websiteAssets.projectId, project.id))
+    .limit(1)
+
+  if (!website) notFound()
+
+  const plan = await getOrgPlan(org.id)
+
+  return (
+    <Builder
+      projectId={project.id}
+      initialPages={normalisePages(website.pages)}
+      initialTheme={(website.customStyles ?? {}) as Theme}
+      initialSubdomain={website.subdomain}
+      isPublished={website.isPublished}
+      canPublish={plan?.websiteBuilder ?? false}
+    />
+  )
+}

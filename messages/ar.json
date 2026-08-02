@@ -221,6 +221,43 @@
       "about": "من نحن",
       "services": "الخدمات",
       "contact": "اتصل بنا"
-    }
+    },
+    "edit": "تعديل الموقع",
+    "liveAt": "متاح على",
+    "notPublished": "لم يُنشر بعد"
+  },
+  "Builder": {
+    "pages": {
+      "home": "الرئيسية",
+      "about": "من نحن",
+      "services": "الخدمات",
+      "contact": "اتصل بنا"
+    },
+    "blocks": {
+      "hero": "الواجهة",
+      "features": "المزايا",
+      "richText": "قسم نصي",
+      "services": "الخدمات",
+      "cta": "دعوة لاتخاذ إجراء",
+      "contact": "اتصل بنا"
+    },
+    "addSection": "أضف قسماً",
+    "selectPrompt": "اختر قسماً لتعديله.",
+    "emptyPage": "هذه الصفحة فارغة. أضف قسماً من القائمة.",
+    "undo": "تراجع",
+    "redo": "إعادة",
+    "desktop": "سطح المكتب",
+    "mobile": "الجوال",
+    "saving": "جاري الحفظ…",
+    "saved": "تم حفظ كل التغييرات",
+    "unsaved": "تغييرات غير محفوظة",
+    "publish": "نشر",
+    "published": "منشور",
+    "update": "تحديث",
+    "unpublish": "إلغاء النشر",
+    "address": "عنوان الموقع",
+    "willBeLiveAt": "سيكون متاحاً على",
+    "viewSite": "عرض الموقع",
+    "publishLocked": "النشر يتطلب باقة Basic أو أعلى"
   }
 }

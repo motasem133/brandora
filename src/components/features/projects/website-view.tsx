@@ -1,7 +1,9 @@
 import { getTranslations } from 'next-intl/server'
 
 import { Badge } from '@/components/ui/badge'
+import { buttonVariants } from '@/components/ui/button'
 import { Card, CardTitle } from '@/components/ui/card'
+import { Link } from '@/i18n/navigation'
 import type { WebsiteAsset } from '@/server/db/schema'
 
 type Block = { type: string } & Record<string, unknown>
@@ -14,6 +16,29 @@ export async function WebsiteView({ website }: { website: WebsiteAsset }) {
 
   return (
     <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          {website.isPublished && website.subdomain ? (
+            <a
+              href={`/sites/${website.subdomain}`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-sm text-brand hover:underline"
+            >
+              {t('liveAt')} /sites/{website.subdomain}
+            </a>
+          ) : (
+            <span className="text-sm text-fg-muted">{t('notPublished')}</span>
+          )}
+        </div>
+        <Link
+          href={`/dashboard/projects/${website.projectId}/builder`}
+          className={buttonVariants({ size: 'sm' })}
+        >
+          {t('edit')}
+        </Link>
+      </div>
+
       {PAGE_ORDER.filter((page) => pages[page]?.length).map((page) => (
         <Card key={page} className="space-y-4">
           <div className="flex items-center justify-between gap-3">
