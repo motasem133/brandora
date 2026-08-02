@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:docs.polar.sh)",
+      "WebFetch(domain:polar.sh)",
+      "Bash(pnpm -v)",
+      "Bash(npm -v)",
+      "Bash(git --version)",
+      "Bash(rm -rf .git)",
+      "Bash(git init *)",
+      "Bash(node -e ' *)",
+      "Bash(pnpm install *)",
+      "Bash(SKIP_ENV_VALIDATION=true pnpm typecheck)",
+      "Bash(grep -n \"Plural\\\\|+ \\\\\"s\\\\\"\\\\|+ 's'\\\\|\\\\`\\\\${.*}s\\\\`\" dist/index.mjs)",
+      "Bash(DATABASE_URL=\"postgresql://placeholder:placeholder@localhost:5432/brandora\" pnpm db:generate)"
+    ]
+  }
+}
