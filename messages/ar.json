@@ -259,5 +259,43 @@
     "willBeLiveAt": "سيكون متاحاً على",
     "viewSite": "عرض الموقع",
     "publishLocked": "النشر يتطلب باقة Basic أو أعلى"
+  },
+  "Billing": {
+    "title": "الفوترة",
+    "subtitle": "باقتك ورصيدك وسجل المدفوعات",
+    "currentPlan": "الباقة الحالية",
+    "creditsLeft": "الرصيد المتبقي",
+    "manage": "الإدارة",
+    "openPortal": "بوابة الفوترة",
+    "cancel": "إلغاء الباقة",
+    "cancelConfirm": "إلغاء باقتك؟ ستحتفظ بالوصول حتى نهاية الفترة المدفوعة.",
+    "endsOn": "تنتهي في {date}",
+    "plans": "الباقات",
+    "current": "الحالية",
+    "perMonth": "/شهرياً",
+    "creditsPerMonth": "{credits} رصيد شهرياً",
+    "upgrade": "ترقية",
+    "creditPacks": "حزم الرصيد",
+    "creditPacksBody": "شحن لمرة واحدة. لا تنتهي صلاحيته ويُستخدم بعد رصيدك الشهري.",
+    "credits": "رصيد",
+    "buy": "شراء",
+    "recentActivity": "حركة الرصيد",
+    "noActivity": "لا يوجد شيء بعد.",
+    "orders": "الطلبات",
+    "noOrders": "لا توجد مدفوعات بعد.",
+    "reasons": {
+      "subscription_grant": "رصيد الباقة",
+      "purchase": "حزمة رصيد",
+      "generation": "توليد",
+      "logo_render": "توليد شعار",
+      "assistant_message": "المساعد",
+      "refund": "استرداد",
+      "admin_adjustment": "تعديل إداري"
+    },
+    "orderStatus": {
+      "pending": "قيد الانتظار",
+      "paid": "مدفوع",
+      "refunded": "مُسترد"
+    }
   }
 }

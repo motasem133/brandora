@@ -34,6 +34,8 @@ type LedgerEntry = {
   polarOrderId?: string | null
   idempotencyKey?: string | null
   metadata?: Record<string, unknown>
+  /** Permits the balance to go below zero. Only refund reversals should. */
+  allowNegative?: boolean
 }
 
 /**
@@ -70,7 +72,7 @@ export async function writeLedgerEntry(entry: LedgerEntry) {
 
     const balanceAfter = org.creditBalance + entry.amount
 
-    if (balanceAfter < 0) {
+    if (balanceAfter < 0 && !entry.allowNegative) {
       throw new AppError(
         'INSUFFICIENT_CREDITS',
         `This needs ${Math.abs(entry.amount)} credits but only ${org.creditBalance} remain.`,

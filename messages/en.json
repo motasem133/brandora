@@ -259,5 +259,43 @@
     "willBeLiveAt": "Will be live at",
     "viewSite": "View live site",
     "publishLocked": "Publishing needs Basic or above"
+  },
+  "Billing": {
+    "title": "Billing",
+    "subtitle": "Your plan, credits and payment history",
+    "currentPlan": "Current plan",
+    "creditsLeft": "Credits left",
+    "manage": "Manage",
+    "openPortal": "Billing portal",
+    "cancel": "Cancel plan",
+    "cancelConfirm": "Cancel your plan? You keep access until the end of the period you've paid for.",
+    "endsOn": "Ends {date}",
+    "plans": "Plans",
+    "current": "Current",
+    "perMonth": "/month",
+    "creditsPerMonth": "{credits} credits per month",
+    "upgrade": "Upgrade",
+    "creditPacks": "Credit packs",
+    "creditPacksBody": "One-off top-ups. They never expire and are used after your monthly credits.",
+    "credits": "credits",
+    "buy": "Buy",
+    "recentActivity": "Credit activity",
+    "noActivity": "Nothing yet.",
+    "orders": "Orders",
+    "noOrders": "No payments yet.",
+    "reasons": {
+      "subscription_grant": "Plan credits",
+      "purchase": "Credit pack",
+      "generation": "Generation",
+      "logo_render": "Logo render",
+      "assistant_message": "Assistant",
+      "refund": "Refund",
+      "admin_adjustment": "Adjustment"
+    },
+    "orderStatus": {
+      "pending": "Pending",
+      "paid": "Paid",
+      "refunded": "Refunded"
+    }
   }
 }
