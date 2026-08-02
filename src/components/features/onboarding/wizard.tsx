@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowLeft, ArrowRight, Check, Loader2 } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Check, Loader2, Lock } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import { useAction } from 'next-safe-action/hooks'
 import { useState } from 'react'
@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { FieldError } from '@/components/ui/field-error'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { useRouter } from '@/i18n/navigation'
+import { Link, useRouter } from '@/i18n/navigation'
 import { cn } from '@/lib/utils'
 import { BRAND_STYLES, COUNTRIES, INDUSTRY_KEYS } from '@/lib/validations/project'
 import { createProject } from '@/server/actions/projects'
@@ -43,14 +43,25 @@ const INITIAL: FormState = {
   needsSocialMedia: true,
 }
 
-export function OnboardingWizard() {
+export type WizardEntitlements = {
+  planName: string
+  websiteBuilder: boolean
+  socialMediaKit: boolean
+}
+
+export function OnboardingWizard({ entitlements }: { entitlements: WizardEntitlements }) {
   const t = useTranslations('Onboarding')
   const tc = useTranslations('Common')
   const locale = useLocale()
   const router = useRouter()
 
   const [step, setStep] = useState(1)
-  const [form, setForm] = useState<FormState>(INITIAL)
+  const [form, setForm] = useState<FormState>({
+    ...INITIAL,
+    // Start locked features off, so what the user sees is what gets created.
+    needsWebsite: entitlements.websiteBuilder,
+    needsSocialMedia: entitlements.socialMediaKit,
+  })
   const [error, setError] = useState<string>()
 
   const { execute, isPending, result } = useAction(createProject, {
@@ -233,23 +244,35 @@ export function OnboardingWizard() {
             </div>
           )}
 
-          {step === 7 && (
-            <YesNo
-              value={form.needsWebsite}
-              onChange={(v) => set('needsWebsite', v)}
-              yes={t('yes')}
-              no={t('no')}
-            />
-          )}
+          {step === 7 &&
+            (entitlements.websiteBuilder ? (
+              <YesNo
+                value={form.needsWebsite}
+                onChange={(v) => set('needsWebsite', v)}
+                yes={t('yes')}
+                no={t('no')}
+              />
+            ) : (
+              <LockedFeature
+                message={t('lockedWebsite', { plan: entitlements.planName })}
+                cta={t('seePlans')}
+              />
+            ))}
 
-          {step === 8 && (
-            <YesNo
-              value={form.needsSocialMedia}
-              onChange={(v) => set('needsSocialMedia', v)}
-              yes={t('yes')}
-              no={t('no')}
-            />
-          )}
+          {step === 8 &&
+            (entitlements.socialMediaKit ? (
+              <YesNo
+                value={form.needsSocialMedia}
+                onChange={(v) => set('needsSocialMedia', v)}
+                yes={t('yes')}
+                no={t('no')}
+              />
+            ) : (
+              <LockedFeature
+                message={t('lockedSocial', { plan: entitlements.planName })}
+                cta={t('seePlans')}
+              />
+            ))}
         </div>
 
         <FieldError message={error ?? result?.serverError} />
@@ -273,6 +296,32 @@ export function OnboardingWizard() {
               : tc('next')}
             {step < TOTAL_STEPS && <ArrowRight className="rtl:rotate-180" />}
           </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Shown instead of the Yes/No choice when the plan does not include a feature.
+ *
+ * The server action drops these fields anyway, so offering the choice would
+ * mean silently ignoring the answer — the user would pick "yes, I want a
+ * website" and simply never get one.
+ */
+function LockedFeature({ message, cta }: { message: string; cta: string }) {
+  return (
+    <div className="rounded-lg border border-line bg-elevated/50 p-5">
+      <div className="flex items-start gap-3">
+        <Lock className="mt-0.5 size-4 shrink-0 text-fg-muted" />
+        <div>
+          <p className="text-sm text-fg-secondary">{message}</p>
+          <Link
+            href="/dashboard/billing"
+            className="mt-2 inline-block text-sm text-brand hover:underline"
+          >
+            {cta}
+          </Link>
         </div>
       </div>
     </div>

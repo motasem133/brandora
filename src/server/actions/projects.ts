@@ -7,29 +7,15 @@ import { AppError } from '@/lib/errors'
 import { createProjectSchema, projectIdSchema, updateProjectSchema } from '@/lib/validations/project'
 import { orgAction } from '@/server/actions/safe-action'
 import { db } from '@/server/db'
+import { getOrgPlan } from '@/server/db/queries/plans'
 import { countProjects } from '@/server/db/queries/projects'
-import { plans, projects, subscriptions } from '@/server/db/schema'
-
-/** Falls back to the free plan's limits when an org has no subscription row. */
-async function getPlanLimits(organizationId: string) {
-  const [row] = await db
-    .select({ plan: plans })
-    .from(subscriptions)
-    .innerJoin(plans, eq(plans.id, subscriptions.planId))
-    .where(eq(subscriptions.organizationId, organizationId))
-    .limit(1)
-
-  if (row?.plan) return row.plan
-
-  const [free] = await db.select().from(plans).where(eq(plans.slug, 'free')).limit(1)
-  return free ?? null
-}
+import { projects } from '@/server/db/schema'
 
 export const createProject = orgAction
   .metadata({ name: 'create-project' })
   .inputSchema(createProjectSchema)
   .action(async ({ parsedInput, ctx }) => {
-    const plan = await getPlanLimits(ctx.orgId)
+    const plan = await getOrgPlan(ctx.orgId)
 
     if (plan && plan.maxProjects !== -1) {
       const existing = await countProjects(ctx.orgId)

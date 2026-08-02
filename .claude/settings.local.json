@@ -24,7 +24,12 @@
       "Bash(pnpm add *)",
       "Bash(node -e \"console.log\\(Object.keys\\(require\\('inngest'\\)\\).join\\(', '\\)\\)\")",
       "Bash(python3 -)",
-      "Bash(pnpm build *)"
+      "Bash(pnpm build *)",
+      "Bash(curl -s http://localhost:3000/api/inngest)",
+      "Bash(python3 -m json.tool)",
+      "Bash(npx *)",
+      "Bash(curl -s -o /dev/null http://localhost:8288/)",
+      "Bash(curl -s -o /dev/null -w \"dashboard -> %{http_code}\\\\n\" http://localhost:8288/)"
     ]
   }
 }

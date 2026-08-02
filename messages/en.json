@@ -157,7 +157,10 @@
       "audienceRequired": "Please describe your target audience.",
       "audienceTooShort": "Please add a little more detail (at least 10 characters).",
       "styleRequired": "Please choose a brand style."
-    }
+    },
+    "lockedWebsite": "Website generation isn't included in your {plan} plan. We'll still create your full brand identity — you can add a website by upgrading.",
+    "lockedSocial": "The social media kit isn't included in your {plan} plan. We'll still create your full brand identity — you can add it by upgrading.",
+    "seePlans": "See plans"
   },
   "Generation": {
     "title": "Generate your brand",
