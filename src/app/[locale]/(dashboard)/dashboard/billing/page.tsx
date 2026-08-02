@@ -1,6 +1,7 @@
 import { desc, eq } from 'drizzle-orm'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
+import { BillingSync } from '@/components/features/billing/billing-sync'
 import { CheckoutButton } from '@/components/features/billing/checkout-button'
 import { CancelSubscriptionButton } from '@/components/features/billing/cancel-button'
 import { Badge } from '@/components/ui/badge'
@@ -11,8 +12,15 @@ import { getOrgPlan } from '@/server/db/queries/plans'
 import { creditPacks, creditTransactions, orders, plans, subscriptions } from '@/server/db/schema'
 import { requireOrg } from '@/server/session'
 
-export default async function BillingPage({ params }: { params: Promise<{ locale: string }> }) {
+export default async function BillingPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>
+  searchParams: Promise<{ checkout?: string }>
+}) {
   const { locale } = await params
+  const { checkout } = await searchParams
   setRequestLocale(locale)
 
   const t = await getTranslations('Billing')
@@ -84,6 +92,7 @@ export default async function BillingPage({ params }: { params: Promise<{ locale
             {isOwner && subscription?.status === 'active' && !subscription.cancelAtPeriodEnd && (
               <CancelSubscriptionButton />
             )}
+            <BillingSync auto={checkout === 'success'} />
           </div>
         </Card>
       </div>

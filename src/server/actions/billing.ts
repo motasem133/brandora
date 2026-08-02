@@ -7,6 +7,7 @@ import { env } from '@/lib/env'
 import { AppError } from '@/lib/errors'
 import { orgAction, orgOwnerAction } from '@/server/actions/safe-action'
 import { getPolar } from '@/server/billing/polar'
+import { syncBillingFromPolar } from '@/server/billing/sync'
 import { db } from '@/server/db'
 import { creditPacks, plans, subscriptions } from '@/server/db/schema'
 
@@ -120,4 +121,19 @@ export const cancelSubscription = orgOwnerAction
       .where(eq(subscriptions.id, subscription.id))
 
     return { cancelAtPeriodEnd: true }
+  })
+
+
+/**
+ * Reconciles this organization's billing against Polar.
+ *
+ * Runs automatically when returning from checkout, and is available manually,
+ * so a missed webhook never leaves a paying customer on the wrong plan.
+ */
+export const syncBilling = orgAction
+  .metadata({ name: 'sync-billing' })
+  .inputSchema(z.object({}))
+  .action(async ({ ctx }) => {
+    const result = await syncBillingFromPolar(ctx.orgId)
+    return result
   })

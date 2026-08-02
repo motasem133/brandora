@@ -296,6 +296,7 @@
       "pending": "Pending",
       "paid": "Paid",
       "refunded": "Refunded"
-    }
+    },
+    "refresh": "Refresh"
   }
 }
