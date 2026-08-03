@@ -8,6 +8,7 @@ import { asc, eq } from 'drizzle-orm'
 
 import { env } from '@/lib/env'
 import { db, schema } from './db'
+import { sendEmail } from './email/send'
 import { members } from './db/schema'
 import { createPersonalOrganization } from './services/organizations'
 
@@ -30,8 +31,11 @@ export const auth = betterAuth({
     requireEmailVerification: false,
     minPasswordLength: 8,
     sendResetPassword: async ({ user, url }) => {
-      // TODO(phase-2): send via Resend + React Email
-      console.info(`[auth] password reset for ${user.email}: ${url}`)
+      await sendEmail({
+        to: user.email,
+        locale: (user as { locale?: 'en' | 'ar' }).locale ?? 'en',
+        template: { kind: 'reset-password', url, name: user.name || user.email },
+      })
     },
   },
 
@@ -48,8 +52,11 @@ export const auth = betterAuth({
     sendOnSignUp: true,
     autoSignInAfterVerification: true,
     sendVerificationEmail: async ({ user, url }) => {
-      // TODO(phase-2): send via Resend + React Email
-      console.info(`[auth] verify email for ${user.email}: ${url}`)
+      await sendEmail({
+        to: user.email,
+        locale: (user as { locale?: 'en' | 'ar' }).locale ?? 'en',
+        template: { kind: 'verify-email', url, name: user.name || user.email },
+      })
     },
   },
 
@@ -122,9 +129,16 @@ export const auth = betterAuth({
       allowUserToCreateOrganization: true,
       organizationLimit: 5,
       creatorRole: 'owner',
-      sendInvitationEmail: async ({ email, organization: org }) => {
-        // TODO(phase-2): send via Resend + React Email
-        console.info(`[auth] invite ${email} to ${org.name}`)
+      sendInvitationEmail: async ({ email, inviter, organization: org, id }) => {
+        await sendEmail({
+          to: email,
+          template: {
+            kind: 'org-invite',
+            url: `${env.NEXT_PUBLIC_APP_URL}/en/accept-invitation/${id}`,
+            inviter: inviter.user.name || inviter.user.email,
+            organization: org.name,
+          },
+        })
       },
     }),
     // Must stay last — it flushes Set-Cookie headers in Next.js server actions.

@@ -976,10 +976,17 @@ React Email templates, rendered per locale with RTL support for Arabic.
 | `verify-email` | Sign-up |
 | `reset-password` | Forgot password |
 | `org-invite` | Member invited |
-| `generation-complete` | Job finished (opt-in) |
-| `generation-failed` | Job failed — includes credit-refund confirmation |
-| `credits-low` | Balance drops below 20% of the monthly grant |
-| `subscription-*` | Polar lifecycle events |
+| `generation-complete` | Not built — job finished (opt-in) |
+| `generation-failed` | Not built — job failed, with refund confirmation |
+| `credits-low` | Not built — balance below 20% of the monthly grant |
+| `subscription-*` | Not built — Polar lifecycle events |
+
+Templates are plain HTML rather than components: mail clients support only a
+subset of HTML reliably, and hand-written markup makes the RTL variant a
+one-line change. Delivery failures are logged and swallowed — Better Auth treats
+a throwing handler as a failed sign-up, so a mail outage would otherwise stop
+people registering. Without `RESEND_API_KEY` the link is logged instead, so
+development behaves as it did before rather than failing.
 
 ---
 

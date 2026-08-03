@@ -53,6 +53,7 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-hook-form": "^7.84.0",
+    "resend": "^6.18.1",
     "sharp": "^0.35.3",
     "svgo": "^4.0.2",
     "tailwind-merge": "^3.6.0",
