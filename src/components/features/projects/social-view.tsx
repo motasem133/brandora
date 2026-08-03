@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server'
 
 import { Badge } from '@/components/ui/badge'
 import { Card, CardTitle } from '@/components/ui/card'
+import { CopyButton } from '@/components/ui/copy-button'
 import type { SocialMediaAsset } from '@/server/db/schema'
 
 export async function SocialView({ social }: { social: SocialMediaAsset }) {
@@ -14,8 +15,14 @@ export async function SocialView({ social }: { social: SocialMediaAsset }) {
         <Card className="space-y-3">
           <div className="flex items-baseline justify-between gap-3">
             <CardTitle>{t('bio')}</CardTitle>
-            {/* Instagram hard-caps bios at 150 characters. */}
-            <span className="text-xs text-fg-muted">{social.instagramBio.length}/150</span>
+            <div className="flex items-baseline gap-2">
+              {/* Instagram hard-caps bios at 150 characters. Latin digits and a
+                  slash, so it is pinned LTR rather than re-ordered in Arabic. */}
+              <span dir="ltr" className="text-xs text-fg-muted">
+                {social.instagramBio.length}/150
+              </span>
+              <CopyButton value={social.instagramBio} label={t('bio')} />
+            </div>
           </div>
           <p className="text-sm leading-relaxed">{social.instagramBio}</p>
         </Card>
@@ -32,16 +39,33 @@ export async function SocialView({ social }: { social: SocialMediaAsset }) {
               <Card key={index} className="flex flex-col gap-3 p-5">
                 <div className="flex items-center justify-between gap-2">
                   <Badge tone="brand">{post.type}</Badge>
-                  <span className="text-xs text-fg-muted">#{index + 1}</span>
+                  <span dir="ltr" className="text-xs text-fg-muted">
+                    #{index + 1}
+                  </span>
                 </div>
 
                 <p className="whitespace-pre-line text-sm leading-relaxed">{post.caption}</p>
 
                 {post.hashtags?.length > 0 && (
-                  <p className="mt-auto text-xs text-brand">
+                  <p dir="ltr" className="text-xs text-brand rtl:text-end">
                     {post.hashtags.map((tag) => `#${tag}`).join(' ')}
                   </p>
                 )}
+
+                {/*
+                  Caption and hashtags together, in the order they get pasted
+                  into the composer. Copying them separately is two trips for
+                  something that is always used as one post.
+                */}
+                <div className="mt-auto flex justify-end border-t border-line pt-2">
+                  <CopyButton
+                    value={[post.caption, post.hashtags?.map((tag) => `#${tag}`).join(' ')]
+                      .filter(Boolean)
+                      .join('\n\n')}
+                    label={`${t('post', { number: index + 1 })}`}
+                    showLabel
+                  />
+                </div>
               </Card>
             ))}
           </div>
@@ -53,8 +77,11 @@ export async function SocialView({ social }: { social: SocialMediaAsset }) {
           <CardTitle>{t('stories')}</CardTitle>
           <div className="grid gap-4 sm:grid-cols-3">
             {(social.storyTemplates as { title: string; body: string }[]).map((story, index) => (
-              <div key={index} className="rounded-lg border border-line bg-elevated/40 p-4">
-                <p className="font-medium">{story.title}</p>
+              <div key={index} className="rounded-control border border-line bg-elevated/40 p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="font-medium">{story.title}</p>
+                  <CopyButton value={`${story.title}\n\n${story.body}`} label={story.title} />
+                </div>
                 <p className="mt-1 text-sm text-fg-secondary">{story.body}</p>
               </div>
             ))}
@@ -76,7 +103,10 @@ export async function SocialView({ social }: { social: SocialMediaAsset }) {
               .filter(([, value]) => Boolean(value))
               .map(([key, value]) => (
                 <div key={key}>
-                  <dt className="text-xs uppercase tracking-wide text-fg-muted">{t(`ad.${key}`)}</dt>
+                  <dt className="flex items-center justify-between gap-2 text-xs uppercase tracking-wide text-fg-muted">
+                    {t(`ad.${key}`)}
+                    <CopyButton value={String(value)} label={t(`ad.${key}`)} />
+                  </dt>
                   <dd className="mt-1 text-sm leading-relaxed">{value}</dd>
                 </div>
               ))}
@@ -86,8 +116,15 @@ export async function SocialView({ social }: { social: SocialMediaAsset }) {
 
       {social.hashtags.length > 0 && (
         <Card className="space-y-3">
-          <CardTitle>{t('hashtags')}</CardTitle>
-          <ul className="flex flex-wrap gap-2">
+          <div className="flex items-start justify-between gap-3">
+            <CardTitle>{t('hashtags')}</CardTitle>
+            <CopyButton
+              value={social.hashtags.map((tag) => `#${tag}`).join(' ')}
+              label={t('hashtags')}
+              showLabel
+            />
+          </div>
+          <ul dir="ltr" className="flex flex-wrap gap-2 rtl:justify-end">
             {social.hashtags.map((tag) => (
               <li key={tag} className="rounded-full bg-elevated px-3 py-1 text-sm text-brand">
                 #{tag}

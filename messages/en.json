@@ -18,7 +18,9 @@
     "somethingWentWrong": "Something went wrong. Please try again.",
     "language": "Language",
     "theme": "Theme",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "copy": "Copy",
+    "copied": "Copied"
   },
   "Landing": {
     "heroTitle": "One brief. Your entire brand.",
@@ -285,11 +287,19 @@
     "varAvatar": "Profile picture",
     "varSocialCard": "Social card",
     "varMonochrome": "Monochrome",
-    "varOther": "Variant"
+    "varOther": "Variant",
+    "paletteHint": "Click a colour to copy its hex code.",
+    "fontsHint": "The faces your brand is set in. Copy a name to find it, or install it from Google Fonts.",
+    "findFont": "Find on Google Fonts",
+    "clearIcon": "Remove as icon",
+    "history": "History",
+    "noLogos": "No logo concepts yet",
+    "composerHint": "Enter sends. A new round costs {credits} credits — your earlier rounds stay in the history.",
+    "fileCount": "{count, plural, one {# file} other {# files}}"
   },
   "Social": {
     "bio": "Instagram bio",
-    "posts": "{count} Instagram posts",
+    "posts": "{count, plural, one {# Instagram post} other {# Instagram posts}}",
     "stories": "Story templates",
     "adCopy": "Ad copy",
     "hashtags": "Hashtag set",
@@ -299,10 +309,11 @@
       "cta": "Call to action",
       "facebookAd": "Facebook ad",
       "googleAd": "Google ad"
-    }
+    },
+    "post": "Post {number}"
   },
   "Website": {
-    "blockCount": "{count} sections",
+    "blockCount": "{count, plural, one {# section} other {# sections}}",
     "pages": {
       "home": "Home",
       "about": "About",

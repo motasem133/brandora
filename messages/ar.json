@@ -18,7 +18,9 @@
     "somethingWentWrong": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
     "language": "اللغة",
     "theme": "المظهر",
-    "signOut": "تسجيل الخروج"
+    "signOut": "تسجيل الخروج",
+    "copy": "نسخ",
+    "copied": "تم النسخ"
   },
   "Landing": {
     "heroTitle": "موجز واحد. هويتك كاملة.",
@@ -285,11 +287,19 @@
     "varAvatar": "صورة الحساب",
     "varSocialCard": "بطاقة المشاركة",
     "varMonochrome": "أحادي اللون",
-    "varOther": "اشتقاق"
+    "varOther": "اشتقاق",
+    "paletteHint": "اضغط على أي لون لنسخ رمزه.",
+    "fontsHint": "الخطوط التي تُكتب بها علامتك. انسخ الاسم للبحث عنه، أو ثبّته من Google Fonts.",
+    "findFont": "ابحث عنه في Google Fonts",
+    "clearIcon": "إزالة كأيقونة",
+    "history": "السجل",
+    "noLogos": "لا توجد مفاهيم شعار بعد",
+    "composerHint": "اضغط Enter للإرسال. الجولة الجديدة تكلف {credits} رصيد — وجولاتك السابقة تبقى في السجل.",
+    "fileCount": "{count, plural, zero {لا ملفات} one {ملف واحد} two {ملفان} few {# ملفات} many {# ملفاً} other {# ملف}}"
   },
   "Social": {
     "bio": "نبذة إنستغرام",
-    "posts": "{count} منشورات إنستغرام",
+    "posts": "{count, plural, zero {لا منشورات} one {منشور إنستغرام واحد} two {منشوران على إنستغرام} few {# منشورات إنستغرام} many {# منشوراً على إنستغرام} other {# منشور إنستغرام}}",
     "stories": "قوالب الستوري",
     "adCopy": "النصوص الإعلانية",
     "hashtags": "مجموعة الهاشتاغات",
@@ -299,10 +309,11 @@
       "cta": "دعوة لاتخاذ إجراء",
       "facebookAd": "إعلان فيسبوك",
       "googleAd": "إعلان جوجل"
-    }
+    },
+    "post": "منشور {number}"
   },
   "Website": {
-    "blockCount": "{count} أقسام",
+    "blockCount": "{count, plural, zero {لا أقسام} one {قسم واحد} two {قسمان} few {# أقسام} many {# قسماً} other {# قسم}}",
     "pages": {
       "home": "الرئيسية",
       "about": "من نحن",

@@ -14,6 +14,34 @@ export function formatDate(date: Date | string, locale = 'en') {
   }).format(new Date(date))
 }
 
+const RELATIVE_STEPS = [
+  { unit: 'second' as const, ms: 1000, limit: 60 },
+  { unit: 'minute' as const, ms: 60_000, limit: 60 },
+  { unit: 'hour' as const, ms: 3_600_000, limit: 24 },
+  { unit: 'day' as const, ms: 86_400_000, limit: 7 },
+]
+
+/**
+ * "4 minutes ago" for a history that is mostly minutes old.
+ *
+ * Rendered on the server, so it is a snapshot rather than a ticking clock —
+ * which is right for a list of past rounds and wrong for anything live.
+ * Anything older than a week falls back to a date, because "37 days ago" is a
+ * worse answer than "3 Aug 2026".
+ */
+export function formatRelative(date: Date | string, locale = 'en') {
+  const then = new Date(date)
+  const elapsed = Date.now() - then.getTime()
+  const tag = locale === 'ar' ? 'ar-AE' : 'en-GB'
+
+  if (elapsed >= 7 * 86_400_000) return formatDate(then, locale)
+
+  const format = new Intl.RelativeTimeFormat(tag, { numeric: 'auto' })
+  const step = RELATIVE_STEPS.find(({ ms, limit }) => elapsed < ms * limit) ?? RELATIVE_STEPS[3]
+
+  return format.format(-Math.floor(elapsed / step.ms), step.unit)
+}
+
 export const CURRENCIES = ['usd', 'aed'] as const
 export type Currency = (typeof CURRENCIES)[number]
 

@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server'
 
-import { Card, CardTitle } from '@/components/ui/card'
+import { Disclosure } from '@/components/ui/disclosure'
 import type { GeneratedFile } from '@/server/db/schema'
 import { publicUrl } from '@/server/storage/r2'
 
@@ -101,16 +101,20 @@ export async function LogoVariations({
     variations.push({ file, label: t('varOther'), detail: `PNG · ${dimensions(file) ?? '—'}` })
   }
 
+  /*
+   * Folded shut by default.
+   *
+   * These are consulted — "is the favicon right?" — not decided on, and open
+   * they were a screenful of near-identical tiles between the palette and
+   * everything below it.
+   */
   return (
-    <Card className="space-y-4">
-      <div>
-        <CardTitle>{t('variations')}</CardTitle>
-        <p className="mt-1 text-sm text-fg-secondary">
-          {mark ? t('variationsHintWithIcon') : t('variationsHint')}
-        </p>
-      </div>
+    <Disclosure title={t('variations')} meta={t('fileCount', { count: variations.length })}>
+      <p className="text-sm text-fg-secondary">
+        {mark ? t('variationsHintWithIcon') : t('variationsHint')}
+      </p>
 
-      <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-4">
+      <div className="mt-4 grid gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {variations.map((variation) => {
           const { file, label, detail, wide } = variation
           const src = publicUrl(file.r2Key) ?? `/api/files/${file.id}`
@@ -145,6 +149,6 @@ export async function LogoVariations({
           )
         })}
       </div>
-    </Card>
+    </Disclosure>
   )
 }

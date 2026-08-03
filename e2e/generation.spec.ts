@@ -69,9 +69,16 @@ test.describe('generation progress', () => {
 
     await page.goto(`/en/dashboard/projects/${projectId}?tab=branding`)
 
-    const button = page.getByRole('button', { name: /Generating logos|Regenerate logos/ })
-    await expect(button).toBeVisible()
-    await expect(button).toBeDisabled()
-    await expect(button).toHaveText(/Generating logos/)
+    /*
+     * The send control is an icon in the composer now, so its state lives in
+     * the accessible name rather than in visible text — and the composer says
+     * the same thing in words underneath. Both are asserted: the control must
+     * be shut while a round is in flight, and the screen must say why.
+     */
+    const send = page.getByRole('button', { name: /Generating logos|Send and regenerate/ })
+    await expect(send).toBeVisible()
+    await expect(send).toBeDisabled()
+    await expect(send).toHaveAccessibleName(/Generating logos/)
+    await expect(page.getByText(/Generating logos/)).toBeVisible()
   })
 })
