@@ -22,7 +22,7 @@ export function Topbar({ user }: { user: { name: string; email: string } }) {
   const otherLocale = locales.find((l) => l !== locale) ?? 'en'
 
   return (
-    <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b border-line bg-base/80 px-6 backdrop-blur lg:px-10">
+    <header className="glass sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b border-line px-6 lg:px-10">
       <Link href="/dashboard" className="lg:hidden">
         <Logo className="text-lg" markClassName="size-6" />
       </Link>

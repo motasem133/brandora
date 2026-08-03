@@ -41,10 +41,10 @@ export function Sidebar({ isAdmin }: { isAdmin: boolean }) {
                    * on the item you moved to, so the eye follows the change
                    * instead of hunting for which row changed shade.
                    */
-                  'relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors duration-200',
-                  'before:absolute before:inset-y-1.5 before:-start-1 before:w-0.5 before:rounded-full before:bg-brand before:transition-transform before:duration-200 before:content-[""]',
+                  'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200',
+                  'before:absolute before:inset-y-2 before:-start-1 before:w-0.5 before:rounded-full before:bg-brand before:transition-transform before:duration-200 before:content-[""]',
                   active
-                    ? 'bg-elevated font-medium text-fg before:scale-y-100'
+                    ? 'bg-[image:linear-gradient(100deg,color-mix(in_oklch,var(--brand-primary)_22%,transparent),transparent_70%)] font-medium text-fg shadow-[inset_0_0_0_1px_color-mix(in_oklch,var(--brand-primary)_20%,transparent)] before:scale-y-100'
                     : 'text-fg-secondary before:scale-y-0 hover:bg-elevated hover:text-fg',
                 )}
               >

@@ -317,3 +317,72 @@
     transform: none;
   }
 }
+
+/* ------------------------------------------------------------- surfaces --- */
+
+/*
+ * Depth, applied sparingly.
+ *
+ * The app was flat panels on a flat background, which reads as unfinished at
+ * any size. These give the eye a hierarchy — a lit edge on what matters, a
+ * plain border on what does not — without turning every card into a gradient.
+ */
+
+/* A hairline gradient edge. Two layers, because a border cannot hold a
+   gradient and a background at once. */
+@utility card-lit {
+  position: relative;
+  background:
+    linear-gradient(var(--bg-surface), var(--bg-surface)) padding-box,
+    linear-gradient(
+        135deg,
+        color-mix(in oklch, var(--brand-primary) 55%, transparent),
+        color-mix(in oklch, var(--brand-secondary) 35%, transparent) 45%,
+        var(--border) 75%
+      )
+      border-box;
+  border: 1px solid transparent;
+  border-radius: var(--radius-card);
+}
+
+/* The glow that follows a hover, sized to feel like light rather than shadow. */
+@utility glow-brand {
+  box-shadow:
+    0 0 0 1px color-mix(in oklch, var(--brand-primary) 22%, transparent),
+    0 18px 40px -20px color-mix(in oklch, var(--brand-primary) 55%, transparent);
+}
+
+/* Frosted bar for anything that floats over scrolling content. */
+@utility glass {
+  background-color: color-mix(in oklch, var(--bg-base) 72%, transparent);
+  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+}
+
+/* Tinted chip behind a feature icon — the cheapest way to add colour without
+   painting whole surfaces. */
+@utility icon-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  padding: 0.625rem;
+  color: var(--brand-primary);
+  background: linear-gradient(
+    140deg,
+    color-mix(in oklch, var(--brand-primary) 22%, transparent),
+    color-mix(in oklch, var(--brand-secondary) 16%, transparent)
+  );
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--brand-primary) 18%, transparent);
+}
+
+/* Numbers that carry the brand rather than sitting in body grey. */
+@utility stat-figure {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  background: var(--brand-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}

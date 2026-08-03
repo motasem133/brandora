@@ -3,7 +3,6 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { buttonVariants } from '@/components/ui/button'
 import { Logo, LogoMark } from '@/components/ui/logo'
-import { Card } from '@/components/ui/card'
 import { Link } from '@/i18n/navigation'
 
 export default async function LandingPage({ params }: { params: Promise<{ locale: string }> }) {
@@ -48,7 +47,7 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
         <LogoMark className="mx-auto mb-8 size-16 animate-scale-in" animated id="hero" />
 
         <h1
-          className="font-display text-4xl font-bold leading-tight animate-fade-up sm:text-6xl"
+          className="font-display text-5xl font-bold leading-[1.05] tracking-tight animate-fade-up sm:text-7xl"
           style={{ animationDelay: '80ms' }}
         >
           <span className="gradient-text">{t('heroTitle')}</span>
@@ -74,13 +73,17 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
 
       <section className="mx-auto grid max-w-6xl gap-4 px-6 pb-24 stagger-children sm:grid-cols-2">
         {features.map(({ icon: Icon, title, body }, index) => (
-          <Card key={title} className="group interactive" style={{ '--i': index } as React.CSSProperties}>
-            <div className="mb-4 inline-flex rounded-lg bg-brand/15 p-2.5 transition-transform duration-200 group-hover:scale-110">
-              <Icon className="size-5 text-brand" />
+          <div
+            key={title}
+            className="card-lit interactive group p-6"
+            style={{ '--i': index } as React.CSSProperties}
+          >
+            <div className="icon-chip mb-4 transition-transform duration-200 group-hover:scale-110">
+              <Icon className="size-5" />
             </div>
             <h2 className="font-display text-lg font-semibold">{title}</h2>
             <p className="mt-1.5 text-sm text-fg-secondary">{body}</p>
-          </Card>
+          </div>
         ))}
       </section>
     </div>
