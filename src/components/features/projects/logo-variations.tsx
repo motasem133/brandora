@@ -21,6 +21,12 @@ type Variation = {
   wide?: boolean
 }
 
+/*
+ * One file can legitimately appear under two labels — the same concept chosen
+ * as both the logo and the icon — so the file id alone is not a unique key.
+ */
+const keyOf = (variation: Variation) => `${variation.label}:${variation.file.id}`
+
 function dimensions(file: GeneratedFile) {
   return file.width && file.height ? `${file.width}×${file.height}` : null
 }
@@ -63,7 +69,12 @@ export async function LogoVariations({
 
   variations.push({ file: logo, label: t('varFullLogo'), detail: `PNG · ${dimensions(logo) ?? '—'}` })
   if (svg) variations.push({ file: svg, label: t('varVector'), detail: 'SVG · ∞' })
-  if (mark) variations.push({ file: mark, label: t('varIcon'), detail: `PNG · ${dimensions(mark) ?? '—'}` })
+
+  // Choosing one concept as both is allowed — it means "use the logo where text
+  // will not fit" — but it is one piece of artwork, so it gets one tile.
+  if (mark && mark.id !== logo.id) {
+    variations.push({ file: mark, label: t('varIcon'), detail: `PNG · ${dimensions(mark) ?? '—'}` })
+  }
 
   for (const file of byVariant('favicon')) {
     variations.push({ file, label: t('varFavicon'), detail: `PNG · ${dimensions(file) ?? '32×32'}` })
@@ -100,12 +111,13 @@ export async function LogoVariations({
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-4">
-        {variations.map(({ file, label, detail, wide }) => {
+        {variations.map((variation) => {
+          const { file, label, detail, wide } = variation
           const src = publicUrl(file.r2Key) ?? `/api/files/${file.id}`
 
           return (
             <figure
-              key={file.id}
+              key={keyOf(variation)}
               className={wide ? 'space-y-2 sm:col-span-2' : 'space-y-2'}
             >
               {/* Generated assets are arbitrary user content, so next/image
