@@ -1,3 +1,4 @@
+import { withSentryConfig } from '@sentry/nextjs'
 import createNextIntlPlugin from 'next-intl/plugin'
 import type { NextConfig } from 'next'
 
@@ -25,4 +26,24 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default withNextIntl(nextConfig)
+/**
+ * Source maps are uploaded only when there is a token to upload them with, so a
+ * local build and a CI build stay exactly as fast as before. Everything else
+ * the plugin does — instrumenting the runtimes, tunnelling browser reports past
+ * ad blockers — costs nothing when no DSN is configured.
+ */
+export default withSentryConfig(withNextIntl(nextConfig), {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+
+  silent: !process.env.CI,
+  sourcemaps: { disable: !process.env.SENTRY_AUTH_TOKEN },
+
+  /*
+   * Browser reports are proxied through the app's own origin. Sent straight to
+   * ingest.sentry.io they are blocked by most ad blockers, which quietly
+   * removes exactly the client-side errors this exists to see.
+   */
+  tunnelRoute: '/monitoring',
+})

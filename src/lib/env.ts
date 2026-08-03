@@ -53,6 +53,16 @@ export const env = createEnv({
     /** Only needed when the project lives under a team rather than a user. */
     VERCEL_TEAM_ID: z.string().min(1).optional(),
 
+    /*
+     * --- monitoring ---
+     * The DSN is public by design and lives in the client block below. These
+     * three exist only so a release build can upload source maps; without them
+     * the build still succeeds and reports arrive minified.
+     */
+    SENTRY_ORG: z.string().min(1).optional(),
+    SENTRY_PROJECT: z.string().min(1).optional(),
+    SENTRY_AUTH_TOKEN: z.string().min(1).optional(),
+
     // --- email ---
     RESEND_API_KEY: z.string().min(1).optional(),
     /*
@@ -73,6 +83,8 @@ export const env = createEnv({
 
   client: {
     NEXT_PUBLIC_APP_URL: z.string().url(),
+    /** Identifies the project to report to. Not a secret — it only accepts events. */
+    NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
   },
 
   /**
@@ -102,11 +114,15 @@ export const env = createEnv({
     VERCEL_API_TOKEN: process.env.VERCEL_API_TOKEN,
     VERCEL_PROJECT_ID: process.env.VERCEL_PROJECT_ID,
     VERCEL_TEAM_ID: process.env.VERCEL_TEAM_ID,
+    SENTRY_ORG: process.env.SENTRY_ORG,
+    SENTRY_PROJECT: process.env.SENTRY_PROJECT,
+    SENTRY_AUTH_TOKEN: process.env.SENTRY_AUTH_TOKEN,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     EMAIL_FROM: process.env.EMAIL_FROM,
     SEED_ADMIN_EMAIL: process.env.SEED_ADMIN_EMAIL,
     SEED_ADMIN_PASSWORD: process.env.SEED_ADMIN_PASSWORD,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+    NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
   },
 
   emptyStringAsUndefined: true,

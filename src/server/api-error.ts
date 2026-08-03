@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { isAppError } from '@/lib/errors'
+import { reportError } from '@/lib/observability'
 
 /**
  * Turns a thrown error into a Response for Route Handlers.
@@ -20,5 +21,6 @@ export function toErrorResponse(error: unknown): Response {
   }
 
   console.error('[api] unhandled route error', error)
+  reportError(error, { source: 'route-handler' })
   return Response.json({ error: { code: 'INTERNAL' } }, { status: 500 })
 }

@@ -1,5 +1,8 @@
 allowBuilds:
   '@parcel/watcher': true
+  # Downloads the sentry-cli binary, which the build needs to upload source
+  # maps. Without it a release build silently ships unreadable stack traces.
+  '@sentry/cli': true
   '@swc/core': true
   esbuild: true
   protobufjs: true

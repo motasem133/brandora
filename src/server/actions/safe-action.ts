@@ -6,6 +6,7 @@ import { createSafeActionClient } from 'next-safe-action'
 import { z } from 'zod'
 
 import { AppError, isAppError } from '@/lib/errors'
+import { reportError } from '@/lib/observability'
 import { auth } from '@/server/auth'
 import { db } from '@/server/db'
 import { members } from '@/server/db/schema'
@@ -21,9 +22,12 @@ export const actionClient = createSafeActionClient({
   defineMetadataSchema() {
     return z.object({ name: z.string() })
   },
-  handleServerError(error) {
+  handleServerError(error, { metadata }) {
+    // Expected failures carry their own message and are not faults.
     if (isAppError(error)) return error.message
+
     console.error('[action] unhandled error', error)
+    reportError(error, { source: 'server-action', action: metadata?.name })
     return 'Something went wrong. Please try again.'
   },
 })

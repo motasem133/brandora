@@ -1757,8 +1757,10 @@ Each PR produces a Vercel preview deploy bound to a fresh Neon branch, so migrat
 | `EMAIL_FROM` | ✅ | e.g. `Brandora <hello@enigmitic.com>` |
 | `VERCEL_API_TOKEN` | Custom domains | Attaching customer domains via the Domains API |
 | `VERCEL_PROJECT_ID` | Custom domains | Target project |
-| `SENTRY_DSN` | Monitoring | Error tracking |
-| `SENTRY_AUTH_TOKEN` | Monitoring | Source map upload at build |
+| `NEXT_PUBLIC_SENTRY_DSN` | Monitoring | Error tracking. Public by design — it only accepts events. Absent, the SDK is inert |
+| `SENTRY_ORG` | Monitoring | Source map upload at build |
+| `SENTRY_PROJECT` | Monitoring | Source map upload at build |
+| `SENTRY_AUTH_TOKEN` | Monitoring | Source map upload at build. Without it the build still succeeds and traces arrive minified |
 | `NEXT_PUBLIC_POSTHOG_KEY` | Analytics | Product analytics |
 | `NEXT_PUBLIC_POSTHOG_HOST` | Analytics | e.g. `https://eu.i.posthog.com` |
 
@@ -1784,6 +1786,33 @@ type ErrorCode =
   | 'INSUFFICIENT_CREDITS' | 'FEATURE_LOCKED' | 'SEAT_LIMIT'
   | 'GENERATION_IN_PROGRESS' | 'AI_PROVIDER_ERROR' | 'RATE_LIMITED'
 ```
+
+### What Reaches Sentry
+
+`AppError` is the taxonomy of *expected* failures. None of it is reported: a
+missing session, an exhausted balance or a locked feature is the product working
+as designed, and sending those would bury the faults nobody planned for. Next's
+own control-flow throws (`NEXT_REDIRECT`, `NEXT_NOT_FOUND`) are dropped for the
+same reason. Everything else is reported, from three places:
+
+| Path | Where |
+|---|---|
+| Server Actions | `handleServerError` in `actions/safe-action.ts`, tagged with the action name |
+| Route Handlers | `toErrorResponse` in `server/api-error.ts` |
+| Anything uncaught — RSC renders, unhandled rejections | `onRequestError` in `src/instrumentation.ts` |
+
+One policy module, `lib/observability.ts`, is shared by the browser, Node and
+edge runtimes, because a filter applied in one runtime and not another makes the
+noise look like it only happens there.
+
+`sendDefaultPii` is off. Brand briefs and customer contact details pass through
+nearly every request here, and an error tracker is not where they belong.
+
+Browser reports are tunnelled through `/monitoring` on the app's own origin,
+since ad blockers drop requests to `ingest.sentry.io` — which would quietly
+remove exactly the client-side errors this exists to catch. That path is
+excluded from the proxy matcher; left in, locale negotiation redirects it to
+`/en/monitoring` and the reports are lost silently.
 
 ### Surfacing
 

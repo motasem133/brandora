@@ -159,6 +159,13 @@ export default function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Skip API routes, static assets, and anything with a file extension.
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)'],
+  /*
+   * Skip API routes, static assets, and anything with a file extension.
+   *
+   * /monitoring is the tunnel the browser posts Sentry reports to. Left in,
+   * locale negotiation redirects it to /en/monitoring and every client-side
+   * error is lost — silently, which is the one failure an error tracker must
+   * not have.
+   */
+  matcher: ['/((?!api|monitoring|_next/static|_next/image|favicon.ico|.*\\..*).*)'],
 }
