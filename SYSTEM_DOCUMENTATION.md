@@ -1706,11 +1706,30 @@ Create the bucket, generate an S3-compatible access key, and set a CORS policy a
 
 Verify the sending domain in Resend and add the SPF, DKIM, and DMARC records to `enigmitic.com` DNS. Since email DNS lives on the apex, the `brandora` NS delegation from Step 3 does not affect it.
 
-### Step 8 — Deploy
+### Step 8 — Preflight, then deploy
 
 ```bash
+pnpm preflight --production --services
 git push origin main    # Vercel builds and promotes to production
 ```
+
+`preflight` reads only — it never writes, migrates or seeds — so it is safe to
+point at production. It checks the things that stay invisible until a customer
+hits them: a migration that was generated but never applied, a plan priced with
+no Polar product behind it, `POLAR_SERVER` left on sandbox, `INNGEST_DEV` left
+set, a PostHog key with no host for `/ingest` to rewrite to, an app URL that
+disagrees with `BETTER_AUTH_URL` (which refuses every sign-in rather than
+degrading). It exits non-zero when something is blocking, so it can gate a
+deploy.
+
+| Flag | Effect |
+|---|---|
+| *(none)* | Development rules: missing production-only variables are noted, not fatal |
+| `--production` | Production rules. Also inferred from `VERCEL_ENV`/`NODE_ENV` |
+| `--services` | Additionally calls Polar, Resend, R2 and Vercel with the configured credentials |
+
+Migrations are verified by hash, so an applied migration whose file was edited
+afterwards is reported as well as one that never ran.
 
 ### CI Pipeline
 
