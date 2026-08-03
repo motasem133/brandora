@@ -23,16 +23,54 @@ export function Horizon() {
   const y = useSpring(raw, { stiffness: 90, damping: 24, mass: 0.6 })
   const fade = useTransform(scrollY, [0, 700], [1, 0.35])
 
-  const ring =
-    'radial-gradient(circle at 50% 50%, transparent 0 44%, rgba(124,58,237,0.22) 44.6%, rgba(139,92,246,0.6) 46.2%, rgba(196,181,253,0.95) 47.6%, #ffffff 48.5%, rgba(147,197,253,0.95) 49.4%, rgba(59,130,246,0.55) 50.8%, rgba(37,99,235,0.18) 52.4%, transparent 54%)'
+  /*
+   * Drawn as an SVG arc rather than a CSS ring.
+   *
+   * A radial-gradient ring puts the line at the element's edge, where the
+   * rounded box clips it and only the inner falloff survives — which is why
+   * the earlier attempts read as haze. A stroked path gives the line and its
+   * glow as separate, controllable things.
+   */
+  const arc = (
+    <svg viewBox="0 0 1600 420" className="w-[110rem] max-w-none" preserveAspectRatio="xMidYMin slice">
+      <defs>
+        <linearGradient id="horizon-line" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor="#7C3AED" stopOpacity="0" />
+          <stop offset="18%" stopColor="#8B5CF6" stopOpacity="0.85" />
+          <stop offset="42%" stopColor="#DDD6FE" />
+          <stop offset="52%" stopColor="#FFFFFF" />
+          <stop offset="64%" stopColor="#93C5FD" />
+          <stop offset="86%" stopColor="#3B82F6" stopOpacity="0.8" />
+          <stop offset="100%" stopColor="#2563EB" stopOpacity="0" />
+        </linearGradient>
+
+        <filter id="horizon-glow" x="-30%" y="-120%" width="160%" height="360%">
+          <feGaussianBlur stdDeviation="26" result="wide" />
+          <feGaussianBlur stdDeviation="7" result="tight" />
+          <feMerge>
+            <feMergeNode in="wide" />
+            <feMergeNode in="wide" />
+            <feMergeNode in="tight" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+
+      {/* One wide, shallow curve: the top of a circle far larger than the page. */}
+      <path
+        d="M -200 420 Q 800 -110 1800 420"
+        fill="none"
+        stroke="url(#horizon-line)"
+        strokeWidth="2.5"
+        filter="url(#horizon-glow)"
+      />
+    </svg>
+  )
 
   if (reduced) {
     return (
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-[52%] z-0 flex justify-center">
-        <div
-          className="size-[64rem] shrink-0 rounded-full sm:size-[82rem]"
-          style={{ background: ring, filter: 'drop-shadow(0 -10px 60px rgba(139,92,246,0.7))' }}
-        />
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-[34%] z-0 flex justify-center overflow-hidden">
+        {arc}
       </div>
     )
   }
@@ -40,39 +78,95 @@ export function Horizon() {
   return (
     <motion.div
       aria-hidden
-      className="pointer-events-none absolute inset-x-0 top-[52%] z-0 flex justify-center"
+      className="pointer-events-none absolute inset-x-0 top-[34%] z-0 flex justify-center overflow-hidden"
       style={{ y, opacity: fade }}
     >
       <motion.div
         className="relative flex justify-center"
-        initial={{ y: 130, opacity: 0 }}
+        initial={{ y: 120, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 1.8, ease: EASE, delay: 0.15 }}
       >
-        {/* The bloom the crest throws upward into the copy. */}
+        {/* The bloom the crest throws up into the copy. */}
         <motion.div
-          className="absolute -top-[13rem] size-[44rem] rounded-full blur-[110px]"
+          className="absolute -top-[15rem] left-1/2 size-[46rem] -translate-x-1/2 rounded-full blur-[120px]"
           style={{
             background:
-              'radial-gradient(circle, rgba(139,92,246,0.34), rgba(79,70,229,0.16) 45%, transparent 70%)',
+              'radial-gradient(circle, rgba(139,92,246,0.42), rgba(79,70,229,0.18) 45%, transparent 70%)',
           }}
-          animate={{ opacity: [0.75, 1, 0.75], scale: [1, 1.06, 1] }}
+          animate={{ opacity: [0.7, 1, 0.7], scale: [1, 1.07, 1] }}
           transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
         />
 
         <motion.div
-          className="size-[64rem] shrink-0 rounded-full sm:size-[82rem]"
-          style={{ background: ring }}
-          animate={{
-            filter: [
-              'drop-shadow(0 -4px 22px rgba(196,181,253,0.85)) drop-shadow(0 -18px 80px rgba(99,102,241,0.5))',
-              'drop-shadow(0 -4px 34px rgba(221,214,254,1)) drop-shadow(0 -22px 100px rgba(129,140,248,0.65))',
-              'drop-shadow(0 -4px 22px rgba(196,181,253,0.85)) drop-shadow(0 -18px 80px rgba(99,102,241,0.5))',
-            ],
-          }}
+          animate={{ opacity: [0.85, 1, 0.85] }}
           transition={{ duration: 6.5, repeat: Infinity, ease: 'easeInOut' }}
-        />
+        >
+          {arc}
+        </motion.div>
       </motion.div>
+    </motion.div>
+  )
+}
+
+/**
+ * A smaller arc for the sections below the fold.
+ *
+ * The same light, further away: thinner, dimmer, and rising from the section's
+ * own base, so the page reads as one continuous sky rather than as a hero with
+ * a horizon and then unrelated dark blocks.
+ */
+export function SectionArc({ className }: { className?: string }) {
+  const reduced = useReducedMotion()
+
+  const arc = (
+    <svg viewBox="0 0 1600 300" className="w-[90rem] max-w-none" preserveAspectRatio="xMidYMin slice">
+      <defs>
+        <linearGradient id="section-line" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor="#4F46E5" stopOpacity="0" />
+          <stop offset="30%" stopColor="#8B5CF6" stopOpacity="0.5" />
+          <stop offset="50%" stopColor="#C4B5FD" stopOpacity="0.9" />
+          <stop offset="70%" stopColor="#60A5FA" stopOpacity="0.5" />
+          <stop offset="100%" stopColor="#3B82F6" stopOpacity="0" />
+        </linearGradient>
+        <filter id="section-glow" x="-30%" y="-150%" width="160%" height="400%">
+          <feGaussianBlur stdDeviation="18" result="w" />
+          <feMerge>
+            <feMergeNode in="w" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+      <path
+        d="M -200 300 Q 800 -40 1800 300"
+        fill="none"
+        stroke="url(#section-line)"
+        strokeWidth="1.5"
+        filter="url(#section-glow)"
+      />
+    </svg>
+  )
+
+  const wrapper = `pointer-events-none absolute inset-x-0 z-0 flex justify-center overflow-hidden ${className ?? ''}`
+
+  if (reduced) {
+    return (
+      <div aria-hidden className={wrapper}>
+        {arc}
+      </div>
+    )
+  }
+
+  return (
+    <motion.div
+      aria-hidden
+      className={wrapper}
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-15%' }}
+      transition={{ duration: 1.4, ease: EASE }}
+    >
+      {arc}
     </motion.div>
   )
 }

@@ -7,6 +7,7 @@ import {
   Cell,
   Horizon,
   LightSweep,
+  SectionArc,
   ProductFrame,
   SectionReveal,
 } from '@/components/features/landing/horizon'
@@ -136,8 +137,9 @@ export default async function HorizonDirection({
 
       {/* -------------------------------------------------------------- kit */}
       <section id="kit" className="relative overflow-hidden border-t border-white/[0.06] bg-[#070a14]">
+        <SectionArc className="top-0" />
         <LightSweep />
-        <div className="relative mx-auto max-w-7xl px-8 py-24">
+        <div className="relative z-10 mx-auto max-w-7xl px-8 py-28">
           <SectionReveal>
             <h2 className="max-w-2xl text-[clamp(2rem,4vw,3.2rem)] font-bold leading-[1.08] tracking-[-0.03em]">
               One brief in.
@@ -145,12 +147,16 @@ export default async function HorizonDirection({
             </h2>
           </SectionReveal>
 
-          <div className="mt-14 grid gap-px overflow-hidden rounded-3xl bg-white/[0.07] sm:grid-cols-2 lg:grid-cols-5">
+          <div className="mt-16 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             {KIT.map((entry, index) => (
               <Cell key={entry.item} index={index}>
-                <div className="h-full bg-[#080c16] p-7 transition-colors hover:bg-[#0c1120]">
-                  <p className="text-base font-semibold">{entry.item}</p>
-                  <p className="mt-2 text-sm leading-relaxed text-white/45">{entry.detail}</p>
+                {/* A lit top edge on each cell, so the section keeps the same
+                    light the horizon casts rather than going flat. */}
+                <div className="group h-full rounded-2xl bg-[image:linear-gradient(180deg,rgba(167,139,250,0.35),rgba(255,255,255,0.04)_38%)] p-px transition-transform duration-200">
+                  <div className="h-full rounded-[calc(1rem-1px)] bg-[#080c16] p-6 transition-colors duration-200 group-hover:bg-[#0c1222]">
+                    <p className="text-base font-semibold">{entry.item}</p>
+                    <p className="mt-2 text-sm leading-relaxed text-white/45">{entry.detail}</p>
+                  </div>
                 </div>
               </Cell>
             ))}
@@ -159,17 +165,30 @@ export default async function HorizonDirection({
       </section>
 
       {/* -------------------------------------------------------------- how */}
-      <section id="how" className="border-t border-white/[0.06]">
-        <div className="mx-auto max-w-7xl px-8 py-24">
-          <h2 className="text-[clamp(2rem,4vw,3.2rem)] font-bold tracking-[-0.03em]">
-            How a run works
-          </h2>
+      <section id="how" className="relative overflow-hidden border-t border-white/[0.06]">
+        <SectionArc className="top-0" />
+        <div className="relative z-10 mx-auto max-w-7xl px-8 py-28">
+          <SectionReveal>
+            <h2 className="text-[clamp(2rem,4vw,3.2rem)] font-bold tracking-[-0.03em]">
+              How a run works
+            </h2>
+          </SectionReveal>
 
-          <div className="mt-14 grid gap-10 md:grid-cols-3 lg:grid-cols-5">
+          {/* The rail: one line of light through the sequence. */}
+          <div className="relative mt-16">
+            <div
+              aria-hidden
+              className="absolute inset-x-0 top-[18px] hidden h-px lg:block"
+              style={{
+                background:
+                  'linear-gradient(90deg, transparent, rgba(167,139,250,0.55), rgba(96,165,250,0.55), transparent)',
+              }}
+            />
+            <div className="grid gap-10 md:grid-cols-3 lg:grid-cols-5">
             {STEPS.map((step, index) => (
               <Cell key={step.n} index={index}>
                 <div className="relative">
-                  <span className="inline-flex size-9 items-center justify-center rounded-full border border-white/12 bg-white/[0.04] text-sm font-semibold">
+                  <span className="relative z-10 inline-flex size-9 items-center justify-center rounded-full border border-white/12 bg-[#0a0f1c] text-sm font-semibold shadow-[0_0_24px_-6px_rgba(139,92,246,0.9)]">
                     {index + 1}
                   </span>
                   <p className="mt-4 text-lg font-semibold">{step.n}</p>
@@ -177,23 +196,19 @@ export default async function HorizonDirection({
                 </div>
               </Cell>
             ))}
+            </div>
           </div>
         </div>
       </section>
 
       {/* ---------------------------------------------------------- pricing */}
       <section id="pricing" className="relative overflow-hidden border-t border-white/[0.06]">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 bottom-[-30%] h-[40rem]"
-          style={{
-            background:
-              'radial-gradient(50% 50% at 50% 50%, rgba(79,70,229,0.28), transparent 70%)',
-          }}
-        />
+        <SectionArc className="top-0" />
 
-        <div className="relative mx-auto max-w-7xl px-8 py-24">
-          <h2 className="text-[clamp(2rem,4vw,3.2rem)] font-bold tracking-[-0.03em]">Pricing</h2>
+        <div className="relative z-10 mx-auto max-w-7xl px-8 py-28">
+          <SectionReveal>
+            <h2 className="text-[clamp(2rem,4vw,3.2rem)] font-bold tracking-[-0.03em]">Pricing</h2>
+          </SectionReveal>
           <p className="mt-3 max-w-[48ch] text-white/50">
             Start free — a full identity, no card. Upgrade when you need more runs, more credits,
             or your own domain.
@@ -250,6 +265,27 @@ export default async function HorizonDirection({
             <Check className="size-4 text-[#7cabff]" />
             Every plan includes the full identity — names, logos, palette, typography, brand story.
           </p>
+        </div>
+      </section>
+
+      <section className="relative overflow-hidden border-t border-white/[0.06]">
+        <SectionArc className="top-[38%]" />
+        <div className="relative z-10 mx-auto max-w-7xl px-8 py-28 text-center">
+          <SectionReveal>
+            <h2 className="mx-auto max-w-3xl text-[clamp(2.2rem,5vw,4rem)] font-bold leading-[1.05] tracking-[-0.035em]">
+              Bring a brief.
+              <span className="text-white/45"> Leave with a brand.</span>
+            </h2>
+          </SectionReveal>
+          <SectionReveal delay={0.1}>
+            <Link
+              href="/register"
+              className="mt-10 inline-flex items-center gap-2 rounded-full bg-[image:linear-gradient(100deg,#7C3AED,#4F46E5_55%,#3B82F6)] px-8 py-4 text-sm font-semibold shadow-[0_0_50px_-10px_#4F46E5] transition-transform duration-200 hover:scale-[1.03]"
+            >
+              Start free
+              <ArrowRight className="size-4 rtl:rotate-180" />
+            </Link>
+          </SectionReveal>
         </div>
       </section>
 
