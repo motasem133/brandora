@@ -7,11 +7,21 @@ const intlMiddleware = createIntlMiddleware(routing)
 
 /** Paths that require a session, checked after the locale prefix is stripped. */
 const PROTECTED = ['/dashboard', '/onboarding', '/admin']
-/** Paths a signed-in user should be bounced away from. */
-const GUEST_ONLY = ['/login', '/register', '/forgot-password', '/reset-password']
+/*
+ * Paths a signed-in user should be bounced away from.
+ *
+ * /reset-password is deliberately absent: it is reached from an emailed link
+ * carrying a token, and someone who is still signed in on that browser is
+ * exactly the person who needs it — bouncing them to the dashboard would make
+ * the reset link unusable for them.
+ */
+const GUEST_ONLY = ['/login', '/register', '/forgot-password']
 
 /** Hostnames that are the app itself rather than a customer's published site. */
 const APP_HOSTS = new Set(['localhost', '127.0.0.1'])
+
+/** Labels that belong to the app even though they sit where a subdomain does. */
+const RESERVED_SUBDOMAINS = new Set(['www'])
 
 /**
  * Extracts the customer subdomain from a host, or null when the host is the app.
@@ -26,16 +36,25 @@ function customerSubdomain(host: string | null, appHost: string): string | null 
   const hostname = host.split(':')[0]
   if (APP_HOSTS.has(hostname) || hostname === appHost) return null
 
+  let label: string | null = null
+
   if (hostname.endsWith(`.${appHost}`)) {
-    return hostname.slice(0, -(appHost.length + 1)) || null
+    label = hostname.slice(0, -(appHost.length + 1))
+  } else if (hostname.endsWith('.localhost')) {
+    // `{sub}.localhost` — the development equivalent of a wildcard subdomain.
+    label = hostname.slice(0, -'.localhost'.length)
   }
 
-  // `{sub}.localhost` — the development equivalent of a wildcard subdomain.
-  if (hostname.endsWith('.localhost')) {
-    return hostname.slice(0, -'.localhost'.length) || null
-  }
+  if (!label || RESERVED_SUBDOMAINS.has(label)) return null
 
-  return null
+  /*
+   * Exactly one label deep. The wildcard certificate covers no more than that,
+   * and treating `a.b.brandora.enigmitic.com` as a customer named "a.b" would
+   * serve a 404 where the app should answer.
+   */
+  if (label.includes('.')) return null
+
+  return label
 }
 
 /**
