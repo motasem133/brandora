@@ -156,7 +156,8 @@
       "branding": "Branding",
       "website": "Website",
       "social": "Social media",
-      "assistant": "Assistant"
+      "assistant": "Assistant",
+      "label": "Project sections"
     },
     "brief": "Brief",
     "briefIndustry": "Industry",

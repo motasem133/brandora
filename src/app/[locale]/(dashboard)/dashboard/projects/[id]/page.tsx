@@ -9,9 +9,12 @@ import { GenerationPanel } from '@/components/features/projects/generation-panel
 import { ProjectTabs, type ProjectTab } from '@/components/features/projects/project-tabs'
 import { SocialView } from '@/components/features/projects/social-view'
 import { WebsiteView } from '@/components/features/projects/website-view'
+import { Sparkles } from 'lucide-react'
+
 import { Badge } from '@/components/ui/badge'
 import { Card, CardTitle } from '@/components/ui/card'
 import { formatDate } from '@/lib/utils'
+import { publicUrl } from '@/server/storage/r2'
 import { CREDIT_COSTS, creditsForSections } from '@/server/billing/credits'
 import { db } from '@/server/db'
 import { getThreadMessages } from '@/server/db/queries/assistant'
@@ -51,6 +54,10 @@ export default async function ProjectDetailPage({
     .where(eq(generatedFiles.projectId, project.id))
 
   const logoFiles = files.filter((file) => file.kind === 'logo_raster')
+
+  // The mark the customer chose, or the first concept until they choose one.
+  const primaryLogo =
+    logoFiles.find((file) => file.id === branding[0]?.primaryLogoFileId) ?? logoFiles[0]
   const kitFile = files.find((file) => file.kind === 'brand_kit_zip')
 
   const brandingAsset = branding[0]
@@ -91,17 +98,43 @@ export default async function ProjectDetailPage({
     requested && available.includes(requested) ? requested : (available[0] ?? 'branding')
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="font-display text-2xl font-semibold">{project.title}</h1>
-            <Badge>{t(`status.${project.status}`)}</Badge>
+    <div className="mx-auto max-w-5xl space-y-6">
+      {/*
+        The identity block answers "which brand am I in" before anything else.
+        The chosen mark carries that faster than the title does, so it leads —
+        and where no logo exists yet, its absence is the state.
+      */}
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex min-w-0 items-center gap-4">
+          <div className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-card border border-line bg-white">
+            {primaryLogo ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={publicUrl(primaryLogo.r2Key) ?? `/api/files/${primaryLogo.id}`}
+                alt=""
+                className="size-full object-contain p-1.5"
+              />
+            ) : (
+              <Sparkles className="size-5 text-fg-muted" />
+            )}
           </div>
-          <p className="mt-1 text-sm text-fg-secondary">
-            {t('createdOn', { date: formatDate(project.createdAt, locale) })}
-          </p>
+
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <h1 className="truncate text-2xl font-semibold tracking-[-0.02em]">
+                {project.businessName || project.title}
+              </h1>
+              <Badge tone={project.status === 'completed' ? 'success' : 'neutral'}>
+                {t(`status.${project.status}`)}
+              </Badge>
+            </div>
+            <p className="mt-1 truncate text-sm text-fg-secondary">
+              {project.industry} · {project.country} ·{' '}
+              {t('createdOn', { date: formatDate(project.createdAt, locale) })}
+            </p>
+          </div>
         </div>
+
         <DeleteProjectButton projectId={project.id} />
       </div>
 
