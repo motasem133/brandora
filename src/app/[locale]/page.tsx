@@ -1,479 +1,458 @@
-import { ArrowRight, Check, Sparkles } from 'lucide-react'
-import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { ArrowRight, Check } from 'lucide-react'
+import { setRequestLocale } from 'next-intl/server'
 import Image from 'next/image'
 
-import { ManifestRow, StickyBrief } from '@/components/features/landing/manifest'
-import { FloatCard, HeroBadge } from '@/components/features/landing/float'
+import { HeroBadge } from '@/components/features/landing/float'
 import {
-  AfterHeadline,
-  HeadlineWords,
-  LogoTile,
-  ParallaxFrame,
-} from '@/components/features/landing/motion-hero'
-import { buttonVariants } from '@/components/ui/button'
-import { Logo, LogoMark } from '@/components/ui/logo'
+  Cell,
+  Horizon,
+  LightSweep,
+  SectionArc,
+  ProductFrame,
+  SectionReveal,
+} from '@/components/features/landing/horizon'
+import { AfterHeadline, HeadlineWords } from '@/components/features/landing/motion-hero'
+import { PLANS, STEPS } from '@/components/features/landing/landing-data'
+import { LogoMark } from '@/components/ui/logo'
 import { Link } from '@/i18n/navigation'
 
 /**
- * The landing page is one generation run, itemised.
+ * Direction D — Horizon.
  *
- * The product's claim is that a single brief produces a whole identity, so the
- * page is built as that transaction: the brief pinned on one side, everything
- * it returned listed on the other. Nothing here is a mockup — the brand below
- * came out of this product, and the files shown are the ones it wrote.
+ * Built to the reference the client supplied: near-black ground, a centred
+ * column, and a light source rising behind the fold with the product framed in
+ * front of it. The arc is the page's whole visual argument, so it is drawn
+ * rather than illustrated — a gradient ring, bloomed, cropped by the section.
+ *
+ * The reference's customer logo wall is deliberately absent: there are no
+ * customers yet, and inventing a "trusted by" row is the one thing on that
+ * page we cannot honestly copy.
  */
-
-/** Real output from a completed run. Labelled as a generated sample on the page. */
-const SAMPLE = {
-  names: [
-    {
-      name: 'Makān',
-      rationale:
-        "Arabic for 'place' or 'space' — minimal and grounded, reflecting the idea of a space to think and find clarity.",
-    },
-    {
-      name: 'Qahwa Sākin',
-      rationale:
-        "Qahwa (coffee) + Sākin (still/quiet) — Arabic for 'quiet coffee', directly evoking the brand's theme of calm and focus.",
-    },
-  ],
-  slogan: 'Brewed for focus.',
-  palette: [
-    { name: 'Primary', hex: '#6F4E37' },
-    { name: 'Secondary', hex: '#D4A574' },
-    { name: 'Accent', hex: '#C08552' },
-    { name: 'Background', hex: '#FAF6F0' },
-    { name: 'Text', hex: '#2D1B0E' },
-  ],
-  fonts: { heading: 'Sora', body: 'Inter', accent: 'DM Serif Display' },
-  values: ['Intentional Restraint', 'Sensory Clarity', 'Modern Heritage', 'Quiet Confidence'],
-  logos: [
-    { src: '/marketing/makan-wordmark.webp', style: 'Wordmark' },
-    { src: '/marketing/makan-lettermark-monogram.webp', style: 'Lettermark' },
-    { src: '/marketing/makan-mark.webp', style: 'Icon' },
-    { src: '/marketing/makan-emblem-badge.webp', style: 'Emblem' },
-  ],
-} as const
-
-type Plan = {
-  slug: string
-  name: string
-  price: number
-  credits: number
-  once?: boolean
-  popular?: boolean
-  features: string[]
-}
-
-/** The seeded plans. Figures match the database, not marketing rounding. */
-const PLANS: Plan[] = [
-  { slug: 'free', name: 'Free', price: 0, credits: 10, once: true, features: ['1 full brand generation', '4 logo concepts', 'Colour palette & fonts', 'Brand story'] },
-  { slug: 'basic', name: 'Basic', price: 29, credits: 120, features: ['~15 generations / month', 'Website builder', 'SVG vector export', 'Brand kit ZIP', '2 seats'] },
-  { slug: 'pro', name: 'Pro', price: 79, credits: 400, popular: true, features: ['~50 generations / month', 'Social media kit', 'Brand Assistant', 'Priority queue', '5 seats'] },
-  { slug: 'business', name: 'Business', price: 199, credits: 1200, features: ['~150 generations / month', 'Custom domains', 'Unlimited seats', 'API access', 'Dedicated support'] },
+/** Real files from a completed run, used as the deliverable specimens. */
+const LOGOS = [
+  '/marketing/makan-wordmark.webp',
+  '/marketing/makan-lettermark-monogram.webp',
+  '/marketing/makan-mark.webp',
+  '/marketing/makan-emblem-badge.webp',
 ]
 
-export default async function LandingPage({ params }: { params: Promise<{ locale: string }> }) {
+const PALETTE = ['#6F4E37', '#D4A574', '#C08552', '#FAF6F0', '#2D1B0E']
+
+const REST = [
+  'Brand story',
+  'Brand voice',
+  'Brand values',
+  'Social kit — 9 posts',
+  'Bios and hashtags',
+  'Ad copy',
+  'Favicon',
+  'Avatars',
+  'OG card',
+  'Brand kit ZIP',
+]
+
+export default async function HorizonDirection({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}) {
   const { locale } = await params
   setRequestLocale(locale)
 
-  const t = await getTranslations('Landing')
-  const tn = await getTranslations('Nav')
-
-  const brief = [
-    { label: t('briefBusiness'), value: t('briefValueBusiness') },
-    { label: t('briefIndustry'), value: t('briefValueIndustry') },
-    { label: t('briefMarket'), value: t('briefValueMarket') },
-    { label: t('briefStyle'), value: t('briefValueStyle') },
-  ]
-
   return (
-    /*
-     * The marketing page runs in the light world regardless of the app's
-     * theme: the product sells on an airy, atmospheric first screen, and the
-     * dashboard behind the login is where the dark interface belongs.
-     */
-    <div className="light relative min-h-dvh bg-base text-fg">
-      {/* The sky. Three washes in the brand ramp, layered so the horizon reads
-          as depth rather than as a single flat gradient. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[1100px]"
-        style={{
-          background:
-            'radial-gradient(70% 55% at 15% 0%, #7C3AED2e, transparent 65%), radial-gradient(60% 50% at 85% 5%, #3B82F62b, transparent 62%), radial-gradient(90% 60% at 50% 38%, #4F46E518, transparent 70%), linear-gradient(180deg, #ffffff 0%, #f6f4ff 42%, #f7f8fc 100%)',
-        }}
-      />
+    <div className="min-h-dvh overflow-x-hidden bg-[#05070f] text-white">
+      <header className="relative z-20 mx-auto flex max-w-7xl items-center justify-between px-8 py-6">
+        <span className="flex items-center gap-2.5">
+          <LogoMark className="size-6" id="horizon" />
+          <span className="font-semibold tracking-[-0.01em]">Brandora</span>
+        </span>
 
-      <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
-        <Logo className="text-xl" markClassName="size-7" animated />
-        <nav className="flex items-center gap-2">
-          <Link href="/pricing" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
-            {t('ctaSecondary')}
-          </Link>
-          <Link href="/login" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
-            {tn('signIn')}
-          </Link>
-          <Link href="/register" className={buttonVariants({ size: 'sm' })}>
-            {t('ctaPrimary')}
-          </Link>
+        <nav className="hidden items-center gap-8 text-sm text-white/60 md:flex">
+          <a href="#kit" className="transition-colors hover:text-white">
+            What you get
+          </a>
+          <a href="#how" className="transition-colors hover:text-white">
+            How it works
+          </a>
+          <a href="#pricing" className="transition-colors hover:text-white">
+            Pricing
+          </a>
         </nav>
+
+        <Link
+          href="/register"
+          className="inline-flex items-center gap-2 rounded-full bg-[image:linear-gradient(100deg,#7C3AED,#4F46E5_55%,#3B82F6)] px-5 py-2.5 text-sm font-semibold shadow-[0_0_28px_-6px_#4F46E5] transition-transform duration-200 hover:scale-[1.03]"
+        >
+          Start free
+          <ArrowRight className="size-4 rtl:rotate-180" />
+        </Link>
       </header>
 
-      <section className="relative mx-auto max-w-6xl px-6 pb-24 pt-16 text-center sm:pt-24">
-        <HeroBadge>
-          <span className="inline-flex items-center gap-2 rounded-full border border-brand/20 bg-white/70 px-4 py-1.5 text-sm text-fg-secondary shadow-[var(--shadow-soft)] backdrop-blur">
-            <Sparkles className="size-3.5 text-brand" />
-            {t('badge')}
-          </span>
-        </HeroBadge>
+      {/* ------------------------------------------------------------- hero */}
+      <section className="relative overflow-hidden pb-0 pt-14 text-center sm:pt-20">
+        <Horizon />
 
-        <div className="mt-8">
-          <HeadlineWords
-            text={t('heroTitleLead')}
-            className="mx-auto max-w-4xl text-[3rem] font-extrabold leading-[1.02] tracking-[-0.04em] sm:text-[5rem]"
-          />
-          <AfterHeadline delay={0.28}>
-            <p className="mx-auto max-w-4xl bg-[image:var(--brand-gradient)] bg-clip-text text-[3rem] font-extrabold leading-[1.02] tracking-[-0.04em] text-transparent sm:text-[5rem]">
-              {t('heroTitleAccent')}
+        <div className="relative z-10 mx-auto max-w-4xl px-8">
+          <HeroBadge>
+            <span className="inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/[0.04] py-1 pe-4 ps-1 text-sm backdrop-blur">
+              <span className="rounded-full bg-[image:linear-gradient(100deg,#7C3AED,#3B82F6)] px-3 py-1 text-xs font-semibold">
+                One run
+              </span>
+              <span className="text-white/70">Ten deliverables, not a logo</span>
+            </span>
+          </HeroBadge>
+
+          <div className="mt-8">
+            <HeadlineWords
+              text="Your entire brand identity,"
+              className="text-[clamp(2.6rem,6.2vw,4.6rem)] font-bold leading-[1.05] tracking-[-0.035em]"
+            />
+            <AfterHeadline delay={0.3}>
+              <p className="text-[clamp(2.6rem,6.2vw,4.6rem)] font-bold leading-[1.05] tracking-[-0.035em] text-white/45">
+                generated in one run.
+              </p>
+            </AfterHeadline>
+          </div>
+
+          <AfterHeadline delay={0.5}>
+            <p className="mx-auto mt-7 max-w-[52ch] text-lg leading-relaxed text-white/55">
+              Names, logos, palette, typography, a brand story, a live website and a social kit —
+              all decided together, so they agree with each other.
             </p>
+          </AfterHeadline>
+
+          <AfterHeadline delay={0.62}>
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+              <Link
+                href="/pricing"
+                className="rounded-full border border-white/12 bg-white/[0.06] px-6 py-3 text-sm font-medium backdrop-blur transition-colors hover:bg-white/[0.12]"
+              >
+                See pricing
+              </Link>
+              <Link
+                href="/register"
+                className="inline-flex items-center gap-2 rounded-full bg-[image:linear-gradient(100deg,#7C3AED,#4F46E5_55%,#3B82F6)] px-6 py-3 text-sm font-semibold shadow-[0_0_40px_-8px_#4F46E5] transition-transform duration-200 hover:scale-[1.03]"
+              >
+                Start free
+                <ArrowRight className="size-4 rtl:rotate-180" />
+              </Link>
+            </div>
           </AfterHeadline>
         </div>
 
-        <AfterHeadline delay={0.46}>
-          <p className="mx-auto mt-7 max-w-[54ch] text-lg leading-relaxed text-fg-secondary">
-            {t('heroLead')}
-          </p>
-        </AfterHeadline>
-
-        <AfterHeadline delay={0.58}>
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-            <Link href="/register" className={buttonVariants({ size: 'lg' })}>
-              {t('ctaPrimary')}
-              <ArrowRight className="rtl:rotate-180" />
-            </Link>
-
-            <span className="inline-flex items-center gap-3">
-              <span className="rounded-control bg-[image:var(--brand-gradient)] px-3 py-2 text-lg font-bold text-white">
-                60+
-              </span>
-              <span className="text-start text-sm leading-tight text-fg-secondary">
-                {t('statLabel')}
-              </span>
-            </span>
-          </div>
-        </AfterHeadline>
-
-        {/* The output itself, floating over the sky. Real files, not chrome. */}
-        <div className="relative mt-16 h-[26rem] sm:h-[30rem]">
-          <FloatCard
-            className="absolute start-0 top-6 w-56 sm:w-64"
-            delay={0.7}
-            tilt={-4}
-            duration={11}
-          >
-            <div className="rounded-card bg-white p-4 shadow-[0_24px_60px_-24px_rgba(11,16,32,0.35)]">
-              <p className="text-xs font-medium text-fg-muted">Palette</p>
-              <div className="mt-3 flex gap-1.5">
-                {SAMPLE.palette.map((swatch) => (
-                  <span
-                    key={swatch.hex}
-                    className="h-12 flex-1 rounded-lg"
-                    style={{ backgroundColor: swatch.hex }}
-                  />
-                ))}
-              </div>
-              <p className="mt-3 text-sm font-semibold">Makān</p>
-              <p className="text-xs text-fg-muted">{SAMPLE.slogan}</p>
-            </div>
-          </FloatCard>
-
-          <FloatCard
-            className="absolute inset-x-0 top-0 mx-auto w-64 sm:w-80"
-            delay={0.55}
-            tilt={0}
-            drift={18}
-            duration={9}
-          >
-            <div className="overflow-hidden rounded-card bg-white p-3 shadow-[0_32px_80px_-28px_rgba(11,16,32,0.4)]">
+        {/* The product, framed in front of the light and cropped by the fold. */}
+        <div className="relative z-10 mx-auto mt-28 max-w-6xl px-8 sm:mt-36">
+          <ProductFrame>
+            <div className="rounded-t-[1.75rem] border border-white/10 bg-white/[0.03] p-2 shadow-[0_-10px_80px_-20px_rgba(99,102,241,0.6)] backdrop-blur">
               <Image
-                src="/marketing/makan-mark.webp"
-                alt="A logo concept generated for Makān"
-                width={720}
-                height={720}
-                className="aspect-square w-full rounded-lg object-contain"
-                sizes="320px"
+                src="/marketing/app-dashboard.webp"
+                alt="The Brandora dashboard"
+                width={1600}
+                height={1000}
+                className="w-full rounded-t-[1.35rem]"
+                sizes="(max-width: 1024px) 100vw, 1100px"
                 priority
               />
             </div>
-          </FloatCard>
-
-          <FloatCard
-            className="absolute end-0 top-16 w-60 sm:w-72"
-            delay={0.85}
-            tilt={4}
-            duration={13}
-          >
-            <div className="overflow-hidden rounded-card bg-white shadow-[0_24px_60px_-24px_rgba(11,16,32,0.35)]">
-              <Image
-                src="/marketing/makan-website.webp"
-                alt="The published website generated for Makān"
-                width={1200}
-                height={806}
-                className="w-full"
-                sizes="288px"
-              />
-            </div>
-          </FloatCard>
-
-          <FloatCard
-            className="absolute bottom-0 start-[12%] w-52 sm:w-60"
-            delay={1}
-            tilt={3}
-            drift={10}
-            duration={12}
-          >
-            <div className="rounded-card bg-white p-4 shadow-[0_24px_60px_-24px_rgba(11,16,32,0.35)]">
-              <p className="text-xs font-medium text-fg-muted">Typography</p>
-              <p className="mt-2 text-xl font-semibold leading-tight">{SAMPLE.fonts.heading}</p>
-              <p className="text-sm text-fg-secondary">{SAMPLE.fonts.body}</p>
-            </div>
-          </FloatCard>
+          </ProductFrame>
         </div>
       </section>
 
-      {/* ----------------------------------------------------------- manifest */}
-      <section className="mx-auto max-w-6xl px-6 pb-24">
-        <div className="grid gap-12 lg:grid-cols-[20rem_1fr] lg:gap-16">
-          <StickyBrief>
-            <div className="rounded-panel border border-line bg-surface p-7 shadow-[var(--shadow-soft)]">
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-fg-muted">
-                {t('briefLabel')}
-              </p>
-
-              <dl className="mt-6 space-y-5">
-                {brief.map((field) => (
-                  <div key={field.label}>
-                    <dt className="text-xs text-fg-muted">{field.label}</dt>
-                    <dd className="mt-1 text-sm leading-relaxed text-fg">{field.value}</dd>
-                  </div>
-                ))}
-              </dl>
-
-              <p className="mt-7 flex items-center gap-2 border-t border-line pt-5 text-xs text-fg-muted">
-                <LogoMark className="size-4" id="brief" />
-                {t('sampleNotice')}
-              </p>
-            </div>
-          </StickyBrief>
-
-          <div>
-            <h2 className="text-3xl font-bold tracking-[-0.03em] sm:text-4xl">
-              {t('manifestTitle')}
+      {/* -------------------------------------------------------------- kit */}
+      <section id="kit" className="relative overflow-hidden border-t border-white/[0.06] bg-[#070a14]">
+        <SectionArc className="top-0" />
+        <LightSweep />
+        <div className="relative z-10 mx-auto max-w-7xl px-8 py-28">
+          <SectionReveal>
+            <h2 className="max-w-2xl text-[clamp(2rem,4vw,3.2rem)] font-bold leading-[1.08] tracking-[-0.03em]">
+              One brief in.
+              <span className="text-white/45"> Everything a brand needs out.</span>
             </h2>
-            <p className="mt-3 max-w-[58ch] leading-relaxed text-fg-secondary">
-              {t('manifestLead')}
-            </p>
+          </SectionReveal>
 
-            <ol className="mt-4">
-              <ManifestRow label={t('itemNames')} note={t('itemNamesNote')} index={0}>
-                <div className="space-y-5">
-                  {SAMPLE.names.map((entry) => (
-                    <div key={entry.name}>
-                      <p className="text-xl font-semibold tracking-tight">{entry.name}</p>
-                      <p className="mt-1 max-w-[62ch] text-sm leading-relaxed text-fg-secondary">
-                        {entry.rationale}
-                      </p>
-                    </div>
-                  ))}
-                  <p className="text-sm text-fg-muted">
-                    {t('sloganLabel')}:{' '}
-                    <span className="italic text-fg-secondary">“{SAMPLE.slogan}”</span>
-                  </p>
+          {/*
+            The deliverables are shown, not listed. Ten identical cells told the
+            visitor a count; these tiles hand over the actual artifacts a run
+            produced, sized by how much looking each one rewards.
+          */}
+          <div className="mt-16 grid auto-rows-[13rem] grid-cols-2 gap-4 lg:grid-cols-4">
+            <Cell index={0} className="col-span-2 row-span-2">
+              <div className="group relative h-full overflow-hidden rounded-2xl bg-[image:linear-gradient(180deg,rgba(167,139,250,0.35),rgba(255,255,255,0.04)_38%)] p-px">
+                <div className="flex h-full flex-col rounded-[calc(1rem-1px)] bg-[#080c16] p-7">
+                  <p className="text-sm text-white/45">Four logo concepts</p>
+                  <div className="mt-5 grid flex-1 grid-cols-2 gap-3">
+                    {LOGOS.map((logo) => (
+                      <div key={logo} className="overflow-hidden rounded-xl bg-white/95">
+                        <Image
+                          src={logo}
+                          alt="A logo concept generated by Brandora"
+                          width={720}
+                          height={720}
+                          className="size-full object-contain p-2 transition-transform duration-300 group-hover:scale-[1.04]"
+                          sizes="160px"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <p className="mt-4 text-xs text-white/35">PNG and traced SVG, plus favicon and avatars</p>
                 </div>
-              </ManifestRow>
+              </div>
+            </Cell>
 
-              <ManifestRow label={t('itemPalette')} index={1}>
-                <div className="flex flex-wrap gap-3">
-                  {SAMPLE.palette.map((swatch) => (
-                    <div key={swatch.hex} className="w-28">
-                      <div
-                        className="h-20 w-full rounded-control border border-line"
-                        style={{ backgroundColor: swatch.hex }}
-                      />
-                      <p className="mt-2 text-xs text-fg-secondary">{swatch.name}</p>
-                      <p className="text-xs text-fg-muted">{swatch.hex}</p>
-                    </div>
-                  ))}
+            <Cell index={1} className="col-span-2">
+              <div className="h-full rounded-2xl bg-[image:linear-gradient(180deg,rgba(167,139,250,0.28),rgba(255,255,255,0.04)_38%)] p-px">
+                <div className="flex h-full flex-col rounded-[calc(1rem-1px)] bg-[#080c16] p-7">
+                  <p className="text-sm text-white/45">Colour palette</p>
+                  <div className="mt-5 flex flex-1 gap-2">
+                    {PALETTE.map((hex) => (
+                      <div key={hex} className="flex-1 rounded-xl" style={{ backgroundColor: hex }} />
+                    ))}
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 font-mono text-[11px] text-white/35">
+                    {PALETTE.map((hex) => (
+                      <span key={hex}>{hex}</span>
+                    ))}
+                  </div>
                 </div>
-              </ManifestRow>
+              </div>
+            </Cell>
 
-              <ManifestRow label={t('itemLogos')} note={t('itemLogosNote')} index={3}>
-                <div className="grid grid-cols-2 gap-5 sm:grid-cols-4">
-                  {SAMPLE.logos.map((logo, index) => (
-                    <LogoTile key={logo.src} index={index}>
-                      <figure>
-                        <div className="overflow-hidden rounded-card bg-white shadow-[var(--shadow-soft)]">
-                          <Image
-                            src={logo.src}
-                            alt={`${logo.style} logo concept generated for Makān`}
-                            width={720}
-                            height={720}
-                            className="aspect-square w-full object-contain"
-                            sizes="(max-width: 640px) 45vw, 180px"
-                          />
-                        </div>
-                        <figcaption className="mt-3 text-xs text-fg-muted">{logo.style}</figcaption>
-                      </figure>
-                    </LogoTile>
-                  ))}
+            <Cell index={2}>
+              <div className="h-full rounded-2xl bg-[image:linear-gradient(180deg,rgba(167,139,250,0.28),rgba(255,255,255,0.04)_38%)] p-px">
+                <div className="flex h-full flex-col justify-between rounded-[calc(1rem-1px)] bg-[#080c16] p-7">
+                  <p className="text-sm text-white/45">Names, with reasoning</p>
+                  <div>
+                    <p className="text-2xl font-semibold tracking-[-0.02em]">Makān</p>
+                    <p className="mt-1.5 text-xs leading-relaxed text-white/40">
+                      Arabic for &ldquo;place&rdquo; — a space to think and find clarity.
+                    </p>
+                  </div>
                 </div>
-              </ManifestRow>
+              </div>
+            </Cell>
 
-              <ManifestRow label={t('itemWebsite')} note={t('itemWebsiteNote')} index={5}>
-                <ParallaxFrame>
+            <Cell index={3}>
+              <div className="h-full rounded-2xl bg-[image:linear-gradient(180deg,rgba(167,139,250,0.28),rgba(255,255,255,0.04)_38%)] p-px">
+                <div className="flex h-full flex-col justify-between rounded-[calc(1rem-1px)] bg-[#080c16] p-7">
+                  <p className="text-sm text-white/45">Typography</p>
+                  <div>
+                    <p className="text-3xl font-semibold tracking-[-0.03em]">Sora</p>
+                    <p className="text-sm text-white/50">Inter · DM Serif Display</p>
+                  </div>
+                </div>
+              </div>
+            </Cell>
+
+            <Cell index={4} className="col-span-2">
+              <div className="group h-full overflow-hidden rounded-2xl bg-[image:linear-gradient(180deg,rgba(167,139,250,0.3),rgba(255,255,255,0.04)_38%)] p-px">
+                <div className="relative h-full overflow-hidden rounded-[calc(1rem-1px)] bg-[#080c16]">
                   <Image
                     src="/marketing/makan-website.webp"
-                    alt="The published website generated for Makān"
+                    alt="A website generated and published by Brandora"
                     width={1200}
                     height={806}
-                    className="w-full scale-[1.06]"
-                    sizes="(max-width: 1024px) 90vw, 640px"
+                    className="size-full object-cover object-top opacity-80 transition-transform duration-500 group-hover:scale-[1.03]"
+                    sizes="(max-width: 1024px) 100vw, 560px"
                   />
-                </ParallaxFrame>
-              </ManifestRow>
+                  <div className="absolute inset-x-0 bottom-0 bg-[image:linear-gradient(0deg,#080c16,transparent)] p-6 pt-16">
+                    <p className="text-sm font-semibold">A published website</p>
+                    <p className="text-xs text-white/45">multi-page, editable, on its own address</p>
+                  </div>
+                </div>
+              </div>
+            </Cell>
 
-            </ol>
-          </div>
-        </div>
-      </section>
-
-      {/* ---------------------------------------------------------- argument */}
-      <section className="border-t border-line bg-surface">
-        <div className="mx-auto grid max-w-6xl gap-12 px-6 py-24 lg:grid-cols-3 lg:gap-16">
-          {[
-            { title: t('coherenceTitle'), body: t('coherenceBody') },
-            { title: t('editTitle'), body: t('editBody') },
-            { title: t('arabicTitle'), body: t('arabicBody') },
-          ].map((block) => (
-            <div key={block.title}>
-              <h2 className="text-2xl font-bold leading-tight tracking-[-0.03em]">{block.title}</h2>
-              <p className="mt-4 max-w-[52ch] leading-relaxed text-fg-secondary">{block.body}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-
-      {/* ------------------------------------------------------------ pricing */}
-      <section className="border-t border-line bg-white/60">
-        <div className="mx-auto max-w-6xl px-6 py-24">
-          <div className="max-w-2xl">
-            <h2 className="text-3xl font-extrabold tracking-[-0.035em] sm:text-5xl">
-              {t('pricingTitle')}
-            </h2>
-            <p className="mt-4 text-lg leading-relaxed text-fg-secondary">{t('pricingLead')}</p>
-          </div>
-
-          <div className="mt-14 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
-            {PLANS.map((plan, index) => (
-              <LogoTile key={plan.slug} index={index}>
-                <div
-                  className={
-                    plan.popular
-                      ? 'relative flex h-full flex-col rounded-panel bg-[image:linear-gradient(160deg,#7C3AED,#4F46E5_55%,#3B82F6)] p-7 text-white shadow-[0_30px_70px_-30px_rgba(79,70,229,0.75)]'
-                      : 'relative flex h-full flex-col rounded-panel border border-line bg-white p-7 shadow-[var(--shadow-soft)]'
-                  }
-                >
-                  {plan.popular && (
-                    <span className="absolute end-6 top-6 rounded-full bg-white/20 px-3 py-1 text-xs font-medium">
-                      {t('pricingPopular')}
-                    </span>
-                  )}
-
-                  <p className={plan.popular ? 'text-sm text-white/80' : 'text-sm text-fg-secondary'}>
-                    {plan.name}
-                  </p>
-
-                  <p className="mt-3 flex items-baseline gap-1">
-                    <span className="text-4xl font-extrabold tracking-[-0.03em]">
-                      {plan.price === 0 ? t('pricingFree') : `$${plan.price}`}
-                    </span>
-                    {plan.price > 0 && (
-                      <span className={plan.popular ? 'text-sm text-white/70' : 'text-sm text-fg-muted'}>
-                        {t('pricingPerMonth')}
-                      </span>
-                    )}
-                  </p>
-
-                  <p className={plan.popular ? 'mt-2 text-sm text-white/80' : 'mt-2 text-sm text-fg-secondary'}>
-                    {plan.once
-                      ? t('pricingCreditsOnce', { credits: plan.credits })
-                      : t('pricingCredits', { credits: plan.credits })}
-                  </p>
-
-                  <ul className="mt-6 flex-1 space-y-2.5">
-                    {plan.features.map((feature) => (
-                      <li key={feature} className="flex items-start gap-2 text-sm">
-                        <Check
-                          className={
-                            plan.popular
-                              ? 'mt-0.5 size-4 shrink-0 text-white'
-                              : 'mt-0.5 size-4 shrink-0 text-brand'
-                          }
-                        />
-                        <span className={plan.popular ? 'text-white/90' : 'text-fg-secondary'}>
-                          {feature}
-                        </span>
+            <Cell index={5} className="col-span-2">
+              <div className="h-full rounded-2xl bg-[image:linear-gradient(180deg,rgba(167,139,250,0.28),rgba(255,255,255,0.04)_38%)] p-px">
+                <div className="flex h-full flex-col justify-between rounded-[calc(1rem-1px)] bg-[#080c16] p-7">
+                  <p className="text-sm text-white/45">And the rest of it</p>
+                  <ul className="flex flex-wrap gap-2">
+                    {REST.map((item) => (
+                      <li
+                        key={item}
+                        className="rounded-full border border-white/10 px-3 py-1.5 text-xs text-white/60"
+                      >
+                        {item}
                       </li>
                     ))}
                   </ul>
+                </div>
+              </div>
+            </Cell>
+          </div>
+        </div>
+      </section>
 
-                  <Link
-                    href="/register"
+      {/* -------------------------------------------------------------- how */}
+      <section id="how" className="relative overflow-hidden border-t border-white/[0.06]">
+        <SectionArc className="top-0" />
+        <div className="relative z-10 mx-auto max-w-5xl px-8 py-28">
+          <SectionReveal>
+            <h2 className="text-[clamp(2rem,4vw,3.2rem)] font-bold tracking-[-0.03em]">
+              How a run works
+            </h2>
+          </SectionReveal>
+
+          {/*
+            A descent rather than five columns: the run happens in sequence, and
+            a row of equal boxes said nothing about order. The rail carries the
+            eye down it, and each stage states what it produces.
+          */}
+          <ol className="relative mt-16">
+            <div
+              aria-hidden
+              className="absolute bottom-8 start-[1.55rem] top-4 w-px"
+              style={{
+                background:
+                  'linear-gradient(180deg, rgba(167,139,250,0.7), rgba(96,165,250,0.5), transparent)',
+              }}
+            />
+
+            {STEPS.map((step, index) => (
+              <Cell key={step.n} index={index}>
+                <li className="relative grid grid-cols-[3.5rem_1fr] items-start gap-x-6 pb-14 last:pb-0">
+                  <span className="relative z-10 flex size-14 items-center justify-center rounded-2xl border border-white/10 bg-[#0a0f1c] text-lg font-semibold shadow-[0_0_34px_-8px_rgba(139,92,246,0.9)]">
+                    {index + 1}
+                  </span>
+
+                  <div className="pt-2.5">
+                    <p className="text-2xl font-semibold tracking-[-0.02em]">{step.n}</p>
+                    <p className="mt-2 max-w-[58ch] leading-relaxed text-white/45">{step.body}</p>
+                  </div>
+                </li>
+              </Cell>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      {/* ---------------------------------------------------------- pricing */}
+      <section id="pricing" className="relative overflow-hidden border-t border-white/[0.06] bg-[#070a14]">
+        <SectionArc className="top-0" />
+
+        <div className="relative z-10 mx-auto max-w-7xl px-8 py-28">
+          <SectionReveal>
+            <div className="flex flex-wrap items-end justify-between gap-6">
+              <h2 className="text-[clamp(2rem,4vw,3.2rem)] font-bold tracking-[-0.03em]">Pricing</h2>
+              <p className="max-w-[42ch] text-white/50">
+                Every plan generates the full identity. What changes is how many brands you can
+                run, and where the site can live.
+              </p>
+            </div>
+          </SectionReveal>
+
+          <div className="mt-16 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+            {PLANS.map((plan, index) => {
+              const featured = index === 2
+
+              return (
+                <Cell key={plan.name} index={index}>
+                  <div
                     className={
-                      plan.popular
-                        ? 'mt-7 inline-flex h-11 items-center justify-center rounded-control bg-white px-5 text-sm font-semibold text-brand transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]'
-                        : `mt-7 ${buttonVariants({ variant: plan.price === 0 ? 'primary' : 'secondary', size: 'md' })}`
+                      featured
+                        ? 'relative h-full rounded-3xl bg-[image:linear-gradient(160deg,#7C3AED,#4F46E5_55%,#3B82F6)] p-px shadow-[0_0_70px_-20px_#4F46E5]'
+                        : 'h-full rounded-3xl bg-[image:linear-gradient(180deg,rgba(167,139,250,0.28),rgba(255,255,255,0.05)_40%)] p-px'
                     }
                   >
-                    {plan.price === 0 ? t('pricingCta') : t('pricingCtaPaid', { plan: plan.name })}
-                  </Link>
-                </div>
-              </LogoTile>
-            ))}
+                    <div className="flex h-full flex-col rounded-[calc(1.5rem-1px)] bg-[#080c16] p-7">
+                      {featured && (
+                        <span className="absolute -top-3 end-6 rounded-full bg-[image:linear-gradient(100deg,#7C3AED,#3B82F6)] px-3 py-1 text-[11px] font-semibold">
+                          Most chosen
+                        </span>
+                      )}
+
+                      <p className="text-sm text-white/50">{plan.name}</p>
+
+                      <p className="mt-4 flex items-baseline gap-1.5">
+                        <span className="text-5xl font-bold tracking-[-0.04em]">
+                          {plan.price === 0 ? 'Free' : `$${plan.price}`}
+                        </span>
+                        {plan.price > 0 && (
+                          <span className="text-sm text-white/40">/month</span>
+                        )}
+                      </p>
+
+                      {/* The number that actually decides the plan. */}
+                      <p className="mt-5 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3.5 py-2.5 text-sm">
+                        <span className="font-semibold">{plan.runs}</span>
+                        <span className="text-white/40"> · {plan.credits}</span>
+                      </p>
+
+                      <ul className="mt-6 flex-1 space-y-3">
+                        {plan.features.map((feature) => (
+                          <li key={feature} className="flex items-start gap-2.5 text-sm">
+                            <Check className="mt-0.5 size-4 shrink-0 text-[#a78bfa]" />
+                            <span className="text-white/65">{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+
+                      <Link
+                        href="/register"
+                        className={
+                          featured
+                            ? 'mt-8 flex items-center justify-center rounded-full bg-[image:linear-gradient(100deg,#7C3AED,#3B82F6)] py-3 text-sm font-semibold transition-transform duration-200 hover:scale-[1.02]'
+                            : 'mt-8 flex items-center justify-center rounded-full border border-white/12 bg-white/[0.05] py-3 text-sm font-medium transition-colors hover:bg-white/[0.12]'
+                        }
+                      >
+                        {plan.price === 0 ? 'Start free' : `Choose ${plan.name}`}
+                      </Link>
+                    </div>
+                  </div>
+                </Cell>
+              )
+            })}
           </div>
 
-          <p className="mt-8 text-sm text-fg-muted">{t('pricingAll')}</p>
+          <p className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-white/40">
+            <span className="flex items-center gap-2">
+              <Check className="size-4 text-[#7cabff]" />
+              No card for the free plan
+            </span>
+            <span className="flex items-center gap-2">
+              <Check className="size-4 text-[#7cabff]" />
+              Credits never expire on paid plans
+            </span>
+            <span className="flex items-center gap-2">
+              <Check className="size-4 text-[#7cabff]" />
+              Cancel any time — access runs to the end of the period
+            </span>
+          </p>
         </div>
       </section>
 
-      {/* ----------------------------------------------------------- closing */}
-      <section className="mx-auto max-w-6xl px-6 py-28">
-        <h2 className="text-4xl font-extrabold tracking-[-0.035em] sm:text-6xl">
-          {t('closingTitle')}
-        </h2>
-        <p className="mt-5 max-w-[52ch] text-lg leading-relaxed text-fg-secondary">
-          {t('closingBody')}
-        </p>
+      <section className="relative overflow-hidden border-t border-white/[0.06]">
+        <SectionArc className="top-[38%]" />
+        <div className="relative z-10 mx-auto max-w-7xl px-8 py-28 text-center">
+          <SectionReveal>
+            <h2 className="mx-auto max-w-3xl text-[clamp(2.2rem,5vw,4rem)] font-bold leading-[1.05] tracking-[-0.035em]">
+              Bring a brief.
+              <span className="text-white/45"> Leave with a brand.</span>
+            </h2>
+          </SectionReveal>
+          <SectionReveal delay={0.1}>
+            <Link
+              href="/register"
+              className="mt-10 inline-flex items-center gap-2 rounded-full bg-[image:linear-gradient(100deg,#7C3AED,#4F46E5_55%,#3B82F6)] px-8 py-4 text-sm font-semibold shadow-[0_0_50px_-10px_#4F46E5] transition-transform duration-200 hover:scale-[1.03]"
+            >
+              Start free
+              <ArrowRight className="size-4 rtl:rotate-180" />
+            </Link>
+          </SectionReveal>
+        </div>
+      </section>
 
-        <div className="mt-9 flex flex-wrap items-center gap-4">
-          <Link href="/register" className={buttonVariants({ size: 'lg' })}>
-            {t('ctaPrimary')}
-            <ArrowRight className="rtl:rotate-180" />
-          </Link>
-          <span className="inline-flex items-center gap-2 text-sm text-fg-muted">
-            <Check className="size-4 text-success" />
-            {t('priceFrom')}
+      <footer className="border-t border-white/[0.06]">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-8 py-10">
+          <span className="flex items-center gap-2.5">
+            <LogoMark className="size-5" id="horizon-foot" />
+            <span className="text-sm font-semibold">Brandora</span>
           </span>
-        </div>
-      </section>
-
-      <footer className="border-t border-line">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-8">
-          <Logo className="text-base" markClassName="size-5" />
-          <Link href="/pricing" className="text-sm text-fg-secondary hover:text-fg">
-            {t('ctaSecondary')}
+          <Link
+            href="/register"
+            className="text-sm text-white/50 transition-colors hover:text-white"
+          >
+            Start free
           </Link>
         </div>
       </footer>
