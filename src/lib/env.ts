@@ -44,7 +44,12 @@ export const env = createEnv({
 
     // --- email ---
     RESEND_API_KEY: z.string().min(1).optional(),
-    EMAIL_FROM: z.string().min(1).default('Brandora <onboarding@resend.dev>'),
+    /*
+     * Must be an address on a domain verified in Resend. The shared
+     * onboarding@resend.dev sender only delivers to the Resend account owner,
+     * so leaving it as a default silently drops mail to real customers.
+     */
+    EMAIL_FROM: z.string().min(1).default('Brandora <hello@brandora.enigmitic.com>'),
 
     // --- seeding ---
     SEED_ADMIN_EMAIL: z.string().email().optional(),
