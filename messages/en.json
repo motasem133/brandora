@@ -63,7 +63,21 @@
     "arabicBody": "Brief it in Arabic and the model works in Arabic from the start. Naming, idiom and rhythm do not survive translation, so we do not translate.",
     "closingTitle": "Bring a brief.",
     "closingBody": "The free plan generates a full identity. No card.",
-    "priceFrom": "Paid plans from $29 a month"
+    "priceFrom": "Paid plans from $29 a month",
+    "badge": "One brief in. A whole brand out.",
+    "heroTitleLead": "Your entire brand,",
+    "heroTitleAccent": "generated together.",
+    "statLabel": "artifacts from one run",
+    "pricingTitle": "Simple pricing",
+    "pricingLead": "Start free. Upgrade when you need more brands, more credits, or your own domain.",
+    "pricingPopular": "Most popular",
+    "pricingFree": "Free",
+    "pricingPerMonth": "/month",
+    "pricingCta": "Start free",
+    "pricingCtaPaid": "Choose {plan}",
+    "pricingCredits": "{credits} credits a month",
+    "pricingCreditsOnce": "{credits} credits, once",
+    "pricingAll": "Every plan includes the full brand identity — names, logos, palette, typography and brand story."
   },
   "Auth": {
     "signIn": "Sign in",
