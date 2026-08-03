@@ -4,7 +4,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { ProjectCard } from '@/components/features/projects/project-card'
 import { buttonVariants } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { Stagger, StaggerItem } from '@/components/ui/motion'
+import { Cell } from '@/components/features/landing/horizon'
 import { Link } from '@/i18n/navigation'
 import { countProjects, countProjectsByStatus, listProjects } from '@/server/db/queries/projects'
 import { requireOrg } from '@/server/session'
@@ -37,9 +37,9 @@ export default async function OverviewPage({ params }: { params: Promise<{ local
         <p className="mt-2 text-fg-secondary">{t('subtitle')}</p>
       </div>
 
-      <Stagger className="grid gap-5 sm:grid-cols-3">
-        {stats.map((stat) => (
-          <StaggerItem key={stat.label}>
+      <div className="grid gap-5 sm:grid-cols-3">
+        {stats.map((stat, index) => (
+          <Cell key={stat.label} index={index}>
             <div className="card-lit interactive h-full p-6">
               <div className="flex items-start justify-between gap-3">
                 <p className="text-sm text-fg-secondary">{stat.label}</p>
@@ -49,9 +49,9 @@ export default async function OverviewPage({ params }: { params: Promise<{ local
               </div>
               <p className="mt-3 stat-figure text-4xl">{stat.value}</p>
             </div>
-          </StaggerItem>
+          </Cell>
         ))}
-      </Stagger>
+      </div>
 
       {recent.length === 0 ? (
         <Card className="flex flex-col items-center gap-4 py-16 text-center">

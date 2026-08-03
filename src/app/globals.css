@@ -25,13 +25,13 @@
 
 :root {
   /* Dark Navy, and two steps lifted out of it rather than grey panels. */
-  --bg-base: #0b1020;
-  --bg-surface: #111731;
-  --bg-elevated: #182042;
+  --bg-base: #05070f;
+  --bg-surface: #0a0f1c;
+  --bg-elevated: #121a2e;
 
   --text-primary: #ffffff;
-  --text-secondary: #aab3cf;
-  --text-muted: #78829f;
+  --text-secondary: #a3aec9;
+  --text-muted: #6f7b96;
 
   /*
    * Borders are translucent white rather than a grey line. A hard border is
@@ -417,4 +417,46 @@
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+/* ------------------------------------------------------- system surfaces --- */
+
+/*
+ * The landing page's language, available to every screen behind the login.
+ *
+ * A lit top edge instead of a hairline border: the light in this product comes
+ * from above, and a uniform 1px outline is what made the app read as a
+ * template next to its own marketing.
+ */
+@utility lit {
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--brand-primary) 34%, transparent),
+    color-mix(in srgb, #ffffff 4%, transparent) 38%
+  );
+  padding: 1px;
+  border-radius: var(--radius-card);
+}
+
+@utility lit-inner {
+  background-color: var(--bg-surface);
+  border-radius: calc(var(--radius-card) - 1px);
+  height: 100%;
+}
+
+/* A rail of light, for anything sequential: steps, timelines, nav. */
+@utility rail {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--brand-primary) 70%, transparent),
+    color-mix(in srgb, var(--brand-secondary) 50%, transparent),
+    transparent
+  );
+}
+
+/* The marker that sits on a rail, lit from within. */
+@utility rail-node {
+  background-color: var(--bg-base);
+  border: 1px solid color-mix(in srgb, #ffffff 12%, transparent);
+  box-shadow: 0 0 28px -6px color-mix(in srgb, var(--brand-primary) 90%, transparent);
 }

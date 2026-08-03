@@ -19,7 +19,7 @@ export function Sidebar({ isAdmin }: { isAdmin: boolean }) {
   const pathname = usePathname()
 
   return (
-    <aside className="hidden w-60 shrink-0 border-e border-line bg-surface lg:block">
+    <aside className="relative z-10 hidden w-60 shrink-0 border-e border-line bg-surface/60 backdrop-blur-xl lg:block">
       <div className="sticky top-0 flex h-dvh flex-col p-4">
         <Link href="/dashboard" className="mb-8 px-2">
           <Logo className="text-xl" markClassName="size-7" animated />

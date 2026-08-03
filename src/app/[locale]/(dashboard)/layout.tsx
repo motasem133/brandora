@@ -2,6 +2,7 @@ import { setRequestLocale } from 'next-intl/server'
 import { redirect } from 'next/navigation'
 
 import { AnalyticsIdentity } from '@/components/analytics/posthog-provider'
+import { SectionArc } from '@/components/features/landing/horizon'
 import { Sidebar } from '@/components/features/dashboard/sidebar'
 import { Topbar } from '@/components/features/dashboard/topbar'
 import { getEntitlements } from '@/server/db/queries/plans'
@@ -26,7 +27,13 @@ export default async function DashboardLayout({
   const { planName } = await getEntitlements(org.id)
 
   return (
-    <div className="flex min-h-dvh">
+    <div className="relative flex min-h-dvh">
+      {/*
+        The same light as the marketing page, once, at the top of the app.
+        Behind the content and behind the sidebar, so the whole shell sits
+        under one sky rather than each screen inventing its own.
+      */}
+      <SectionArc className="top-0 opacity-70" />
       <AnalyticsIdentity userId={session.user.id} organizationId={org.id} plan={planName} />
       <Sidebar isAdmin={session.user.role === 'admin'} />
       <div className="flex min-w-0 flex-1 flex-col">
