@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from 'next-intl'
 
 
 import { Button } from '@/components/ui/button'
+import { Logo } from '@/components/ui/logo'
 import { Link, usePathname, useRouter } from '@/i18n/navigation'
 import { resetAnalyticsIdentity } from '@/lib/analytics'
 import { authClient } from '@/lib/auth-client'
@@ -22,8 +23,8 @@ export function Topbar({ user }: { user: { name: string; email: string } }) {
 
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b border-line bg-base/80 px-6 backdrop-blur lg:px-10">
-      <Link href="/dashboard" className="font-display text-lg font-bold gradient-text lg:hidden">
-        Brandora
+      <Link href="/dashboard" className="lg:hidden">
+        <Logo className="text-lg" markClassName="size-6" />
       </Link>
 
       <div className="ms-auto flex items-center gap-2">

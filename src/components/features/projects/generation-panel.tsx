@@ -110,7 +110,12 @@ export function GenerationPanel({
   if (status === 'completed') return null
 
   return (
-    <Card className="space-y-5">
+    <Card
+      className={cn(
+        'space-y-5 transition-colors duration-300',
+        isRunning && 'border-brand/30',
+      )}
+    >
       <div className="flex items-start justify-between gap-4">
         <div>
           <CardTitle>{isRunning ? t('running') : t('title')}</CardTitle>
@@ -128,19 +133,35 @@ export function GenerationPanel({
       </div>
 
       {(isRunning || status === 'partial' || status === 'failed') && (
-        <ol className="space-y-2">
-          {sections.map((section) => {
+        <ol className="space-y-2 stagger-children">
+          {sections.map((section, index) => {
             const state = stepStatus(progress[section]?.status)
             return (
               <li
                 key={section}
+                style={{ '--i': index } as React.CSSProperties}
                 className={cn(
-                  'flex items-center gap-3 rounded-lg border border-line px-4 py-3 text-sm',
+                  'relative flex items-center gap-3 overflow-hidden rounded-lg border border-line px-4 py-3 text-sm transition-colors duration-300',
                   state === 'running' && 'border-brand/40 bg-brand/5',
+                  state === 'done' && 'border-success/30',
                 )}
               >
+                {/*
+                  A band of light crossing only the step that is running. One
+                  moving element at a time is what makes the list read as work
+                  in progress rather than as decoration.
+                */}
+                {state === 'running' && (
+                  <span aria-hidden className="absolute inset-0 shimmer-surface" />
+                )}
                 <StepIcon status={state} />
-                <span className={cn(state === 'pending' && 'text-fg-muted')}>
+                <span
+                  className={cn(
+                    'relative transition-colors duration-300',
+                    state === 'pending' && 'text-fg-muted',
+                    state === 'running' && 'font-medium text-fg',
+                  )}
+                >
                   {t(`steps.${section}`)}
                 </span>
                 {progress[section]?.error && (
@@ -164,6 +185,12 @@ export function GenerationPanel({
 function StepIcon({ status }: { status: StepStatus }) {
   if (status === 'done') return <Check className="size-4 shrink-0 text-success" />
   if (status === 'failed') return <AlertCircle className="size-4 shrink-0 text-danger" />
-  if (status === 'running') return <Loader2 className="size-4 shrink-0 animate-spin text-brand" />
+  if (status === 'running') {
+    return (
+      <span className="relative flex size-4 shrink-0 items-center justify-center rounded-full pulse-brand">
+        <Loader2 className="size-4 animate-spin text-brand" />
+      </span>
+    )
+  }
   return <span className="size-4 shrink-0 rounded-full border border-line-strong" />
 }

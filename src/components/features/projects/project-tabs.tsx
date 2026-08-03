@@ -32,10 +32,16 @@ export async function ProjectTabs({
           href={`/dashboard/projects/${projectId}?tab=${tab}`}
           scroll={false}
           className={cn(
-            '-mb-px border-b-2 px-4 py-2.5 text-sm transition-colors',
+            /*
+             * The underline is a scaled pseudo-element rather than a border,
+             * so it grows from the centre of the tab you picked. A border
+             * swap has no in-between state to animate.
+             */
+            'relative -mb-px cursor-pointer px-4 py-2.5 text-sm transition-colors duration-200',
+            'after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:origin-center after:rounded-full after:bg-brand after:transition-transform after:duration-200 after:content-[""]',
             tab === active
-              ? 'border-brand font-medium text-fg'
-              : 'border-transparent text-fg-secondary hover:text-fg',
+              ? 'font-medium text-fg after:scale-x-100'
+              : 'text-fg-secondary after:scale-x-0 hover:text-fg hover:after:scale-x-50 hover:after:bg-line-strong',
           )}
         >
           {t(tab)}
