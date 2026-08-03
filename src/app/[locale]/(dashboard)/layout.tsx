@@ -31,7 +31,12 @@ export default async function DashboardLayout({
       <Sidebar isAdmin={session.user.role === 'admin'} />
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar user={{ name: session.user.name, email: session.user.email }} />
-        <main className="flex-1 px-6 py-8 lg:px-10">{children}</main>
+        {/*
+          Content arrives rather than snapping in. Deliberately not keyed on
+          the pathname: keying would remount the subtree on every navigation
+          and throw away client state the project tabs and assistant rely on.
+        */}
+        <main className="flex-1 px-6 py-8 animate-fade-up lg:px-10">{children}</main>
       </div>
     </div>
   )

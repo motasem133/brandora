@@ -19,11 +19,8 @@ export function ProjectCard({ project, locale }: { project: Project; locale: str
   const t = useTranslations('Projects')
 
   return (
-    <Link
-      href={`/dashboard/projects/${project.id}`}
-      className="block transition-transform hover:-translate-y-0.5"
-    >
-      <Card className="h-full p-5">
+    <Link href={`/dashboard/projects/${project.id}`} className="group block">
+      <Card className="h-full p-5 interactive">
         <div className="flex items-start justify-between gap-3">
           <h3 className="line-clamp-1 font-display font-semibold">{project.title}</h3>
           <Badge tone={STATUS_TONE[project.status]}>{t(`status.${project.status}`)}</Badge>
