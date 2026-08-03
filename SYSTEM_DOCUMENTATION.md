@@ -38,7 +38,7 @@
 
 - [Appendix A — Seeded Data](#appendix-a--seeded-data)
 - [Appendix B — Key File Reference](#appendix-b--key-file-reference)
-- [Appendix C — Migration from v1](#appendix-c--migration-from-v1)
+- [Appendix C — Relationship to v1](#appendix-c--relationship-to-v1)
 
 ---
 
@@ -61,7 +61,10 @@ Brandora is a SaaS platform that lets entrepreneurs and businesses generate a co
 
 ### What Changed from v1
 
-| Area | v1 (Legacy) | v2 (Current) |
+v1 was designed and documented but never built, so this compares two designs
+rather than describing a rewrite of running software — see Appendix C.
+
+| Area | v1 (Designed) | v2 (Built) |
 |---|---|---|
 | Frontend | Angular 18 SPA | Next.js 16 App Router + RSC |
 | Backend | Laravel 11 REST API | Next.js Server Actions + Route Handlers |
@@ -1935,26 +1938,23 @@ SEED_ADMIN_PASSWORD=<generated, changed on first login>
 
 ---
 
-## Appendix C — Migration from v1
+## Appendix C — Relationship to v1
 
-### Data Migration (MySQL → Postgres)
+v1 — *Enigmatic Launchpad AI*, the Angular + Laravel + MySQL design kept in
+`SYSTEM_DOCUMENTATION.v1-laravel-angular.md` — **was specified but never built**.
+There is no v1 database, no v1 customer, and no Stripe subscription anywhere.
 
-| v1 table | v2 destination | Transformation |
-|---|---|---|
-| `users` | `users` + `organizations` + `members` | Each user gets a personal org; they become its `owner` |
-| `plans` | `plans` | `generations_limit` → `monthly_credits` (× 8 credits per generation) |
-| `subscriptions` | `subscriptions` | Stripe IDs cannot transfer — customers must re-subscribe through Polar |
-| `projects` | `projects` | `user_id` → `organization_id` (the personal org) |
-| `branding_assets` | `branding_assets` | JSON columns → JSONB; DALL·E URLs re-hosted to R2 (they expire) |
-| `website_assets` | `website_assets` | `pages` object → typed block arrays (see Section 5) |
-| `social_media_assets` | `social_media_assets` | Direct copy |
-| `invoices` | `orders` | Historical record only; Polar owns all new billing |
+That makes this a greenfield deployment, and it removes what would otherwise be
+the hardest part of launching: no data migration, no dual-running two billing
+systems, no password-reset campaign at cutover, no expiring DALL·E URLs to
+rescue. The first production database is the one `pnpm db:migrate && pnpm
+db:seed` creates.
 
-**Non-negotiable steps**
-1. **Download every DALL·E image before migrating.** Those URLs expire — the assets are already at risk today.
-2. **Passwords do not transfer.** Laravel bcrypt hashes are not compatible with Better Auth's Argon2id. Email every existing user a password-reset link at cutover, or verify them via Google OAuth.
-3. **Stripe subscriptions cannot be ported to Polar.** Run both in parallel: let existing Stripe subscriptions expire naturally while all new signups go to Polar. Grandfather existing customers on their current pricing.
-4. **Convert website content to blocks.** Write a one-off script mapping v1's `{home: {hero_title, hero_subtitle, ...}}` shape onto the v2 block array. Anything unmapped becomes a generic `text` block rather than being dropped.
+The v1 document is retained deliberately. Every "why" in this one — cookies over
+localStorage JWTs, Polar over Stripe, blocks over fixed page objects, queued
+generation over a synchronous 60-second request — is an argument against a
+specific alternative, and that document is where the alternative is written
+down. It is a record of a design decision, not of a system that ran.
 
 ### Suggested Build Order
 
@@ -1968,13 +1968,16 @@ SEED_ADMIN_PASSWORD=<generated, changed on first login>
 | 6 | Polar billing, plans, credit packs, webhooks |
 | 7 | Brand Assistant |
 | 8 | Admin panel + AI cost dashboard |
-| 9 | Data migration, cutover, Stripe wind-down |
 
-All eight build phases are complete. Two test suites guard them: `pnpm
+All eight phases are complete, and two test suites guard them: `pnpm
 test:system` drives the app over HTTP and asserts against the database, and
 `pnpm test:e2e` drives a browser for the surfaces HTTP cannot reach. Both run in
 CI on every push.
 
+A ninth phase — data migration, cutover and a Stripe wind-down — was planned
+while v1 was still expected to exist. It was dropped rather than done; see
+Appendix C.
+
 ---
 
-*Brandora — System Documentation v2.0 · Next.js 16 · Last updated 2026-08-02*
+*Brandora — System Documentation v2.0 · Next.js 16 · Last updated 2026-08-03*

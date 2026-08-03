@@ -1,5 +1,11 @@
 # Enigmatic Launchpad AI — Full System Documentation
 
+> **This design was never built.** It is the superseded v1 specification,
+> retained because the current system's design decisions are arguments against
+> the alternatives written down here. Nothing described below ever ran, and
+> there is no data, customer or Stripe subscription anywhere in it. The system
+> that exists is documented in `SYSTEM_DOCUMENTATION.md`.
+
 > **Platform**: AI-powered SaaS for brand identity generation  
 > **Domain**: https://lab.enigmitic.com  
 > **Stack**: Angular 18 (Frontend) + Laravel 11 (Backend API) + MySQL + OpenAI + Stripe
