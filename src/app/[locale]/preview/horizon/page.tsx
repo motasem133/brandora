@@ -2,7 +2,14 @@ import { ArrowRight, Check } from 'lucide-react'
 import { setRequestLocale } from 'next-intl/server'
 import Image from 'next/image'
 
-import { FloatCard, HeroBadge } from '@/components/features/landing/float'
+import { HeroBadge } from '@/components/features/landing/float'
+import {
+  Cell,
+  Horizon,
+  LightSweep,
+  ProductFrame,
+  SectionReveal,
+} from '@/components/features/landing/horizon'
 import { AfterHeadline, HeadlineWords } from '@/components/features/landing/motion-hero'
 import { KIT, PLANS, STEPS } from '@/components/features/landing/preview-data'
 import { LogoMark } from '@/components/ui/logo'
@@ -59,34 +66,7 @@ export default async function HorizonDirection({
 
       {/* ------------------------------------------------------------- hero */}
       <section className="relative overflow-hidden pb-0 pt-14 text-center sm:pt-20">
-        {/* The horizon. A gradient ring, bloomed and cropped, so the light
-            reads as coming from behind the page rather than painted on it. */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-[62%] z-0 flex justify-center sm:top-[58%]"
-        >
-          <div
-            className="size-[70rem] shrink-0 rounded-full sm:size-[86rem]"
-            style={{
-              /* The crest is the light source: a bright core with a wide,
-                 warm falloff, so it reads as the sun coming up rather than
-                 as a stroked circle. */
-              background:
-                'radial-gradient(circle at 50% 50%, transparent 0 47.4%, rgba(124,58,237,0.35) 47.6%, rgba(139,92,246,0.9) 48.4%, rgba(196,181,253,1) 48.9%, rgba(96,165,250,0.9) 49.4%, rgba(59,130,246,0.35) 50.2%, transparent 51.4%)',
-              filter: 'drop-shadow(0 -6px 40px rgba(167,139,250,0.9)) drop-shadow(0 -30px 140px rgba(79,70,229,0.85))',
-            }}
-          />
-        </div>
-
-        {/* Bloom above the arc, so the crest glows into the copy. */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-[34%] z-0 h-[40rem]"
-          style={{
-            background:
-              'radial-gradient(52% 42% at 50% 78%, rgba(139,92,246,0.5), transparent 68%), radial-gradient(34% 30% at 50% 74%, rgba(147,197,253,0.35), transparent 70%)',
-          }}
-        />
+        <Horizon />
 
         <div className="relative z-10 mx-auto max-w-4xl px-8">
           <HeroBadge>
@@ -138,7 +118,7 @@ export default async function HorizonDirection({
 
         {/* The product, framed in front of the light and cropped by the fold. */}
         <div className="relative z-10 mx-auto mt-28 max-w-6xl px-8 sm:mt-36">
-          <FloatCard delay={0.8} drift={10} duration={12}>
+          <ProductFrame>
             <div className="rounded-t-[1.75rem] border border-white/10 bg-white/[0.03] p-2 shadow-[0_-10px_80px_-20px_rgba(99,102,241,0.6)] backdrop-blur">
               <Image
                 src="/marketing/app-dashboard.webp"
@@ -150,24 +130,29 @@ export default async function HorizonDirection({
                 priority
               />
             </div>
-          </FloatCard>
+          </ProductFrame>
         </div>
       </section>
 
       {/* -------------------------------------------------------------- kit */}
-      <section id="kit" className="border-t border-white/[0.06] bg-[#070a14]">
-        <div className="mx-auto max-w-7xl px-8 py-24">
-          <h2 className="max-w-2xl text-[clamp(2rem,4vw,3.2rem)] font-bold leading-[1.08] tracking-[-0.03em]">
-            One brief in.
-            <span className="text-white/45"> Everything a brand needs out.</span>
-          </h2>
+      <section id="kit" className="relative overflow-hidden border-t border-white/[0.06] bg-[#070a14]">
+        <LightSweep />
+        <div className="relative mx-auto max-w-7xl px-8 py-24">
+          <SectionReveal>
+            <h2 className="max-w-2xl text-[clamp(2rem,4vw,3.2rem)] font-bold leading-[1.08] tracking-[-0.03em]">
+              One brief in.
+              <span className="text-white/45"> Everything a brand needs out.</span>
+            </h2>
+          </SectionReveal>
 
           <div className="mt-14 grid gap-px overflow-hidden rounded-3xl bg-white/[0.07] sm:grid-cols-2 lg:grid-cols-5">
-            {KIT.map((entry) => (
-              <div key={entry.item} className="bg-[#080c16] p-7 transition-colors hover:bg-[#0c1120]">
-                <p className="text-base font-semibold">{entry.item}</p>
-                <p className="mt-2 text-sm leading-relaxed text-white/45">{entry.detail}</p>
-              </div>
+            {KIT.map((entry, index) => (
+              <Cell key={entry.item} index={index}>
+                <div className="h-full bg-[#080c16] p-7 transition-colors hover:bg-[#0c1120]">
+                  <p className="text-base font-semibold">{entry.item}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-white/45">{entry.detail}</p>
+                </div>
+              </Cell>
             ))}
           </div>
         </div>
@@ -182,13 +167,15 @@ export default async function HorizonDirection({
 
           <div className="mt-14 grid gap-10 md:grid-cols-3 lg:grid-cols-5">
             {STEPS.map((step, index) => (
-              <div key={step.n} className="relative">
-                <span className="inline-flex size-9 items-center justify-center rounded-full border border-white/12 bg-white/[0.04] text-sm font-semibold">
-                  {index + 1}
-                </span>
-                <p className="mt-4 text-lg font-semibold">{step.n}</p>
-                <p className="mt-2 text-sm leading-relaxed text-white/45">{step.body}</p>
-              </div>
+              <Cell key={step.n} index={index}>
+                <div className="relative">
+                  <span className="inline-flex size-9 items-center justify-center rounded-full border border-white/12 bg-white/[0.04] text-sm font-semibold">
+                    {index + 1}
+                  </span>
+                  <p className="mt-4 text-lg font-semibold">{step.n}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-white/45">{step.body}</p>
+                </div>
+              </Cell>
             ))}
           </div>
         </div>
@@ -217,8 +204,8 @@ export default async function HorizonDirection({
               const featured = index === 2
 
               return (
+                <Cell key={plan.name} index={index}>
                 <div
-                  key={plan.name}
                   className={
                     featured
                       ? 'relative rounded-3xl bg-[image:linear-gradient(160deg,#7C3AED,#4F46E5_55%,#3B82F6)] p-px shadow-[0_0_60px_-18px_#4F46E5]'
@@ -254,6 +241,7 @@ export default async function HorizonDirection({
                     </Link>
                   </div>
                 </div>
+                </Cell>
               )
             })}
           </div>
