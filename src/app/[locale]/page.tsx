@@ -3,9 +3,15 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import Image from 'next/image'
 
 import { ManifestRow, StickyBrief } from '@/components/features/landing/manifest'
+import {
+  AfterHeadline,
+  Aurora,
+  HeadlineWords,
+  LogoTile,
+  ParallaxFrame,
+} from '@/components/features/landing/motion-hero'
 import { buttonVariants } from '@/components/ui/button'
 import { Logo, LogoMark } from '@/components/ui/logo'
-import { Reveal } from '@/components/ui/motion'
 import { Link } from '@/i18n/navigation'
 
 /**
@@ -64,7 +70,9 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
   ]
 
   return (
-    <div className="min-h-dvh">
+    <div className="relative min-h-dvh">
+      <Aurora />
+
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
         <Logo className="text-xl" markClassName="size-7" animated />
         <nav className="flex items-center gap-2">
@@ -77,22 +85,21 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
         </nav>
       </header>
 
-      <section className="mx-auto max-w-6xl px-6 pb-16 pt-16 sm:pt-24">
-        <Reveal>
-          <h1 className="max-w-4xl text-5xl font-extrabold leading-[1.02] tracking-[-0.035em] sm:text-7xl">
-            {t('heroTitle')}
-          </h1>
-        </Reveal>
+      <section className="mx-auto max-w-6xl px-6 pb-28 pt-20 sm:pb-40 sm:pt-32">
+        <HeadlineWords
+          text={t('heroTitle')}
+          className="max-w-4xl text-[3.25rem] font-extrabold leading-[0.98] tracking-[-0.04em] sm:text-[5.5rem]"
+        />
 
-        <Reveal delay={0.08}>
+        <AfterHeadline delay={0.5}>
           {/* Measure held near 60ch: this is a paragraph to read, not a banner. */}
-          <p className="mt-7 max-w-[62ch] text-lg leading-relaxed text-fg-secondary sm:text-xl">
+          <p className="mt-8 max-w-[54ch] text-lg leading-relaxed text-fg-secondary sm:text-xl">
             {t('heroLead')}
           </p>
-        </Reveal>
+        </AfterHeadline>
 
-        <Reveal delay={0.16}>
-          <div className="mt-10 flex flex-wrap items-center gap-3">
+        <AfterHeadline delay={0.62}>
+          <div className="mt-11 flex flex-wrap items-center gap-3">
             <Link href="/register" className={buttonVariants({ size: 'lg' })}>
               {t('ctaPrimary')}
               <ArrowRight className="rtl:rotate-180" />
@@ -101,7 +108,7 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
               {t('ctaSecondary')}
             </Link>
           </div>
-        </Reveal>
+        </AfterHeadline>
       </section>
 
       {/* ----------------------------------------------------------- manifest */}
@@ -170,72 +177,41 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
                 </div>
               </ManifestRow>
 
-              <ManifestRow label={t('itemType')} index={2}>
-                <dl className="grid gap-5 sm:grid-cols-3">
-                  {[
-                    { label: t('headingFont'), value: SAMPLE.fonts.heading },
-                    { label: t('bodyFont'), value: SAMPLE.fonts.body },
-                    { label: t('accentFont'), value: SAMPLE.fonts.accent },
-                  ].map((font) => (
-                    <div key={font.label}>
-                      <dt className="text-xs text-fg-muted">{font.label}</dt>
-                      <dd className="mt-1 text-lg font-medium">{font.value}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </ManifestRow>
-
               <ManifestRow label={t('itemLogos')} note={t('itemLogosNote')} index={3}>
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                  {SAMPLE.logos.map((logo) => (
-                    <figure key={logo.src}>
-                      <div className="overflow-hidden rounded-control border border-line bg-white">
-                        <Image
-                          src={logo.src}
-                          alt={`${logo.style} logo concept generated for Makān`}
-                          width={720}
-                          height={720}
-                          className="aspect-square w-full object-contain"
-                          sizes="(max-width: 640px) 45vw, 180px"
-                        />
-                      </div>
-                      <figcaption className="mt-2 text-xs text-fg-muted">{logo.style}</figcaption>
-                    </figure>
+                <div className="grid grid-cols-2 gap-5 sm:grid-cols-4">
+                  {SAMPLE.logos.map((logo, index) => (
+                    <LogoTile key={logo.src} index={index}>
+                      <figure>
+                        <div className="overflow-hidden rounded-card bg-white shadow-[var(--shadow-soft)]">
+                          <Image
+                            src={logo.src}
+                            alt={`${logo.style} logo concept generated for Makān`}
+                            width={720}
+                            height={720}
+                            className="aspect-square w-full object-contain"
+                            sizes="(max-width: 640px) 45vw, 180px"
+                          />
+                        </div>
+                        <figcaption className="mt-3 text-xs text-fg-muted">{logo.style}</figcaption>
+                      </figure>
+                    </LogoTile>
                   ))}
                 </div>
               </ManifestRow>
 
-              <ManifestRow label={t('itemValues')} index={4}>
-                <ul className="flex flex-wrap gap-2">
-                  {SAMPLE.values.map((value) => (
-                    <li
-                      key={value}
-                      className="rounded-full border border-line px-3.5 py-1.5 text-sm text-fg-secondary"
-                    >
-                      {value}
-                    </li>
-                  ))}
-                </ul>
-              </ManifestRow>
-
               <ManifestRow label={t('itemWebsite')} note={t('itemWebsiteNote')} index={5}>
-                <div className="overflow-hidden rounded-card border border-line">
+                <ParallaxFrame>
                   <Image
                     src="/marketing/makan-website.webp"
                     alt="The published website generated for Makān"
                     width={1200}
                     height={806}
-                    className="w-full"
+                    className="w-full scale-[1.06]"
                     sizes="(max-width: 1024px) 90vw, 640px"
                   />
-                </div>
+                </ParallaxFrame>
               </ManifestRow>
 
-              <ManifestRow label={t('itemSocial')} note={t('itemSocialNote')} index={6}>
-                <p className="max-w-[62ch] leading-relaxed text-fg-secondary">
-                  {t('itemKit')} — {t('itemKitNote')}.
-                </p>
-              </ManifestRow>
             </ol>
           </div>
         </div>
