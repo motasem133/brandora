@@ -1,49 +1,79 @@
 @import 'tailwindcss';
 
 /*
- * Tailwind v4 tokens. Dark is the default theme; `.light` on <html> flips it.
- * Colours are OKLCH so lightness steps stay perceptually even across hues.
+ * Brandora design tokens.
+ *
+ * The logo is the source: its purple→indigo→blue ramp is the only accent the
+ * product uses, and Dark Navy is the ground it sits on. There is deliberately
+ * no second accent colour — status colours aside, anything that needs emphasis
+ * borrows from the same three brand stops.
  */
 @theme {
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
   --font-arabic: var(--font-arabic), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-syne), var(--font-inter), ui-sans-serif, sans-serif;
+  --font-display: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
 
-  --radius-card: 0.875rem;
+  /* Generous and consistent: cards 20px, panels 24px, controls 14px. */
+  --radius-control: 0.875rem;
+  --radius-card: 1.25rem;
+  --radius-panel: 1.5rem;
+
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-soft: cubic-bezier(0.64, 0, 0.78, 0);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 :root {
-  --bg-base: oklch(0.16 0.012 275);
-  --bg-surface: oklch(0.2 0.014 275);
-  --bg-elevated: oklch(0.25 0.016 275);
-  --text-primary: oklch(0.97 0.004 275);
-  --text-secondary: oklch(0.72 0.014 275);
-  --text-muted: oklch(0.56 0.014 275);
-  --border: oklch(0.3 0.016 275);
-  --border-strong: oklch(0.38 0.018 275);
+  /* Dark Navy, and two steps lifted out of it rather than grey panels. */
+  --bg-base: #0b1020;
+  --bg-surface: #111731;
+  --bg-elevated: #182042;
 
-  --brand-primary: oklch(0.62 0.21 295);
-  --brand-secondary: oklch(0.75 0.13 205);
-  --brand-fg: oklch(0.99 0 0);
-  --brand-gradient: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+  --text-primary: #ffffff;
+  --text-secondary: #aab3cf;
+  --text-muted: #78829f;
 
-  --success: oklch(0.72 0.17 155);
-  --warning: oklch(0.79 0.16 80);
-  --danger: oklch(0.63 0.21 25);
+  /*
+   * Borders are translucent white rather than a grey line. A hard border is
+   * the single thing that makes a dark interface look like a template.
+   */
+  --border: color-mix(in srgb, #ffffff 9%, transparent);
+  --border-strong: color-mix(in srgb, #ffffff 16%, transparent);
+
+  --brand-primary: #7c3aed;
+  --brand-indigo: #4f46e5;
+  --brand-secondary: #3b82f6;
+  --brand-fg: #ffffff;
+  --brand-gradient: linear-gradient(
+    135deg,
+    var(--brand-primary),
+    var(--brand-indigo) 52%,
+    var(--brand-secondary)
+  );
+
+  /* Soft, wide, and tinted with the brand rather than pure black. */
+  --shadow-soft: 0 1px 2px rgba(5, 8, 20, 0.4), 0 12px 32px -16px rgba(5, 8, 20, 0.8);
+  --shadow-lifted: 0 2px 4px rgba(5, 8, 20, 0.35), 0 26px 56px -24px rgba(79, 70, 229, 0.55);
+
+  --success: #22c55e;
+  --warning: #f5a524;
+  --danger: #ef4444;
 }
 
 .light {
-  --bg-base: oklch(0.99 0.002 275);
-  --bg-surface: oklch(1 0 0);
-  --bg-elevated: oklch(0.97 0.004 275);
-  --text-primary: oklch(0.21 0.014 275);
-  --text-secondary: oklch(0.44 0.014 275);
-  --text-muted: oklch(0.58 0.012 275);
-  --border: oklch(0.9 0.006 275);
-  --border-strong: oklch(0.83 0.008 275);
+  --bg-base: #f7f8fc;
+  --bg-surface: #ffffff;
+  --bg-elevated: #f2f4fb;
 
-  --brand-primary: oklch(0.53 0.22 295);
-  --brand-secondary: oklch(0.62 0.14 205);
+  --text-primary: #0b1020;
+  --text-secondary: #4c5570;
+  --text-muted: #6d7794;
+
+  --border: color-mix(in srgb, #0b1020 8%, transparent);
+  --border-strong: color-mix(in srgb, #0b1020 14%, transparent);
+
+  --shadow-soft: 0 1px 2px rgba(11, 16, 32, 0.05), 0 10px 30px -18px rgba(11, 16, 32, 0.25);
+  --shadow-lifted: 0 2px 6px rgba(11, 16, 32, 0.06), 0 24px 48px -24px rgba(124, 58, 237, 0.35);
 }
 
 @theme inline {
@@ -56,6 +86,7 @@
   --color-line: var(--border);
   --color-line-strong: var(--border-strong);
   --color-brand: var(--brand-primary);
+  --color-brand-indigo: var(--brand-indigo);
   --color-brand-2: var(--brand-secondary);
   --color-brand-fg: var(--brand-fg);
   --color-success: var(--success);
@@ -120,6 +151,7 @@
   background-color: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
+  box-shadow: var(--shadow-soft);
 }
 
 /* ---------------------------------------------------------------- motion --- */
@@ -194,7 +226,7 @@
 /* A single expanding ring — one running step, not a row of bouncing dots. */
 @keyframes pulse-ring {
   0% {
-    box-shadow: 0 0 0 0 color-mix(in oklch, var(--brand-primary) 55%, transparent);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--brand-primary) 55%, transparent);
   }
   70% {
     box-shadow: 0 0 0 10px transparent;
@@ -244,7 +276,7 @@
   background-image: linear-gradient(
     90deg,
     transparent 0%,
-    color-mix(in oklch, var(--text-primary) 8%, transparent) 50%,
+    color-mix(in srgb, var(--text-primary) 8%, transparent) 50%,
     transparent 100%
   );
   background-size: 200% 100%;
@@ -260,9 +292,9 @@
     background-color 0.18s ease;
 
   &:hover {
-    transform: translateY(-2px);
-    border-color: color-mix(in oklch, var(--brand-primary) 45%, var(--border));
-    box-shadow: 0 8px 24px -12px color-mix(in oklch, var(--brand-primary) 40%, transparent);
+    transform: translateY(-3px);
+    border-color: color-mix(in srgb, var(--brand-primary) 40%, var(--border));
+    box-shadow: var(--shadow-lifted);
   }
 
   &:active {
@@ -336,8 +368,8 @@
     linear-gradient(var(--bg-surface), var(--bg-surface)) padding-box,
     linear-gradient(
         135deg,
-        color-mix(in oklch, var(--brand-primary) 55%, transparent),
-        color-mix(in oklch, var(--brand-secondary) 35%, transparent) 45%,
+        color-mix(in srgb, var(--brand-primary) 55%, transparent),
+        color-mix(in srgb, var(--brand-secondary) 35%, transparent) 45%,
         var(--border) 75%
       )
       border-box;
@@ -348,13 +380,13 @@
 /* The glow that follows a hover, sized to feel like light rather than shadow. */
 @utility glow-brand {
   box-shadow:
-    0 0 0 1px color-mix(in oklch, var(--brand-primary) 22%, transparent),
-    0 18px 40px -20px color-mix(in oklch, var(--brand-primary) 55%, transparent);
+    0 0 0 1px color-mix(in srgb, var(--brand-primary) 22%, transparent),
+    0 18px 40px -20px color-mix(in srgb, var(--brand-primary) 55%, transparent);
 }
 
 /* Frosted bar for anything that floats over scrolling content. */
 @utility glass {
-  background-color: color-mix(in oklch, var(--bg-base) 72%, transparent);
+  background-color: color-mix(in srgb, var(--bg-base) 72%, transparent);
   backdrop-filter: blur(14px) saturate(1.4);
   -webkit-backdrop-filter: blur(14px) saturate(1.4);
 }
@@ -370,10 +402,10 @@
   color: var(--brand-primary);
   background: linear-gradient(
     140deg,
-    color-mix(in oklch, var(--brand-primary) 22%, transparent),
-    color-mix(in oklch, var(--brand-secondary) 16%, transparent)
+    color-mix(in srgb, var(--brand-primary) 22%, transparent),
+    color-mix(in srgb, var(--brand-secondary) 16%, transparent)
   );
-  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--brand-primary) 18%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand-primary) 18%, transparent);
 }
 
 /* Numbers that carry the brand rather than sitting in body grey. */
