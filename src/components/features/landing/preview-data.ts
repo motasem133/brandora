@@ -20,10 +20,38 @@ export const KIT = [
 ] as const
 
 export const PLANS = [
-  { name: 'Free', price: 0, credits: '10 credits, once', note: 'One full brand identity' },
-  { name: 'Basic', price: 29, credits: '120 credits a month', note: 'Website builder, SVG export' },
-  { name: 'Pro', price: 79, credits: '400 credits a month', note: 'Social kit, assistant, priority' },
-  { name: 'Business', price: 199, credits: '1,200 credits a month', note: 'Custom domains, unlimited seats' },
+  {
+    name: 'Free',
+    price: 0,
+    credits: '10 credits, once',
+    note: 'One full brand identity',
+    runs: '1 brand',
+    features: ['4 logo concepts', 'Palette and fonts', 'Brand story', '3 projects'],
+  },
+  {
+    name: 'Basic',
+    price: 29,
+    credits: '120 credits a month',
+    note: 'Website builder, SVG export',
+    runs: '~15 runs a month',
+    features: ['Everything in Free', 'Website builder', 'SVG vector export', 'Brand kit ZIP', '2 seats'],
+  },
+  {
+    name: 'Pro',
+    price: 79,
+    credits: '400 credits a month',
+    note: 'Social kit, assistant, priority',
+    runs: '~50 runs a month',
+    features: ['Everything in Basic', 'Social media kit', 'Brand Assistant', 'Priority queue', '5 seats'],
+  },
+  {
+    name: 'Business',
+    price: 199,
+    credits: '1,200 credits a month',
+    note: 'Custom domains, unlimited seats',
+    runs: '~150 runs a month',
+    features: ['Everything in Pro', 'Your own domain', 'Unlimited seats', 'API access', 'Dedicated support'],
+  },
 ] as const
 
 export const STEPS = [
