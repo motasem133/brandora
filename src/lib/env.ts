@@ -48,8 +48,12 @@ export const env = createEnv({
      * Must be an address on a domain verified in Resend. The shared
      * onboarding@resend.dev sender only delivers to the Resend account owner,
      * so leaving it as a default silently drops mail to real customers.
+     *
+     * Deliberately the apex rather than brandora.enigmitic.com: §10 delegates
+     * that subtree's nameservers to Vercel for wildcard certificates, which
+     * would take the mail records with it and break delivery silently.
      */
-    EMAIL_FROM: z.string().min(1).default('Brandora <hello@brandora.enigmitic.com>'),
+    EMAIL_FROM: z.string().min(1).default('Brandora <hello@enigmitic.com>'),
 
     // --- seeding ---
     SEED_ADMIN_EMAIL: z.string().email().optional(),
