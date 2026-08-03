@@ -4,10 +4,13 @@ import { eq } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
+import { headers } from 'next/headers'
+
 import { AppError } from '@/lib/errors'
 import { authedAction, orgOwnerAction } from '@/server/actions/safe-action'
+import { auth } from '@/server/auth'
 import { db } from '@/server/db'
-import { organizations, users } from '@/server/db/schema'
+import { organizations } from '@/server/db/schema'
 
 export const updateProfile = authedAction
   .metadata({ name: 'update-profile' })
@@ -17,11 +20,19 @@ export const updateProfile = authedAction
       locale: z.enum(['en', 'ar']),
     }),
   )
-  .action(async ({ parsedInput, ctx }) => {
-    await db
-      .update(users)
-      .set({ name: parsedInput.name, locale: parsedInput.locale, updatedAt: new Date() })
-      .where(eq(users.id, ctx.user.id))
+  .action(async ({ parsedInput }) => {
+    /*
+     * Through Better Auth rather than straight to the table.
+     *
+     * Sessions are cached in the cookie for five minutes, and the pages read
+     * the name from the session. A direct write updated the database and left
+     * every screen showing the old value until the cache expired, which reads
+     * as the save having failed.
+     */
+    await auth.api.updateUser({
+      headers: await headers(),
+      body: { name: parsedInput.name, locale: parsedInput.locale },
+    })
 
     revalidatePath('/[locale]/dashboard', 'layout')
     return { name: parsedInput.name }

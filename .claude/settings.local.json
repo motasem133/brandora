@@ -29,7 +29,8 @@
       "Bash(python3 -m json.tool)",
       "Bash(npx *)",
       "Bash(curl -s -o /dev/null http://localhost:8288/)",
-      "Bash(curl -s -o /dev/null -w \"dashboard -> %{http_code}\\\\n\" http://localhost:8288/)"
+      "Bash(curl -s -o /dev/null -w \"dashboard -> %{http_code}\\\\n\" http://localhost:8288/)",
+      "Bash(E2E_EMAIL=e2e@brandora-test.com E2E_PASSWORD=testpassword123 pnpm exec playwright test e2e/settings.spec.ts)"
     ]
   }
 }
