@@ -2,11 +2,20 @@ import { eq } from 'drizzle-orm'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { CurrencySwitch } from '@/components/features/billing/currency-switch'
+import { IntervalSwitch } from '@/components/features/billing/interval-switch'
 import { buttonVariants } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardTitle } from '@/components/ui/card'
 import { Link } from '@/i18n/navigation'
-import { formatPrice, isCurrency, pickPrice, type Currency } from '@/lib/utils'
+import {
+  formatPrice,
+  isCurrency,
+  isInterval,
+  pickPrice,
+  yearlySavingPercent,
+  type BillingInterval,
+  type Currency,
+} from '@/lib/utils'
 import { db } from '@/server/db'
 import { creditPacks, plans } from '@/server/db/schema'
 
@@ -15,14 +24,15 @@ export default async function PricingPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>
-  searchParams: Promise<{ currency?: string }>
+  searchParams: Promise<{ currency?: string; interval?: string }>
 }) {
   const { locale } = await params
-  const { currency: requested } = await searchParams
+  const { currency: requested, interval: requestedInterval } = await searchParams
   setRequestLocale(locale)
 
   const t = await getTranslations('Pricing')
   const currency: Currency = isCurrency(requested) ? requested : locale === 'ar' ? 'aed' : 'usd'
+  const interval: BillingInterval = isInterval(requestedInterval) ? requestedInterval : 'monthly'
 
   const [allPlans, packs] = await Promise.all([
     db.select().from(plans).where(eq(plans.isActive, true)).orderBy(plans.sortOrder),
@@ -53,15 +63,22 @@ export default async function PricingPage({
           </div>
           {/* Prices are shown in both currencies because Polar charges in the
               customer's, and a figure that differs from the invoice erodes trust. */}
-          <CurrencySwitch active={currency} href="/pricing" />
+          <div className="flex flex-wrap items-center gap-2">
+            <IntervalSwitch active={interval} currency={currency} href="/pricing" />
+            <CurrencySwitch active={currency} interval={interval} href="/pricing" />
+          </div>
         </div>
 
         <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {allPlans.map((plan) => {
-            const shown = pickPrice(currency, {
-              usd: plan.priceMonthly,
-              aed: plan.priceMonthlyAed,
-            })
+            const yearly = interval === 'yearly'
+            const shown = pickPrice(
+              currency,
+              yearly
+                ? { usd: plan.priceYearly, aed: plan.priceYearlyAed }
+                : { usd: plan.priceMonthly, aed: plan.priceMonthlyAed },
+            )
+            const saving = yearlySavingPercent(plan.priceMonthly, plan.priceYearly)
             const features = (plan.features as Record<string, string[]>)?.[locale] ?? []
             const highlighted = plan.slug === 'pro'
 
@@ -74,8 +91,15 @@ export default async function PricingPage({
 
                 <p className="mt-3 font-display text-3xl font-semibold">
                   {formatPrice(shown.amount, shown.currency, locale)}
-                  <span className="text-sm font-normal text-fg-muted">{t('perMonth')}</span>
+                  <span className="text-sm font-normal text-fg-muted">
+                    {yearly ? t('perYear') : t('perMonth')}
+                  </span>
                 </p>
+                {yearly && saving !== null && (
+                  <Badge tone="success" className="mt-1">
+                    {t('savePercent', { percent: saving })}
+                  </Badge>
+                )}
                 {shown.alternate && (
                   <p className="text-xs text-fg-muted">
                     ≈ {formatPrice(shown.alternate.amount, shown.alternate.currency, locale)}

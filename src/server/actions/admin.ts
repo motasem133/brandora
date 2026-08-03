@@ -74,6 +74,13 @@ export const updatePlan = adminAction
       vectorExport: z.boolean(),
       brandAssistant: z.boolean(),
       customDomain: z.boolean(),
+      /*
+       * Polar product ids, trimmed to null when cleared. Without these,
+       * checkout has nothing to sell — and the yearly one is the difference
+       * between offering annual billing and only appearing to.
+       */
+      polarProductIdMonthly: z.string().trim().max(120).nullable(),
+      polarProductIdYearly: z.string().trim().max(120).nullable(),
     }),
   )
   .action(async ({ parsedInput }) => {

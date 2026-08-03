@@ -330,7 +330,13 @@
     },
     "refresh": "Refresh",
     "currency": "Currency",
-    "approx": "≈ {price}"
+    "approx": "≈ {price}",
+    "interval": "Billing period",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "perYear": "/year",
+    "savePercent": "Save {percent}%",
+    "intervalUnavailable": "Not sold on this billing period yet."
   },
   "Assistant": {
     "emptyTitle": "Refine your brand",
@@ -434,15 +440,18 @@
       "active": "Visible on pricing",
       "save": "Save",
       "saved": "Saved",
-      "connected": "Connected to Polar",
-      "notConnected": "No Polar product",
       "flags": {
         "websiteBuilder": "Website builder",
         "socialMediaKit": "Social media kit",
         "vectorExport": "SVG export",
         "brandAssistant": "Brand assistant",
         "customDomain": "Custom domain"
-      }
+      },
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "polarProductIdMonthly": "Polar product — monthly",
+      "polarProductIdYearly": "Polar product — yearly",
+      "productIdPlaceholder": "Not sold"
     },
     "projects": {
       "title": "Projects",
@@ -468,7 +477,9 @@
     "choose": "Choose {plan}",
     "packsTitle": "Need more?",
     "packsBody": "One-off credit packs. They never expire and are used after your monthly credits.",
-    "creditsWord": "credits"
+    "creditsWord": "credits",
+    "perYear": "/year",
+    "savePercent": "Save {percent}%"
   },
   "Settings": {
     "title": "Settings",

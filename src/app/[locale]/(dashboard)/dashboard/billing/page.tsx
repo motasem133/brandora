@@ -7,7 +7,17 @@ import { CancelSubscriptionButton } from '@/components/features/billing/cancel-b
 import { Badge } from '@/components/ui/badge'
 import { Card, CardDescription, CardTitle } from '@/components/ui/card'
 import { CurrencySwitch } from '@/components/features/billing/currency-switch'
-import { formatDate, formatPrice, isCurrency, pickPrice, type Currency } from '@/lib/utils'
+import { IntervalSwitch } from '@/components/features/billing/interval-switch'
+import {
+  formatDate,
+  formatPrice,
+  isCurrency,
+  isInterval,
+  pickPrice,
+  yearlySavingPercent,
+  type BillingInterval,
+  type Currency,
+} from '@/lib/utils'
 import { db } from '@/server/db'
 import { getOrgPlan } from '@/server/db/queries/plans'
 import { creditPacks, creditTransactions, orders, plans, subscriptions } from '@/server/db/schema'
@@ -18,15 +28,16 @@ export default async function BillingPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>
-  searchParams: Promise<{ checkout?: string; currency?: string }>
+  searchParams: Promise<{ checkout?: string; currency?: string; interval?: string }>
 }) {
   const { locale } = await params
-  const { checkout, currency: requested } = await searchParams
+  const { checkout, currency: requested, interval: requestedInterval } = await searchParams
   setRequestLocale(locale)
 
   // Arabic readers are almost always billing in the UAE, so default to dirhams
   // there and dollars elsewhere. The switch overrides either way.
   const currency: Currency = isCurrency(requested) ? requested : locale === 'ar' ? 'aed' : 'usd'
+  const interval: BillingInterval = isInterval(requestedInterval) ? requestedInterval : 'monthly'
 
   const t = await getTranslations('Billing')
   const { org, orgRole } = await requireOrg()
@@ -60,7 +71,10 @@ export default async function BillingPage({
           <h1 className="font-display text-2xl font-semibold">{t('title')}</h1>
           <p className="mt-1 text-sm text-fg-secondary">{t('subtitle')}</p>
         </div>
-        <CurrencySwitch active={currency} />
+        <div className="flex flex-wrap items-center gap-2">
+          <IntervalSwitch active={interval} currency={currency} />
+          <CurrencySwitch active={currency} interval={interval} />
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -120,16 +134,27 @@ export default async function BillingPage({
                 </div>
 
                 {(() => {
-                  const shown = pickPrice(currency, {
-                    usd: plan.priceMonthly,
-                    aed: plan.priceMonthlyAed,
-                  })
+                  const yearly = interval === 'yearly'
+                  const shown = pickPrice(
+                    currency,
+                    yearly
+                      ? { usd: plan.priceYearly, aed: plan.priceYearlyAed }
+                      : { usd: plan.priceMonthly, aed: plan.priceMonthlyAed },
+                  )
+                  const saving = yearlySavingPercent(plan.priceMonthly, plan.priceYearly)
                   return (
                     <>
                       <p className="mt-2 font-display text-2xl font-semibold">
                         {formatPrice(shown.amount, shown.currency, locale)}
-                        <span className="text-sm font-normal text-fg-muted">{t('perMonth')}</span>
+                        <span className="text-sm font-normal text-fg-muted">
+                          {yearly ? t('perYear') : t('perMonth')}
+                        </span>
                       </p>
+                      {yearly && saving !== null && (
+                        <Badge tone="success" className="mt-1">
+                          {t('savePercent', { percent: saving })}
+                        </Badge>
+                      )}
                       {/* The other currency, so what Polar charges is never a surprise. */}
                       {shown.alternate && (
                         <p className="text-xs text-fg-muted">
@@ -157,7 +182,24 @@ export default async function BillingPage({
 
                 {!isCurrent && plan.priceMonthly > 0 && isOwner && (
                   <div className="mt-4">
-                    <CheckoutButton kind="plan" slug={plan.slug} label={t('upgrade')} />
+                    {/*
+                      A plan is only buyable on a period that has a Polar
+                      product behind it. Offering the button regardless sends
+                      the customer to a checkout that refuses them, which reads
+                      as a broken payment rather than an unsold option.
+                    */}
+                    {(interval === 'yearly'
+                      ? plan.polarProductIdYearly
+                      : plan.polarProductIdMonthly) ? (
+                      <CheckoutButton
+                        kind="plan"
+                        slug={plan.slug}
+                        interval={interval}
+                        label={t('upgrade')}
+                      />
+                    ) : (
+                      <p className="text-xs text-fg-muted">{t('intervalUnavailable')}</p>
+                    )}
                   </div>
                 )}
               </Card>

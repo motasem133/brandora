@@ -1408,6 +1408,19 @@ The ~1.1% premium buys tax compliance. That is a good trade at this stage.
 | **Business** | $199 | $1,990 | 1,200 | ~150 | Unlimited | + Custom domain, API access, dedicated support |
 
 Annual = 10 months' price (2 months free), credits granted monthly, not upfront.
+AED annual prices follow the same ratio: AED 1,100 / 2,890 / 7,290.
+
+Both the pricing page and the billing page carry the period in `?interval=`,
+alongside `?currency=`, so a shared link opens on the same figures the sender
+saw. The discount shown on the yearly view is computed from the two prices
+rather than written in copy — editing an annual price can never leave a stale
+"2 months free" claim behind.
+
+A plan is only offered on a period that has a Polar product behind it: with
+`polar_product_id_yearly` unset, the yearly view prices the plan but says it is
+not sold yet instead of opening a checkout that would refuse the customer. Both
+product ids are editable in **Admin → Plans**, which is also where a newly
+created Polar product gets connected.
 
 ### Currencies
 

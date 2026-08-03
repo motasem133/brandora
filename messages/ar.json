@@ -330,7 +330,13 @@
     },
     "refresh": "تحديث",
     "currency": "العملة",
-    "approx": "≈ {price}"
+    "approx": "≈ {price}",
+    "interval": "دورة الفوترة",
+    "monthly": "شهري",
+    "yearly": "سنوي",
+    "perYear": "/سنة",
+    "savePercent": "وفّر {percent}٪",
+    "intervalUnavailable": "غير متاح على دورة الفوترة هذه بعد."
   },
   "Assistant": {
     "emptyTitle": "حسّن علامتك التجارية",
@@ -434,15 +440,18 @@
       "active": "ظاهرة في الأسعار",
       "save": "حفظ",
       "saved": "تم الحفظ",
-      "connected": "متصلة بـ Polar",
-      "notConnected": "لا يوجد منتج",
       "flags": {
         "websiteBuilder": "منشئ المواقع",
         "socialMediaKit": "حزمة السوشيال ميديا",
         "vectorExport": "تصدير SVG",
         "brandAssistant": "مساعد العلامة",
         "customDomain": "نطاق مخصص"
-      }
+      },
+      "monthly": "شهري",
+      "yearly": "سنوي",
+      "polarProductIdMonthly": "منتج Polar — شهري",
+      "polarProductIdYearly": "منتج Polar — سنوي",
+      "productIdPlaceholder": "غير معروض للبيع"
     },
     "projects": {
       "title": "المشاريع",
@@ -468,7 +477,9 @@
     "choose": "اختر {plan}",
     "packsTitle": "تحتاج المزيد؟",
     "packsBody": "حزم رصيد لمرة واحدة. لا تنتهي صلاحيتها وتُستخدم بعد رصيدك الشهري.",
-    "creditsWord": "رصيد"
+    "creditsWord": "رصيد",
+    "perYear": "/سنة",
+    "savePercent": "وفّر {percent}٪"
   },
   "Settings": {
     "title": "الإعدادات",

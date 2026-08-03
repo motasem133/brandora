@@ -23,7 +23,8 @@ type Plan = {
   vectorExport: boolean
   brandAssistant: boolean
   customDomain: boolean
-  connected: boolean
+  polarProductIdMonthly: string | null
+  polarProductIdYearly: string | null
 }
 
 const FLAGS = [
@@ -33,6 +34,12 @@ const FLAGS = [
   'brandAssistant',
   'customDomain',
 ] as const
+
+/** An emptied field means "not sold", which is null rather than "". */
+function productId(value: FormDataEntryValue | null) {
+  const trimmed = String(value ?? '').trim()
+  return trimmed.length > 0 ? trimmed : null
+}
 
 export function PlanEditor({ plan }: { plan: Plan }) {
   const t = useTranslations('Admin')
@@ -61,6 +68,8 @@ export function PlanEditor({ plan }: { plan: Plan }) {
       vectorExport: data.get('vectorExport') === 'on',
       brandAssistant: data.get('brandAssistant') === 'on',
       customDomain: data.get('customDomain') === 'on',
+      polarProductIdMonthly: productId(data.get('polarProductIdMonthly')),
+      polarProductIdYearly: productId(data.get('polarProductIdYearly')),
     })
   }
 
@@ -72,9 +81,17 @@ export function PlanEditor({ plan }: { plan: Plan }) {
           <p className="mt-0.5 text-sm text-fg-secondary">{plan.price}</p>
         </div>
         {/* Without a Polar product, checkout cannot resolve anything to sell. */}
-        <Badge tone={plan.connected ? 'success' : 'warning'}>
-          {plan.connected ? t('plans.connected') : t('plans.notConnected')}
-        </Badge>
+        {/* Per interval: a plan with only a monthly product can be bought
+            monthly and not yearly, and reading one badge for both hid exactly
+            that. */}
+        <div className="flex flex-wrap justify-end gap-1.5">
+          <Badge tone={plan.polarProductIdMonthly ? 'success' : 'warning'}>
+            {t('plans.monthly')}
+          </Badge>
+          <Badge tone={plan.polarProductIdYearly ? 'success' : 'warning'}>
+            {t('plans.yearly')}
+          </Badge>
+        </div>
       </div>
 
       <form ref={formRef} className="space-y-3" onChange={() => setSaved(false)}>
@@ -88,6 +105,28 @@ export function PlanEditor({ plan }: { plan: Plan }) {
             className="h-10 w-32 rounded-lg border border-line bg-surface px-3 text-sm focus:border-brand focus:outline-none"
           />
         </label>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          {(
+            [
+              ['polarProductIdMonthly', plan.polarProductIdMonthly],
+              ['polarProductIdYearly', plan.polarProductIdYearly],
+            ] as const
+          ).map(([field, value]) => (
+            <label key={field} className="block">
+              <span className="mb-1 block text-xs text-fg-secondary">
+                {t(`plans.${field}`)}
+              </span>
+              <input
+                name={field}
+                defaultValue={value ?? ''}
+                placeholder={t('plans.productIdPlaceholder')}
+                spellCheck={false}
+                className="h-10 w-full rounded-lg border border-line bg-surface px-3 font-mono text-xs focus:border-brand focus:outline-none"
+              />
+            </label>
+          ))}
+        </div>
 
         <div className="grid gap-2 sm:grid-cols-2">
           {FLAGS.map((flag) => (
