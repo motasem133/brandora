@@ -5,6 +5,7 @@ import { useAction } from 'next-safe-action/hooks'
 
 import { Button } from '@/components/ui/button'
 import { FieldError } from '@/components/ui/field-error'
+import { EVENTS, capture } from '@/lib/analytics'
 import type { BillingInterval } from '@/lib/utils'
 import { createCheckout } from '@/server/actions/billing'
 
@@ -33,7 +34,10 @@ export function CheckoutButton({
         size="sm"
         className="w-full"
         disabled={isPending}
-        onClick={() => execute({ kind, slug, interval })}
+        onClick={() => {
+          capture(EVENTS.checkoutStarted, { kind, slug, interval })
+          execute({ kind, slug, interval })
+        }}
       >
         {isPending && <Loader2 className="animate-spin" />}
         {label}

@@ -4,6 +4,7 @@ import { setRequestLocale } from 'next-intl/server'
 import { IBM_Plex_Sans_Arabic, Inter, Syne } from 'next/font/google'
 import { notFound } from 'next/navigation'
 
+import { PostHogProvider } from '@/components/analytics/posthog-provider'
 import { isRtl, routing } from '@/i18n/routing'
 import { themeInitScript } from '@/lib/theme'
 import '../globals.css'
@@ -55,7 +56,10 @@ export default async function LocaleLayout({
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body>
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <NextIntlClientProvider>
+          <PostHogProvider />
+          {children}
+        </NextIntlClientProvider>
       </body>
     </html>
   )

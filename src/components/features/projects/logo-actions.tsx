@@ -7,6 +7,7 @@ import { useState } from 'react'
 
 import { FieldError } from '@/components/ui/field-error'
 import { useRouter } from '@/i18n/navigation'
+import { EVENTS, capture } from '@/lib/analytics'
 import { selectPrimaryLogo } from '@/server/actions/branding'
 import { regenerateLogos } from '@/server/actions/generation'
 
@@ -69,6 +70,7 @@ export function RegenerateLogosButton({
        * onwards rather than appearing to do nothing until the refresh lands —
        * which is what made people click it twice.
        */
+      capture(EVENTS.logosRegenerated, { cost })
       setQueued(true)
       router.refresh()
     },

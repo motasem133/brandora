@@ -4,6 +4,24 @@ import type { NextConfig } from 'next'
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts')
 
+/**
+ * PostHog's ingest host, split into the two upstreams it serves: the API and
+ * the static assets bundle. Derived from NEXT_PUBLIC_POSTHOG_HOST so pointing
+ * at the EU region — or at a local collector in a test — needs no code change.
+ */
+function posthogUpstreams() {
+  const host = process.env.NEXT_PUBLIC_POSTHOG_HOST
+  if (!host) return null
+
+  const assets = host.includes('://eu.')
+    ? 'https://eu-assets.i.posthog.com'
+    : host.includes('://us.')
+      ? 'https://us-assets.i.posthog.com'
+      : host
+
+  return { api: host.replace(/\/$/, ''), assets: assets.replace(/\/$/, '') }
+}
+
 const nextConfig: NextConfig = {
   /*
    * Native addons must not be bundled — the bundler cannot place a .node
@@ -12,6 +30,26 @@ const nextConfig: NextConfig = {
    * instead, which is also how they resolve correctly on Vercel.
    */
   serverExternalPackages: ['@neplex/vectorizer', 'sharp'],
+
+  /*
+   * PostHog's own domain is on every ad-block list, so requests to it are
+   * dropped for a large share of visitors — and disproportionately for the
+   * technical ones. Rewriting through this origin is the supported way to
+   * measure them; without a host configured, no rewrite is added at all.
+   */
+  async rewrites() {
+    const upstream = posthogUpstreams()
+    if (!upstream) return []
+
+    return [
+      { source: '/ingest/static/:path*', destination: `${upstream.assets}/static/:path*` },
+      { source: '/ingest/:path*', destination: `${upstream.api}/:path*` },
+    ]
+  },
+
+  // PostHog's API is sensitive to a trailing slash being appended, which is
+  // what Next does by default on the way through a rewrite.
+  skipTrailingSlashRedirect: true,
 
   experimental: {
     // Server Actions are public endpoints; keep payloads small on purpose.

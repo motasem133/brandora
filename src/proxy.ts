@@ -162,10 +162,10 @@ export const config = {
   /*
    * Skip API routes, static assets, and anything with a file extension.
    *
-   * /monitoring is the tunnel the browser posts Sentry reports to. Left in,
-   * locale negotiation redirects it to /en/monitoring and every client-side
-   * error is lost — silently, which is the one failure an error tracker must
-   * not have.
+   * /monitoring and /ingest are the paths the browser posts Sentry reports and
+   * PostHog events to. Left in, locale negotiation redirects them to
+   * /en/monitoring and /en/ingest and every client-side report is lost —
+   * silently, which is the one failure this kind of tooling must not have.
    */
-  matcher: ['/((?!api|monitoring|_next/static|_next/image|favicon.ico|.*\\..*).*)'],
+  matcher: ['/((?!api|monitoring|ingest|_next/static|_next/image|favicon.ico|.*\\..*).*)'],
 }

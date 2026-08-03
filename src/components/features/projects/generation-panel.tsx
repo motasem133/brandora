@@ -10,6 +10,7 @@ import { Card, CardDescription, CardTitle } from '@/components/ui/card'
 import { FieldError } from '@/components/ui/field-error'
 import { useRouter } from '@/i18n/navigation'
 import { cn } from '@/lib/utils'
+import { EVENTS, capture } from '@/lib/analytics'
 import { generateProject } from '@/server/actions/generation'
 
 type StepStatus = 'pending' | 'running' | 'done' | 'failed'
@@ -75,6 +76,7 @@ export function GenerationPanel({
 
   const { execute, isPending, result } = useAction(generateProject, {
     onSuccess: () => {
+      capture(EVENTS.generationStarted)
       setStatus('queued')
       subscribe()
     },

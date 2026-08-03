@@ -85,6 +85,11 @@ export const env = createEnv({
     NEXT_PUBLIC_APP_URL: z.string().url(),
     /** Identifies the project to report to. Not a secret — it only accepts events. */
     NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
+
+    /** PostHog project key. Write-only, and public by the same design. */
+    NEXT_PUBLIC_POSTHOG_KEY: z.string().min(1).optional(),
+    /** Region host, e.g. https://eu.i.posthog.com. Also the rewrite upstream. */
+    NEXT_PUBLIC_POSTHOG_HOST: z.string().url().optional(),
   },
 
   /**
@@ -123,6 +128,8 @@ export const env = createEnv({
     SEED_ADMIN_PASSWORD: process.env.SEED_ADMIN_PASSWORD,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
+    NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
+    NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
   },
 
   emptyStringAsUndefined: true,

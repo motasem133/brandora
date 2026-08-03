@@ -8,6 +8,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { FieldError } from '@/components/ui/field-error'
 import { Input } from '@/components/ui/input'
+import { EVENTS, capture } from '@/lib/analytics'
 import {
   attachCustomDomain,
   publishWebsite,
@@ -64,6 +65,7 @@ export function PublishPanel({
 
   const attach = useAction(attachCustomDomain, {
     onSuccess: ({ data }) => {
+      capture(EVENTS.customDomainAttached)
       if (data) setDomain(data)
       setDomainInput('')
     },
@@ -81,6 +83,7 @@ export function PublishPanel({
 
   const publish = useAction(publishWebsite, {
     onSuccess: ({ data }) => {
+      capture(EVENTS.websitePublished)
       setPublished(true)
       setLiveSubdomain(data?.subdomain ?? subdomain)
       setOpen(false)

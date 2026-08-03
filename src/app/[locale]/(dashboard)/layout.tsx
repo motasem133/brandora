@@ -1,9 +1,11 @@
 import { setRequestLocale } from 'next-intl/server'
 import { redirect } from 'next/navigation'
 
+import { AnalyticsIdentity } from '@/components/analytics/posthog-provider'
 import { Sidebar } from '@/components/features/dashboard/sidebar'
 import { Topbar } from '@/components/features/dashboard/topbar'
-import { getSession } from '@/server/session'
+import { getEntitlements } from '@/server/db/queries/plans'
+import { getSession, requireOrg } from '@/server/session'
 
 export default async function DashboardLayout({
   children,
@@ -20,8 +22,12 @@ export default async function DashboardLayout({
   const session = await getSession()
   if (!session) redirect(`/${locale}/login`)
 
+  const { org } = await requireOrg()
+  const { planName } = await getEntitlements(org.id)
+
   return (
     <div className="flex min-h-dvh">
+      <AnalyticsIdentity userId={session.user.id} organizationId={org.id} plan={planName} />
       <Sidebar isAdmin={session.user.role === 'admin'} />
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar user={{ name: session.user.name, email: session.user.email }} />

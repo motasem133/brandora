@@ -10,6 +10,7 @@ import { FieldError } from '@/components/ui/field-error'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Link, useRouter } from '@/i18n/navigation'
+import { EVENTS, capture } from '@/lib/analytics'
 import { cn } from '@/lib/utils'
 import { BRAND_STYLES, COUNTRIES, INDUSTRY_KEYS } from '@/lib/validations/project'
 import { createProject } from '@/server/actions/projects'
@@ -66,6 +67,7 @@ export function OnboardingWizard({ entitlements }: { entitlements: WizardEntitle
 
   const { execute, isPending, result } = useAction(createProject, {
     onSuccess: ({ data }) => {
+      capture(EVENTS.projectCreated)
       if (data?.projectId) router.push(`/dashboard/projects/${data.projectId}`)
     },
   })

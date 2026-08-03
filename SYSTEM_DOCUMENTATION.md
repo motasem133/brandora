@@ -1761,8 +1761,8 @@ Each PR produces a Vercel preview deploy bound to a fresh Neon branch, so migrat
 | `SENTRY_ORG` | Monitoring | Source map upload at build |
 | `SENTRY_PROJECT` | Monitoring | Source map upload at build |
 | `SENTRY_AUTH_TOKEN` | Monitoring | Source map upload at build. Without it the build still succeeds and traces arrive minified |
-| `NEXT_PUBLIC_POSTHOG_KEY` | Analytics | Product analytics |
-| `NEXT_PUBLIC_POSTHOG_HOST` | Analytics | e.g. `https://eu.i.posthog.com` |
+| `NEXT_PUBLIC_POSTHOG_KEY` | Analytics | Product analytics. Write-only and public; absent, the SDK is inert |
+| `NEXT_PUBLIC_POSTHOG_HOST` | Analytics | e.g. `https://eu.i.posthog.com`. Also the upstream `/ingest` rewrites to, so it is required alongside the key |
 
 **Rules**
 - Only `NEXT_PUBLIC_*` reaches the browser. Everything else is server-only — a leaked `OPENROUTER_API_KEY` is a directly billable incident.
@@ -1813,6 +1813,29 @@ since ad blockers drop requests to `ingest.sentry.io` — which would quietly
 remove exactly the client-side errors this exists to catch. That path is
 excluded from the proxy matcher; left in, locale negotiation redirects it to
 `/en/monitoring` and the reports are lost silently.
+
+### Product Analytics
+
+PostHog, mounted from the locale layout so the marketing pages are counted too —
+"how many visitors reach sign-up" is unanswerable if counting starts after they
+already have.
+
+Deliberately narrow: page views, `identify` on reaching the dashboard, an
+`organization` group carrying the plan, and a closed set of product events
+(`lib/analytics.ts`) covering project → generation → publish → checkout.
+**Autocapture and session recording are both off.** Every screen in this app is
+full of the customer's unreleased brand work, and neither feature can be aimed
+narrowly enough to avoid collecting it. Only the user id is sent — never name or
+email.
+
+Requests go to `/ingest` on this origin and are rewritten onward in
+`next.config.ts`, because PostHog's own domain is on every ad-block list, and
+the blocked visitors skew technical. Like `/monitoring`, that path is excluded
+from the proxy matcher.
+
+> Two things to know when testing this: PostHog drops events from anything it
+> considers a bot, which includes a headless browser, and the SDK's remote
+> config is loaded as a script rather than fetched as JSON.
 
 ### Surfacing
 

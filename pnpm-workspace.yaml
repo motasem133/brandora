@@ -4,6 +4,8 @@ allowBuilds:
   # maps. Without it a release build silently ships unreadable stack traces.
   '@sentry/cli': true
   '@swc/core': true
+  # posthog-js pulls it in; its postinstall only prints a funding notice.
+  core-js: false
   esbuild: true
   protobufjs: true
   sharp: true
