@@ -39,27 +39,47 @@ export async function generateLogos(params: {
   const results: LogoResult[] = []
 
   /*
-   * Clear the previous concepts first.
+   * Concepts accumulate in rounds rather than replacing what came before.
    *
-   * Object keys are deterministic, so R2 overwrites the images — but inserting
-   * a row per run left one row per generation all pointing at the same object,
-   * which rendered as eight identical tiles after a single regeneration.
-   * Replacing keeps the row count equal to the number of concepts on offer.
+   * Deleting them was how the "eight identical tiles" bug was fixed: object
+   * keys were deterministic, so a second run overwrote the images in R2 while
+   * leaving a second set of rows pointing at them. Numbering the round fixes
+   * that at the source — every round writes its own objects — and a customer
+   * who preferred the logo they had two attempts ago can still go back to it.
+   */
+  const existing = await db
+    .select({ metadata: generatedFiles.metadata })
+    .from(generatedFiles)
+    .where(
+      and(
+        eq(generatedFiles.projectId, params.projectId),
+        eq(generatedFiles.kind, 'logo_raster'),
+      ),
+    )
+
+  // Rows written before rounds existed are round 1.
+  const round =
+    existing.reduce((highest, file) => Math.max(highest, Number(file.metadata?.round ?? 1)), 0) + 1
+
+  /*
+   * Only the derived assets are replaced. They are one favicon, one avatar set
+   * and one OG card — the current ones, by definition — and they are rewritten
+   * below from whichever concept is chosen.
    */
   await db
     .delete(generatedFiles)
     .where(
       and(
         eq(generatedFiles.projectId, params.projectId),
-        inArray(generatedFiles.kind, ['logo_raster', 'logo_svg', 'favicon', 'social_avatar']),
+        inArray(generatedFiles.kind, ['favicon', 'social_avatar']),
       ),
     )
 
-  // A selection pointing at a deleted row would leave nothing marked as chosen.
-  await db
-    .update(brandingAssets)
-    .set({ primaryLogoFileId: null })
+  const [before] = await db
+    .select({ primaryLogoFileId: brandingAssets.primaryLogoFileId })
+    .from(brandingAssets)
     .where(eq(brandingAssets.projectId, params.projectId))
+    .limit(1)
 
   const settled = await Promise.allSettled(
     LOGO_STYLES.slice(0, LOGO_COUNT).map(async (style) => {
@@ -77,7 +97,9 @@ export async function generateLogos(params: {
       // Measure rather than assume: the provider decides final dimensions.
       const meta = await sharp(raster).metadata()
 
-      const pngKey = objectKey(params.projectId, `logo-${slug}.png`)
+      // Round in the key, or the new images would overwrite the old ones in R2
+      // and every round would render as the newest one.
+      const pngKey = objectKey(params.projectId, `logo-r${round}-${slug}.png`)
       await uploadObject({ key: pngKey, body: raster, contentType: 'image/png' })
 
       const [file] = await db
@@ -90,7 +112,7 @@ export async function generateLogos(params: {
           sizeBytes: raster.byteLength,
           width: meta.width ?? null,
           height: meta.height ?? null,
-          metadata: { style, prompt },
+          metadata: { style, prompt, round, brief: params.project.logoBrief ?? null },
         })
         .returning()
 
@@ -100,7 +122,7 @@ export async function generateLogos(params: {
       // still a usable raster logo, so it must not fail the whole concept.
       try {
         const svg = await rasterToSvg(raster)
-        const svgKey = objectKey(params.projectId, `logo-${slug}.svg`)
+        const svgKey = objectKey(params.projectId, `logo-r${round}-${slug}.svg`)
         await uploadObject({ key: svgKey, body: svg, contentType: 'image/svg+xml' })
 
         await db.insert(generatedFiles).values({
@@ -109,7 +131,7 @@ export async function generateLogos(params: {
           r2Key: svgKey,
           mimeType: 'image/svg+xml',
           sizeBytes: Buffer.byteLength(svg),
-          metadata: { style, tracedFrom: pngKey },
+          metadata: { style, tracedFrom: pngKey, round },
         })
 
         kitFiles.set(`${slug}.svg`, Buffer.from(svg))
@@ -130,8 +152,41 @@ export async function generateLogos(params: {
     throw new Error('Every logo concept failed to generate.')
   }
 
-  // Supporting assets are derived from the first successful concept, which is
-  // the wordmark — the one that works as an avatar and a favicon.
+  await db
+    .update(brandingAssets)
+    .set({
+      logoConcepts: results.map((r) => ({ fileId: r.fileId, prompt: r.prompt, style: r.style })),
+      updatedAt: new Date(),
+    })
+    .where(eq(brandingAssets.projectId, params.projectId))
+
+  /*
+   * A logo the customer picked outlives a regeneration.
+   *
+   * They asked for more options, not for their choice to be overwritten — and
+   * the favicon, avatars and brand kit are all derived from it, so silently
+   * repointing them at a new concept would change a published site's icon
+   * because someone clicked "regenerate" to look around.
+   */
+  const chosen = before?.primaryLogoFileId
+    ? (
+        await db
+          .select({ r2Key: generatedFiles.r2Key })
+          .from(generatedFiles)
+          .where(eq(generatedFiles.id, before.primaryLogoFileId))
+          .limit(1)
+      )[0]
+    : undefined
+
+  if (chosen) {
+    // Rebuilds the derived assets and the kit from the existing choice, which
+    // costs nothing — no model is called.
+    await rederivePrimaryAssets(params.projectId, chosen.r2Key)
+    return { generated: results.length, requested: LOGO_COUNT }
+  }
+
+  // Nothing chosen yet: the newest round's first concept is the wordmark, which
+  // is the one that works as an avatar and a favicon.
   const primary = kitFiles.get(`${results[0].style.replace(/\s+/g, '-')}.png`)
 
   if (primary) {
@@ -142,14 +197,6 @@ export async function generateLogos(params: {
       kitFiles,
     })
   }
-
-  await db
-    .update(brandingAssets)
-    .set({
-      logoConcepts: results.map((r) => ({ fileId: r.fileId, prompt: r.prompt, style: r.style })),
-      updatedAt: new Date(),
-    })
-    .where(eq(brandingAssets.projectId, params.projectId))
 
   await buildBrandKit(params.projectId, kitFiles)
 

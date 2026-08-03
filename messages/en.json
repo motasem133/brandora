@@ -216,14 +216,16 @@
     "chosen": "Chosen",
     "logosHint": "Pick your logo. The favicon, avatars and brand kit are rebuilt from it.",
     "useThisLogo": "Use this logo",
-    "regenerateLogos": "Regenerate logos ({credits} credits)",
     "notEnoughCredits": "Not enough credits",
-    "briefTitle": "Logo direction",
-    "briefHint": "Describe what you want and the next generation follows it.",
-    "briefPlaceholder": "e.g. a simple crescent-moon mark above the name, no coffee cups, lots of white space",
-    "saveBrief": "Save direction",
-    "briefSaved": "Saved",
-    "regenerating": "Generating logos…"
+    "regenerating": "Generating logos…",
+    "directionTitle": "Change the logo",
+    "directionHint": "Describe what you want different. Sending starts a new round — your current logos stay below.",
+    "directionPlaceholder": "e.g. a simple crescent-moon mark above the name, no coffee cups, lots of white space",
+    "sendDirection": "Send and regenerate ({credits} credits)",
+    "keepsPrevious": "Previous logos are kept — you can still choose one.",
+    "latestRound": "Latest",
+    "earlierRound": "Round {round}",
+    "roundDirection": "Direction: {brief}"
   },
   "Social": {
     "bio": "Instagram bio",

@@ -87,25 +87,3 @@ export const selectPrimaryLogo = orgAction
   })
 
 
-/**
- * Stores free-text direction for the logo.
- *
- * Regenerating until chance produces what someone already has in mind is a
- * poor use of their credits — this lets them say it instead. The text is
- * appended to the generated prompt, after the automatic direction, so an
- * explicit instruction outweighs the defaults.
- */
-export const updateLogoBrief = orgAction
-  .metadata({ name: 'update-logo-brief' })
-  .inputSchema(z.object({ projectId: z.uuid(), brief: z.string().trim().max(600) }))
-  .action(async ({ parsedInput, ctx }) => {
-    await assertOwnedProject(parsedInput.projectId, ctx.orgId)
-
-    await db
-      .update(projects)
-      .set({ logoBrief: parsedInput.brief || null, updatedAt: new Date() })
-      .where(eq(projects.id, parsedInput.projectId))
-
-    revalidatePath('/[locale]/dashboard', 'layout')
-    return { saved: true }
-  })
