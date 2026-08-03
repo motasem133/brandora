@@ -8,7 +8,8 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary: 'bg-brand text-brand-fg hover:opacity-90',
+        primary:
+          'bg-[image:var(--brand-gradient)] bg-[length:180%_auto] bg-left text-brand-fg shadow-[0_10px_24px_-14px_var(--brand-primary)] transition-[background-position,transform,box-shadow] hover:bg-right hover:shadow-[0_14px_30px_-12px_var(--brand-primary)] duration-500',
         secondary: 'bg-elevated text-fg hover:bg-elevated/70 border border-line',
         outline: 'border border-line-strong text-fg hover:bg-elevated',
         ghost: 'text-fg-secondary hover:bg-elevated hover:text-fg',

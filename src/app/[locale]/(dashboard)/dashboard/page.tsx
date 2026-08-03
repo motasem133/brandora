@@ -1,4 +1,4 @@
-import { Sparkles } from 'lucide-react'
+import { CheckCircle2, Coins, FolderOpen, Sparkles } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { ProjectCard } from '@/components/features/projects/project-card'
@@ -22,26 +22,35 @@ export default async function OverviewPage({ params }: { params: Promise<{ local
   ])
 
   const stats = [
-    { label: t('statProjects'), value: total },
-    { label: t('statCompleted'), value: completed },
-    { label: t('statCredits'), value: org.creditBalance },
+    { label: t('statProjects'), value: total, icon: FolderOpen },
+    { label: t('statCompleted'), value: completed, icon: CheckCircle2 },
+    { label: t('statCredits'), value: org.creditBalance, icon: Coins },
   ]
 
   return (
     <div className="mx-auto max-w-6xl space-y-8">
       <div>
-        <h1 className="font-display text-2xl font-semibold">
+        <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">
           {t('welcome', { name: user.name.split(' ')[0] })}
         </h1>
-        <p className="mt-1 text-sm text-fg-secondary">{t('subtitle')}</p>
+        <p className="mt-2 text-fg-secondary">{t('subtitle')}</p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        {stats.map((stat) => (
-          <Card key={stat.label} className="p-5">
-            <p className="text-sm text-fg-secondary">{stat.label}</p>
-            <p className="mt-1 font-display text-3xl font-semibold">{stat.value}</p>
-          </Card>
+      <div className="grid gap-4 stagger-children sm:grid-cols-3">
+        {stats.map((stat, index) => (
+          <div
+            key={stat.label}
+            style={{ '--i': index } as React.CSSProperties}
+            className="card-lit interactive p-5"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <p className="text-sm text-fg-secondary">{stat.label}</p>
+              <span className="icon-chip">
+                <stat.icon className="size-4" />
+              </span>
+            </div>
+            <p className="mt-3 stat-figure text-4xl">{stat.value}</p>
+          </div>
         ))}
       </div>
 
