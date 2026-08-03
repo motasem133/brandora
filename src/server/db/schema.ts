@@ -29,6 +29,9 @@ export const subscriptionStatusEnum = pgEnum('subscription_status', [
   'revoked',
 ])
 
+/** Which period a subscription is billed on — see plans.polar_product_id_*. */
+export const billingIntervalEnum = pgEnum('billing_interval', ['monthly', 'yearly'])
+
 export const creditReasonEnum = pgEnum('credit_reason', [
   'subscription_grant',
   'purchase',
@@ -316,6 +319,12 @@ export const subscriptions = pgTable(
 
     polarSubscriptionId: text('polar_subscription_id').unique(),
     status: subscriptionStatusEnum('status').notNull().default('active'),
+    /*
+     * Which period the customer actually bought, resolved from the Polar
+     * product the webhook carries rather than from what they clicked — the
+     * period can change in Polar's portal without the app ever seeing it.
+     */
+    interval: billingIntervalEnum('interval').notNull().default('monthly'),
 
     currentPeriodStart: timestamp('current_period_start', { withTimezone: true }),
     currentPeriodEnd: timestamp('current_period_end', { withTimezone: true }),

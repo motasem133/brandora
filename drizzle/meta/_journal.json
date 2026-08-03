@@ -43,6 +43,13 @@
       "when": 1785698880670,
       "tag": "0005_vengeful_madelyne_pryor",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1785757547057,
+      "tag": "0006_numerous_patriot",
+      "breakpoints": true
     }
   ]
 }

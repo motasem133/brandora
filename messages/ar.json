@@ -336,7 +336,10 @@
     "yearly": "سنوي",
     "perYear": "/سنة",
     "savePercent": "وفّر {percent}٪",
-    "intervalUnavailable": "غير متاح على دورة الفوترة هذه بعد."
+    "intervalUnavailable": "غير متاح على دورة الفوترة هذه بعد.",
+    "billedMonthly": "فوترة شهرية",
+    "billedYearly": "فوترة سنوية",
+    "renewsOn": "تتجدد في {date}"
   },
   "Assistant": {
     "emptyTitle": "حسّن علامتك التجارية",

@@ -69,6 +69,14 @@ async function resolveOrganizationId(
   return null
 }
 
+/**
+ * The plan a Polar product belongs to, and the period it is sold on.
+ *
+ * Which of the two columns matched is the only trustworthy source for the
+ * interval: a customer can switch period in Polar's portal without the app
+ * ever seeing the click, and the next webhook simply arrives carrying the
+ * other product.
+ */
 async function findPlanByProduct(productId?: string) {
   if (!productId) return null
 
@@ -78,7 +86,7 @@ async function findPlanByProduct(productId?: string) {
     .where(eq(plans.polarProductIdMonthly, productId))
     .limit(1)
 
-  if (monthly) return monthly
+  if (monthly) return { plan: monthly, interval: 'monthly' as const }
 
   const [yearly] = await db
     .select()
@@ -86,7 +94,7 @@ async function findPlanByProduct(productId?: string) {
     .where(eq(plans.polarProductIdYearly, productId))
     .limit(1)
 
-  return yearly ?? null
+  return yearly ? { plan: yearly, interval: 'yearly' as const } : null
 }
 
 /** Creates or updates the subscription row from a Polar subscription object. */
@@ -97,11 +105,13 @@ export async function syncSubscription(data: PolarSubscription) {
     return
   }
 
-  const plan = await findPlanByProduct(data.productId)
-  if (!plan) {
+  const matched = await findPlanByProduct(data.productId)
+  if (!matched) {
     console.warn(`[billing] no plan matches Polar product ${data.productId}`)
     return
   }
+
+  const { plan, interval } = matched
 
   if (data.customerId) {
     await db
@@ -117,6 +127,7 @@ export async function syncSubscription(data: PolarSubscription) {
     planId: plan.id,
     polarSubscriptionId: data.id,
     status,
+    interval,
     currentPeriodStart: toDate(data.currentPeriodStart),
     currentPeriodEnd: toDate(data.currentPeriodEnd),
     cancelAtPeriodEnd: data.cancelAtPeriodEnd ?? false,
@@ -128,7 +139,7 @@ export async function syncSubscription(data: PolarSubscription) {
     .values(values)
     .onConflictDoUpdate({ target: subscriptions.polarSubscriptionId, set: values })
 
-  return { organizationId, plan, status }
+  return { organizationId, plan, interval, status }
 }
 
 function mapStatus(status: string) {

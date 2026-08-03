@@ -37,7 +37,6 @@ export default async function BillingPage({
   // Arabic readers are almost always billing in the UAE, so default to dirhams
   // there and dollars elsewhere. The switch overrides either way.
   const currency: Currency = isCurrency(requested) ? requested : locale === 'ar' ? 'aed' : 'usd'
-  const interval: BillingInterval = isInterval(requestedInterval) ? requestedInterval : 'monthly'
 
   const t = await getTranslations('Billing')
   const { org, orgRole } = await requireOrg()
@@ -64,6 +63,15 @@ export default async function BillingPage({
 
   const isOwner = orgRole === 'owner'
 
+  /*
+   * Default to the period the customer is already on, so someone billed
+   * yearly opens on yearly figures rather than monthly ones they are not
+   * paying. An explicit ?interval= still wins.
+   */
+  const interval: BillingInterval = isInterval(requestedInterval)
+    ? requestedInterval
+    : (subscription?.status === 'active' ? subscription.interval : 'monthly')
+
   return (
     <div className="mx-auto max-w-5xl space-y-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -81,6 +89,14 @@ export default async function BillingPage({
         <Card className="p-5">
           <p className="text-sm text-fg-secondary">{t('currentPlan')}</p>
           <p className="mt-1 font-display text-2xl font-semibold">{currentPlan?.name ?? 'Free'}</p>
+          {subscription?.status === 'active' && !subscription.cancelAtPeriodEnd && (
+            <p className="mt-1 text-xs text-fg-muted">
+              {t(subscription.interval === 'yearly' ? 'billedYearly' : 'billedMonthly')}
+              {subscription.currentPeriodEnd
+                ? ` · ${t('renewsOn', { date: formatDate(subscription.currentPeriodEnd, locale) })}`
+                : ''}
+            </p>
+          )}
           {subscription?.cancelAtPeriodEnd && (
             <Badge tone="warning" className="mt-2">
               {t('endsOn', {
