@@ -3,11 +3,13 @@ import { getTranslations } from 'next-intl/server'
 import { Card, CardTitle } from '@/components/ui/card'
 import type { BrandingAsset, GeneratedFile } from '@/server/db/schema'
 import { LogoGrid } from './logo-grid'
+import { LogoVariations } from './logo-variations'
 import { NamePicker } from './name-picker'
 
 export async function BrandingView({
   branding,
   logos = [],
+  files = [],
   kit,
   projectId,
   chosenName,
@@ -18,6 +20,8 @@ export async function BrandingView({
 }: {
   branding: BrandingAsset
   logos?: GeneratedFile[]
+  /** Every file the project has, so the variations panel can pair them up. */
+  files?: GeneratedFile[]
   kit?: GeneratedFile
   projectId: string
   chosenName: string | null
@@ -37,10 +41,17 @@ export async function BrandingView({
         kit={kit}
         projectId={projectId}
         primaryLogoFileId={branding.primaryLogoFileId}
+        markLogoFileId={branding.markLogoFileId}
         creditBalance={creditBalance}
         logoCost={logoCost}
         logoBrief={logoBrief}
         isGenerating={isGenerating}
+      />
+
+      <LogoVariations
+        files={files}
+        primaryLogoFileId={branding.primaryLogoFileId}
+        markLogoFileId={branding.markLogoFileId}
       />
 
       {branding.businessNameIdeas.length > 0 && (

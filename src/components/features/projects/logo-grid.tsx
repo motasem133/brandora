@@ -6,13 +6,14 @@ import { cn } from '@/lib/utils'
 import type { GeneratedFile } from '@/server/db/schema'
 import { publicUrl } from '@/server/storage/r2'
 import { LogoComposer } from './logo-composer'
-import { SelectLogoButton } from './logo-actions'
+import { SelectLogoButton, SelectMarkButton } from './logo-actions'
 
 export async function LogoGrid({
   logos,
   kit,
   projectId,
   primaryLogoFileId,
+  markLogoFileId,
   creditBalance,
   logoCost,
   logoBrief,
@@ -22,6 +23,7 @@ export async function LogoGrid({
   kit?: GeneratedFile
   projectId: string
   primaryLogoFileId: string | null
+  markLogoFileId: string | null
   creditBalance: number
   logoCost: number
   logoBrief: string | null
@@ -130,11 +132,18 @@ export async function LogoGrid({
                         {t('download')}
                       </a>
                     </div>
-                    <SelectLogoButton
-                      projectId={projectId}
-                      fileId={logo.id}
-                      isPrimary={logo.id === primaryId}
-                    />
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                      <SelectLogoButton
+                        projectId={projectId}
+                        fileId={logo.id}
+                        isPrimary={logo.id === primaryId}
+                      />
+                      <SelectMarkButton
+                        projectId={projectId}
+                        fileId={logo.id}
+                        isMark={logo.id === markLogoFileId}
+                      />
+                    </div>
                   </figcaption>
                 </figure>
               )

@@ -203,48 +203,74 @@ export async function generateLogos(params: {
   return { generated: results.length, requested: LOGO_COUNT }
 }
 
+/**
+ * Every variant derived from the chosen artwork.
+ *
+ * `icon` is whatever belongs where there is no room for text — the mark if one
+ * was chosen, the logo otherwise. `logo` is always the full lockup, because a
+ * social card cropped to an icon says nothing about who posted it.
+ */
 async function derivePrimaryAssets(params: {
   projectId: string
   primary: Buffer
+  icon?: Buffer
   background: string
   kitFiles: Map<string, Buffer>
 }) {
-  const derived: { name: string; buffer: Buffer; kind: 'favicon' | 'social_avatar'; size?: number }[] =
-    []
+  const icon = params.icon ?? params.primary
+
+  const derived: {
+    name: string
+    buffer: Buffer
+    kind: 'favicon' | 'social_avatar'
+    size?: number
+    variant: string
+    source: 'logo' | 'icon'
+  }[] = []
 
   for (const size of [512, 256, 128]) {
     derived.push({
       name: `primary-${size}.png`,
-      buffer: await resizePng(params.primary, size),
+      buffer: await resizePng(icon, size),
       kind: 'social_avatar',
       size,
+      variant: 'avatar',
+      source: 'icon',
     })
   }
 
   derived.push({
     name: 'favicon-32.png',
-    buffer: await resizePng(params.primary, 32),
+    buffer: await resizePng(icon, 32),
     kind: 'favicon',
     size: 32,
+    variant: 'favicon',
+    source: 'icon',
   })
 
   derived.push({
     name: 'social-avatar-1080.png',
-    buffer: await resizePng(params.primary, 1080),
+    buffer: await resizePng(icon, 1080),
     kind: 'social_avatar',
     size: 1080,
+    variant: 'avatar',
+    source: 'icon',
   })
 
   derived.push({
     name: 'og-image-1200x630.png',
     buffer: await makeOgImage(params.primary, params.background),
     kind: 'social_avatar',
+    variant: 'og',
+    source: 'logo',
   })
 
   derived.push({
     name: 'monochrome.png',
     buffer: await makeMonochrome(params.primary),
     kind: 'social_avatar',
+    variant: 'monochrome',
+    source: 'logo',
   })
 
   for (const asset of derived) {
@@ -259,6 +285,9 @@ async function derivePrimaryAssets(params: {
       sizeBytes: asset.buffer.byteLength,
       width: asset.size ?? null,
       height: asset.size ?? null,
+      // Labels the variant for the UI, so it can be listed as "Favicon 32px"
+      // rather than by guessing from a filename.
+      metadata: { variant: asset.variant, source: asset.source },
     })
 
     params.kitFiles.set(asset.name, asset.buffer)
@@ -266,26 +295,40 @@ async function derivePrimaryAssets(params: {
 }
 
 
-/**
- * Rebuilds the derived assets from a chosen logo concept.
- *
- * Called when a customer picks a different concept as their primary. Only
- * image processing runs, so this costs nothing — the point is that the favicon,
- * avatars, OG card and brand kit reflect the logo they actually chose rather
- * than whichever concept was generated first.
- */
-export async function rederivePrimaryAssets(projectId: string, primaryKey: string) {
-  const url = await signedDownloadUrl(primaryKey, 300)
+async function readObject(key: string): Promise<Buffer> {
+  const url = await signedDownloadUrl(key, 300)
   const response = await fetch(url)
   if (!response.ok) throw new Error(`Could not read the chosen logo (${response.status})`)
+  return Buffer.from(await response.arrayBuffer())
+}
 
-  const primary = Buffer.from(await response.arrayBuffer())
-
+/**
+ * Rebuilds every derived variant from the current choices.
+ *
+ * Called whenever a customer picks a different logo or icon. Only image
+ * processing runs, so this costs nothing — the point is that the favicon,
+ * avatars, OG card and brand kit reflect what they actually chose rather than
+ * whichever concept happened to be generated first.
+ */
+export async function rederivePrimaryAssets(projectId: string, primaryKey?: string) {
   const [branding] = await db
     .select()
     .from(brandingAssets)
     .where(eq(brandingAssets.projectId, projectId))
     .limit(1)
+
+  /*
+   * The stored choices are the source of truth. An explicit key is only passed
+   * by the generation pipeline, which knows the chosen row is still current
+   * before the transaction that would tell it otherwise.
+   */
+  const logoKey = primaryKey ?? (await keyOfFile(branding?.primaryLogoFileId))
+  if (!logoKey) throw new Error('No logo has been chosen for this project.')
+
+  const iconKey = await keyOfFile(branding?.markLogoFileId)
+
+  const primary = await readObject(logoKey)
+  const icon = iconKey && iconKey !== logoKey ? await readObject(iconKey) : undefined
 
   const background = branding?.colorPalette?.background ?? '#ffffff'
 
@@ -317,6 +360,19 @@ export async function rederivePrimaryAssets(projectId: string, primaryKey: strin
       ),
     )
 
-  await derivePrimaryAssets({ projectId, primary, background, kitFiles })
+  await derivePrimaryAssets({ projectId, primary, icon, background, kitFiles })
   await buildBrandKit(projectId, kitFiles)
+}
+
+/** Resolves a stored file id to its object key, tolerating a stale reference. */
+async function keyOfFile(fileId?: string | null) {
+  if (!fileId) return null
+
+  const [file] = await db
+    .select({ r2Key: generatedFiles.r2Key })
+    .from(generatedFiles)
+    .where(eq(generatedFiles.id, fileId))
+    .limit(1)
+
+  return file?.r2Key ?? null
 }

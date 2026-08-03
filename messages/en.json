@@ -225,7 +225,20 @@
     "keepsPrevious": "Previous logos are kept — you can still choose one.",
     "latestRound": "Latest",
     "earlierRound": "Round {round}",
-    "roundDirection": "Direction: {brief}"
+    "roundDirection": "Direction: {brief}",
+    "useAsIcon": "Use as icon",
+    "isIcon": "Icon",
+    "variations": "Variations",
+    "variationsHint": "Every size and format of your chosen logo. Pick an icon above to use a text-free mark for the favicon and avatars.",
+    "variationsHintWithIcon": "Every size and format. The favicon and avatars use your chosen icon; the social card uses the full logo.",
+    "varFullLogo": "Full logo",
+    "varVector": "Vector",
+    "varIcon": "Icon",
+    "varFavicon": "Favicon",
+    "varAvatar": "Profile picture",
+    "varSocialCard": "Social card",
+    "varMonochrome": "Monochrome",
+    "varOther": "Variant"
   },
   "Social": {
     "bio": "Instagram bio",

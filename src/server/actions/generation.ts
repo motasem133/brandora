@@ -9,6 +9,13 @@ import { db } from '@/server/db'
 import { projects } from '@/server/db/schema'
 import { startGeneration } from '@/server/services/generation'
 
+/*
+ * Long enough to stop being a limit anyone writes into. It is a bound rather
+ * than none at all because the text goes into a model prompt and a database
+ * column, and neither should accept an unbounded paste.
+ */
+const MAX_BRIEF = 8000
+
 export const generateProject = orgAction
   .metadata({ name: 'generate-project' })
   .inputSchema(z.object({ projectId: z.uuid() }))
@@ -42,7 +49,7 @@ export const generateProject = orgAction
  */
 export const regenerateLogos = orgAction
   .metadata({ name: 'regenerate-logos' })
-  .inputSchema(z.object({ projectId: z.uuid(), brief: z.string().trim().max(600).optional() }))
+  .inputSchema(z.object({ projectId: z.uuid(), brief: z.string().trim().max(MAX_BRIEF).optional() }))
   .action(async ({ parsedInput, ctx }) => {
     if (parsedInput.brief !== undefined) {
       await db

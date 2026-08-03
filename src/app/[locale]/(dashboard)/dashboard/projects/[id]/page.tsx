@@ -122,6 +122,7 @@ export default async function ProjectDetailPage({
         <BrandingView
           branding={brandingAsset}
           logos={logoFiles}
+          files={files}
           kit={kitFile}
           projectId={project.id}
           chosenName={project.businessName}

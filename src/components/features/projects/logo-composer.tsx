@@ -80,7 +80,6 @@ export function LogoComposer({
           }
         }}
         rows={3}
-        maxLength={600}
         placeholder={t('directionPlaceholder')}
         className="mt-3 w-full resize-y rounded-lg border border-line bg-surface px-3.5 py-3 text-sm focus:border-brand focus:outline-none"
       />

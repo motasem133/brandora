@@ -80,10 +80,57 @@ export const selectPrimaryLogo = orgAction
 
     if (!updated) throw new AppError('NOT_FOUND', 'This project has no branding yet.')
 
-    await rederivePrimaryAssets(parsedInput.projectId, file.r2Key)
+    await rederivePrimaryAssets(parsedInput.projectId)
 
     revalidatePath('/[locale]/dashboard', 'layout')
     return { fileId: file.id }
+  })
+
+/**
+ * Chooses the concept to use where there is no room for text.
+ *
+ * A wordmark at 32 pixels is an unreadable smudge, so the favicon and the
+ * social avatars come from this one when it is set. Passing the same file as
+ * the logo clears it again, which is how "actually, just use the logo" is
+ * expressed without a second control.
+ */
+export const selectLogoMark = orgAction
+  .metadata({ name: 'select-logo-mark' })
+  .inputSchema(z.object({ projectId: z.uuid(), fileId: z.uuid().nullable() }))
+  .action(async ({ parsedInput, ctx }) => {
+    await assertOwnedProject(parsedInput.projectId, ctx.orgId)
+
+    if (parsedInput.fileId) {
+      const [file] = await db
+        .select({ id: generatedFiles.id })
+        .from(generatedFiles)
+        .where(
+          and(
+            eq(generatedFiles.id, parsedInput.fileId),
+            eq(generatedFiles.projectId, parsedInput.projectId),
+            eq(generatedFiles.kind, 'logo_raster'),
+          ),
+        )
+        .limit(1)
+
+      if (!file) throw new AppError('NOT_FOUND', 'That logo does not belong to this project.')
+    }
+
+    const [updated] = await db
+      .update(brandingAssets)
+      .set({ markLogoFileId: parsedInput.fileId, updatedAt: new Date() })
+      .where(eq(brandingAssets.projectId, parsedInput.projectId))
+      .returning({ primaryLogoFileId: brandingAssets.primaryLogoFileId })
+
+    if (!updated) throw new AppError('NOT_FOUND', 'This project has no branding yet.')
+
+    // Nothing to rebuild until a logo exists to rebuild the rest from.
+    if (updated.primaryLogoFileId) {
+      await rederivePrimaryAssets(parsedInput.projectId)
+    }
+
+    revalidatePath('/[locale]/dashboard', 'layout')
+    return { fileId: parsedInput.fileId }
   })
 
 

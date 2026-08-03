@@ -477,11 +477,20 @@ export const brandingAssets = pgTable('branding_assets', {
   /**
    * The concept the customer chose as their logo.
    *
-   * Null means undecided, in which case the first concept is shown. Everything
-   * derived — favicon, avatars, the OG card — is built from whichever concept
-   * this points at.
+   * Null means undecided, in which case the first concept is shown. The OG card
+   * and the monochrome mark are built from whichever concept this points at.
    */
   primaryLogoFileId: uuid('primary_logo_file_id'),
+
+  /**
+   * An optional second choice: the concept to use where there is no room for
+   * text — favicons and social avatars.
+   *
+   * A wordmark shrunk to 32px is an unreadable smudge, which is why this
+   * exists separately rather than being cropped out of the logo. Null means
+   * those variants are derived from the logo itself.
+   */
+  markLogoFileId: uuid('mark_logo_file_id'),
 
   /** Provenance — which model and prompt version produced this. */
   modelUsed: text('model_used'),
