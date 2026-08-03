@@ -42,6 +42,17 @@ export const env = createEnv({
     POLAR_WEBHOOK_SECRET: z.string().min(1).optional(),
     POLAR_SERVER: z.enum(['sandbox', 'production']).default('sandbox'),
 
+    /*
+     * --- custom domains (Business plan) ---
+     * Attaching a customer's own domain goes through Vercel's Domains API.
+     * Optional: without them the feature reports itself unavailable rather
+     * than failing at the moment a customer tries to use it.
+     */
+    VERCEL_API_TOKEN: z.string().min(1).optional(),
+    VERCEL_PROJECT_ID: z.string().min(1).optional(),
+    /** Only needed when the project lives under a team rather than a user. */
+    VERCEL_TEAM_ID: z.string().min(1).optional(),
+
     // --- email ---
     RESEND_API_KEY: z.string().min(1).optional(),
     /*
@@ -88,6 +99,9 @@ export const env = createEnv({
     POLAR_ACCESS_TOKEN: process.env.POLAR_ACCESS_TOKEN,
     POLAR_WEBHOOK_SECRET: process.env.POLAR_WEBHOOK_SECRET,
     POLAR_SERVER: process.env.POLAR_SERVER,
+    VERCEL_API_TOKEN: process.env.VERCEL_API_TOKEN,
+    VERCEL_PROJECT_ID: process.env.VERCEL_PROJECT_ID,
+    VERCEL_TEAM_ID: process.env.VERCEL_TEAM_ID,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     EMAIL_FROM: process.env.EMAIL_FROM,
     SEED_ADMIN_EMAIL: process.env.SEED_ADMIN_EMAIL,

@@ -1,11 +1,10 @@
-import { and, eq } from 'drizzle-orm'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
 import { PageRenderer, resolveTheme } from '@/components/blocks/block-renderer'
 import { PAGE_KEYS, type Block, type PageKey, type Theme } from '@/lib/blocks'
-import { db } from '@/server/db'
-import { brandingAssets, projects, websiteAssets, type BrandingAsset } from '@/server/db/schema'
+import { getPublishedSite } from '@/server/db/queries/sites'
+import { type BrandingAsset } from '@/server/db/schema'
 
 /** Maps a generated brand palette onto the renderer's theme shape. */
 function themeFromBranding(branding: BrandingAsset | null): Theme {
@@ -22,24 +21,14 @@ function themeFromBranding(branding: BrandingAsset | null): Theme {
   }
 }
 
-/**
+/*
  * Published customer websites.
  *
  * Deliberately outside the [locale] segment: these are the customer's own
  * sites, not part of the Brandora app, so they carry no app chrome, no locale
- * prefix and no session.
+ * prefix and no session. The [subdomain] segment holds either a Brandora
+ * subdomain or an attached custom domain — see getPublishedSite.
  */
-async function getSite(subdomain: string) {
-  const [row] = await db
-    .select({ website: websiteAssets, project: projects, branding: brandingAssets })
-    .from(websiteAssets)
-    .innerJoin(projects, eq(projects.id, websiteAssets.projectId))
-    .leftJoin(brandingAssets, eq(brandingAssets.projectId, websiteAssets.projectId))
-    .where(and(eq(websiteAssets.subdomain, subdomain), eq(websiteAssets.isPublished, true)))
-    .limit(1)
-
-  return row ?? null
-}
 
 export async function generateMetadata({
   params,
@@ -47,7 +36,7 @@ export async function generateMetadata({
   params: Promise<{ subdomain: string }>
 }): Promise<Metadata> {
   const { subdomain } = await params
-  const site = await getSite(subdomain)
+  const site = await getPublishedSite(subdomain)
   if (!site) return { title: 'Not found' }
 
   const name = site.project.businessName || site.project.title
@@ -69,7 +58,7 @@ export default async function PublishedSite({
   const { subdomain } = await params
   const { page } = await searchParams
 
-  const site = await getSite(subdomain)
+  const site = await getPublishedSite(subdomain)
   if (!site) notFound()
 
   /*

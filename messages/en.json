@@ -283,7 +283,13 @@
     "address": "Site address",
     "willBeLiveAt": "Will be live at",
     "viewSite": "View live site",
-    "publishLocked": "Publishing needs Basic or above"
+    "publishLocked": "Publishing needs Basic or above",
+    "customDomain": "Custom domain",
+    "connectDomain": "Connect domain",
+    "checkDomain": "Check status",
+    "removeDomain": "Remove",
+    "domainLive": "Live — this domain serves your site.",
+    "domainPendingDns": "Add this record at your DNS host, then check the status. It can take up to an hour."
   },
   "Billing": {
     "title": "Billing",

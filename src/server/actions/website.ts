@@ -5,11 +5,13 @@ import { updateTag } from 'next/cache'
 import { z } from 'zod'
 
 import { pagesSchema, themeSchema } from '@/lib/blocks'
+import { env } from '@/lib/env'
 import { AppError } from '@/lib/errors'
 import { orgAction, orgAdminAction } from '@/server/actions/safe-action'
 import { db } from '@/server/db'
 import { getOrgPlan } from '@/server/db/queries/plans'
 import { projects, websiteAssets } from '@/server/db/schema'
+import { attachDomain, detachDomain, domainStatus } from '@/server/services/domains'
 
 /** Subdomains become public URLs, so the grammar is deliberately strict. */
 const subdomainSchema = z
@@ -26,6 +28,32 @@ const RESERVED = new Set([
   'mail', 'smtp', 'ftp', 'cdn', 'static', 'assets', 'files', 'status',
   'support', 'help', 'blog', 'docs', 'brandora', 'billing', 'pricing',
 ])
+
+/**
+ * A hostname the customer already owns. Deliberately not a URL: pasting
+ * `https://theircompany.com/` is the common mistake, so the transform strips
+ * the scheme, any path and a trailing dot before validating.
+ */
+const customDomainSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .transform((value) => value.replace(/^https?:\/\//, '').replace(/[/?#].*$/, '').replace(/\.$/, ''))
+  .pipe(
+    z
+      .string()
+      .min(4)
+      .max(253)
+      .regex(
+        /^(?=.{1,253}$)(?!-)[a-z0-9-]{1,63}(?<!-)(\.(?!-)[a-z0-9-]{1,63}(?<!-))+$/,
+        'Enter a domain like example.com',
+      ),
+  )
+
+/** The app's own host, so nobody can attach it and take over the app. */
+function appHostname() {
+  return new URL(env.NEXT_PUBLIC_APP_URL).hostname
+}
 
 async function assertOwnedProject(projectId: string, orgId: string) {
   const [project] = await db
@@ -118,6 +146,118 @@ export const publishWebsite = orgAdminAction
     updateTag(`site:${parsedInput.subdomain}`)
 
     return { subdomain: parsedInput.subdomain, url: `/sites/${parsedInput.subdomain}` }
+  })
+
+/**
+ * Attaches a customer's own domain to their published site.
+ *
+ * Two independent steps hide behind one button: Vercel must accept the domain
+ * onto the project, and the customer must point DNS at it. This returns the
+ * records for the second step rather than pretending the domain is live.
+ */
+export const attachCustomDomain = orgAdminAction
+  .metadata({ name: 'attach-custom-domain' })
+  .inputSchema(z.object({ projectId: z.uuid(), domain: customDomainSchema }))
+  .action(async ({ parsedInput, ctx }) => {
+    await assertOwnedProject(parsedInput.projectId, ctx.orgId)
+
+    const plan = await getOrgPlan(ctx.orgId)
+    if (!plan?.customDomain) {
+      throw new AppError('FEATURE_LOCKED', 'Custom domains are available on Business.')
+    }
+
+    const appHost = appHostname()
+    if (parsedInput.domain === appHost || parsedInput.domain.endsWith(`.${appHost}`)) {
+      throw new AppError('VALIDATION', 'That domain belongs to Brandora. Use your own domain.')
+    }
+
+    const [site] = await db
+      .select()
+      .from(websiteAssets)
+      .where(eq(websiteAssets.projectId, parsedInput.projectId))
+      .limit(1)
+
+    if (!site) throw new AppError('NOT_FOUND', 'This project has no website yet.')
+    if (!site.isPublished) {
+      throw new AppError('VALIDATION', 'Publish the site before attaching a domain.')
+    }
+
+    // Same reason as the subdomain check: a friendly message instead of a
+    // unique-constraint violation.
+    const [taken] = await db
+      .select({ id: websiteAssets.id })
+      .from(websiteAssets)
+      .where(
+        and(
+          eq(websiteAssets.customDomain, parsedInput.domain),
+          ne(websiteAssets.projectId, parsedInput.projectId),
+        ),
+      )
+      .limit(1)
+
+    if (taken) throw new AppError('VALIDATION', 'That domain is already in use.')
+
+    // Vercel first: if it refuses the domain, nothing is stored, so the column
+    // never claims a domain the platform will not serve.
+    const status = await attachDomain(parsedInput.domain)
+
+    await db
+      .update(websiteAssets)
+      .set({ customDomain: parsedInput.domain, updatedAt: new Date() })
+      .where(eq(websiteAssets.projectId, parsedInput.projectId))
+
+    return status
+  })
+
+/** Re-reads the domain's verification and DNS state from Vercel. */
+export const refreshCustomDomain = orgAdminAction
+  .metadata({ name: 'refresh-custom-domain' })
+  .inputSchema(z.object({ projectId: z.uuid() }))
+  .action(async ({ parsedInput, ctx }) => {
+    await assertOwnedProject(parsedInput.projectId, ctx.orgId)
+
+    const [site] = await db
+      .select({ customDomain: websiteAssets.customDomain })
+      .from(websiteAssets)
+      .where(eq(websiteAssets.projectId, parsedInput.projectId))
+      .limit(1)
+
+    if (!site?.customDomain) throw new AppError('NOT_FOUND', 'No domain is attached.')
+
+    return await domainStatus(site.customDomain)
+  })
+
+export const removeCustomDomain = orgAdminAction
+  .metadata({ name: 'remove-custom-domain' })
+  .inputSchema(z.object({ projectId: z.uuid() }))
+  .action(async ({ parsedInput, ctx }) => {
+    await assertOwnedProject(parsedInput.projectId, ctx.orgId)
+
+    const [site] = await db
+      .select({ customDomain: websiteAssets.customDomain })
+      .from(websiteAssets)
+      .where(eq(websiteAssets.projectId, parsedInput.projectId))
+      .limit(1)
+
+    if (!site?.customDomain) return { success: true }
+
+    /*
+     * Clear the column even if Vercel errors. Leaving a domain the customer
+     * asked to remove attached to their site is worse than leaving a stale
+     * entry in the Vercel project, which an admin can sweep.
+     */
+    try {
+      await detachDomain(site.customDomain)
+    } catch (error) {
+      console.error('[domains] detach failed, clearing locally anyway', error)
+    }
+
+    await db
+      .update(websiteAssets)
+      .set({ customDomain: null, updatedAt: new Date() })
+      .where(eq(websiteAssets.projectId, parsedInput.projectId))
+
+    return { success: true }
   })
 
 export const unpublishWebsite = orgAdminAction

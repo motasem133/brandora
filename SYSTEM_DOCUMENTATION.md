@@ -708,20 +708,24 @@ Angular's `authGuard` / `guestGuard` / `adminGuard` map onto two layers — and 
 
 | v1 Guard | v2 Equivalent |
 |---|---|
-| `authGuard` | `middleware.ts` session-cookie check → redirect (UX only) **+** `orgAction` / RSC `requireSession()` (real enforcement) |
-| `guestGuard` | Middleware redirect to `/dashboard` when a session cookie exists |
-| `adminGuard` | Middleware path check **+** `adminAction` / `requireAdmin()` in every admin page and action |
+| `authGuard` | `src/proxy.ts` session-cookie check → redirect (UX only) **+** `orgAction` / RSC `requireSession()` (real enforcement) |
+| `guestGuard` | Proxy redirect to `/dashboard` when a session cookie exists |
+| `adminGuard` | Proxy path check **+** `adminAction` / `requireAdmin()` in every admin page and action |
 
-> Middleware is a redirect convenience, **not** a security boundary. It can be bypassed by calling a Server Action directly. Every page and action re-checks.
+> The proxy is a redirect convenience, **not** a security boundary. It can be bypassed by calling a Server Action directly. Every page and action re-checks.
 
-### Middleware Responsibilities
+### Proxy Responsibilities
+
+Next.js 16 renamed `middleware.ts` to `proxy.ts`; it is the same edge hook, and it lives at `src/proxy.ts` because the app is under `src/`.
 
 ```ts
-// middleware.ts — runs before every request
-// 1. Locale negotiation: infer from path → cookie → Accept-Language → default 'en'
-// 2. Session cookie presence check → redirect unauthenticated users off /dashboard
-// 3. Reverse: redirect authenticated users off /login and /register
-// 4. Subdomain rewrite: {sub}.brandora.app → /sites/{sub}
+// src/proxy.ts — runs before every request
+// 1. Subdomain rewrite: {sub}.brandora.enigmitic.com → /sites/{sub}
+// 2. Custom-domain rewrite: any other unrecognised host → /sites/{host}
+// 3. Locale negotiation: infer from path → cookie → Accept-Language → default 'en'
+// 4. Session cookie presence check → redirect unauthenticated users off /dashboard
+// 5. Reverse: redirect authenticated users off /login and /register
+//    (/reset-password is excluded — it is reached from an emailed token link)
 export const config = {
   matcher: ['/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)'],
 }
@@ -1641,7 +1645,7 @@ brandora.enigmitic.com        → the app
 
 Vercel now controls DNS for that subtree only, so it can complete DNS-01 challenges and renew the wildcard cert forever without you touching anything. `enigmitic.com`, `www`, `lab`, and MX records are unaffected.
 
-The middleware rewrite maps hostnames to routes:
+The proxy rewrite maps hostnames to routes:
 
 ```ts
 const host = req.headers.get('host') ?? ''
@@ -1652,7 +1656,11 @@ if (host.endsWith(`.${base}`) && host !== base) {
 }
 ```
 
-**Customer custom domains** (Business plan): the app calls Vercel's Domains API to attach `theircompany.com` to the project; the customer points a CNAME at `cname.vercel-dns.com`. Vercel issues a per-domain certificate automatically. The domain is stored on `website_assets.custom_domain` and resolved by the same middleware.
+**Customer custom domains** (Business plan): the builder's publish panel calls `attachCustomDomain`, which posts the domain to Vercel's Domains API (`src/server/services/domains.ts`) and stores it on `website_assets.custom_domain`. Vercel issues a per-domain certificate automatically once DNS resolves — a subdomain points a CNAME at `cname.vercel-dns.com`, an apex an A record at `76.76.21.21`, and the panel shows whichever applies.
+
+Resolution is the same rewrite as above: `proxy.ts` hands any host that is neither the app's nor one of its subdomains to `/sites/{host}`, and `getPublishedSite` matches on `custom_domain` rather than `subdomain` when the segment contains a dot — subdomains cannot, so the two never collide. A host that is not attached to a published site 404s at the route, since the proxy runs on the edge and has no database.
+
+Set `VERCEL_API_TOKEN` and `VERCEL_PROJECT_ID` (plus `VERCEL_TEAM_ID` for team projects) or the builder hides the section rather than offering a control that cannot work.
 
 ### Step 4 — Inngest
 

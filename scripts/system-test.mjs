@@ -249,6 +249,29 @@ async function main() {
     const viaHost = await rawRequest('/', `${published.subdomain}.localhost`)
     check('subdomain host serves the same site', viaHost.status === 200, `got ${viaHost.status}`)
     check('subdomain response is the published site', viaHost.body.includes('<html lang='))
+
+    /*
+     * Custom domains cannot be attached for real here — that needs Vercel — so
+     * the column is set directly and cleared again. What is being tested is the
+     * half that runs on every request: the proxy handing an unrecognised host
+     * to the site route, and the route matching it against custom_domain.
+     */
+    const testDomain = `system-test-${stamp}.example`
+    try {
+      await sql`
+        UPDATE website_assets SET custom_domain = ${testDomain}
+        WHERE subdomain = ${published.subdomain}`
+
+      const viaDomain = await rawRequest('/', testDomain)
+      check('attached custom domain serves the site', viaDomain.status === 200, `got ${viaDomain.status}`)
+      check('custom domain response is the published site', viaDomain.body.includes('<html lang='))
+    } finally {
+      await sql`
+        UPDATE website_assets SET custom_domain = NULL WHERE custom_domain = ${testDomain}`
+    }
+
+    const unattached = await rawRequest('/', 'not-attached-anywhere.example')
+    check('unattached domain 404s', unattached.status === 404, `got ${unattached.status}`)
   } else {
     check('a published site exists to test', false, 'none found')
   }

@@ -58,6 +58,40 @@ function customerSubdomain(host: string | null, appHost: string): string | null 
 }
 
 /**
+ * Hosts that reach the app on something other than its own domain, and are
+ * therefore never a customer's attached domain: Vercel's own deployment URLs,
+ * bare IP addresses (the LAN address `next dev` prints), and anything with no
+ * dot at all.
+ */
+function isPlatformHost(hostname: string) {
+  return (
+    hostname.endsWith('.vercel.app') ||
+    hostname.endsWith('.localhost') ||
+    !hostname.includes('.') ||
+    /^[\d.]+$/.test(hostname)
+  )
+}
+
+/**
+ * A Business-plan customer's own domain, pointed here by CNAME or A record.
+ *
+ * Unlike a subdomain this cannot be recognised from the host alone — whether
+ * `theircompany.com` is attached lives in the database. The lookup happens in
+ * the site route, where a database connection exists; the proxy only decides
+ * that the host is not the app's and hands the hostname over. An unattached
+ * domain therefore 404s at the route rather than here.
+ */
+function customerDomain(host: string | null, appHost: string): string | null {
+  if (!host) return null
+
+  const hostname = host.split(':')[0]
+  if (hostname === appHost || hostname.endsWith(`.${appHost}`)) return null
+  if (APP_HOSTS.has(hostname) || isPlatformHost(hostname)) return null
+
+  return hostname
+}
+
+/**
  * Proxy (formerly middleware) handles subdomain routing, locale negotiation
  * and *redirects only*.
  *
@@ -73,10 +107,19 @@ export default function proxy(request: NextRequest) {
     .replace(/^https?:\/\//, '')
     .split(':')[0]
 
+  const host = request.headers.get('host')
+
   // A customer subdomain serves that customer's published site, nothing else.
-  const subdomain = customerSubdomain(request.headers.get('host'), appHost)
+  const subdomain = customerSubdomain(host, appHost)
   if (subdomain) {
     return NextResponse.rewrite(new URL(`/sites/${subdomain}${pathname}`, request.url))
+  }
+
+  // As does a domain the customer attached themselves. Hostnames always contain
+  // a dot and subdomains never do, so the site route can tell them apart.
+  const domain = customerDomain(host, appHost)
+  if (domain) {
+    return NextResponse.rewrite(new URL(`/sites/${domain}${pathname}`, request.url))
   }
 
   /*

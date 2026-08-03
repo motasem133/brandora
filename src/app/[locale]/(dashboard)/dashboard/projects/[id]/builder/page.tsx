@@ -8,6 +8,7 @@ import { db } from '@/server/db'
 import { getOrgPlan } from '@/server/db/queries/plans'
 import { getProject } from '@/server/db/queries/projects'
 import { websiteAssets } from '@/server/db/schema'
+import { isDomainsConfigured } from '@/server/services/domains'
 import { requireOrg } from '@/server/session'
 
 /**
@@ -51,8 +52,12 @@ export default async function BuilderPage({
       initialPages={normalisePages(website.pages)}
       initialTheme={(website.customStyles ?? {}) as Theme}
       initialSubdomain={website.subdomain}
+      initialCustomDomain={website.customDomain}
       isPublished={website.isPublished}
       canPublish={plan?.websiteBuilder ?? false}
+      /* Both must hold: the plan sells the feature, and this deployment has
+         Vercel credentials to attach a domain with. */
+      canUseCustomDomain={(plan?.customDomain ?? false) && isDomainsConfigured()}
     />
   )
 }

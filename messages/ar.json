@@ -283,7 +283,13 @@
     "address": "عنوان الموقع",
     "willBeLiveAt": "سيكون متاحاً على",
     "viewSite": "عرض الموقع",
-    "publishLocked": "النشر يتطلب باقة Basic أو أعلى"
+    "publishLocked": "النشر يتطلب باقة Basic أو أعلى",
+    "customDomain": "نطاق مخصص",
+    "connectDomain": "ربط النطاق",
+    "checkDomain": "تحقق من الحالة",
+    "removeDomain": "إزالة",
+    "domainLive": "يعمل — هذا النطاق يعرض موقعك.",
+    "domainPendingDns": "أضف هذا السجل لدى مزوّد DNS الخاص بك ثم تحقق من الحالة. قد يستغرق ذلك حتى ساعة."
   },
   "Billing": {
     "title": "الفوترة",

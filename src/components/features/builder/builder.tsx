@@ -47,15 +47,19 @@ export function Builder({
   initialPages,
   initialTheme,
   initialSubdomain,
+  initialCustomDomain,
   isPublished,
   canPublish,
+  canUseCustomDomain,
 }: {
   projectId: string
   initialPages: Pages
   initialTheme: Theme
   initialSubdomain: string | null
+  initialCustomDomain: string | null
   isPublished: boolean
   canPublish: boolean
+  canUseCustomDomain: boolean
 }) {
   const t = useTranslations('Builder')
 
@@ -201,8 +205,10 @@ export function Builder({
           <PublishPanel
             projectId={projectId}
             initialSubdomain={initialSubdomain}
+            initialCustomDomain={initialCustomDomain}
             isPublished={isPublished}
             canPublish={canPublish}
+            canUseCustomDomain={canUseCustomDomain}
           />
         </div>
       </header>
