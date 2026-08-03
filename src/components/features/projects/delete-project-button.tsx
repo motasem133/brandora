@@ -17,17 +17,27 @@ export function DeleteProjectButton({ projectId }: { projectId: string }) {
     onSuccess: () => router.push('/dashboard/projects'),
   })
 
+  /*
+   * Icon-only and quiet, deliberately.
+   *
+   * This was the only action in the project header, which made destroying the
+   * brand the most prominent thing on a page whose actual job is handing the
+   * brand over. It keeps its accessible name and its confirmation; it just
+   * stops competing with the download.
+   */
   return (
     <Button
       variant="ghost"
-      size="sm"
+      size="icon"
+      aria-label={tc('delete')}
+      title={tc('delete')}
       disabled={isPending}
+      className="text-fg-muted hover:text-danger"
       onClick={() => {
         if (confirm(t('deleteConfirm'))) execute({ id: projectId })
       }}
     >
       {isPending ? <Loader2 className="animate-spin" /> : <Trash2 />}
-      {tc('delete')}
     </Button>
   )
 }

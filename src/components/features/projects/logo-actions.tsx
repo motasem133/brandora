@@ -1,12 +1,21 @@
 'use client'
 
-import { Check, Loader2 } from 'lucide-react'
+import { Check, Loader2, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useAction } from 'next-safe-action/hooks'
 
+import { Button } from '@/components/ui/button'
 import { useRouter } from '@/i18n/navigation'
 import { selectLogoMark, selectPrimaryLogo } from '@/server/actions/branding'
 
+/**
+ * The decision the whole branding screen exists to support.
+ *
+ * These were 12px text links under a thumbnail — the most consequential control
+ * on the page rendered as the least prominent thing on it. On the canvas they
+ * are buttons, and the chosen state is a disabled button rather than a
+ * disappearing one, so the row never changes shape under the pointer.
+ */
 export function SelectLogoButton({
   projectId,
   fileId,
@@ -25,21 +34,18 @@ export function SelectLogoButton({
 
   if (isPrimary) {
     return (
-      <span className="inline-flex items-center gap-1 text-xs font-medium text-brand">
-        <Check className="size-3" />
+      <Button variant="secondary" size="sm" disabled className="disabled:opacity-100">
+        <Check className="text-brand" />
         {t('chosen')}
-      </span>
+      </Button>
     )
   }
 
   return (
-    <button
-      onClick={() => execute({ projectId, fileId })}
-      disabled={isPending}
-      className="text-xs text-fg-secondary transition-colors hover:text-brand disabled:opacity-50"
-    >
-      {isPending ? <Loader2 className="size-3 animate-spin" /> : t('useThisLogo')}
-    </button>
+    <Button size="sm" disabled={isPending} onClick={() => execute({ projectId, fileId })}>
+      {isPending && <Loader2 className="animate-spin" />}
+      {t('useThisLogo')}
+    </Button>
   )
 }
 
@@ -66,25 +72,14 @@ export function SelectMarkButton({
   })
 
   return (
-    <button
-      onClick={() => execute({ projectId, fileId: isMark ? null : fileId })}
+    <Button
+      variant="outline"
+      size="sm"
       disabled={isPending}
-      className={
-        isMark
-          ? 'inline-flex items-center gap-1 text-xs font-medium text-brand disabled:opacity-50'
-          : 'text-xs text-fg-secondary transition-colors hover:text-brand disabled:opacity-50'
-      }
+      onClick={() => execute({ projectId, fileId: isMark ? null : fileId })}
     >
-      {isPending ? (
-        <Loader2 className="size-3 animate-spin" />
-      ) : isMark ? (
-        <>
-          <Check className="size-3" />
-          {t('isIcon')}
-        </>
-      ) : (
-        t('useAsIcon')
-      )}
-    </button>
+      {isPending ? <Loader2 className="animate-spin" /> : isMark ? <X /> : null}
+      {isMark ? t('clearIcon') : t('useAsIcon')}
+    </Button>
   )
 }

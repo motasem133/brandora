@@ -2,6 +2,7 @@
 
 import { AlertCircle, Check, Loader2, Sparkles } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { useSearchParams } from 'next/navigation'
 import { useAction } from 'next-safe-action/hooks'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
@@ -39,6 +40,14 @@ export function GenerationPanel({
 }) {
   const t = useTranslations('Generation')
   const router = useRouter()
+  /*
+   * The tab lives in the URL and this panel does not remount when it changes —
+   * it sits above the tabs, so React keeps it in place. Reading the tab makes
+   * it a dependency of the subscription below, which is what lets a stream
+   * that closed on an idle project reopen when the customer comes back to a
+   * page where work has since started.
+   */
+  const tab = useSearchParams().get('tab')
 
   const [progress, setProgress] = useState<Progress>(initialProgress)
   const [status, setStatus] = useState(initialStatus)
@@ -61,9 +70,19 @@ export function GenerationPanel({
 
     source.addEventListener('done', (event) => {
       const payload = JSON.parse((event as MessageEvent).data)
-      setStatus(payload.status)
       source.close()
       sourceRef.current = null
+
+      /*
+       * 'idle' means there is no job row at all, which says nothing about the
+       * project. Adopting it as a status turned a finished brand back into an
+       * un-generated one: the header read "Completed" while the panel above the
+       * work offered to generate it. Only a real job status replaces what the
+       * page was rendered with.
+       */
+      if (payload.status === 'idle') return
+
+      setStatus(payload.status)
       // Pull the freshly generated assets into the server-rendered page.
       router.refresh()
     })
@@ -91,6 +110,11 @@ export function GenerationPanel({
    * vanished until a hard refresh. The stream answers immediately and closes
    * when nothing is running, so this costs one indexed read for a project that
    * is idle, and self-corrects one that is not.
+   *
+   * Re-run on the tab as well as on mount. A stream that closed because there
+   * was no job stays closed, so without this the panel is deaf to a run that
+   * starts afterwards — which is the "vanished until a hard refresh" failure
+   * again, one navigation later.
    */
   useEffect(() => {
     subscribe()
@@ -98,7 +122,7 @@ export function GenerationPanel({
       sourceRef.current?.close()
       sourceRef.current = null
     }
-  }, [subscribe])
+  }, [subscribe, tab])
 
   const canAfford = creditBalance >= creditCost
 

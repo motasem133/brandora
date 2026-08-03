@@ -1,3 +1,4 @@
+import { ExternalLink } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 
 import { Badge } from '@/components/ui/badge'
@@ -16,21 +17,34 @@ export async function WebsiteView({ website }: { website: WebsiteAsset }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          {website.isPublished && website.subdomain ? (
-            <a
-              href={`/sites/${website.subdomain}`}
-              target="_blank"
-              rel="noreferrer"
-              className="text-sm text-brand hover:underline"
-            >
-              {t('liveAt')} /sites/{website.subdomain}
-            </a>
-          ) : (
-            <span className="text-sm text-fg-muted">{t('notPublished')}</span>
-          )}
-        </div>
+      {/*
+        Published or not is the first thing anyone wants from this tab, and it
+        was a line of loose text floating above the cards. It gets a bar of its
+        own, with a dot carrying the state alongside the words rather than
+        instead of them.
+      */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-line bg-surface/60 px-5 py-3">
+        {website.isPublished && website.subdomain ? (
+          <a
+            href={`/sites/${website.subdomain}`}
+            target="_blank"
+            rel="noreferrer"
+            className="group inline-flex min-w-0 items-center gap-2 text-sm"
+          >
+            <span className="size-2 shrink-0 rounded-full bg-success" />
+            <span className="text-fg-secondary">{t('liveAt')}</span>
+            <span dir="ltr" className="truncate text-brand group-hover:underline">
+              /sites/{website.subdomain}
+            </span>
+            <ExternalLink className="size-3.5 shrink-0 text-fg-muted" />
+          </a>
+        ) : (
+          <span className="inline-flex items-center gap-2 text-sm text-fg-muted">
+            <span className="size-2 shrink-0 rounded-full bg-fg-muted/50" />
+            {t('notPublished')}
+          </span>
+        )}
+
         <Link
           href={`/dashboard/projects/${website.projectId}/builder`}
           className={buttonVariants({ size: 'sm' })}

@@ -7,16 +7,21 @@ import { useState } from 'react'
 
 import { FieldError } from '@/components/ui/field-error'
 import { useRouter } from '@/i18n/navigation'
+import { cn } from '@/lib/utils'
 import { EVENTS, capture } from '@/lib/analytics'
 import { regenerateLogos } from '@/server/actions/generation'
 
 /**
- * Say what to change, send, and a new round starts.
+ * The prompt bar under the canvas: say what to change, send, a round starts.
  *
- * This replaced a "save direction" button next to a separate "regenerate"
- * button. Typing the direction and then pressing regenerate without saving
- * spent credits on a run that ignored what had just been asked for, and
- * nothing about the two buttons said they had to be pressed in order.
+ * It was a bordered panel with a heading, two lines of explanation, a labelled
+ * textarea and a wide button — five elements to say one thing. As a composer it
+ * says the same thing in a placeholder and a send key, and it sits where the
+ * next action belongs, directly beneath the work it changes.
+ *
+ * (The two-button version this originally replaced — "save direction" then
+ * "regenerate" — spent credits on a run that ignored what had just been typed.
+ * One control, one meaning.)
  */
 export function LogoComposer({
   projectId,
@@ -43,7 +48,7 @@ export function LogoComposer({
     onSuccess: () => {
       /*
        * Queueing returns long before anything visible changes. Holding this
-       * locally keeps the button showing progress from the moment it is
+       * locally keeps the control showing progress from the moment it is
        * pressed, which is what stopped people pressing it twice.
        */
       capture(EVENTS.logosRegenerated, { cost })
@@ -62,41 +67,58 @@ export function LogoComposer({
   }
 
   return (
-    <div className="rounded-lg border border-line p-4">
-      <label htmlFor="logo-direction" className="block text-sm font-medium">
-        {t('directionTitle')}
-      </label>
-      <p className="mt-0.5 text-sm text-fg-secondary">{t('directionHint')}</p>
+    <div className="space-y-2">
+      <div
+        className={cn(
+          'flex items-end gap-2 rounded-card border border-line bg-surface p-2 transition-colors',
+          'focus-within:border-brand/60',
+          busy && 'opacity-70',
+        )}
+      >
+        <label htmlFor="logo-direction" className="sr-only">
+          {t('directionTitle')}
+        </label>
 
-      <textarea
-        id="logo-direction"
-        value={text}
-        onChange={(event) => setText(event.target.value)}
-        onKeyDown={(event) => {
-          // Enter sends, as in any message box. Shift+Enter still breaks a line.
-          if (event.key === 'Enter' && !event.shiftKey) {
-            event.preventDefault()
-            send()
-          }
-        }}
-        rows={3}
-        placeholder={t('directionPlaceholder')}
-        className="mt-3 w-full resize-y rounded-lg border border-line bg-surface px-3.5 py-3 text-sm focus:border-brand focus:outline-none"
-      />
+        <textarea
+          id="logo-direction"
+          value={text}
+          onChange={(event) => setText(event.target.value)}
+          onKeyDown={(event) => {
+            // Enter sends, as in any message box. Shift+Enter still breaks a line.
+            if (event.key === 'Enter' && !event.shiftKey) {
+              event.preventDefault()
+              send()
+            }
+          }}
+          rows={2}
+          disabled={busy}
+          placeholder={t('directionPlaceholder')}
+          className="min-h-11 w-full resize-none bg-transparent px-2.5 py-2 text-sm placeholder:text-fg-muted focus:outline-none disabled:cursor-not-allowed"
+        />
 
-      <div className="mt-2 flex flex-wrap items-center gap-3">
         <button
           onClick={send}
           disabled={disabled}
-          title={affordable ? undefined : t('notEnoughCredits')}
-          className="inline-flex items-center gap-2 rounded-lg bg-brand px-3.5 py-2 text-sm font-medium text-brand-fg transition-opacity hover:opacity-90 disabled:opacity-60"
+          title={affordable ? t('sendDirection', { credits: cost }) : t('notEnoughCredits')}
+          /*
+           * The label carries the state, because the icon cannot. A send
+           * control that silently becomes a spinner tells a screen reader
+           * nothing about whether the press did anything.
+           */
+          aria-label={busy ? t('regenerating') : t('sendDirection', { credits: cost })}
+          className="grid size-10 shrink-0 place-items-center rounded-control bg-[image:var(--brand-gradient)] text-brand-fg transition-opacity hover:opacity-90 disabled:opacity-50"
         >
-          {busy ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
-          {busy ? t('regenerating') : t('sendDirection', { credits: cost })}
+          {busy ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <Send className="size-4 rtl:-scale-x-100" />
+          )}
         </button>
-
-        <span className="text-xs text-fg-muted">{t('keepsPrevious')}</span>
       </div>
+
+      <p className="px-1 text-xs text-fg-muted">
+        {busy ? t('regenerating') : t('composerHint', { credits: cost })}
+      </p>
 
       <FieldError message={result?.serverError} />
     </div>
