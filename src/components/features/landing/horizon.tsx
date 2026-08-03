@@ -218,7 +218,15 @@ export function SectionReveal({
 }
 
 /** Grid children arriving in sequence, with a lift on hover. */
-export function Cell({ index, children }: { index: number; children: React.ReactNode }) {
+export function Cell({
+  index,
+  children,
+  className,
+}: {
+  index: number
+  children: React.ReactNode
+  className?: string
+}) {
   const reduced = useReducedMotion()
 
   return (
@@ -228,7 +236,7 @@ export function Cell({ index, children }: { index: number; children: React.React
       viewport={{ once: true, margin: '-10%' }}
       transition={{ duration: 0.6, ease: EASE, delay: reduced ? 0 : Math.min(index * 0.05, 0.4) }}
       whileHover={reduced ? undefined : { y: -4, transition: { duration: 0.2, ease: EASE } }}
-      className="h-full"
+      className={`h-full ${className ?? ''}`}
     >
       {children}
     </motion.div>
