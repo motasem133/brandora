@@ -5,6 +5,7 @@ import { Suspense } from 'react'
 import { ProjectCard } from '@/components/features/projects/project-card'
 import { buttonVariants } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { Stagger, StaggerItem } from '@/components/ui/motion'
 import { Link } from '@/i18n/navigation'
 import { listProjects } from '@/server/db/queries/projects'
 import { requireOrg } from '@/server/session'
@@ -60,13 +61,13 @@ async function ProjectList({ locale }: { locale: string }) {
   }
 
   return (
-    <div className="grid gap-4 stagger-children sm:grid-cols-2 lg:grid-cols-3">
-      {projects.map((project, index) => (
-        <div key={project.id} style={{ '--i': index } as React.CSSProperties}>
+    <Stagger className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {projects.map((project) => (
+        <StaggerItem key={project.id}>
           <ProjectCard project={project} locale={locale} />
-        </div>
+        </StaggerItem>
       ))}
-    </div>
+    </Stagger>
   )
 }
 

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { NextIntlClientProvider, hasLocale } from 'next-intl'
 import { setRequestLocale } from 'next-intl/server'
-import { IBM_Plex_Sans_Arabic, Inter, Syne } from 'next/font/google'
+import { IBM_Plex_Sans_Arabic, Plus_Jakarta_Sans } from 'next/font/google'
 import { notFound } from 'next/navigation'
 
 import { PostHogProvider } from '@/components/analytics/posthog-provider'
@@ -9,8 +9,18 @@ import { isRtl, routing } from '@/i18n/routing'
 import { themeInitScript } from '@/lib/theme'
 import '../globals.css'
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' })
-const syne = Syne({ subsets: ['latin'], variable: '--font-syne', display: 'swap' })
+/*
+ * One family across the whole product, weight doing the work display type used
+ * to do. Two families was one more than the brand needs, and the pairing put a
+ * geometric display face next to a neutral text face for no reason anyone
+ * could point at.
+ */
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-jakarta',
+  display: 'swap',
+})
 const arabic = IBM_Plex_Sans_Arabic({
   subsets: ['arabic'],
   weight: ['300', '400', '500', '600', '700'],
@@ -45,7 +55,7 @@ export default async function LocaleLayout({
       lang={locale}
       dir={isRtl(locale) ? 'rtl' : 'ltr'}
       suppressHydrationWarning
-      className={`${inter.variable} ${syne.variable} ${arabic.variable}`}
+      className={`${jakarta.variable} ${arabic.variable}`}
     >
       <head>
         {/*

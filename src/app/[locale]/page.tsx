@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { buttonVariants } from '@/components/ui/button'
 import { Logo, LogoMark } from '@/components/ui/logo'
+import { Reveal, Stagger, StaggerItem } from '@/components/ui/motion'
 import { Link } from '@/i18n/navigation'
 
 export default async function LandingPage({ params }: { params: Promise<{ locale: string }> }) {
@@ -31,7 +32,7 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
         style={{ maskImage: 'radial-gradient(60% 60% at 50% 0%, black, transparent)' }}
       />
 
-      <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6 animate-fade-in">
+      <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
         <Logo className="text-xl" markClassName="size-7" animated />
         <nav className="flex items-center gap-2">
           <Link href="/login" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
@@ -44,48 +45,45 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
       </header>
 
       <section className="mx-auto max-w-3xl px-6 py-20 text-center sm:py-28">
-        <LogoMark className="mx-auto mb-8 size-16 animate-scale-in" animated id="hero" />
+        <Reveal>
+          <LogoMark className="mx-auto mb-8 size-20" animated id="hero" />
+        </Reveal>
 
-        <h1
-          className="font-display text-5xl font-bold leading-[1.05] tracking-tight animate-fade-up sm:text-7xl"
-          style={{ animationDelay: '80ms' }}
-        >
-          <span className="gradient-text">{t('heroTitle')}</span>
-        </h1>
-        <p
-          className="mx-auto mt-6 max-w-xl text-lg text-fg-secondary animate-fade-up"
-          style={{ animationDelay: '160ms' }}
-        >
-          {t('heroSubtitle')}
-        </p>
-        <div
-          className="mt-10 flex flex-wrap justify-center gap-3 animate-fade-up"
-          style={{ animationDelay: '240ms' }}
-        >
-          <Link href="/register" className={buttonVariants({ size: 'lg' })}>
-            {t('ctaPrimary')}
-          </Link>
-          <Link href="/pricing" className={buttonVariants({ variant: 'outline', size: 'lg' })}>
-            {t('ctaSecondary')}
-          </Link>
-        </div>
-      </section>
+        <Reveal delay={0.08}>
+          <h1 className="font-display text-5xl font-extrabold leading-[1.05] tracking-[-0.03em] sm:text-7xl">
+            <span className="gradient-text">{t('heroTitle')}</span>
+          </h1>
+        </Reveal>
 
-      <section className="mx-auto grid max-w-6xl gap-4 px-6 pb-24 stagger-children sm:grid-cols-2">
-        {features.map(({ icon: Icon, title, body }, index) => (
-          <div
-            key={title}
-            className="card-lit interactive group p-6"
-            style={{ '--i': index } as React.CSSProperties}
-          >
-            <div className="icon-chip mb-4 transition-transform duration-200 group-hover:scale-110">
-              <Icon className="size-5" />
-            </div>
-            <h2 className="font-display text-lg font-semibold">{title}</h2>
-            <p className="mt-1.5 text-sm text-fg-secondary">{body}</p>
+        <Reveal delay={0.16}>
+          <p className="mx-auto mt-6 max-w-xl text-lg text-fg-secondary">{t('heroSubtitle')}</p>
+        </Reveal>
+
+        <Reveal delay={0.24}>
+          <div className="mt-10 flex flex-wrap justify-center gap-3">
+            <Link href="/register" className={buttonVariants({ size: 'lg' })}>
+              {t('ctaPrimary')}
+            </Link>
+            <Link href="/pricing" className={buttonVariants({ variant: 'outline', size: 'lg' })}>
+              {t('ctaSecondary')}
+            </Link>
           </div>
-        ))}
+        </Reveal>
       </section>
+
+      <Stagger className="mx-auto grid max-w-6xl gap-5 px-6 pb-24 sm:grid-cols-2">
+        {features.map(({ icon: Icon, title, body }) => (
+          <StaggerItem key={title}>
+            <div className="card-lit interactive group h-full p-7">
+              <div className="icon-chip mb-5 transition-transform duration-200 group-hover:scale-110">
+                <Icon className="size-5" />
+              </div>
+              <h2 className="font-display text-lg font-semibold">{title}</h2>
+              <p className="mt-2 text-sm leading-relaxed text-fg-secondary">{body}</p>
+            </div>
+          </StaggerItem>
+        ))}
+      </Stagger>
     </div>
   )
 }

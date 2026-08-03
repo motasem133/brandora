@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { ProjectCard } from '@/components/features/projects/project-card'
 import { buttonVariants } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { Stagger, StaggerItem } from '@/components/ui/motion'
 import { Link } from '@/i18n/navigation'
 import { countProjects, countProjectsByStatus, listProjects } from '@/server/db/queries/projects'
 import { requireOrg } from '@/server/session'
@@ -36,23 +37,21 @@ export default async function OverviewPage({ params }: { params: Promise<{ local
         <p className="mt-2 text-fg-secondary">{t('subtitle')}</p>
       </div>
 
-      <div className="grid gap-4 stagger-children sm:grid-cols-3">
-        {stats.map((stat, index) => (
-          <div
-            key={stat.label}
-            style={{ '--i': index } as React.CSSProperties}
-            className="card-lit interactive p-5"
-          >
-            <div className="flex items-start justify-between gap-3">
-              <p className="text-sm text-fg-secondary">{stat.label}</p>
-              <span className="icon-chip">
-                <stat.icon className="size-4" />
-              </span>
+      <Stagger className="grid gap-5 sm:grid-cols-3">
+        {stats.map((stat) => (
+          <StaggerItem key={stat.label}>
+            <div className="card-lit interactive h-full p-6">
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-sm text-fg-secondary">{stat.label}</p>
+                <span className="icon-chip">
+                  <stat.icon className="size-4" />
+                </span>
+              </div>
+              <p className="mt-3 stat-figure text-4xl">{stat.value}</p>
             </div>
-            <p className="mt-3 stat-figure text-4xl">{stat.value}</p>
-          </div>
+          </StaggerItem>
         ))}
-      </div>
+      </Stagger>
 
       {recent.length === 0 ? (
         <Card className="flex flex-col items-center gap-4 py-16 text-center">
