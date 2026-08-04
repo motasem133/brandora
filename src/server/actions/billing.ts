@@ -28,6 +28,31 @@ export const createCheckout = orgAction
     }),
   )
   .action(async ({ parsedInput, ctx }) => {
+    /*
+     * A customer who already subscribes cannot be sent to a fresh checkout.
+     *
+     * Polar refuses a second subscription for the same customer, and the
+     * refusal surfaces at its own hosted page as "you already have a
+     * subscription" — after the customer has left the app, believing they were
+     * buying something. Changing plans is an update, not a purchase, and the
+     * hosted portal is where Polar performs it, with the proration it owes
+     * them.
+     *
+     * Credit packs are exempt: they are one-off orders, not subscriptions, so
+     * buying one while subscribed is exactly what should happen.
+     */
+    if (parsedInput.kind === 'plan') {
+      const [existing] = await db
+        .select({ status: subscriptions.status })
+        .from(subscriptions)
+        .where(eq(subscriptions.organizationId, ctx.orgId))
+        .limit(1)
+
+      if (existing?.status === 'active' || existing?.status === 'trialing') {
+        return { url: `${env.NEXT_PUBLIC_APP_URL}/api/portal`, isPlanChange: true }
+      }
+    }
+
     const productId = await resolveProductId(parsedInput)
 
     if (!productId) {
@@ -63,7 +88,7 @@ export const createCheckout = orgAction
       checkout = await polar.checkouts.create(base)
     }
 
-    return { url: checkout.url }
+    return { url: checkout.url, isPlanChange: false }
   })
 
 async function resolveProductId(input: {

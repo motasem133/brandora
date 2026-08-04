@@ -72,6 +72,9 @@ export default async function BillingPage({
     ? requestedInterval
     : (subscription?.status === 'active' ? subscription.interval : 'monthly')
 
+  /* Anything that already bills recurringly changes plan rather than buys one. */
+  const isSubscribed = subscription?.status === 'active' || subscription?.status === 'trialing'
+
   return (
     <div className="mx-auto max-w-5xl space-y-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -211,7 +214,13 @@ export default async function BillingPage({
                         kind="plan"
                         slug={plan.slug}
                         interval={interval}
-                        label={t('upgrade')}
+                        /*
+                          "Upgrade" is only true for someone who has nothing.
+                          A subscriber moving between plans may be going down
+                          as often as up, and the action itself is a change
+                          handled in the portal rather than a purchase.
+                        */
+                        label={isSubscribed ? t('changePlan') : t('upgrade')}
                       />
                     ) : (
                       <p className="text-xs text-fg-muted">{t('intervalUnavailable')}</p>

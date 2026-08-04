@@ -146,7 +146,7 @@
     "emptyTitle": "Nothing here yet",
     "emptyBody": "Your generated brands will appear here.",
     "createdOn": "Created {date}",
-    "deleteConfirm": "Delete this project? This cannot be undone.",
+    "deleteConfirm": "Its logos, palette, website and social kit go with it. You cannot undo this.",
     "deleted": "Project deleted.",
     "status": {
       "draft": "Draft",
@@ -168,7 +168,8 @@
     "briefCountry": "Country",
     "briefStyle": "Style",
     "briefLanguage": "Language",
-    "briefAudience": "About the brand"
+    "briefAudience": "About the brand",
+    "deleteTitle": "Delete this brand?"
   },
   "Onboarding": {
     "title": "Let's build your brand",
@@ -243,7 +244,10 @@
     "step4Hint3": "What makes you different",
     "step4Short": "A sentence or two is plenty.",
     "step4Good": "This is what shapes your names, your logo and every line of copy.",
-    "cancelConfirm": "Leave without creating your brand? Your answers will not be saved."
+    "cancelConfirm": "Leave without creating your brand? Your answers will not be saved.",
+    "cancelTitle": "Leave without creating your brand?",
+    "discard": "Discard answers",
+    "keepGoing": "Keep going"
   },
   "Generation": {
     "title": "Generate your brand",
@@ -436,7 +440,10 @@
     "intervalUnavailable": "Not sold on this billing period yet.",
     "billedMonthly": "Billed monthly",
     "billedYearly": "Billed yearly",
-    "renewsOn": "renews {date}"
+    "renewsOn": "renews {date}",
+    "changePlan": "Change plan",
+    "cancelTitle": "Cancel your subscription?",
+    "keepPlan": "Keep my plan"
   },
   "Assistant": {
     "emptyTitle": "Refine your brand",

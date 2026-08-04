@@ -146,7 +146,7 @@
     "emptyTitle": "لا يوجد شيء هنا بعد",
     "emptyBody": "ستظهر علاماتك التجارية المُنشأة هنا.",
     "createdOn": "أُنشئ في {date}",
-    "deleteConfirm": "حذف هذا المشروع؟ لا يمكن التراجع عن هذا.",
+    "deleteConfirm": "ستذهب معها الشعارات ولوحة الألوان والموقع وحزمة التواصل. لا يمكن التراجع عن هذا.",
     "deleted": "تم حذف المشروع.",
     "status": {
       "draft": "مسودة",
@@ -168,7 +168,8 @@
     "briefCountry": "الدولة",
     "briefStyle": "الأسلوب",
     "briefLanguage": "اللغة",
-    "briefAudience": "عن العلامة"
+    "briefAudience": "عن العلامة",
+    "deleteTitle": "حذف هذه العلامة؟"
   },
   "Onboarding": {
     "title": "لنبنِ علامتك التجارية",
@@ -243,7 +244,10 @@
     "step4Hint3": "ما الذي يميّزك",
     "step4Short": "جملة أو جملتان تكفيان.",
     "step4Good": "هذا ما يصوغ الأسماء والشعار وكل سطر من النصوص.",
-    "cancelConfirm": "الخروج دون إنشاء علامتك؟ لن يتم حفظ إجاباتك."
+    "cancelConfirm": "الخروج دون إنشاء علامتك؟ لن يتم حفظ إجاباتك.",
+    "cancelTitle": "الخروج دون إنشاء علامتك؟",
+    "discard": "تجاهل الإجابات",
+    "keepGoing": "المتابعة"
   },
   "Generation": {
     "title": "ولّد علامتك التجارية",
@@ -436,7 +440,10 @@
     "intervalUnavailable": "غير متاح على دورة الفوترة هذه بعد.",
     "billedMonthly": "فوترة شهرية",
     "billedYearly": "فوترة سنوية",
-    "renewsOn": "تتجدد في {date}"
+    "renewsOn": "تتجدد في {date}",
+    "changePlan": "تغيير الخطة",
+    "cancelTitle": "إلغاء اشتراكك؟",
+    "keepPlan": "الاحتفاظ بالخطة"
   },
   "Assistant": {
     "emptyTitle": "حسّن علامتك التجارية",
