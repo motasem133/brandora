@@ -30,7 +30,26 @@
       "Bash(npx *)",
       "Bash(curl -s -o /dev/null http://localhost:8288/)",
       "Bash(curl -s -o /dev/null -w \"dashboard -> %{http_code}\\\\n\" http://localhost:8288/)",
-      "Bash(E2E_EMAIL=e2e@brandora-test.com E2E_PASSWORD=testpassword123 pnpm exec playwright test e2e/settings.spec.ts)"
+      "Bash(E2E_EMAIL=e2e@brandora-test.com E2E_PASSWORD=testpassword123 pnpm exec playwright test e2e/settings.spec.ts)",
+      "Bash(grep -n -i -E \"^#{1,3} |phase|todo|pending|not implemented|remaining|roadmap\" SYSTEM_DOCUMENTATION.md)",
+      "Bash(echo \"exit:$?\")",
+      "Bash(grep -n -E \"^#{1,3} \" SYSTEM_DOCUMENTATION.v1-laravel-angular.md)",
+      "Bash(cp /tmp/mark-v2.svg public/brandora-mark.svg)",
+      "Bash(cp /tmp/mark-v2.svg src/app/icon.svg)",
+      "Bash(SKIP_ENV_VALIDATION=true pnpm lint)",
+      "Bash(python3 *)",
+      "Bash(pnpm typecheck *)",
+      "Bash(pnpm lint *)",
+      "Bash(pnpm dev *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/en/login)",
+      "Bash(SHOT_DIR=__TRACKED_VAR__ node shot.mjs)",
+      "Bash(pnpm test:e2e)",
+      "WebFetch(domain:www.aardvarkbookclub.com)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/en)",
+      "Bash(curl -s http://localhost:3000/en)",
+      "Bash(node check.mjs)",
+      "Skill(impeccable:impeccable)",
+      "Bash(node /Users/motasemmoner/.claude/plugins/cache/impeccable/impeccable/4.0.4/skills/impeccable/scripts/concept-seed.mjs --scope surface --mode operate)"
     ]
   }
 }
