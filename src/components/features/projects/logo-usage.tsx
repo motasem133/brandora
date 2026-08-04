@@ -23,15 +23,11 @@ export async function LogoUsage({
   files,
   businessName,
   slogan,
-  hasIcon,
-  iconStyle,
 }: {
   files: GeneratedFile[]
   businessName: string | null
   slogan: string | null
   /** Whether a text-free mark was chosen, or the logo is standing in for one. */
-  hasIcon: boolean
-  iconStyle: string | null
 }) {
   const t = await getTranslations('Branding')
 
@@ -71,7 +67,7 @@ export async function LogoUsage({
                     alt=""
                     className="size-4 shrink-0 rounded-[3px] bg-white object-contain"
                   />
-                  <span className="truncate text-[11px] text-fg-secondary">{name}</span>
+                  <span className="truncate text-xs text-fg-secondary">{name}</span>
                   <X className="size-2.5 shrink-0 text-fg-muted" />
                 </div>
                 <div className="h-6 w-12 rounded-t-lg bg-surface/40" />
@@ -141,7 +137,7 @@ export async function LogoUsage({
         the customer to infer it from a control they never pressed.
       */}
       <p className="border-t border-line pt-4 text-sm text-fg-secondary">
-        {hasIcon ? t('usageIconIs', { style: iconStyle ?? '' }) : t('usageNoIcon')}
+        {t('usageFromLogo')}
       </p>
     </Card>
   )

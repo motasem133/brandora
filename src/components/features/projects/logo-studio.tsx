@@ -9,7 +9,7 @@ import type { LogoRound } from '@/lib/logo-rounds'
 import type { GeneratedFile } from '@/server/db/schema'
 import { publicUrl } from '@/server/storage/r2'
 import { LogoComposer } from './logo-composer'
-import { SelectLogoButton, SelectMarkButton } from './logo-actions'
+import { SelectLogoButton } from './logo-actions'
 
 /**
  * The stage: one mark, large, and the controls that act on it.
@@ -20,14 +20,20 @@ import { SelectLogoButton, SelectMarkButton } from './logo-actions'
  * three screens down. Here one concept is on the canvas at a size you can judge,
  * its siblings sit under it as a row of switches, and the earlier rounds are a
  * strip across the top of the section.
+ *
+ * One decision, not two. There used to be a second control naming a separate
+ * concept for the favicon and the avatars, which meant the customer had to
+ * understand why a logo and an icon are different things before either button
+ * did anything — and picking the icon first did nothing at all, because the
+ * rebuild it triggers was skipped whenever no logo had been chosen yet. The
+ * icon follows the logo now.
  */
 export async function LogoStudio({
   projectId,
   round,
   concept,
   isLatestRound,
-  primaryId,
-  markLogoFileId,
+  chosenId,
   logoBrief,
   logoCost,
   affordable,
@@ -40,8 +46,7 @@ export async function LogoStudio({
   round?: LogoRound
   concept?: GeneratedFile
   isLatestRound: boolean
-  primaryId: string | null
-  markLogoFileId: string | null
+  chosenId: string | null
   logoBrief: string | null
   logoCost: number
   affordable: boolean
@@ -53,8 +58,7 @@ export async function LogoStudio({
   const t = await getTranslations('Branding')
   const theme = brandTheme(palette)
 
-  const isPrimary = Boolean(concept && concept.id === primaryId)
-  const isMark = Boolean(concept && concept.id === markLogoFileId)
+  const isPrimary = Boolean(concept && concept.id === chosenId)
   const style = String(concept?.metadata?.style ?? '')
 
   return (
@@ -118,7 +122,7 @@ export async function LogoStudio({
             <ol className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
               {round.concepts.map((option) => {
                 const current = option.id === concept?.id
-                const chosen = option.id === primaryId
+                const chosen = option.id === chosenId
 
                 return (
                   <li key={option.id}>
@@ -165,7 +169,6 @@ export async function LogoStudio({
           {concept && (
             <div className="flex flex-wrap items-center gap-2">
               <SelectLogoButton projectId={projectId} fileId={concept.id} isPrimary={isPrimary} />
-              <SelectMarkButton projectId={projectId} fileId={concept.id} isMark={isMark} />
 
               {style && (
                 <span className="ms-1 text-xs capitalize text-fg-muted">{style}</span>

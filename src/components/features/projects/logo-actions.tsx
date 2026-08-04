@@ -1,12 +1,12 @@
 'use client'
 
-import { Check, Loader2, X } from 'lucide-react'
+import { Check, Loader2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useAction } from 'next-safe-action/hooks'
 
 import { Button } from '@/components/ui/button'
 import { useRouter } from '@/i18n/navigation'
-import { selectLogoMark, selectPrimaryLogo } from '@/server/actions/branding'
+import { selectPrimaryLogo } from '@/server/actions/branding'
 
 /**
  * The decision the whole branding screen exists to support.
@@ -55,31 +55,3 @@ export function SelectLogoButton({
  * Clicking the current icon clears it, so the favicon falls back to the logo
  * itself rather than needing a separate "none" control.
  */
-export function SelectMarkButton({
-  projectId,
-  fileId,
-  isMark,
-}: {
-  projectId: string
-  fileId: string
-  isMark: boolean
-}) {
-  const t = useTranslations('Branding')
-  const router = useRouter()
-
-  const { execute, isPending } = useAction(selectLogoMark, {
-    onSuccess: () => router.refresh(),
-  })
-
-  return (
-    <Button
-      variant="outline"
-      size="sm"
-      disabled={isPending}
-      onClick={() => execute({ projectId, fileId: isMark ? null : fileId })}
-    >
-      {isPending ? <Loader2 className="animate-spin" /> : isMark ? <X /> : null}
-      {isMark ? t('clearIcon') : t('useAsIcon')}
-    </Button>
-  )
-}

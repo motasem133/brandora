@@ -35,6 +35,7 @@ export async function BrandingView({
   activeRound,
   activeConcept,
   primaryId,
+  chosenId,
   language,
   emailVerified,
   userEmail,
@@ -52,6 +53,8 @@ export async function BrandingView({
   activeRound?: LogoRound
   activeConcept?: GeneratedFile
   primaryId: string | null
+  /** The decision itself, null until one is made. */
+  chosenId: string | null
   language: string
   emailVerified: boolean
   userEmail: string
@@ -120,8 +123,7 @@ export async function BrandingView({
             round={activeRound}
             concept={activeConcept}
             isLatestRound={!activeRound || activeRound.round === rounds[0]?.round}
-            primaryId={primaryId}
-            markLogoFileId={branding.markLogoFileId}
+            chosenId={chosenId}
             logoBrief={logoBrief}
             logoCost={logoCost}
             affordable={creditBalance >= logoCost}
@@ -152,14 +154,6 @@ export async function BrandingView({
         files={files}
         businessName={chosenName}
         slogan={branding.slogan}
-        hasIcon={Boolean(branding.markLogoFileId)}
-        iconStyle={
-          branding.markLogoFileId
-            ? (String(
-                files.find((file) => file.id === branding.markLogoFileId)?.metadata?.style ?? '',
-              ) || null)
-            : null
-        }
       />
 
       <BrandSheet
