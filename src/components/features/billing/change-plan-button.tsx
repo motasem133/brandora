@@ -32,12 +32,22 @@ export function ChangePlanButton({
   price,
   interval,
   label,
+  canManageCard,
 }: {
   slug: string
   planName: string
   price: string
   interval: BillingInterval
   label: string
+  /**
+   * Whether this organization has a Polar customer behind it.
+   *
+   * A subscription can exist without one — the customer id is only recorded
+   * when a webhook carries it — and the portal has nothing to open without it.
+   * The plan change itself is unaffected, because that works from the
+   * subscription id, so this hides one link rather than the whole control.
+   */
+  canManageCard: boolean
 }) {
   const t = useTranslations('Billing')
   const tc = useTranslations('Common')
@@ -68,7 +78,25 @@ export function ChangePlanButton({
         onClose={() => setAsking(false)}
         onConfirm={() => execute({ slug, interval })}
         title={t('changeTitle', { plan: planName })}
-        body={t('changeBody', { plan: planName, price })}
+        body={
+          <>
+            {t('changeBody', { plan: planName, price })}{' '}
+            {/*
+              The one question this dialog raises and could not otherwise
+              answer: which card. Polar's SDK exposes no payment method on the
+              subscription or the customer, so rather than describe a card we
+              cannot name, the way to change it sits right here — a plain
+              anchor, because /api/portal is a Route Handler that redirects and
+              a client navigation would never follow it.
+            */}
+            {canManageCard && (
+              /* eslint-disable-next-line @next/next/no-html-link-for-pages */
+              <a href="/api/portal" className="accent-text underline underline-offset-2">
+                {t('useAnotherCard')}
+              </a>
+            )}
+          </>
+        }
         confirmLabel={t('confirmChange')}
         cancelLabel={tc('cancel')}
       />
