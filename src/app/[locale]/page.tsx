@@ -214,7 +214,7 @@ export default async function HorizonDirection({
                 <div className="flex h-full flex-col rounded-[calc(1rem-1px)] bg-[#080c16] p-7">
                   <p className="text-sm text-white/45">Colour palette</p>
                   <PaletteDeal colors={PALETTE} className="mt-5 flex flex-1 gap-2" />
-                  <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 font-mono text-[11px] text-white/35">
+                  <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 font-mono text-xs text-white/35">
                     {PALETTE.map((hex) => (
                       <span key={hex}>{hex}</span>
                     ))}
@@ -356,7 +356,7 @@ export default async function HorizonDirection({
                   >
                     <div className="flex h-full flex-col rounded-[calc(1.5rem-1px)] bg-[#080c16] p-7">
                       {featured && (
-                        <span className="absolute -top-3 end-6 rounded-full bg-[image:linear-gradient(100deg,#7C3AED,#3B82F6)] px-3 py-1 text-[11px] font-semibold">
+                        <span className="absolute -top-3 end-6 rounded-full bg-[image:linear-gradient(100deg,#7C3AED,#3B82F6)] px-3 py-1 text-xs font-semibold">
                           Most chosen
                         </span>
                       )}

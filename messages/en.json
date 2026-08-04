@@ -286,7 +286,6 @@
     "latestRound": "Latest",
     "earlierRound": "Round {round}",
     "roundDirection": "Direction: {brief}",
-    "useAsIcon": "Use as icon",
     "isIcon": "Icon",
     "variations": "Variations",
     "variationsHint": "Every size and format of your chosen logo. Pick an icon above to use a text-free mark for the favicon and avatars.",
@@ -313,9 +312,7 @@
     "usageAvatar": "Profile picture",
     "usageCard": "Link preview",
     "usageFromIcon": "from your icon",
-    "usageFromLogo": "from your logo",
-    "usageIconIs": "Small formats are cut from the {style} concept.",
-    "usageNoIcon": "No icon picked, so these use your logo. If it looks crowded at this size, open a concept without text and press \"Use as icon\".",
+    "usageFromLogo": "Your favicon, avatars and link preview are cut from the logo you choose.",
     "fontHeading": "Headings",
     "fontBody": "Body",
     "fontsSpecimen": "The quick brown fox jumps over the lazy dog."

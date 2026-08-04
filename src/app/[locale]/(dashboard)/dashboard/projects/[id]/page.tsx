@@ -87,9 +87,20 @@ export default async function ProjectDetailPage({
     brandingAsset?.primaryLogoFileId ?? null,
   )
 
-  // Undecided falls back to the newest round's first concept, which is what the
-  // rest of the system already assumes.
-  const primaryId = brandingAsset?.primaryLogoFileId ?? rounds[0]?.concepts[0]?.id ?? null
+  /*
+   * Two different questions, and they were being answered with one value.
+   *
+   * `primaryId` is "what should be on the canvas", which falls back to the
+   * newest round's first concept so the stage is never empty. `chosenId` is
+   * "what did the customer actually decide", which stays null until they do.
+   *
+   * Blending them made the choose button read "Chosen" on a project where
+   * nothing had been chosen — so it sat in its already-done state, did nothing
+   * when pressed, and the decision could never be recorded. The favicon and
+   * avatars are rebuilt by that action, so they never got rebuilt either.
+   */
+  const chosenId = brandingAsset?.primaryLogoFileId ?? null
+  const primaryId = chosenId ?? rounds[0]?.concepts[0]?.id ?? null
 
   const primaryLogo = logoFiles.find((file) => file.id === primaryId)
   const kitFile = files.find((file) => file.kind === 'brand_kit_zip')
@@ -209,6 +220,7 @@ export default async function ProjectDetailPage({
           activeRound={activeRound}
           activeConcept={activeConcept}
           primaryId={primaryId}
+          chosenId={chosenId}
           language={project.language}
           emailVerified={user.emailVerified}
           userEmail={user.email}
