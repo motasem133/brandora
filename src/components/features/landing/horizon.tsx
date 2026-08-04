@@ -56,13 +56,22 @@ export function Horizon() {
         </filter>
       </defs>
 
-      {/* One wide, shallow curve: the top of a circle far larger than the page. */}
-      <path
+      {/*
+        One wide, shallow curve: the top of a circle far larger than the page.
+
+        The stroke thickens and thins on a long cycle rather than only fading.
+        Opacity alone dims the whole arc at once, which reads as a light being
+        turned down; widening the line makes it read as a light with something
+        burning behind it.
+      */}
+      <motion.path
         d="M -200 420 Q 800 -110 1800 420"
         fill="none"
         stroke="url(#horizon-line)"
-        strokeWidth="2.5"
+        strokeWidth={2.5}
         filter="url(#horizon-glow)"
+        animate={reduced ? undefined : { strokeWidth: [2.5, 4.4, 2.5] }}
+        transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
       />
     </svg>
   )
@@ -137,12 +146,21 @@ export function SectionArc({ className }: { className?: string }) {
           </feMerge>
         </filter>
       </defs>
-      <path
+      {/*
+        The same breath as the hero's crest, gated on visibility. There are four
+        of these down the page, and an arc pulsing in a section nobody is
+        looking at is a rAF loop that costs battery and shows nothing.
+      */}
+      <motion.path
         d="M -200 300 Q 800 -40 1800 300"
         fill="none"
         stroke="url(#section-line)"
-        strokeWidth="1.5"
+        strokeWidth={1.5}
         filter="url(#section-glow)"
+        initial={false}
+        whileInView={reduced ? undefined : { strokeWidth: [1.5, 2.9, 1.5] }}
+        viewport={{ once: false }}
+        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
       />
     </svg>
   )
@@ -217,15 +235,24 @@ export function SectionReveal({
   )
 }
 
-/** Grid children arriving in sequence, with a lift on hover. */
+/**
+ * Grid children arriving in sequence, with a lift on hover.
+ *
+ * `lift` exists for cells that answer the pointer themselves. Two things
+ * responding to one hover is not twice as responsive — and where the inner
+ * response is momentum-based, a wrapper that moves out from under the cursor
+ * makes the cell enter itself over and over.
+ */
 export function Cell({
   index,
   children,
   className,
+  lift = true,
 }: {
   index: number
   children: React.ReactNode
   className?: string
+  lift?: boolean
 }) {
   const reduced = useReducedMotion()
 
@@ -235,7 +262,7 @@ export function Cell({
       whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
       viewport={{ once: true, margin: '-10%' }}
       transition={{ duration: 0.6, ease: EASE, delay: reduced ? 0 : Math.min(index * 0.05, 0.4) }}
-      whileHover={reduced ? undefined : { y: -4, transition: { duration: 0.2, ease: EASE } }}
+      whileHover={reduced || !lift ? undefined : { y: -4, transition: { duration: 0.2, ease: EASE } }}
       className={`h-full ${className ?? ''}`}
     >
       {children}
