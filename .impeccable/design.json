@@ -1,0 +1,435 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-04T00:00:00.000Z",
+  "title": "Design System: Brandora",
+  "extensions": {
+    "colorMeta": {
+      "signal-violet": {
+        "role": "primary",
+        "displayName": "Signal Violet",
+        "canonical": "#7c3aed",
+        "tonalRamp": [
+          "oklch(22% 0.12 293)",
+          "oklch(32% 0.17 293)",
+          "oklch(42% 0.22 293)",
+          "oklch(53% 0.26 293)",
+          "oklch(63% 0.22 293)",
+          "oklch(74% 0.16 293)",
+          "oklch(85% 0.09 293)",
+          "oklch(95% 0.03 293)"
+        ]
+      },
+      "indigo-core": {
+        "role": "primary",
+        "displayName": "Indigo Core",
+        "canonical": "#4f46e5",
+        "tonalRamp": [
+          "oklch(21% 0.11 275)",
+          "oklch(30% 0.16 275)",
+          "oklch(40% 0.20 275)",
+          "oklch(51% 0.24 275)",
+          "oklch(62% 0.20 275)",
+          "oklch(73% 0.15 275)",
+          "oklch(85% 0.08 275)",
+          "oklch(95% 0.03 275)"
+        ]
+      },
+      "horizon-blue": {
+        "role": "secondary",
+        "displayName": "Horizon Blue",
+        "canonical": "#3b82f6",
+        "tonalRamp": [
+          "oklch(24% 0.09 260)",
+          "oklch(34% 0.13 260)",
+          "oklch(44% 0.16 260)",
+          "oklch(55% 0.19 260)",
+          "oklch(65% 0.16 260)",
+          "oklch(76% 0.12 260)",
+          "oklch(86% 0.07 260)",
+          "oklch(95% 0.02 260)"
+        ]
+      },
+      "lit-violet": {
+        "role": "primary",
+        "displayName": "Lit Violet",
+        "canonical": "#a78bfa",
+        "lightThemeValue": "#6d28d9",
+        "purpose": "The readable member of the ramp. All accent text, in both themes.",
+        "tonalRamp": [
+          "oklch(28% 0.10 292)",
+          "oklch(38% 0.14 292)",
+          "oklch(48% 0.17 292)",
+          "oklch(58% 0.18 292)",
+          "oklch(68% 0.15 292)",
+          "oklch(78% 0.11 292)",
+          "oklch(88% 0.06 292)",
+          "oklch(96% 0.02 292)"
+        ]
+      },
+      "room-black": {
+        "role": "neutral",
+        "displayName": "Room Black",
+        "canonical": "#05070f",
+        "purpose": "The page. The dark room itself.",
+        "tonalRamp": [
+          "oklch(12% 0.015 265)",
+          "oklch(18% 0.018 265)",
+          "oklch(26% 0.020 265)",
+          "oklch(36% 0.022 265)",
+          "oklch(48% 0.022 265)",
+          "oklch(62% 0.018 265)",
+          "oklch(78% 0.012 265)",
+          "oklch(94% 0.006 265)"
+        ]
+      },
+      "bench-navy": {
+        "role": "neutral",
+        "displayName": "Bench Navy",
+        "canonical": "#0a0f1c",
+        "purpose": "Panels and cards — the surface work is laid on.",
+        "tonalRamp": [
+          "oklch(15% 0.020 265)",
+          "oklch(21% 0.024 265)",
+          "oklch(29% 0.026 265)",
+          "oklch(39% 0.026 265)",
+          "oklch(51% 0.024 265)",
+          "oklch(65% 0.020 265)",
+          "oklch(80% 0.013 265)",
+          "oklch(95% 0.006 265)"
+        ]
+      },
+      "riser-navy": {
+        "role": "neutral",
+        "displayName": "Riser Navy",
+        "canonical": "#121a2e",
+        "purpose": "Raised fills, chips, hover states, input grounds.",
+        "tonalRamp": [
+          "oklch(18% 0.028 265)",
+          "oklch(25% 0.034 265)",
+          "oklch(33% 0.038 265)",
+          "oklch(43% 0.038 265)",
+          "oklch(55% 0.034 265)",
+          "oklch(68% 0.026 265)",
+          "oklch(82% 0.016 265)",
+          "oklch(95% 0.007 265)"
+        ]
+      },
+      "reading-grey": {
+        "role": "neutral",
+        "displayName": "Reading Grey",
+        "canonical": "#a3aec9",
+        "purpose": "Secondary prose meant to be read — subtitles, descriptions."
+      },
+      "quiet-grey": {
+        "role": "neutral",
+        "displayName": "Quiet Grey",
+        "canonical": "#6f7b96",
+        "purpose": "Labels, timestamps, hints. Present, not competing."
+      },
+      "success-green": {
+        "role": "tertiary",
+        "displayName": "Success Green",
+        "canonical": "#22c55e"
+      },
+      "warning-amber": {
+        "role": "tertiary",
+        "displayName": "Warning Amber",
+        "canonical": "#f5a524"
+      },
+      "danger-red": {
+        "role": "tertiary",
+        "displayName": "Danger Red",
+        "canonical": "#ef4444"
+      },
+      "bloom-violet": {
+        "role": "primary",
+        "displayName": "Bloom Violet",
+        "canonical": "#8b5cf6",
+        "purpose": "The stop between Signal Violet and Lit Violet; carries the horizon bloom and sits inside both arc gradients.",
+        "tonalRamp": [
+          "oklch(25% 0.11 292)",
+          "oklch(35% 0.15 292)",
+          "oklch(45% 0.19 292)",
+          "oklch(56% 0.22 292)",
+          "oklch(66% 0.18 292)",
+          "oklch(77% 0.13 292)",
+          "oklch(87% 0.07 292)",
+          "oklch(96% 0.02 292)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Marketing headlines only. Never inside the app."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "The one page-owning h1 — a greeting, a brand's name on its plate."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Card and section headings."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "All prose. Measure stays inside 65–75ch."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Uppercase section eyebrows and meta keys."
+      },
+      "arabic": {
+        "displayName": "Arabic",
+        "purpose": "A separate stack at 1.85 leading, not a fallback."
+      }
+    },
+    "themes": {
+      "light": {
+        "room-black": "#f7f8fc",
+        "bench-navy": "#ffffff",
+        "riser-navy": "#f2f4fb",
+        "paper-white": "#0b1020",
+        "reading-grey": "#4c5570",
+        "quiet-grey": "#6d7794",
+        "lit-violet": "#6d28d9"
+      }
+    },
+    "gradients": [
+      {
+        "name": "brand-gradient",
+        "value": "linear-gradient(135deg, #7c3aed, #4f46e5 52%, #3b82f6)",
+        "purpose": "The primary button fill and the lit edge source. One per view."
+      },
+      {
+        "name": "lit-edge",
+        "value": "linear-gradient(180deg, color-mix(in srgb, #7c3aed 34%, transparent), color-mix(in srgb, #ffffff 4%, transparent) 38%)",
+        "purpose": "The 1px padding ring that lights a surface from above."
+      },
+      {
+        "name": "horizon-arc",
+        "value": "linear-gradient(90deg, #7c3aed 0%, #8b5cf6 18%, #ddd6fe 42%, #ffffff 52%, #93c5fd 64%, #3b82f6 86%, #2563eb 100%)",
+        "purpose": "The marketing hero crest, stroked onto an SVG path and bloomed. Interpolates through white at its centre because it is light, not a surface."
+      },
+      {
+        "name": "section-arc",
+        "value": "linear-gradient(90deg, #4f46e5 0%, #8b5cf6 30%, #c4b5fd 50%, #60a5fa 70%, #3b82f6 100%)",
+        "purpose": "The same light further away: thinner, dimmer, rising from a section base."
+      },
+      {
+        "name": "horizon-bloom",
+        "value": "radial-gradient(circle, rgba(139,92,246,0.42), rgba(79,70,229,0.18) 45%, transparent 70%)",
+        "purpose": "The haze the crest throws up into the copy above it."
+      }
+    ],
+    "shadows": [
+      {
+        "name": "soft",
+        "value": "0 1px 2px rgba(5,8,20,0.4), 0 12px 32px -16px rgba(5,8,20,0.8)",
+        "purpose": "The resting state of any raised surface."
+      },
+      {
+        "name": "lifted",
+        "value": "0 2px 4px rgba(5,8,20,0.35), 0 26px 56px -24px rgba(79,70,229,0.55)",
+        "purpose": "Hover and active elevation. The indigo tint is what makes it read as light rather than darkness."
+      },
+      {
+        "name": "glow-brand",
+        "value": "0 0 0 1px color-mix(in srgb, #7c3aed 22%, transparent), 0 18px 40px -20px color-mix(in srgb, #7c3aed 55%, transparent)",
+        "purpose": "Reserved for the brand-carrying moment — a primary action, a running job."
+      },
+      {
+        "name": "focus-ring",
+        "value": "0 0 0 3px color-mix(in srgb, #7c3aed 22%, transparent)",
+        "purpose": "Field focus. A bloom outside the border, not an outline."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out-soft",
+        "value": "cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "Entrances and all default state transitions."
+      },
+      {
+        "name": "ease-in-soft",
+        "value": "cubic-bezier(0.64, 0, 0.78, 0)",
+        "purpose": "Exits."
+      },
+      {
+        "name": "ease-spring",
+        "value": "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "purpose": "Scale-in, where a small overshoot reads as arrival."
+      },
+      {
+        "name": "duration-band",
+        "value": "150–300ms",
+        "purpose": "Interface motion. Outside this band it reads as decorative rather than responsive."
+      },
+      {
+        "name": "stagger-step",
+        "value": "60ms, capped at 480ms",
+        "purpose": "List entrances via a --i index; the cap stops a long list leaving its last row waiting."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one gradient fill in the system. Normally one per view.",
+      "html": "<button class=\"ds-btn-primary\">Create my brand</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; height: 2.75rem; padding: 0 1.25rem; border: none; border-radius: 0.875rem; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; font-weight: 600; color: #ffffff; cursor: pointer; background-image: linear-gradient(135deg, #7c3aed, #4f46e5 52%, #3b82f6); background-size: 180% auto; background-position: left center; box-shadow: 0 10px 24px -14px #7c3aed; transition: background-position 500ms cubic-bezier(0.22,1,0.36,1), box-shadow 500ms cubic-bezier(0.22,1,0.36,1), transform 200ms cubic-bezier(0.22,1,0.36,1); } .ds-btn-primary:hover { background-position: right center; box-shadow: 0 14px 30px -12px #7c3aed; } .ds-btn-primary:focus-visible { outline: 2px solid #7c3aed; outline-offset: 2px; } .ds-btn-primary:active { transform: scale(0.98); transition-duration: 75ms; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "The default non-committal action: raised ground, hairline edge.",
+      "html": "<button class=\"ds-btn-secondary\">Resend verification email</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; height: 2.75rem; padding: 0 1.25rem; border: 1px solid rgba(255,255,255,0.09); border-radius: 0.875rem; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; font-weight: 600; color: #ffffff; background-color: #121a2e; cursor: pointer; transition: background-color 200ms cubic-bezier(0.22,1,0.36,1), transform 200ms cubic-bezier(0.22,1,0.36,1); } .ds-btn-secondary:hover { background-color: rgba(18,26,46,0.7); } .ds-btn-secondary:focus-visible { outline: 2px solid #7c3aed; outline-offset: 2px; } .ds-btn-secondary:active { transform: scale(0.98); transition-duration: 75ms; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Text until hovered. For the quieter half of a pair.",
+      "html": "<button class=\"ds-btn-ghost\">Back</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; height: 2.75rem; padding: 0 1.25rem; border: none; border-radius: 0.875rem; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; font-weight: 600; color: #a3aec9; background: transparent; cursor: pointer; transition: background-color 200ms cubic-bezier(0.22,1,0.36,1), color 200ms cubic-bezier(0.22,1,0.36,1); } .ds-btn-ghost:hover { background-color: #121a2e; color: #ffffff; } .ds-btn-ghost:focus-visible { outline: 2px solid #7c3aed; outline-offset: 2px; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "44px tall, hairline edge, and a violet bloom on focus rather than an outline.",
+      "html": "<input class=\"ds-input\" placeholder=\"e.g. TechFlow\" />",
+      "css": ".ds-input { width: 100%; height: 2.75rem; padding: 0 0.875rem; border: 1px solid rgba(255,255,255,0.09); border-radius: 0.875rem; background-color: rgba(18,26,46,0.6); color: #ffffff; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; transition: border-color 200ms ease, box-shadow 200ms cubic-bezier(0.22,1,0.36,1); } .ds-input::placeholder { color: #6f7b96; } .ds-input:focus { outline: none; border-color: #7c3aed; box-shadow: 0 0 0 3px color-mix(in srgb, #7c3aed 22%, transparent); } .ds-input[aria-invalid='true'] { border-color: #ef4444; }"
+    },
+    {
+      "name": "Lit Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "The signature surface: a 1px gradient ring lit from above around an inner ground. Two elements, because a border cannot hold a gradient and a background at once.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-inner\"><h3 class=\"ds-card-title\">Colour palette</h3><p class=\"ds-card-body\">Click a colour to copy its hex code.</p></div></div>",
+      "css": ".ds-card { padding: 1px; border-radius: 1.25rem; background-image: linear-gradient(180deg, color-mix(in srgb, #7c3aed 34%, transparent), color-mix(in srgb, #ffffff 4%, transparent) 38%); box-shadow: 0 1px 2px rgba(5,8,20,0.4), 0 12px 32px -16px rgba(5,8,20,0.8); transition: box-shadow 200ms cubic-bezier(0.22,1,0.36,1); } .ds-card:hover { box-shadow: 0 2px 4px rgba(5,8,20,0.35), 0 26px 56px -24px rgba(79,70,229,0.55); } .ds-card-inner { background-color: #0a0f1c; border-radius: calc(1.25rem - 1px); padding: 1.75rem; } .ds-card-title { margin: 0; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 1.25rem; font-weight: 600; letter-spacing: -0.02em; color: #ffffff; } .ds-card-body { margin: 0.375rem 0 0; font-size: 0.875rem; line-height: 1.6; color: #a3aec9; }"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "badge-brand",
+      "description": "A state, not a control — which is why it is a full pill. The word always rides with the colour.",
+      "html": "<span class=\"ds-badge ds-badge-success\">Completed</span> <span class=\"ds-badge ds-badge-warning\">Generating</span> <span class=\"ds-badge ds-badge-brand\">Chosen</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.625rem; border-radius: 9999px; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 0.75rem; font-weight: 500; } .ds-badge-success { background-color: color-mix(in srgb, #22c55e 15%, transparent); color: #22c55e; } .ds-badge-warning { background-color: color-mix(in srgb, #f5a524 15%, transparent); color: #f5a524; } .ds-badge-brand { background-color: color-mix(in srgb, #7c3aed 15%, transparent); color: #a78bfa; }"
+    },
+    {
+      "name": "Rail Navigation Item",
+      "kind": "nav",
+      "refersTo": "nav-item-active",
+      "description": "The active marker is a violet bar that grows from nothing on the item you moved to, so the eye follows the change rather than hunting for which row changed shade.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-item ds-nav-item-active\" href=\"#\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"3\" width=\"7\" height=\"7\" rx=\"1\"/><rect x=\"14\" y=\"3\" width=\"7\" height=\"7\" rx=\"1\"/><rect x=\"3\" y=\"14\" width=\"7\" height=\"7\" rx=\"1\"/><rect x=\"14\" y=\"14\" width=\"7\" height=\"7\" rx=\"1\"/></svg>Overview</a><a class=\"ds-nav-item\" href=\"#\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z\"/></svg>Projects</a></nav>",
+      "css": ".ds-nav { display: flex; flex-direction: column; gap: 0.25rem; width: 15rem; } .ds-nav-item { position: relative; display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 0.875rem; border-radius: 0.875rem; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; color: #a3aec9; text-decoration: none; transition: background-color 200ms cubic-bezier(0.22,1,0.36,1), color 200ms cubic-bezier(0.22,1,0.36,1); } .ds-nav-item::before { content: ''; position: absolute; inset-block: 0.5rem; inset-inline-start: -0.25rem; width: 2px; border-radius: 9999px; background-color: #7c3aed; transform: scaleY(0); transition: transform 200ms cubic-bezier(0.22,1,0.36,1); } .ds-nav-item:hover { background-color: #121a2e; color: #ffffff; } .ds-nav-item-active { background-image: linear-gradient(100deg, color-mix(in srgb, #7c3aed 22%, transparent), transparent 70%); box-shadow: inset 0 0 0 1px color-mix(in srgb, #7c3aed 20%, transparent); color: #ffffff; font-weight: 500; } .ds-nav-item-active::before { transform: scaleY(1); }"
+    },
+    {
+      "name": "Brand Specimen",
+      "kind": "custom",
+      "description": "A brand shown as itself: its mark on its own paper, its name in its own heading face, its palette along the base as the sheet's own edge. The unit of the contact sheet. Every colour here comes from the guest brand, not from Brandora.",
+      "html": "<article class=\"ds-specimen\"><div class=\"ds-specimen-stage\"><span class=\"ds-specimen-mark\">Marra</span></div><div class=\"ds-specimen-meta\"><h3 class=\"ds-specimen-name\">Marra</h3><p class=\"ds-specimen-slogan\">Built to be understood.</p><p class=\"ds-specimen-facts\">Food &amp; beverage · United Arab Emirates</p></div><div class=\"ds-specimen-band\"><span style=\"background:#7c3aed\"></span><span style=\"background:#06b6d4\"></span><span style=\"background:#111827\"></span><span style=\"background:#1f2937\"></span></div></article>",
+      "css": ".ds-specimen { --brand-paper: #f9fafb; --brand-ink: #1f2937; --brand-line: color-mix(in srgb, #1f2937 14%, transparent); display: flex; flex-direction: column; overflow: hidden; border-radius: 1.5rem; background-color: var(--brand-paper); box-shadow: 0 1px 2px rgba(5,8,20,0.4), 0 12px 32px -16px rgba(5,8,20,0.8); box-shadow: 0 1px 2px rgba(5,8,20,0.4), 0 12px 32px -16px rgba(5,8,20,0.8), 0 0 0 1px var(--brand-line); } .ds-specimen-stage { display: grid; place-items: center; min-height: 10rem; padding: 2.5rem 2rem; } .ds-specimen-mark { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 2rem; font-weight: 600; letter-spacing: -0.03em; color: var(--brand-ink); } .ds-specimen-meta { padding: 0 1.5rem 1.25rem; } .ds-specimen-name { margin: 0; font-size: 1.125rem; font-weight: 600; letter-spacing: -0.02em; color: var(--brand-ink); } .ds-specimen-slogan { margin: 0.25rem 0 0; font-size: 0.875rem; color: color-mix(in srgb, var(--brand-ink) 66%, var(--brand-paper)); } .ds-specimen-facts { margin: 0.625rem 0 0; font-size: 0.75rem; color: color-mix(in srgb, var(--brand-ink) 42%, var(--brand-paper)); } .ds-specimen-band { display: flex; height: 0.625rem; } .ds-specimen-band span { flex: 1; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Darkroom",
+    "overview": "The interface is the dark room. Every brand this product generates is a print that comes out of it, and the print is the only thing carrying colour. That is why the chrome sits at near-black and holds a single accent ramp: it is not minimalism as a style preference, it is a room built so that whatever is pinned up in it can be judged. A product that sells brand coherence cannot show a customer's brand inside its own purple and expect to be believed.\n\nSo the register is a quiet instrument around loud work. Chrome is severe: hairline edges mixed from white rather than drawn in grey, three tonal grounds instead of borders, one accent that appears where something means something. Expression is delegated outward — a project page adopts the palette and the faces of the brand it is showing, and Brandora's own ramp withdraws to the shell. The one place the chrome is allowed to be expressive is motion, and even there it is bounded: nothing loops forever except a running job and a loading skeleton.\n\nThe visual anti-reference is the admin template — same-size cards of icon plus heading plus text, a row of stat tiles whose largest type is the digit 1, and a grey 1px border around everything. Those were all present and all removed deliberately; a change that reintroduces them is a regression regardless of how it looks in isolation.",
+    "keyCharacteristics": [
+      "Near-black navy ground with three tonal steps, never a grey border",
+      "One accent ramp, violet through blue, used sparingly and never as text at full strength",
+      "Light from above: a gradient top edge on what matters, brand-tinted shadow below",
+      "The generated brand owns any region that displays it, with contrast guarded at runtime",
+      "Generous radii (14 / 20 / 24px) and a 150–300ms motion band that collapses entirely under reduced-motion",
+      "Fully bilingual: every surface works in Arabic with RTL, on its own font stack"
+    ],
+    "rules": [
+      {
+        "name": "The One Ramp Rule",
+        "body": "There is no second accent. Status colours aside, anything that needs emphasis borrows from Signal Violet, Indigo Core or Horizon Blue. A new colour entering the system is a design decision, not an implementation detail.",
+        "section": "colors"
+      },
+      {
+        "name": "The Readable Accent Rule",
+        "body": "Signal Violet is 3.4:1 on Room Black — enough under a button, not enough under words. Accent text is always Lit Violet, which clears 7:1 in both themes. This is why the two values differ per theme while the ramp does not.",
+        "section": "colors"
+      },
+      {
+        "name": "The Guest Palette Rule",
+        "body": "On any surface displaying a generated brand, that brand's palette owns the region and Brandora's ramp withdraws to the shell. The guest palette is untrusted input: every colour that ends up under text is contrast-checked at runtime and replaced when it fails, so a bad generation degrades to plain rather than to unreadable. Secondary text on a guest ground is mixed from that brand's own ink, never set to grey.",
+        "section": "colors"
+      },
+      {
+        "name": "The Rendered Light Rule",
+        "body": "The horizon arcs and their bloom are light, not surfaces, so they interpolate across the ramp and through white rather than stepping between named swatches. Their intermediate stops — pale violets, pale blues, a white core — are samples along that ramp and belong to the gradient definitions in the sidecar, not to the palette. Anything that is not rendered light uses a named colour.",
+        "section": "colors"
+      },
+      {
+        "name": "The Word-Not-Letter Rule",
+        "body": "Headline motion splits on words, never on characters. Character-level animation reads as a typewriter gimmick at display size and it breaks Arabic outright, where letterforms join.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tracking Floor Rule",
+        "body": "Negative tracking scales with size: -0.02em at title, -0.03em at headline, -0.035em at display, and never past -0.04em.",
+        "section": "typography"
+      },
+      {
+        "name": "The No Dead Column Rule",
+        "body": "A persistent side region must earn its width down the whole page. A rail holding four links above a screen-height of nothing is the failure this system was rebuilt to remove; give it more to hold, or let it collapse.",
+        "section": "layout"
+      },
+      {
+        "name": "The Light From Above Rule",
+        "body": "Illumination enters at the top edge. A uniform 1px outline on all four sides is what made this app read as a template beside its own marketing; the lit edge replaced it and should not be reintroduced.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Tinted Shadow Rule",
+        "body": "No shadow in this system is pure black. Tint with the ground's navy for weight, with Indigo Core for lift.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do delegate colour outward on any surface showing a generated brand, and contrast-check every guest colour that ends up under text.",
+      "Do use Lit Violet (#a78bfa / #6d28d9) for accent text and Signal Violet (#7c3aed) for fills. They are not interchangeable.",
+      "Do mix borders from white at 9% or 16% into the ground rather than drawing a grey line.",
+      "Do put a lit gradient edge on what matters and a plain hairline on what does not.",
+      "Do pick the radius by role: 14px to operate, 20px for a card, 24px for a panel of cards.",
+      "Do keep interface motion in the 150–300ms band, ease entrances out and exits in, and collapse all of it under prefers-reduced-motion.",
+      "Do design both directions. Arabic uses its own stack at 1.85 leading, and every layout uses logical properties."
+    ],
+    "donts": [
+      "Don't clip the brand gradient to text. It was removed for legibility: part of every glyph sits on the lowest-contrast stop, and the words vanish entirely where the clip is unsupported.",
+      "Don't introduce a second accent colour, or a solid grey 1px border, or a shadow made of pure black.",
+      "Don't nest a card inside a card. Drop the inner one to a plain region with a hairline rule.",
+      "Don't build a page as a stack of same-size cards of icon plus heading plus text, or open a screen with a row of stat tiles. Both were removed deliberately.",
+      "Don't leave a persistent side rail holding less than a screen of content — give it more or let it collapse.",
+      "Don't animate headlines letter by letter; split on words, because Arabic letterforms join.",
+      "Don't signal a state with colour alone; the word rides with the dot."
+    ]
+  }
+}
