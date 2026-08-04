@@ -1,11 +1,12 @@
 'use client'
 
-import { Loader2, Send } from 'lucide-react'
+import { Loader2, MailWarning, Send } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useAction } from 'next-safe-action/hooks'
-import { useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 
 import { FieldError } from '@/components/ui/field-error'
+import { ResendVerification } from '@/components/features/settings/resend-verification'
 import { useRouter } from '@/i18n/navigation'
 import { cn } from '@/lib/utils'
 import { EVENTS, capture } from '@/lib/analytics'
@@ -29,20 +30,53 @@ export function LogoComposer({
   cost,
   affordable,
   isRunning,
+  emailVerified,
+  userEmail,
 }: {
   projectId: string
   brief: string | null
   cost: number
   affordable: boolean
   isRunning: boolean
+  /** A new round is a generation, so the same gate applies here. */
+  emailVerified: boolean
+  userEmail: string
 }) {
   const t = useTranslations('Branding')
+  const ts = useTranslations('Settings')
   const router = useRouter()
 
   // Seeded with the last direction, so refining it means editing a sentence
   // rather than remembering what was asked for last time.
   const [text, setText] = useState(brief ?? '')
   const [queued, setQueued] = useState(false)
+
+  const field = useRef<HTMLTextAreaElement>(null)
+
+  /*
+   * Grow to fit what has been written.
+   *
+   * A fixed two-row box meant a long direction — which is the useful kind, the
+   * one that says what to keep as well as what to change — scrolled away inside
+   * a slot barely taller than the send button, and could not be read back
+   * before sending it.
+   *
+   * Height is reset to `auto` before measuring so the box shrinks again on
+   * delete; `scrollHeight` alone only ever reports the taller of content and
+   * current height. Past the max the CSS caps it and the field scrolls, which
+   * is the point at which one more line stops helping anyway.
+   *
+   * A layout effect rather than an event handler: the field is seeded with the
+   * previous round's brief, so it has to be sized before the first paint too,
+   * not only after a keystroke.
+   */
+  useLayoutEffect(() => {
+    const element = field.current
+    if (!element) return
+
+    element.style.height = 'auto'
+    element.style.height = `${element.scrollHeight}px`
+  }, [text])
 
   const { execute, isPending, result } = useAction(regenerateLogos, {
     onSuccess: () => {
@@ -53,13 +87,28 @@ export function LogoComposer({
        */
       capture(EVENTS.logosRegenerated, { cost })
       setQueued(true)
+
+      /*
+       * Unpin the round before the new one arrives.
+       *
+       * Choosing a concept puts `round` and `concept` in the URL, and the page
+       * resolves the canvas from them. So the moment anyone picked a logo and
+       * then asked for a new direction, the round they had been looking at was
+       * pinned: the job ran, the stream fired its refresh, and the page
+       * re-rendered on the old round with the new concepts nowhere on screen.
+       * It looked like the generation had done nothing.
+       *
+       * Asking for a new direction is the end of browsing an old round, so the
+       * pin is dropped here rather than guessed at on the way back in.
+       */
+      router.replace(`/dashboard/projects/${projectId}`, { scroll: false })
       router.refresh()
     },
     onError: () => setQueued(false),
   })
 
   const busy = isPending || queued || isRunning
-  const disabled = busy || !affordable
+  const disabled = busy || !affordable || !emailVerified
 
   function send() {
     if (disabled) return
@@ -80,6 +129,7 @@ export function LogoComposer({
         </label>
 
         <textarea
+          ref={field}
           id="logo-direction"
           value={text}
           onChange={(event) => setText(event.target.value)}
@@ -90,10 +140,19 @@ export function LogoComposer({
               send()
             }
           }}
-          rows={2}
-          disabled={busy}
+          disabled={busy || !emailVerified}
           placeholder={t('directionPlaceholder')}
-          className="min-h-11 w-full resize-none bg-transparent px-2.5 py-2 text-sm placeholder:text-fg-muted focus:outline-none disabled:cursor-not-allowed"
+          /*
+           * `text-base` against the app's `text-sm` fields, deliberately. This
+           * is the one place in the product where someone writes a sentence
+           * rather than fills a slot, and it is read back before it is spent on
+           * a paid round. It also keeps iOS from zooming the page on focus,
+           * which it does to any input under 16px.
+           *
+           * The floor holds two lines so the example placeholder still reads on
+           * an empty composer; the ceiling is where it starts scrolling.
+           */
+          className="max-h-48 min-h-16 w-full resize-none overflow-y-auto bg-transparent px-2.5 py-2 text-base leading-normal placeholder:text-fg-muted focus:outline-none disabled:cursor-not-allowed"
         />
 
         <button
@@ -116,9 +175,34 @@ export function LogoComposer({
         </button>
       </div>
 
-      <p className="px-1 text-xs text-fg-muted">
-        {busy ? t('regenerating') : t('composerHint', { credits: cost })}
-      </p>
+      {/*
+        The same gate the generation panel shows, said here too.
+
+        The panel disappears once a project is complete, and refining logos is
+        exactly what someone does with a complete project — so this was the one
+        route to generation that still let you write a direction, press send,
+        and receive a bare "verify your email" with nothing to press.
+      */}
+      {emailVerified ? (
+        <p className="px-1 text-xs text-fg-muted">
+          {busy ? t('regenerating') : t('composerHint', { credits: cost })}
+        </p>
+      ) : (
+        <div className="rounded-control border border-warning/30 bg-warning/[0.07] p-4">
+          <div className="flex items-start gap-3">
+            <MailWarning className="mt-0.5 size-4 shrink-0 text-warning" />
+            <div className="min-w-0">
+              <p className="text-sm font-medium">{ts('unverifiedTitle')}</p>
+              <p className="mt-1 text-sm text-fg-secondary">
+                {ts('unverifiedBody', { email: userEmail })}
+              </p>
+              <div className="mt-3.5">
+                <ResendVerification email={userEmail} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <FieldError message={result?.serverError} />
     </div>

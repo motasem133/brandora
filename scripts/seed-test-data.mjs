@@ -113,7 +113,7 @@ async function main() {
     ? existingProject
     : await sql`
         INSERT INTO projects (organization_id, created_by, title, business_name, industry, country,
-                              target_audience, brand_style, preferred_colors, needs_website,
+                              brand_brief, brand_style, preferred_colors, needs_website,
                               needs_social_media, language, status)
         VALUES (${org.id}, ${userId}, 'E2E Fixture Brand', 'Fixture Co', 'Technology',
                 'United Arab Emirates',

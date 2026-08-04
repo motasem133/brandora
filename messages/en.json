@@ -122,7 +122,9 @@
     "settings": "Settings",
     "admin": "Admin",
     "newProject": "New project",
-    "signIn": "Sign in"
+    "signIn": "Sign in",
+    "collapseSidebar": "Collapse menu",
+    "expandSidebar": "Expand menu"
   },
   "Dashboard": {
     "welcome": "Welcome back, {name}",
@@ -166,7 +168,7 @@
     "briefCountry": "Country",
     "briefStyle": "Style",
     "briefLanguage": "Language",
-    "briefAudience": "Target audience"
+    "briefAudience": "About the brand"
   },
   "Onboarding": {
     "title": "Let's build your brand",
@@ -181,9 +183,9 @@
     "step2Placeholder": "Or type your own industry",
     "step3Title": "Where is your business based?",
     "step3Subtitle": "We'll tune the branding to your market.",
-    "step4Title": "Who are you selling to?",
-    "step4Subtitle": "The more specific, the sharper the result.",
-    "step4Placeholder": "e.g. Young professionals aged 25-35 in the UAE who value convenience and design",
+    "step4Title": "Tell us about your brand",
+    "step4Subtitle": "In your own words — what you do, who it is for, and what makes you different.",
+    "step4Placeholder": "e.g. We roast single-origin beans in small batches and sell to independent cafes across Jordan. Our customers care about where coffee comes from and want to taste the difference. We are the only roastery here publishing the farm and harvest date on every bag.",
     "step5Title": "Pick a brand style",
     "step5Subtitle": "This drives your palette, fonts and logo direction.",
     "step6Title": "Any colours you'd like us to use?",
@@ -226,13 +228,22 @@
     "errors": {
       "industryRequired": "Please choose or type an industry.",
       "countryRequired": "Please select a country.",
-      "audienceRequired": "Please describe your target audience.",
-      "audienceTooShort": "Please add a little more detail (at least 10 characters).",
-      "styleRequired": "Please choose a brand style."
+      "styleRequired": "Please choose a brand style.",
+      "brandRequired": "Please tell us about your brand.",
+      "brandTooShort": "A little more, please — a sentence or two is plenty."
     },
     "lockedWebsite": "Website generation isn't included in your {plan} plan. We'll still create your full brand identity — you can add a website by upgrading.",
     "lockedSocial": "The social media kit isn't included in your {plan} plan. We'll still create your full brand identity — you can add it by upgrading.",
-    "seePlans": "See plans"
+    "seePlans": "See plans",
+    "chapterBusiness": "Your business",
+    "chapterBrand": "Your brand",
+    "chapterKit": "Your kit",
+    "step4Hint1": "What you do",
+    "step4Hint2": "Who it is for",
+    "step4Hint3": "What makes you different",
+    "step4Short": "A sentence or two is plenty.",
+    "step4Good": "This is what shapes your names, your logo and every line of copy.",
+    "cancelConfirm": "Leave without creating your brand? Your answers will not be saved."
   },
   "Generation": {
     "title": "Generate your brand",
@@ -295,7 +306,19 @@
     "history": "History",
     "noLogos": "No logo concepts yet",
     "composerHint": "Enter sends. A new round costs {credits} credits — your earlier rounds stay in the history.",
-    "fileCount": "{count, plural, one {# file} other {# files}}"
+    "fileCount": "{count, plural, one {# file} other {# files}}",
+    "usage": "Where your logo ends up",
+    "usageHint": "Favicons and profile pictures are tiny and square, so they are cut from your icon. The link preview always uses the full logo.",
+    "usageTab": "Browser tab",
+    "usageAvatar": "Profile picture",
+    "usageCard": "Link preview",
+    "usageFromIcon": "from your icon",
+    "usageFromLogo": "from your logo",
+    "usageIconIs": "Small formats are cut from the {style} concept.",
+    "usageNoIcon": "No icon picked, so these use your logo. If it looks crowded at this size, open a concept without text and press \"Use as icon\".",
+    "fontHeading": "Headings",
+    "fontBody": "Body",
+    "fontsSpecimen": "The quick brown fox jumps over the lazy dog."
   },
   "Social": {
     "bio": "Instagram bio",
@@ -583,6 +606,11 @@
     "teamComingSoon": "Inviting teammates is not available yet — seats on paid plans are reserved for it.",
     "appearance": "Appearance",
     "appearanceHint": "Applies to this browser.",
-    "toggleTheme": "Switch theme"
+    "toggleTheme": "Switch theme",
+    "resendVerification": "Resend verification email",
+    "verificationSent": "Sent — check your inbox.",
+    "verificationFailed": "Could not send it. Please try again shortly.",
+    "unverifiedTitle": "Verify your email to start generating",
+    "unverifiedBody": "We sent a link to {email}. Generating a brand spends credits, so it stays locked until the address is confirmed."
   }
 }

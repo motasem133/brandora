@@ -40,7 +40,7 @@ export const createProject = orgAction
         businessName: parsedInput.businessName?.trim() || null,
         industry: parsedInput.industry,
         country: parsedInput.country,
-        targetAudience: parsedInput.targetAudience,
+        brandBrief: parsedInput.brandBrief,
         brandStyle: parsedInput.brandStyle,
         preferredColors: parsedInput.preferredColors,
         needsWebsite,

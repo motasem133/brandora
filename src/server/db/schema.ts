@@ -415,7 +415,16 @@ export const projects = pgTable(
     businessName: text('business_name'),
     industry: text('industry').notNull(),
     country: text('country').notNull(),
-    targetAudience: text('target_audience').notNull(),
+    /*
+     * What the customer told us about their business, in their own words.
+     *
+     * Asked as "who are you selling to?" once, which is why the column was
+     * called `target_audience`. It now asks for the whole brand — what the
+     * business does, who it is for, what makes it different — because a model
+     * given only an audience writes copy about the audience and draws marks
+     * about nobody. Both this and the column now say what they hold.
+     */
+    brandBrief: text('brand_brief').notNull(),
     brandStyle: brandStyleEnum('brand_style').notNull(),
     /** Array of hex strings, max 3. */
     preferredColors: jsonb('preferred_colors').$type<string[]>().notNull().default([]),

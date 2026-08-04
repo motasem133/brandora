@@ -1,6 +1,6 @@
 'use client'
 
-import { AlertCircle, Check, Loader2, Sparkles } from 'lucide-react'
+import { AlertCircle, Check, Loader2, MailWarning, Sparkles } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useSearchParams } from 'next/navigation'
 import { useAction } from 'next-safe-action/hooks'
@@ -9,6 +9,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardTitle } from '@/components/ui/card'
 import { FieldError } from '@/components/ui/field-error'
+import { ResendVerification } from '@/components/features/settings/resend-verification'
 import { useRouter } from '@/i18n/navigation'
 import { cn } from '@/lib/utils'
 import { EVENTS, capture } from '@/lib/analytics'
@@ -30,6 +31,8 @@ export function GenerationPanel({
   initialProgress,
   creditBalance,
   creditCost,
+  emailVerified,
+  userEmail,
 }: {
   projectId: string
   sections: string[]
@@ -37,8 +40,12 @@ export function GenerationPanel({
   initialProgress: Progress
   creditBalance: number
   creditCost: number
+  /** Generation is gated on it, so the panel has to be able to say so. */
+  emailVerified: boolean
+  userEmail: string
 }) {
   const t = useTranslations('Generation')
+  const ts = useTranslations('Settings')
   const router = useRouter()
   /*
    * The tab lives in the URL and this panel does not remount when it changes —
@@ -54,6 +61,14 @@ export function GenerationPanel({
   const sourceRef = useRef<EventSource | null>(null)
 
   const isRunning = status === 'queued' || status === 'generating' || status === 'running'
+
+  /*
+   * A boolean rather than the array itself, because it feeds the subscription
+   * callback's dependencies. `sections` is a new array on every render, so
+   * depending on it directly would rebuild `subscribe`, re-run the effect below
+   * and tear down and reopen the stream on every render.
+   */
+  const producesLogos = sections.includes('branding')
 
   /** Opens the SSE stream and mirrors job state into local state. */
   const subscribe = useCallback(() => {
@@ -83,6 +98,24 @@ export function GenerationPanel({
       if (payload.status === 'idle') return
 
       setStatus(payload.status)
+
+      /*
+       * A run that drew new logos invalidates any round pinned in the URL.
+       *
+       * Choosing a concept puts `round` and `concept` there, and the page
+       * resolves the canvas from them — so refreshing while still pinned
+       * re-rendered the round the customer had been browsing and left the work
+       * that just finished off screen entirely. It read as a generation that
+       * had produced nothing.
+       *
+       * Guarded on the job actually including logos: a website-only or
+       * social-only run must not yank someone off a round they deliberately
+       * opened.
+       */
+      if (producesLogos) {
+        router.replace(`/dashboard/projects/${projectId}`, { scroll: false })
+      }
+
       // Pull the freshly generated assets into the server-rendered page.
       router.refresh()
     })
@@ -91,7 +124,7 @@ export function GenerationPanel({
       source.close()
       sourceRef.current = null
     })
-  }, [projectId, router])
+  }, [projectId, router, producesLogos])
 
   const { execute, isPending, result } = useAction(generateProject, {
     onSuccess: () => {
@@ -149,12 +182,40 @@ export function GenerationPanel({
         </div>
 
         {!isRunning && (
-          <Button onClick={() => execute({ projectId })} disabled={isPending || !canAfford}>
+          <Button
+            onClick={() => execute({ projectId })}
+            disabled={isPending || !canAfford || !emailVerified}
+          >
             {isPending ? <Loader2 className="animate-spin" /> : <Sparkles />}
             {status === 'failed' || status === 'partial' ? t('retry') : t('generate')}
           </Button>
         )}
       </div>
+
+      {/*
+        The block, said before it is hit rather than after.
+
+        An unverified address makes the server refuse this run, and the panel
+        used to offer the button anyway: you pressed Generate, waited, and got
+        an error naming a step you had no way to take from here. Saying it up
+        front — with the control attached — turns a refusal into an instruction.
+      */}
+      {!emailVerified && !isRunning && (
+        <div className="rounded-control border border-warning/30 bg-warning/[0.07] p-4">
+          <div className="flex items-start gap-3">
+            <MailWarning className="mt-0.5 size-4 shrink-0 text-warning" />
+            <div className="min-w-0">
+              <p className="text-sm font-medium">{ts('unverifiedTitle')}</p>
+              <p className="mt-1 text-sm text-fg-secondary">
+                {ts('unverifiedBody', { email: userEmail })}
+              </p>
+              <div className="mt-3.5">
+                <ResendVerification email={userEmail} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {(isRunning || status === 'partial' || status === 'failed') && (
         <ol className="space-y-2 stagger-children">

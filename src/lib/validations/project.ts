@@ -56,11 +56,11 @@ export const createProjectSchema = z.object({
   businessName: z.string().trim().max(60).optional().or(z.literal('')),
   industry: z.string().trim().min(2, 'Please choose or type an industry.').max(60),
   country: z.string().trim().min(2, 'Please select a country.').max(60),
-  targetAudience: z
+  brandBrief: z
     .string()
     .trim()
-    .min(10, 'Please add a little more detail (at least 10 characters).')
-    .max(600),
+    .min(20, 'Please tell us a little more — a sentence or two is plenty.')
+    .max(1200),
   brandStyle: z.enum(BRAND_STYLES),
   preferredColors: z.array(hexColor).max(3).default([]),
   needsWebsite: z.boolean().default(false),

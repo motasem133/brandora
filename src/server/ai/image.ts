@@ -47,6 +47,34 @@ export const LOGO_STYLES = [
 export type LogoStyle = (typeof LOGO_STYLES)[number]
 
 /**
+ * The brief, trimmed to something a diffusion prompt can still act on.
+ *
+ * An image prompt is not a chat prompt: the later clauses stop steering the
+ * picture, so a customer's full paragraph cannot simply be pasted in ahead of
+ * the spelling and composition rules. Cut at a word boundary, because a
+ * sentence ending mid-word reads to the model as noise rather than as a
+ * truncation.
+ *
+ * The limit was 180 until a real run showed what that costs. The onboarding
+ * question asks for three things — what you do, who it is for, what makes you
+ * different — and the third is the one no competitor shares. At 180 characters
+ * it was exactly the one being cut: a roastery's "we print the farm and the
+ * harvest date on every bag" fell off the end while "we sell coffee" survived.
+ * 320 fits the three-sentence answer the form asks for, and the whole prompt
+ * still lands under a thousand characters.
+ */
+function condense(text: string, limit = 320) {
+  const clean = text.trim().replace(/\s+/g, ' ')
+  if (!clean) return null
+  if (clean.length <= limit) return clean
+
+  const cut = clean.slice(0, limit)
+  const boundary = cut.lastIndexOf(' ')
+
+  return `${(boundary > 60 ? cut.slice(0, boundary) : cut).replace(/[.,;:]$/, '')}…`
+}
+
+/**
  * Prompt constraints that matter specifically for logos.
  *
  * "flat vector, solid fills, no gradients" is not an aesthetic preference — it
@@ -61,6 +89,7 @@ export function logoPrompt(params: {
 }) {
   const { style, name, project, branding } = params
   const brief = project.logoBrief?.trim()
+  const about = condense(project.brandBrief)
   const palette = branding.colorPalette
   const isArabic = project.language === 'ar'
 
@@ -68,6 +97,19 @@ export function logoPrompt(params: {
     `A professional ${style} logo for "${name}", a ${project.industry} business.`,
     // Spelling it out letter by letter measurably reduces invented lookalike words.
     `The text must read exactly "${name}", spelled ${name.split('').join('-')}.`,
+    /*
+     * What the business actually is, near the front where it still steers.
+     *
+     * The mark used to be drawn from industry, style and palette alone, which
+     * is the same input every business in a category gives — so every coffee
+     * brand got the same four concepts. The customer's own description is the
+     * only thing here that distinguishes one from another.
+     *
+     * Told to inform rather than to illustrate, because "we roast single-origin
+     * beans" as a literal instruction produces a drawing of a coffee bean, and
+     * a mark is not an illustration of a sentence.
+     */
+    about ? `The business: ${about} Let this inform the concept, not be drawn literally.` : null,
     `Brand style: ${project.brandStyle}. Brand values: ${branding.brandValues.join(', ')}.`,
     `Use ${palette.primary} as the primary colour and ${palette.secondary} as the secondary, on a plain ${palette.background} background.`,
     'Flat vector design, solid fills, no gradients, no shading, no photorealism, no 3D.',
