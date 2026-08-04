@@ -3,47 +3,54 @@ import { expect, test } from '@playwright/test'
 import { firstGeneratedProjectId } from './fixtures/db'
 
 /**
- * Tab selection.
+ * Every deliverable is reachable, and none of them silently falls back.
  *
- * The Assistant tab once rendered but could never be selected — clicking it
- * silently fell back to Branding, because the tab list was mutated after the
- * active tab had been derived from it. Nothing server-side caught that: the
- * page returned 200 either way.
+ * This was written against a tab rail: the Assistant tab rendered but could
+ * never be selected, because the tab list was mutated after the active tab had
+ * been derived from it, so clicking it landed on Branding. Nothing server-side
+ * caught it — the page returned 200 either way.
+ *
+ * The rail is gone; the deliverables are sections of one document now. The bug
+ * it guards against is not, so the test asserts the same property against the
+ * new shape: everything the run produced is on the page at once, and the
+ * assistant — the one surface that still takes the whole stage — opens when it
+ * is asked for and shows its own composer rather than the document again.
  */
-test.describe('project tabs', () => {
+test.describe('project deliverables', () => {
   let projectId: string
 
   test.beforeAll(async () => {
     projectId = await firstGeneratedProjectId()
   })
 
-
-  test('every visible tab opens its own panel', async ({ page }) => {
+  test('every section the run produced is on the page at once', async ({ page }) => {
     await page.goto(`/en/dashboard/projects/${projectId}`)
 
-    const tabs = page.getByRole('link', { name: /Branding|Website|Social media|Assistant/ })
-    const count = await tabs.count()
-    expect(count).toBeGreaterThan(1)
+    // The identity plate leads, so the brand is named before anything else.
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+
+    for (const section of [/Logo concepts/, /Edit website/, /Instagram bio/]) {
+      await expect(page.getByText(section).first()).toBeVisible()
+    }
+  })
+
+  test('the assistant opens onto its own stage', async ({ page }) => {
+    await page.goto(`/en/dashboard/projects/${projectId}`)
+
+    const assistant = page.getByRole('link', { name: 'Assistant', exact: true })
+
+    // Only paid plans carry it, so its absence is a valid state, not a failure.
+    test.skip((await assistant.count()) === 0, 'assistant not available on this plan')
+
+    await assistant.click()
+    await expect(page).toHaveURL(/tab=assistant/)
+    await expect(page.getByPlaceholder('Ask for a change…')).toBeVisible()
 
     /*
-     * The assistant is matched on its composer rather than its empty state:
-     * once a project has a conversation the empty state is gone, and the
-     * placeholder is an attribute rather than text content.
+     * The document must not still be underneath it. Rendering the assistant as
+     * one more section at the foot of the page is what made it scroll the whole
+     * window down to itself on load, so this asserts the two are exclusive.
      */
-    const panels: { label: string; slug: string; locate: (p: typeof page) => ReturnType<typeof page.getByText> }[] = [
-      { label: 'Branding', slug: 'branding', locate: (p) => p.getByText(/Name ideas|Logo concepts/).first() },
-      { label: 'Website', slug: 'website', locate: (p) => p.getByText(/Edit website/).first() },
-      { label: 'Social media', slug: 'social', locate: (p) => p.getByText(/Instagram bio/).first() },
-      { label: 'Assistant', slug: 'assistant', locate: (p) => p.getByPlaceholder('Ask for a change…') },
-    ]
-
-    for (const panel of panels) {
-      const tab = page.getByRole('link', { name: panel.label, exact: true })
-      if ((await tab.count()) === 0) continue
-
-      await tab.click()
-      await expect(page).toHaveURL(new RegExp(`tab=${panel.slug}`))
-      await expect(panel.locate(page)).toBeVisible()
-    }
+    await expect(page.getByText(/Logo concepts/)).toHaveCount(0)
   })
 })

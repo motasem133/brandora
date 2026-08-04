@@ -29,7 +29,7 @@ type Locale = 'en' | 'ar'
 export type ProjectBrief = {
   industry: string
   country: string
-  targetAudience: string
+  brandBrief: string
   brandStyle: string
   businessName?: string | null
   preferredColors: string[]
@@ -49,7 +49,12 @@ function projectBrief(project: ProjectBrief) {
   return [
     `Industry: ${project.industry}`,
     `Country / market: ${project.country}`,
-    `Target audience: ${project.targetAudience}`,
+    /*
+     * Labelled as the client's own words, not as a field. The model treats a
+     * quoted brief as source material to honour and a named field as a slot to
+     * paraphrase, and this is the only free text the customer writes.
+     */
+    `About the business, in the client's own words: ${project.brandBrief}`,
     `Desired brand style: ${project.brandStyle}`,
     project.businessName ? `Preferred business name: ${project.businessName}` : null,
     project.preferredColors.length > 0

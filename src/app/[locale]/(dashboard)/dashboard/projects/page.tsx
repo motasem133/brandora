@@ -2,12 +2,12 @@ import { Sparkles } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Suspense } from 'react'
 
-import { ProjectCard } from '@/components/features/projects/project-card'
+import { BrandSpecimen } from '@/components/features/projects/brand-specimen'
 import { buttonVariants } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
 import { Cell } from '@/components/features/landing/horizon'
+import { MomentumField, MomentumItem } from '@/components/ui/momentum'
 import { Link } from '@/i18n/navigation'
-import { listProjects } from '@/server/db/queries/projects'
+import { listBrandSpecimens } from '@/server/db/queries/projects'
 import { requireOrg } from '@/server/session'
 
 export default async function ProjectsPage({ params }: { params: Promise<{ locale: string }> }) {
@@ -44,46 +44,56 @@ export default async function ProjectsPage({ params }: { params: Promise<{ local
 async function ProjectList({ locale }: { locale: string }) {
   const t = await getTranslations('Projects')
   const { org } = await requireOrg()
-  const projects = await listProjects(org.id)
+  const specimens = await listBrandSpecimens(org.id)
 
-  if (projects.length === 0) {
+  if (specimens.length === 0) {
     return (
-      <Card className="flex flex-col items-center gap-4 py-16 text-center animate-scale-in">
-        <div className="rounded-full bg-brand/15 p-4">
-          <Sparkles className="size-6 text-brand" />
-        </div>
-        <div>
-          <h2 className="font-display text-lg font-semibold">{t('emptyTitle')}</h2>
-          <p className="mt-1 text-sm text-fg-secondary">{t('emptyBody')}</p>
-        </div>
-      </Card>
+      <div className="rounded-panel border border-dashed border-line py-16 text-center">
+        <Sparkles className="mx-auto size-6 text-fg-muted" />
+        <h2 className="mt-4 font-display text-lg font-semibold">{t('emptyTitle')}</h2>
+        <p className="mt-1 text-sm text-fg-secondary">{t('emptyBody')}</p>
+      </div>
     )
   }
 
+  /*
+    The grid is the field so that a card entered on the way past knows how the
+    pointer was travelling — a card can only measure velocity it was there for,
+    and by the time one is entered the movement that mattered has happened
+    somewhere else in the grid.
+
+    `lift={false}`: the cards now answer the hover themselves, and a wrapper
+    that also lifts would carry the card out from under the cursor and make it
+    enter itself again.
+  */
   return (
-    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-      {projects.map((project, index) => (
-        <Cell key={project.id} index={index}>
-          <ProjectCard project={project} locale={locale} />
+    <MomentumField className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {specimens.map((specimen, index) => (
+        <Cell key={specimen.project.id} index={index} lift={false}>
+          <MomentumItem className="h-full">
+            <BrandSpecimen specimen={specimen} locale={locale} />
+          </MomentumItem>
         </Cell>
       ))}
-    </div>
+    </MomentumField>
   )
 }
 
-/** Same shapes as the cards it stands in for, so nothing jumps on arrival. */
+/** Same shapes as the specimens it stands in for, so nothing jumps on arrival. */
 function ProjectsSkeleton() {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: 3 }).map((_, index) => (
-        <div key={index} className="surface-card space-y-3 p-5">
-          <div className="h-5 w-2/3 rounded bg-elevated shimmer-surface" />
-          <div className="h-4 w-1/2 rounded bg-elevated shimmer-surface" />
-          <div className="flex gap-1.5 pt-2">
-            {Array.from({ length: 3 }).map((_, dot) => (
-              <div key={dot} className="size-5 rounded-full bg-elevated shimmer-surface" />
-            ))}
+        <div
+          key={index}
+          className="flex min-h-64 flex-col overflow-hidden rounded-panel ring-1 ring-line"
+        >
+          <div className="flex-1 bg-elevated shimmer-surface" />
+          <div className="space-y-2 p-6">
+            <div className="h-5 w-2/3 rounded bg-elevated shimmer-surface" />
+            <div className="h-4 w-1/2 rounded bg-elevated shimmer-surface" />
           </div>
+          <div className="h-2.5 bg-elevated shimmer-surface" />
         </div>
       ))}
     </div>

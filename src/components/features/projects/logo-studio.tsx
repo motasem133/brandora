@@ -3,6 +3,8 @@ import { getTranslations } from 'next-intl/server'
 
 import { Link } from '@/i18n/navigation'
 import { cn } from '@/lib/utils'
+import { brandTheme } from '@/lib/brand-theme'
+import type { BrandPalette } from '@/lib/brand-theme'
 import type { LogoRound } from '@/lib/logo-rounds'
 import type { GeneratedFile } from '@/server/db/schema'
 import { publicUrl } from '@/server/storage/r2'
@@ -16,8 +18,8 @@ import { SelectLogoButton, SelectMarkButton } from './logo-actions'
  * size, stacked down the page — so the thing the customer is actually deciding
  * about was never bigger than 200px, and the fourth round pushed the first one
  * three screens down. Here one concept is on the canvas at a size you can judge,
- * its siblings sit under it as a row of switches, and the rest of the history
- * lives in the rail.
+ * its siblings sit under it as a row of switches, and the earlier rounds are a
+ * strip across the top of the section.
  */
 export async function LogoStudio({
   projectId,
@@ -30,6 +32,9 @@ export async function LogoStudio({
   logoCost,
   affordable,
   isGenerating,
+  palette,
+  emailVerified,
+  userEmail,
 }: {
   projectId: string
   round?: LogoRound
@@ -41,46 +46,55 @@ export async function LogoStudio({
   logoCost: number
   affordable: boolean
   isGenerating: boolean
+  palette: BrandPalette
+  emailVerified: boolean
+  userEmail: string
 }) {
   const t = await getTranslations('Branding')
+  const theme = brandTheme(palette)
 
   const isPrimary = Boolean(concept && concept.id === primaryId)
   const isMark = Boolean(concept && concept.id === markLogoFileId)
   const style = String(concept?.metadata?.style ?? '')
 
   return (
-    <section className="space-y-4">
-      <div className="lit shadow-[var(--shadow-soft)]">
-        <div className="lit-inner space-y-5 p-5 sm:p-7">
-          {/*
-            The direction that produced what is on the canvas. An older round
-            without this reads as an unexplained duplicate of the newest.
-          */}
-          {/*
-            No status chip up here. The action row under the canvas already
-            says whether this concept is the chosen one, and saying it twice
-            within one card is how a simple screen gets busy again.
-          */}
-          <div className="min-w-0">
-            <h2 className="font-display text-lg font-semibold">
-              {round && !isLatestRound ? t('earlierRound', { round: round.round }) : t('logos')}
-            </h2>
-            <p className="mt-1 truncate text-sm text-fg-secondary">
-              {round?.brief ? t('roundDirection', { brief: round.brief }) : t('logosHint')}
-            </p>
-          </div>
+    <section className="space-y-5">
+      {/*
+        No card around any of this any more.
+
+        The mark was a plate inside a panel inside the page — three nested
+        containers, each with its own edge, around one image. The canvas is the
+        object here; it carries its own ground and its own edge, and everything
+        else on this column is a control acting on it.
+      */}
+      <div>
+        <h2 className="text-xs font-semibold uppercase tracking-[0.12em] text-fg-muted">
+          {round && !isLatestRound ? t('earlierRound', { round: round.round }) : t('logos')}
+        </h2>
+        <p className="mt-1.5 text-sm text-fg-secondary">
+          {round?.brief ? t('roundDirection', { brief: round.brief }) : t('logosHint')}
+        </p>
+      </div>
 
           {/*
-            The canvas. White, because that is the ground these marks are drawn
-            on, and large enough to judge one against another.
+            The canvas, on the brand's own background colour rather than on a
+            hard-coded white.
 
-            The edge is a dark hairline rather than the app's own border token:
-            that token is translucent white, which is invisible on white, and in
-            the light theme the plate then dissolved into the card behind it.
+            A mark is drawn to sit on its brand's ground, and judging it against
+            a white it will never appear on is judging the wrong thing. The edge
+            is mixed from the brand's ink so it reads as a hairline on a pale
+            ground and on a dark one alike — the app's own border token is
+            translucent white, which disappears entirely on white.
+
+            The mark is also given room: it was floating at a fraction of its
+            container, which made the most important artifact on the page look
+            like an afterthought.
           */}
           <div
+            style={theme.vars}
             className={cn(
-              'grid min-h-64 place-items-center rounded-card border border-black/5 bg-white p-6 sm:min-h-80',
+              'grid min-h-72 place-items-center rounded-card p-8 sm:min-h-96',
+              'bg-[var(--brand-paper)] ring-1 ring-[var(--brand-line)]',
               isGenerating && 'shimmer-surface',
             )}
           >
@@ -89,10 +103,10 @@ export async function LogoStudio({
               <img
                 src={publicUrl(concept.r2Key) ?? `/api/files/${concept.id}`}
                 alt={style || 'Logo concept'}
-                className="max-h-64 w-auto max-w-full object-contain sm:max-h-72"
+                className="max-h-56 w-auto max-w-full object-contain sm:max-h-80"
               />
             ) : (
-              <div className="text-center text-sm text-[#6f7b96]">
+              <div className="text-center text-sm" style={{ color: 'var(--brand-ink-faint)' }}>
                 <Sparkles className="mx-auto mb-2 size-6" />
                 {t('noLogos')}
               </div>
@@ -109,12 +123,13 @@ export async function LogoStudio({
                 return (
                   <li key={option.id}>
                     <Link
-                      href={`/dashboard/projects/${projectId}?tab=branding&round=${round.round}&concept=${option.id}`}
+                      href={`/dashboard/projects/${projectId}?round=${round.round}&concept=${option.id}`}
                       scroll={false}
                       aria-current={current ? 'true' : undefined}
                       title={String(option.metadata?.style ?? '')}
+                      style={theme.vars}
                       className={cn(
-                        'relative block shrink-0 rounded-control border-2 bg-white p-1 transition-colors',
+                        'relative block shrink-0 rounded-control border-2 bg-[var(--brand-paper)] p-1 transition-colors',
                         current ? 'border-brand' : 'border-line hover:border-line-strong',
                       )}
                     >
@@ -165,8 +180,6 @@ export async function LogoStudio({
               </a>
             </div>
           )}
-        </div>
-      </div>
 
       <LogoComposer
         projectId={projectId}
@@ -174,6 +187,8 @@ export async function LogoStudio({
         cost={logoCost}
         affordable={affordable}
         isRunning={isGenerating}
+        emailVerified={emailVerified}
+        userEmail={userEmail}
       />
     </section>
   )

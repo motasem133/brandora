@@ -23,7 +23,7 @@ export function AssistantPanel({
   const t = useTranslations('Assistant')
   const router = useRouter()
 
-  const endRef = useRef<HTMLDivElement>(null)
+  const listRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const appliedRef = useRef(0)
   const draftKey = `brandora:assistant-draft:${projectId}`
@@ -40,8 +40,19 @@ export function AssistantPanel({
 
   const busy = status === 'submitted' || status === 'streaming'
 
+  /*
+   * Scroll the transcript, never the page.
+   *
+   * `scrollIntoView` walks up and scrolls every scrollable ancestor, the
+   * document included — so mounting this panel anywhere other than alone on a
+   * route yanked the whole page down to it and the content above was never
+   * seen. Setting `scrollTop` on the transcript moves only the transcript.
+   */
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const list = listRef.current
+    if (!list) return
+
+    list.scrollTo({ top: list.scrollHeight, behavior: 'smooth' })
   }, [messages])
 
   /*
@@ -101,7 +112,7 @@ export function AssistantPanel({
 
   return (
     <Card className="flex h-[36rem] flex-col p-0">
-      <div className="flex-1 space-y-4 overflow-y-auto p-5">
+      <div ref={listRef} className="flex-1 space-y-4 overflow-y-auto p-5">
         {messages.length === 0 && (
           <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
             <div className="rounded-full bg-brand/15 p-3">
@@ -181,7 +192,6 @@ export function AssistantPanel({
 
         {error && <p className="text-sm text-danger">{t('error')}</p>}
 
-        <div ref={endRef} />
       </div>
 
       <form

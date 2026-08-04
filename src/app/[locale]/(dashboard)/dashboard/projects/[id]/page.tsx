@@ -3,21 +3,19 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 
 import { AssistantPanel } from '@/components/features/assistant/assistant-panel'
+import { BrandFonts } from '@/components/features/projects/brand-fonts'
 import { BrandingView } from '@/components/features/projects/branding-view'
 import { DeleteProjectButton } from '@/components/features/projects/delete-project-button'
 import { GenerationPanel } from '@/components/features/projects/generation-panel'
-import { ProjectRail, type ProjectSection } from '@/components/features/projects/project-rail'
+import { IdentityPlate } from '@/components/features/projects/identity-plate'
 import { SocialView } from '@/components/features/projects/social-view'
 import { WebsiteView } from '@/components/features/projects/website-view'
-import { ArrowLeft, Download, Sparkles } from 'lucide-react'
+import { ArrowLeft, Download, MessageSquare, Palette } from 'lucide-react'
 
-import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
 import { Disclosure } from '@/components/ui/disclosure'
 import { Link } from '@/i18n/navigation'
 import { groupLogoRounds, resolveConcept, resolveRound } from '@/lib/logo-rounds'
-import { formatDate } from '@/lib/utils'
-import { publicUrl } from '@/server/storage/r2'
 import { CREDIT_COSTS, creditsForSections } from '@/server/billing/credits'
 import { db } from '@/server/db'
 import { getThreadMessages } from '@/server/db/queries/assistant'
@@ -27,6 +25,20 @@ import { brandingAssets, generatedFiles, socialMediaAssets, websiteAssets } from
 import { getLatestJobForProject, sectionsForProject } from '@/server/services/generation'
 import { requireOrg } from '@/server/session'
 
+/**
+ * A project, read as the brand book it produced.
+ *
+ * The page this replaces was a rail of four links beside a column of eight
+ * panels of identical width and weight, with sixteen hundred pixels of empty
+ * column running down the left of it. Nothing on it looked like the brand it
+ * had generated — the customer's colours were five chips near the bottom of a
+ * scroll, under Brandora's own purple.
+ *
+ * It is one document now. The identity plate opens it on the brand's own
+ * ground, in the brand's own faces; the mark is decided beside the system it
+ * has to agree with; and the things the run produced follow in the order
+ * someone reads them, rather than hiding behind tabs that had to be discovered.
+ */
 export default async function ProjectDetailPage({
   params,
   searchParams,
@@ -40,7 +52,7 @@ export default async function ProjectDetailPage({
 
   const t = await getTranslations('Projects')
   const tb = await getTranslations('Branding')
-  const { org } = await requireOrg()
+  const { org, user } = await requireOrg()
 
   // getProject is org-scoped, so a project from another tenant reads as 404.
   const project = await getProject(org.id, id)
@@ -64,7 +76,7 @@ export default async function ProjectDetailPage({
   const socialAsset = social[0]
 
   /*
-   * The history, resolved once here so the rail and the canvas cannot disagree
+   * The history, resolved once here so the strip and the canvas cannot disagree
    * about which round is open or which concept is standing on it.
    */
   const rounds = groupLogoRounds(logoFiles)
@@ -79,7 +91,6 @@ export default async function ProjectDetailPage({
   // rest of the system already assumes.
   const primaryId = brandingAsset?.primaryLogoFileId ?? rounds[0]?.concepts[0]?.id ?? null
 
-  // The mark the customer chose, for the identity block in the header.
   const primaryLogo = logoFiles.find((file) => file.id === primaryId)
   const kitFile = files.find((file) => file.kind === 'brand_kit_zip')
 
@@ -101,78 +112,45 @@ export default async function ProjectDetailPage({
   const history = canAssist ? await getThreadMessages(project.id) : []
 
   /*
-   * Built in one pass and never mutated afterwards. Pushing a section in later
-   * left `active` derived from a shorter list, so the assistant rendered but
-   * could never be selected — it always fell back to the first one.
+   * The assistant is a conversation, not a page of the book — so it takes the
+   * whole stage rather than being appended to the end of the document. Reached
+   * by a link and restored on refresh, which keeps it shareable and costs no
+   * client state.
    */
-  const available: ProjectSection[] = [
-    ...(brandingAsset ? (['branding'] as const) : []),
-    ...(websiteAsset ? (['website'] as const) : []),
-    ...(socialAsset ? (['social'] as const) : []),
-    ...(canAssist ? (['assistant'] as const) : []),
-  ]
-
-  const requested = tab as ProjectSection | undefined
-  const active: ProjectSection =
-    requested && available.includes(requested) ? requested : (available[0] ?? 'branding')
+  const onAssistant = tab === 'assistant' && canAssist
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <div className="mx-auto max-w-6xl space-y-8">
       {/*
-        A way back out. The project page is reachable from a card, a redirect
-        after generation and a shared link, and the sidebar's "Projects" entry
-        was the only exit — which is a long way to travel for "not this one".
+        App actions live in app chrome, above the plate and never on it. A
+        gradient chrome button dropped onto a generated ground is exactly the
+        clash the plate exists to avoid, and a destructive control has no
+        business borrowing a customer's brand colour.
       */}
-      <Link
-        href="/dashboard/projects"
-        className="inline-flex items-center gap-1.5 text-sm text-fg-muted transition-colors hover:text-fg"
-      >
-        <ArrowLeft className="size-4 rtl:-scale-x-100" />
-        {t('title')}
-      </Link>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Link
+          href="/dashboard/projects"
+          className="inline-flex items-center gap-1.5 text-sm text-fg-muted transition-colors hover:text-fg"
+        >
+          <ArrowLeft className="size-4 rtl:-scale-x-100" />
+          {t('title')}
+        </Link>
 
-      {/*
-        The identity block answers "which brand am I in" before anything else.
-        The chosen mark carries that faster than the title does, so it leads —
-        and where no logo exists yet, its absence is the state.
-      */}
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="flex min-w-0 items-center gap-4">
-          <div className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-card border border-line bg-white">
-            {primaryLogo ? (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img
-                src={publicUrl(primaryLogo.r2Key) ?? `/api/files/${primaryLogo.id}`}
-                alt=""
-                className="size-full object-contain p-1.5"
-              />
-            ) : (
-              <Sparkles className="size-5 text-fg-muted" />
-            )}
-          </div>
-
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2.5">
-              <h1 className="truncate text-2xl font-semibold tracking-[-0.02em]">
-                {project.businessName || project.title}
-              </h1>
-              <Badge tone={project.status === 'completed' ? 'success' : 'neutral'}>
-                {t(`status.${project.status}`)}
-              </Badge>
-            </div>
-            <p className="mt-1 truncate text-sm text-fg-secondary">
-              {project.industry} · {project.country} ·{' '}
-              {t('createdOn', { date: formatDate(project.createdAt, locale) })}
-            </p>
-          </div>
-        </div>
-
-        {/*
-          The kit is the thing the customer came for, and it was a small link
-          buried in the middle of the logo card. It is a project-level artifact,
-          so it lives with the project, and delete steps back to an icon.
-        */}
         <div className="flex items-center gap-1.5">
+          {/*
+            The assistant takes the whole stage, so it needs a door back to the
+            brand. Without one the only exit was "Projects", which leaves the
+            project altogether — a dead end dressed as navigation.
+          */}
+          {canAssist && (
+            <Link
+              href={`/dashboard/projects/${project.id}?tab=${onAssistant ? 'branding' : 'assistant'}`}
+              className={buttonVariants({ variant: 'secondary', size: 'sm' })}
+            >
+              {onAssistant ? <Palette /> : <MessageSquare />}
+              {onAssistant ? t('tabs.branding') : t('tabs.assistant')}
+            </Link>
+          )}
           {kitFile && (
             <a href={`/api/files/${kitFile.id}`} className={buttonVariants({ size: 'sm' })}>
               <Download />
@@ -183,6 +161,17 @@ export default async function ProjectDetailPage({
         </div>
       </div>
 
+      <BrandFonts fonts={brandingAsset?.fontRecommendations ?? null} />
+
+      <IdentityPlate
+        project={project}
+        palette={brandingAsset?.colorPalette ?? null}
+        fonts={brandingAsset?.fontRecommendations ?? null}
+        slogan={brandingAsset?.slogan ?? null}
+        logo={primaryLogo}
+        locale={locale}
+      />
+
       <GenerationPanel
         projectId={project.id}
         sections={panelSections}
@@ -190,80 +179,72 @@ export default async function ProjectDetailPage({
         initialProgress={job?.progress ?? {}}
         creditBalance={org.creditBalance}
         creditCost={creditsForSections(sections)}
+        emailVerified={user.emailVerified}
+        userEmail={user.email}
       />
 
       {/*
-        Rail beside stage from large up, stacked above it on a phone. The rail
-        is sticky, so the section list and the logo history stay reachable
-        however far down the sheet the customer has scrolled.
+        Every deliverable on one scroll, in the order it is read.
+
+        Behind tabs, the website and the social kit were things a customer had
+        to already know existed. The product's claim is that one run produces
+        all of it and that it agrees with itself, which is a claim a page can
+        only make by putting the pieces next to each other.
       */}
-      <div className="lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] lg:items-start lg:gap-8">
-        {available.length > 0 && (
-          <div className="mb-6 lg:sticky lg:top-24 lg:mb-0">
-            <ProjectRail
-              projectId={project.id}
-              active={active}
-              available={available}
-              rounds={rounds}
-              activeRound={activeRound?.round}
-              primaryLogoFileId={primaryId}
-              locale={locale}
-            />
+      {onAssistant ? (
+        <AssistantPanel projectId={project.id} initialMessages={history as never} />
+      ) : (
+        <>
+      {brandingAsset && (
+        <BrandingView
+          branding={brandingAsset}
+          files={files}
+          projectId={project.id}
+          chosenName={project.businessName}
+          creditBalance={org.creditBalance}
+          logoCost={CREDIT_COSTS.logos}
+          logoBrief={project.logoBrief}
+          isGenerating={isJobActive}
+          rounds={rounds}
+          activeRound={activeRound}
+          activeConcept={activeConcept}
+          primaryId={primaryId}
+          language={project.language}
+          emailVerified={user.emailVerified}
+          userEmail={user.email}
+        />
+      )}
+
+      {websiteAsset && <WebsiteView website={websiteAsset} />}
+      {socialAsset && <SocialView social={socialAsset} />}
+        </>
+      )}
+
+      {/*
+        The brief used to vanish the moment anything was generated, so the one
+        question people ask of a result they dislike — "what did I actually ask
+        for?" — became unanswerable. It stays, folded shut once there is work to
+        read above it, and open when it is all there is.
+      */}
+      <Disclosure title={t('brief')} open={!brandingAsset}>
+        <dl className="grid gap-4 sm:grid-cols-2">
+          {[
+            [t('briefIndustry'), project.industry],
+            [t('briefCountry'), project.country],
+            [t('briefStyle'), project.brandStyle],
+            [t('briefLanguage'), project.language === 'ar' ? 'العربية' : 'English'],
+          ].map(([label, value]) => (
+            <div key={label}>
+              <dt className="text-xs uppercase tracking-wide text-fg-muted">{label}</dt>
+              <dd className="mt-0.5 text-sm capitalize">{value}</dd>
+            </div>
+          ))}
+          <div className="sm:col-span-2">
+            <dt className="text-xs uppercase tracking-wide text-fg-muted">{t('briefAudience')}</dt>
+            <dd className="mt-0.5 text-sm">{project.brandBrief}</dd>
           </div>
-        )}
-
-        <div className="min-w-0 space-y-6">
-          {active === 'branding' && brandingAsset && (
-            <BrandingView
-              branding={brandingAsset}
-              files={files}
-              projectId={project.id}
-              chosenName={project.businessName}
-              creditBalance={org.creditBalance}
-              logoCost={CREDIT_COSTS.logos}
-              logoBrief={project.logoBrief}
-              isGenerating={isJobActive}
-              rounds={rounds}
-              activeRound={activeRound}
-              activeConcept={activeConcept}
-              primaryId={primaryId}
-            />
-          )}
-          {active === 'website' && websiteAsset && <WebsiteView website={websiteAsset} />}
-          {active === 'social' && socialAsset && <SocialView social={socialAsset} />}
-          {active === 'assistant' && canAssist && (
-            <AssistantPanel projectId={project.id} initialMessages={history as never} />
-          )}
-
-          {/*
-            The brief used to vanish the moment anything was generated, so the
-            one question people ask of a result they dislike — "what did I
-            actually ask for?" — became unanswerable. It stays, folded shut once
-            there is work to read above it, and open when it is all there is.
-          */}
-          <Disclosure title={t('brief')} open={available.length === 0}>
-            <dl className="grid gap-4 sm:grid-cols-2">
-              {[
-                [t('briefIndustry'), project.industry],
-                [t('briefCountry'), project.country],
-                [t('briefStyle'), project.brandStyle],
-                [t('briefLanguage'), project.language === 'ar' ? 'العربية' : 'English'],
-              ].map(([label, value]) => (
-                <div key={label}>
-                  <dt className="text-xs uppercase tracking-wide text-fg-muted">{label}</dt>
-                  <dd className="mt-0.5 text-sm capitalize">{value}</dd>
-                </div>
-              ))}
-              <div className="sm:col-span-2">
-                <dt className="text-xs uppercase tracking-wide text-fg-muted">
-                  {t('briefAudience')}
-                </dt>
-                <dd className="mt-0.5 text-sm">{project.targetAudience}</dd>
-              </div>
-            </dl>
-          </Disclosure>
-        </div>
-      </div>
+        </dl>
+      </Disclosure>
     </div>
   )
 }
