@@ -7,6 +7,7 @@ import { useAction } from 'next-safe-action/hooks'
 import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { FieldError } from '@/components/ui/field-error'
 import { Input } from '@/components/ui/input'
 import { Logo } from '@/components/ui/logo'
@@ -85,6 +86,7 @@ export function OnboardingWizard({ entitlements }: { entitlements: WizardEntitle
     needsSocialMedia: entitlements.socialMediaKit,
   })
   const [error, setError] = useState<string>()
+  const [leaving, setLeaving] = useState(false)
 
   const { execute, isPending, result } = useAction(createProject, {
     onSuccess: ({ data }) => {
@@ -184,7 +186,11 @@ export function OnboardingWizard({ entitlements }: { entitlements: WizardEntitle
    * how a safeguard becomes noise people click through.
    */
   function cancel() {
-    if (dirty && !confirm(t('cancelConfirm'))) return
+    if (dirty) {
+      setLeaving(true)
+      return
+    }
+
     router.push('/dashboard')
   }
 
@@ -204,6 +210,17 @@ export function OnboardingWizard({ entitlements }: { entitlements: WizardEntitle
           {tc('cancel')}
         </button>
       </div>
+
+      <ConfirmDialog
+        open={leaving}
+        onClose={() => setLeaving(false)}
+        onConfirm={() => router.push('/dashboard')}
+        title={t('cancelTitle')}
+        body={t('cancelConfirm')}
+        confirmLabel={t('discard')}
+        cancelLabel={t('keepGoing')}
+        destructive
+      />
 
       <h1 className="text-center font-display text-2xl font-semibold tracking-[-0.02em]">
         {t('title')}
