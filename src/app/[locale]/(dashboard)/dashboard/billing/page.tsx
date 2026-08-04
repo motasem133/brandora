@@ -2,6 +2,7 @@ import { desc, eq } from 'drizzle-orm'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { BillingSync } from '@/components/features/billing/billing-sync'
+import { ChangePlanButton } from '@/components/features/billing/change-plan-button'
 import { CheckoutButton } from '@/components/features/billing/checkout-button'
 import { CancelSubscriptionButton } from '@/components/features/billing/cancel-button'
 import { Badge } from '@/components/ui/badge'
@@ -145,6 +146,15 @@ export default async function BillingPage({
             const isCurrent = plan.id === currentPlan?.id
             const features = (plan.features as Record<string, string[]>)?.[locale] ?? []
 
+            /* The price for the period on show, resolved once for both the
+               headline figure and the confirmation that quotes it. */
+            const shownPrice = pickPrice(
+              currency,
+              interval === 'yearly'
+                ? { usd: plan.priceYearly, aed: plan.priceYearlyAed }
+                : { usd: plan.priceMonthly, aed: plan.priceMonthlyAed },
+            )
+
             return (
               <Card key={plan.id} className={isCurrent ? 'border-brand' : undefined}>
                 <div className="flex items-baseline justify-between gap-2">
@@ -210,18 +220,30 @@ export default async function BillingPage({
                     {(interval === 'yearly'
                       ? plan.polarProductIdYearly
                       : plan.polarProductIdMonthly) ? (
-                      <CheckoutButton
-                        kind="plan"
-                        slug={plan.slug}
-                        interval={interval}
-                        /*
-                          "Upgrade" is only true for someone who has nothing.
-                          A subscriber moving between plans may be going down
-                          as often as up, and the action itself is a change
-                          handled in the portal rather than a purchase.
-                        */
-                        label={isSubscribed ? t('changePlan') : t('upgrade')}
-                      />
+                      /*
+                        Two different actions wearing similar buttons. Someone
+                        with no subscription is buying, and that is a checkout.
+                        Someone who already subscribes is moving an existing one
+                        against a card already on file, which never needed to
+                        leave the app — and "Upgrade" is only true for the
+                        first of them anyway, since a change can go either way.
+                      */
+                      isSubscribed ? (
+                        <ChangePlanButton
+                          slug={plan.slug}
+                          planName={plan.name}
+                          price={formatPrice(shownPrice.amount, shownPrice.currency, locale)}
+                          interval={interval}
+                          label={t('changePlan')}
+                        />
+                      ) : (
+                        <CheckoutButton
+                          kind="plan"
+                          slug={plan.slug}
+                          interval={interval}
+                          label={t('upgrade')}
+                        />
+                      )
                     ) : (
                       <p className="text-xs text-fg-muted">{t('intervalUnavailable')}</p>
                     )}

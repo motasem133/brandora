@@ -443,7 +443,10 @@
     "renewsOn": "renews {date}",
     "changePlan": "Change plan",
     "cancelTitle": "Cancel your subscription?",
-    "keepPlan": "Keep my plan"
+    "keepPlan": "Keep my plan",
+    "changeTitle": "Switch to {plan}?",
+    "changeBody": "Your subscription moves to {plan} at {price} straight away, on the card you already have on file. Polar charges or credits the difference for the rest of this period.",
+    "confirmChange": "Switch plan"
   },
   "Assistant": {
     "emptyTitle": "Refine your brand",
