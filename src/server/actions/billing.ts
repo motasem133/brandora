@@ -1,6 +1,7 @@
 'use server'
 
 import { eq } from 'drizzle-orm'
+import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
 import { env } from '@/lib/env'
@@ -29,30 +30,16 @@ export const createCheckout = orgAction
   )
   .action(async ({ parsedInput, ctx }) => {
     /*
-     * A customer who already subscribes cannot be sent to a fresh checkout.
+     * Checkout is for someone who has nothing yet.
      *
-     * Polar refuses a second subscription for the same customer, and the
-     * refusal surfaces at its own hosted page as "you already have a
-     * subscription" — after the customer has left the app, believing they were
-     * buying something. Changing plans is an update, not a purchase, and the
-     * hosted portal is where Polar performs it, with the proration it owes
-     * them.
+     * Polar refuses a second subscription for the same customer, so a
+     * subscriber sent here met "you already have a subscription" on a payment
+     * page after leaving the app. Moving between plans is `changePlan` below,
+     * which happens in one request against the card already on file.
      *
-     * Credit packs are exempt: they are one-off orders, not subscriptions, so
-     * buying one while subscribed is exactly what should happen.
+     * Credit packs stay here whatever the subscription state: they are one-off
+     * orders, not subscriptions.
      */
-    if (parsedInput.kind === 'plan') {
-      const [existing] = await db
-        .select({ status: subscriptions.status })
-        .from(subscriptions)
-        .where(eq(subscriptions.organizationId, ctx.orgId))
-        .limit(1)
-
-      if (existing?.status === 'active' || existing?.status === 'trialing') {
-        return { url: `${env.NEXT_PUBLIC_APP_URL}/api/portal`, isPlanChange: true }
-      }
-    }
-
     const productId = await resolveProductId(parsedInput)
 
     if (!productId) {
@@ -88,7 +75,7 @@ export const createCheckout = orgAction
       checkout = await polar.checkouts.create(base)
     }
 
-    return { url: checkout.url, isPlanChange: false }
+    return { url: checkout.url }
   })
 
 async function resolveProductId(input: {
@@ -118,6 +105,84 @@ async function resolveProductId(input: {
  * A customer who has paid for the month keeps what they paid for; revoking
  * access on the spot would be taking money for nothing.
  */
+/**
+ * Moves an existing subscription to another plan, in place.
+ *
+ * The first attempt at this sent subscribers to Polar's hosted portal, which
+ * works and is wrong: it drops the customer out of the product to change
+ * something the product knows how to change, and the portal asks for a payment
+ * method they have already given. Every other subscription product in the world
+ * does this in one click against the card on file, and so does this one now.
+ *
+ * Proration is left unset on purpose, so Polar applies whatever the
+ * organization configured. Deciding it here would silently override a setting
+ * that lives with the pricing, not with this button.
+ */
+export const changePlan = orgOwnerAction
+  .metadata({ name: 'change-plan' })
+  .inputSchema(
+    z.object({
+      slug: z.string().min(1),
+      interval: z.enum(['monthly', 'yearly']).default('monthly'),
+    }),
+  )
+  .action(async ({ parsedInput, ctx }) => {
+    const [subscription] = await db
+      .select()
+      .from(subscriptions)
+      .where(eq(subscriptions.organizationId, ctx.orgId))
+      .limit(1)
+
+    if (!subscription?.polarSubscriptionId || subscription.status !== 'active') {
+      throw new AppError('NOT_FOUND', 'There is no active subscription to change.')
+    }
+
+    const productId = await resolveProductId({ kind: 'plan', ...parsedInput })
+
+    if (!productId) {
+      throw new AppError(
+        'VALIDATION',
+        'This plan is not available on that billing period yet.',
+      )
+    }
+
+    const polar = getPolar()
+
+    try {
+      await polar.subscriptions.update({
+        id: subscription.polarSubscriptionId,
+        subscriptionUpdate: { productId },
+      })
+    } catch (error) {
+      /*
+       * The card on file can be declined by the proration charge. That is the
+       * one failure the customer can actually act on, and the portal is where
+       * a payment method is replaced — so it is the only case that sends them
+       * there, and it says why.
+       */
+      const message = error instanceof Error ? error.message : String(error)
+
+      if (/payment/i.test(message)) {
+        throw new AppError(
+          'VALIDATION',
+          'Your card was declined for the amount due today. Update your payment method and try again.',
+        )
+      }
+
+      throw error
+    }
+
+    /*
+     * The webhook writes the authoritative state. Pulling now means the page
+     * the customer lands back on already shows the plan they just chose rather
+     * than the one they left, however long delivery takes.
+     */
+    await syncBillingFromPolar(ctx.orgId)
+    revalidatePath('/[locale]/dashboard', 'layout')
+
+    return { slug: parsedInput.slug }
+  })
+
 export const cancelSubscription = orgOwnerAction
   .metadata({ name: 'cancel-subscription' })
   .inputSchema(z.object({}))

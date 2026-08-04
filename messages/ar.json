@@ -443,7 +443,10 @@
     "renewsOn": "تتجدد في {date}",
     "changePlan": "تغيير الخطة",
     "cancelTitle": "إلغاء اشتراكك؟",
-    "keepPlan": "الاحتفاظ بالخطة"
+    "keepPlan": "الاحتفاظ بالخطة",
+    "changeTitle": "التحويل إلى {plan}؟",
+    "changeBody": "سينتقل اشتراكك إلى {plan} بسعر {price} فوراً، على البطاقة المحفوظة لديك. وتتولى Polar احتساب الفرق لبقية الفترة خصماً أو إضافةً.",
+    "confirmChange": "تحويل الخطة"
   },
   "Assistant": {
     "emptyTitle": "حسّن علامتك التجارية",
