@@ -53,6 +53,7 @@ export async function BrandSystem({
             <div>
               <p
                 lang={language}
+                dir="auto"
                 style={{ fontFamily: fontStack(fonts.heading), color: 'var(--brand-ink)' }}
                 className="text-balance text-4xl font-semibold leading-[1.08] tracking-[-0.03em]"
               >
@@ -60,6 +61,7 @@ export async function BrandSystem({
               </p>
               <p
                 lang={language}
+                dir="auto"
                 style={{ fontFamily: fontStack(fonts.body), color: 'var(--brand-ink-soft)' }}
                 className="mt-3 text-base leading-relaxed"
               >

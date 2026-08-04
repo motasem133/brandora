@@ -137,6 +137,7 @@ export async function BrandSpecimen({
               /* The brand's own body face, so the specimen shows the pairing
                  and not just the display cut. */
               lang={project.language}
+              dir="auto"
             >
               {slogan}
             </p>

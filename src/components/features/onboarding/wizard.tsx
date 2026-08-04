@@ -575,7 +575,7 @@ function LockedFeature({ message, cta }: { message: string; cta: string }) {
           <p className="text-sm text-fg-secondary">{message}</p>
           <Link
             href="/dashboard/billing"
-            className="mt-2 inline-block text-sm text-brand hover:underline"
+            className="mt-2 inline-block text-sm accent-text hover:underline"
           >
             {cta}
           </Link>

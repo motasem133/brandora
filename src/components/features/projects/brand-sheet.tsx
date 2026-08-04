@@ -76,7 +76,7 @@ export async function BrandSheet({
 
             {branding.brandVoice && (
               <div>
-                <h4 className="text-xs uppercase tracking-wide text-fg-muted">{t('voice')}</h4>
+                <h3 className="text-xs uppercase tracking-wide text-fg-muted">{t('voice')}</h3>
                 <p className="mt-1 text-sm leading-relaxed text-fg-secondary">
                   {branding.brandVoice}
                 </p>
@@ -85,7 +85,7 @@ export async function BrandSheet({
 
             {branding.brandValues.length > 0 && (
               <div>
-                <h4 className="text-xs uppercase tracking-wide text-fg-muted">{t('values')}</h4>
+                <h3 className="text-xs uppercase tracking-wide text-fg-muted">{t('values')}</h3>
                 <ul className="mt-2 flex flex-wrap gap-2">
                   {branding.brandValues.map((value) => (
                     <li key={value} className="rounded-full bg-elevated px-3 py-1 text-sm">

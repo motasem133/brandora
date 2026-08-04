@@ -1,18 +1,22 @@
 # Brandora — Product Truth
 
+<!-- impeccable:product-schema 1 -->
+
 Durable product facts. Visual decisions live in DESIGN.md; this file is what
 future design work must not contradict.
 
 ## What it is
 
-Brandora generates a complete brand identity from a short brief: business name
+Brandora generates a complete brand identity from a short brief — what the
+business does, who it is for, and what makes it different, in the customer's
+own words. From that: business name
 ideas, four logo concepts, a colour palette, font pairings, a brand story and
 voice, a multi-page website, and a social media kit — in one run, from one
 brief.
 
 ## Platform
 
-`web`.
+web
 
 ## Stack
 
@@ -56,6 +60,11 @@ Supporting truths, real but not the headline:
   attach their own domain.
 - Pricing is real and seeded: Free, Basic $29, Pro $79, Business $199 monthly,
   each with an annual price at ten months.
+- A run costs credits per section: branding 1, logos 6, website 1, social 1. A
+  fresh set of logo concepts is therefore the most expensive thing a customer
+  can ask for, and the only one they ask for repeatedly.
+- Generation is gated on a verified email address. Free credits are the obvious
+  abuse target, so verification gates spending rather than sign-in.
 
 ## What may NOT be claimed
 
@@ -75,6 +84,28 @@ credits:
   rationale. Four logo concepts as PNG and SVG, favicon, avatars and a brand kit
   in R2. Its website is published and reachable.
 
+## Known limitations
+
+- **Renaming a brand renames the record, not the work.** Choosing a different
+  name updates the project and the brand; the logo, the website copy and the
+  social captions keep the old one until they are generated again. Regenerating
+  is a separate, paid act, so the product states the limit rather than implying
+  the kit follows.
+
+## Operating context
+
+**Customers come back to make more brands.** The account that matters is the
+freelancer or small agency producing identities for a series of clients, not the
+founder who runs once and leaves. A brand is finished in a session or two — a
+brief, a two-minute run, a few rounds of logo refinement — and then the next one
+starts.
+
+That has consequences future work must respect: the account accumulates brands
+rather than settling on one, so surfaces that list them are the product's spine
+and must stay legible at ten as well as at one; comparing across brands is a
+real job, not an edge case; and a customer arriving for their third run should
+not be re-taught the first.
+
 ## Durable constraints
 
 - **Bilingual, both directions.** Every surface must work in Arabic with RTL;
@@ -82,7 +113,42 @@ credits:
 - **Accessibility:** keyboard reachable, visible focus, and motion that collapses
   under `prefers-reduced-motion`.
 - **Credits are real money.** Anything that triggers generation spends a
-  customer's credits and a real API call.
+  customer's credits and a real API call. Anything that can spend them shows
+  both the price and the balance, at the control that spends them — an amount
+  a customer has to remember from another page is not a price they were told.
+
+## Product principles
+
+1. **The kit must agree with itself.** Coherence across the deliverables
+   outranks the quality of any one of them. A better logo that no longer matches
+   the palette, the story and the site makes the product worse, not better. This
+   is the claim a neighbouring product cannot truthfully copy, and the reason
+   everything generates from a single brief.
+2. **Credits are real money.** Nothing spends them without a deliberate act, and
+   anything that can spend them says so before it does.
+3. **Arabic is generated, not translated.** For an Arabic brief the model
+   composes natively from the start. Every surface works in both directions.
+4. **The output stays editable.** What a run produces is a starting point, not a
+   deliverable PDF. The logo rounds, the brand assistant and the website builder
+   exist so the customer can move it afterwards.
+
+## Open product decisions
+
+Recorded so future work does not mistake current behaviour for a settled answer.
+
+- **What the website and social sections on a project page are for.** They
+  render every page block and all nine posts read-only, duplicating what the
+  builder opens, and account for well over half the page. Whether customers
+  actually read and copy from there — making the detail worth its space — or
+  only need proof the run delivered, is not established. It decides whether
+  those sections shrink to a manifest or keep their detail and are presented
+  better, so it is worth an answer from real use rather than a guess.
+
+- **How the icon is chosen.** Choosing a logo is currently the only decision, and
+  the favicon, avatars and OG card all derive from it. That is deliberate — the
+  two-choice model was unusable — but it is not the end state: a wordmark shrunk
+  to 32px is an unreadable smudge, and the intended answer is to select the most
+  icon-like concept automatically rather than to hand the choice back.
 
 ## Brand commitments (client-pinned, recorded not expanded)
 

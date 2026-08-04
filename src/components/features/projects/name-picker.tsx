@@ -44,7 +44,7 @@ export function NamePicker({
             </div>
 
             {isSelected ? (
-              <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-brand/15 px-2.5 py-1 text-xs font-medium text-brand">
+              <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-brand/15 px-2.5 py-1 text-xs font-medium accent-text">
                 <Check className="size-3.5" />
                 {t('chosen')}
               </span>
@@ -52,7 +52,7 @@ export function NamePicker({
               <button
                 onClick={() => execute({ projectId, name: idea.name })}
                 disabled={isPending}
-                className="shrink-0 rounded-lg border border-line px-3 py-1.5 text-xs transition-colors hover:border-brand hover:text-brand disabled:opacity-50"
+                className="shrink-0 rounded-lg border border-line px-3 py-1.5 text-xs transition-colors hover:border-brand hover:accent-text disabled:opacity-50"
               >
                 {saving ? <Loader2 className="size-3.5 animate-spin" /> : t('useThisName')}
               </button>

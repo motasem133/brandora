@@ -70,9 +70,16 @@ export async function IdentityPlate({
           )}
         </div>
 
-        <div className="min-w-0 flex-1">
+        {/*
+          `basis-64`, not `flex-1`. `flex-1` sets `flex-basis: 0%`, so this
+          column shrank to 126px beside the mark at 390px wide and wrapped the
+          brand name onto two lines and the meta onto four — the page's peak
+          moment, broken on the device someone shows their brand on.
+        */}
+        <div className="min-w-0 grow basis-64">
           <h1
             lang={project.language}
+            dir="auto"
             style={{ fontFamily: fontStack(fonts?.heading), color: 'var(--brand-ink)' }}
             className="text-balance text-3xl font-semibold leading-[1.05] tracking-[-0.035em] sm:text-5xl"
           >
@@ -82,6 +89,15 @@ export async function IdentityPlate({
           {slogan && (
             <p
               lang={project.language}
+              /*
+               * `dir` as well as `lang`. `lang` carries pronunciation and font
+               * selection; it does nothing for bidi. Without this, an English
+               * slogan inside the Arabic UI renders as ".Built to be understood"
+               * — the trailing period jumps to the visual left. `palette-grid`
+               * already learned this for hex codes; the brand's own tagline is
+               * where it matters most.
+               */
+              dir="auto"
               style={{ fontFamily: fontStack(fonts?.body), color: 'var(--brand-accent)' }}
               className="mt-3 text-lg sm:text-xl"
             >
@@ -89,7 +105,7 @@ export async function IdentityPlate({
             </p>
           )}
 
-          <p style={{ color: 'var(--brand-ink-faint)' }} className="mt-5 text-sm">
+          <p dir="auto" style={{ color: 'var(--brand-ink-faint)' }} className="mt-5 text-sm">
             {project.industry} · {project.country} ·{' '}
             {t('createdOn', { date: formatDate(project.createdAt, locale) })}
           </p>

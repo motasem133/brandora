@@ -12,7 +12,7 @@ colors:
   riser-navy: "#121a2e"
   paper-white: "#ffffff"
   reading-grey: "#a3aec9"
-  quiet-grey: "#6f7b96"
+  quiet-grey: "#7a86a1"
   success-green: "#22c55e"
   warning-amber: "#f5a524"
   danger-red: "#ef4444"
@@ -160,7 +160,7 @@ reserved for the customer's own palette.
 - **Riser Navy** (`#121a2e`): Raised fills, chips, hover states, input grounds. What sits above the bench.
 - **Paper White** (`#ffffff`): Primary text, and the ground a logo is drawn on when its brand has none.
 - **Reading Grey** (`#a3aec9`): Secondary prose — subtitles, descriptions, meta that is meant to be read.
-- **Quiet Grey** (`#6f7b96`): Labels, timestamps, hints. Present, not competing.
+- **Quiet Grey** (`#7a86a1` dark / `#67708c` light): Labels, timestamps, hints. Present, not competing. Lifted from its original values after measurement: the old pair cleared 4.5:1 on the base ground and failed on every tinted surface above it, which is most of them.
 
 Borders are never a grey line. They are white mixed into the ground at 9%
 (`--border`) or 16% (`--border-strong`), so an edge belongs to the surface it
@@ -176,7 +176,15 @@ detail.
 **The Readable Accent Rule.** Signal Violet is 3.4:1 on Room Black — enough
 under a button, not enough under words. Accent *text* is always Lit Violet,
 which clears 7:1 in both themes. This is why the two values differ per theme
-while the ramp does not.
+while the ramp does not. It applies to the gradient too: white label text over
+the ramp's blue end measured 3.7:1, so `--brand-gradient` closes on the deeper
+`#2563eb` (5.17:1) while Horizon Blue stays the palette's blue.
+
+**The Checked Tone Rule.** Every colour this system puts under text is verified
+against its own ground, not assumed from a percentage. A `color-mix` at 42% of
+its own background cannot reach 4.5:1 for any pair of colours in existence —
+that is arithmetic, not a data problem — so guest-brand text tones are resolved
+by stepping the mix until it clears the floor.
 
 **The Rendered Light Rule.** The horizon arcs and their bloom are light, not
 surfaces, so they interpolate across the ramp and through white rather than

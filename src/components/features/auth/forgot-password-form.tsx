@@ -51,7 +51,7 @@ export function ForgotPasswordForm() {
       <div className="space-y-4 text-center">
         <CheckCircle2 className="mx-auto size-8 text-success" />
         <p className="text-sm text-fg-secondary">{t('resetSent')}</p>
-        <Link href="/login" className="inline-block text-sm text-brand hover:underline">
+        <Link href="/login" className="inline-block text-sm accent-text hover:underline">
           {t('backToSignIn')}
         </Link>
       </div>
@@ -76,7 +76,7 @@ export function ForgotPasswordForm() {
       </form>
 
       <p className="text-center text-sm text-fg-secondary">
-        <Link href="/login" className="text-brand hover:underline">
+        <Link href="/login" className="accent-text hover:underline">
           {t('backToSignIn')}
         </Link>
       </p>

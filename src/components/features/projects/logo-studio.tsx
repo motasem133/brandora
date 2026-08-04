@@ -37,6 +37,7 @@ export async function LogoStudio({
   logoBrief,
   logoCost,
   affordable,
+  creditBalance,
   isGenerating,
   palette,
   emailVerified,
@@ -50,6 +51,7 @@ export async function LogoStudio({
   logoBrief: string | null
   logoCost: number
   affordable: boolean
+  creditBalance: number
   isGenerating: boolean
   palette: BrandPalette
   emailVerified: boolean
@@ -189,6 +191,7 @@ export async function LogoStudio({
         brief={logoBrief}
         cost={logoCost}
         affordable={affordable}
+        creditBalance={creditBalance}
         isRunning={isGenerating}
         emailVerified={emailVerified}
         userEmail={userEmail}

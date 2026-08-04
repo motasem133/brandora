@@ -56,7 +56,7 @@ export function OrganizationCard({
           <p className="text-sm">{t('credits')}</p>
           <p className="font-display text-lg font-semibold">{credits}</p>
         </div>
-        <Link href="/dashboard/billing" className="text-sm text-brand hover:underline">
+        <Link href="/dashboard/billing" className="text-sm accent-text hover:underline">
           {t('manageBilling')}
         </Link>
       </div>

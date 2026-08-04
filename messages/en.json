@@ -271,7 +271,7 @@
     "logos": "Logo concepts",
     "download": "Download",
     "downloadKit": "Download brand kit",
-    "nameIdeasHint": "Choose the name to use everywhere — logos, website and social copy follow it.",
+    "nameIdeasHint": "Renames the project and the brand. Your logo, website and social copy keep the old name until you generate them again.",
     "useThisName": "Use this name",
     "chosen": "Chosen",
     "logosHint": "Pick your logo. The favicon, avatars and brand kit are rebuilt from it.",
@@ -304,7 +304,7 @@
     "clearIcon": "Remove as icon",
     "history": "History",
     "noLogos": "No logo concepts yet",
-    "composerHint": "Enter sends. A new round costs {credits} credits — your earlier rounds stay in the history.",
+    "composerHint": "Press ⌘↵ to send. A new round costs {credits} credits — you have {balance}. Earlier rounds stay in the history.",
     "fileCount": "{count, plural, one {# file} other {# files}}",
     "usage": "Where your logo ends up",
     "usageHint": "Favicons and profile pictures are tiny and square, so they are cut from your icon. The link preview always uses the full logo.",
@@ -315,7 +315,9 @@
     "usageFromLogo": "Your favicon, avatars and link preview are cut from the logo you choose.",
     "fontHeading": "Headings",
     "fontBody": "Body",
-    "fontsSpecimen": "The quick brown fox jumps over the lazy dog."
+    "fontsSpecimen": "The quick brown fox jumps over the lazy dog.",
+    "notEnoughCreditsHint": "A new round costs {credits} credits and you have {balance}.",
+    "topUp": "Add credits"
   },
   "Social": {
     "bio": "Instagram bio",
@@ -330,7 +332,8 @@
       "facebookAd": "Facebook ad",
       "googleAd": "Google ad"
     },
-    "post": "Post {number}"
+    "post": "Post {number}",
+    "allPosts": "All posts"
   },
   "Website": {
     "blockCount": "{count, plural, one {# section} other {# sections}}",
@@ -342,7 +345,8 @@
     },
     "edit": "Edit website",
     "liveAt": "Live at",
-    "notPublished": "Not published yet"
+    "notPublished": "Not published yet",
+    "openSite": "Open the live site"
   },
   "Builder": {
     "pages": {

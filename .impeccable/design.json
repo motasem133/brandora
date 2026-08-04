@@ -123,8 +123,9 @@
       "quiet-grey": {
         "role": "neutral",
         "displayName": "Quiet Grey",
-        "canonical": "#6f7b96",
-        "purpose": "Labels, timestamps, hints. Present, not competing."
+        "canonical": "#7a86a1",
+        "purpose": "Labels, timestamps, hints. Present, not competing.",
+        "lightThemeValue": "#67708c"
       },
       "success-green": {
         "role": "tertiary",
@@ -191,15 +192,15 @@
         "riser-navy": "#f2f4fb",
         "paper-white": "#0b1020",
         "reading-grey": "#4c5570",
-        "quiet-grey": "#6d7794",
+        "quiet-grey": "#67708c",
         "lit-violet": "#6d28d9"
       }
     },
     "gradients": [
       {
         "name": "brand-gradient",
-        "value": "linear-gradient(135deg, #7c3aed, #4f46e5 52%, #3b82f6)",
-        "purpose": "The primary button fill and the lit edge source. One per view."
+        "value": "linear-gradient(135deg, #7c3aed, #4f46e5 52%, #2563eb)",
+        "purpose": "The primary button fill and the lit edge source. One per view. Closes on #2563eb rather than Horizon Blue because white label text over #3b82f6 measures 3.7:1."
       },
       {
         "name": "lit-edge",
@@ -375,6 +376,11 @@
       {
         "name": "The Readable Accent Rule",
         "body": "Signal Violet is 3.4:1 on Room Black — enough under a button, not enough under words. Accent text is always Lit Violet, which clears 7:1 in both themes. This is why the two values differ per theme while the ramp does not.",
+        "section": "colors"
+      },
+      {
+        "name": "The Checked Tone Rule",
+        "body": "Every colour this system puts under text is verified against its own ground, not assumed from a percentage. A color-mix at 42% of its own background cannot reach 4.5:1 for any pair of colours in existence — that is arithmetic, not a data problem — so guest-brand text tones are resolved by stepping the mix until it clears the floor.",
         "section": "colors"
       },
       {

@@ -31,7 +31,10 @@
 
   --text-primary: #ffffff;
   --text-secondary: #a3aec9;
-  --text-muted: #6f7b96;
+  /* Lifted from #6f7b96, which measured 4.36:1 on --bg-surface's tinted
+     variants and 4.08:1 on --bg-elevated. A muted token with no headroom is a
+     token that fails wherever a surface is tinted at all. */
+  --text-muted: #7a86a1;
 
   /*
    * The accent, for text that carries the brand: the wordmark, a slogan, a
@@ -55,11 +58,19 @@
   --brand-indigo: #4f46e5;
   --brand-secondary: #3b82f6;
   --brand-fg: #ffffff;
+  /*
+   * The ramp's blue end, deepened for fills only.
+   *
+   * --brand-secondary (#3b82f6) is correct as a palette colour and stays that
+   * way, but white 14px label text over it measures 3.68:1. This gradient is
+   * what every primary button is filled with, so its blue stop is the deeper
+   * #2563eb (5.17:1) — the same hue, far enough down to carry a label.
+   */
   --brand-gradient: linear-gradient(
     135deg,
     var(--brand-primary),
     var(--brand-indigo) 52%,
-    var(--brand-secondary)
+    #2563eb
   );
 
   /* Soft, wide, and tinted with the brand rather than pure black. */
@@ -71,14 +82,17 @@
   --danger: #ef4444;
 }
 
-.light {
+/* Attribute, not class: React owns <html>'s className and wipes a class added
+   imperatively whenever the locale changes. See lib/theme.ts. */
+[data-theme='light'] {
   --bg-base: #f7f8fc;
   --bg-surface: #ffffff;
   --bg-elevated: #f2f4fb;
 
   --text-primary: #0b1020;
   --text-secondary: #4c5570;
-  --text-muted: #6d7794;
+  /* 4.45:1 on plain white missed AA across 57 nodes in the light theme. */
+  --text-muted: #67708c;
 
   /* A shade of the primary here, for the same reason the dark theme takes a
      tint: the accent has to survive being read on white. */
@@ -156,10 +170,10 @@
   .icon-when-light {
     display: none;
   }
-  .light .icon-when-dark {
+  [data-theme='light'] .icon-when-dark {
     display: none;
   }
-  .light .icon-when-light {
+  [data-theme='light'] .icon-when-light {
     display: block;
   }
 }

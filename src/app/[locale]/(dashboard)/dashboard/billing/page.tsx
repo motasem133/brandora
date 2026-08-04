@@ -123,7 +123,7 @@ export default async function BillingPage({
                * client-side RSC navigation and never follow the redirect.
                */
               // eslint-disable-next-line @next/next/no-html-link-for-pages
-              <a href="/api/portal" className="text-sm text-brand hover:underline">
+              <a href="/api/portal" className="text-sm accent-text hover:underline">
                 {t('openPortal')}
               </a>
             )}

@@ -138,7 +138,10 @@ export async function LogoVariations({
                   <span className="truncate text-xs font-medium">{label}</span>
                   <a
                     href={`/api/files/${file.id}`}
-                    className="shrink-0 text-xs text-brand hover:underline"
+                    /* A row action, not a link inside a sentence, so WCAG
+                       2.5.8's inline exception does not cover it. Measured
+                       59x16; the floor is 24. */
+                    className="inline-flex min-h-6 shrink-0 items-center text-xs accent-text hover:underline"
                   >
                     {t('download')}
                   </a>

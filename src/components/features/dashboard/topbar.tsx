@@ -33,12 +33,29 @@ export function Topbar({ user }: { user: { name: string; email: string } }) {
           <span className="hidden sm:inline">{t('newProject')}</span>
         </Button>
 
-        {/* Locale switch preserves the current path. */}
+        {/*
+          Locale switch preserves the current path, as a real navigation.
+
+          It used to be a soft `router.replace`, which changes `lang` and `dir`
+          on <html> and makes React re-render the document element on the
+          client. That reset every imperative attribute on it — including the
+          one carrying the theme — so anyone on the light theme was thrown back
+          to dark by changing language, and React additionally warned about
+          meeting the theme <script> during a client render.
+
+          A document whose language, direction and font stack all change is a
+          new document. Reloading it lets the theme script run again, which is
+          what makes the theme survive and the warning disappear. Locale
+          switching is rare; correctness is worth the reload.
+        */}
         <Button
           variant="ghost"
           size="icon"
           aria-label={tc('language')}
-          onClick={() => router.replace(pathname, { locale: otherLocale })}
+          onClick={() => {
+            const query = window.location.search
+            window.location.assign(`/${otherLocale}${pathname}${query}`)
+          }}
         >
           <span className="text-xs font-semibold uppercase">{otherLocale}</span>
         </Button>

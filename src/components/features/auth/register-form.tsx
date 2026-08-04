@@ -142,7 +142,7 @@ export function RegisterForm() {
 
       <p className="text-center text-sm text-fg-secondary">
         {t('haveAccount')}{' '}
-        <Link href="/login" className="text-brand hover:underline">
+        <Link href="/login" className="accent-text hover:underline">
           {t('signIn')}
         </Link>
       </p>

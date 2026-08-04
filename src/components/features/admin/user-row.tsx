@@ -68,7 +68,7 @@ export function UserRow({ user, isSelf }: { user: User; isSelf: boolean }) {
               onClick={() =>
                 role.execute({ userId: user.id, role: user.role === 'admin' ? 'user' : 'admin' })
               }
-              className="text-xs text-fg-secondary hover:text-brand disabled:opacity-50"
+              className="text-xs text-fg-secondary hover:accent-text disabled:opacity-50"
             >
               {user.role === 'admin' ? t('users.demote') : t('users.promote')}
             </button>

@@ -85,6 +85,41 @@ function readableOn(ground: string, candidates: (string | undefined)[], min = BO
   return contrast('#ffffff', ground) >= contrast('#000000', ground) ? '#ffffff' : '#000000'
 }
 
+function toHex([r, g, b]: [number, number, number]) {
+  return `#${[r, g, b].map((c) => Math.round(c).toString(16).padStart(2, '0')).join('')}`
+}
+
+/**
+ * Ink softened toward its paper, but only as far as it can go and still be read.
+ *
+ * This used to be a flat `color-mix(... 42%, paper)`. Mixing 42% of anything
+ * into its own background is capped near 2.5:1 — it cannot reach 4.5:1 for any
+ * ink and paper in existence, including pure black on pure white — and it was
+ * carrying the identity plate's meta line and the type specimen's labels, which
+ * measured 2.46:1 on a real brand.
+ *
+ * So the ratio is found rather than assumed: start at the softest step, walk
+ * back toward full ink, and stop at the first mix that clears the floor. Every
+ * other colour in this file is contrast-checked; this one now is too.
+ */
+function softened(ink: string, paper: string, min: number) {
+  const inkRgb = parseHex(ink)
+  const paperRgb = parseHex(paper)
+  if (!inkRgb || !paperRgb) return ink
+
+  for (let strength = 0.4; strength <= 1; strength += 0.05) {
+    const mixed = toHex([
+      inkRgb[0] * strength + paperRgb[0] * (1 - strength),
+      inkRgb[1] * strength + paperRgb[1] * (1 - strength),
+      inkRgb[2] * strength + paperRgb[2] * (1 - strength),
+    ] as [number, number, number])
+
+    if (contrast(mixed, paper) >= min) return mixed
+  }
+
+  return ink
+}
+
 export type BrandTheme = {
   /** The brand's own ground — what its mark is drawn to sit on. */
   paper: string
@@ -152,9 +187,15 @@ export function brandTheme(palette: BrandPalette): BrandTheme {
        * Secondary text and hairlines are mixed from the ink rather than set to
        * a grey. Grey on a coloured ground reads as dirt; the same hue at lower
        * strength reads as quiet.
+       *
+       * Both text tones are resolved to a checked value rather than left as a
+       * `color-mix` the browser evaluates and nothing verifies. `soft` and
+       * `faint` differ in intent, not in legibility: one is quieter, neither is
+       * allowed to be unreadable, so both clear 4.5:1 against this paper.
        */
-      '--brand-ink-soft': `color-mix(in srgb, ${ink} 66%, ${paper})`,
-      '--brand-ink-faint': `color-mix(in srgb, ${ink} 42%, ${paper})`,
+      '--brand-ink-soft': softened(ink, paper, BODY_MIN),
+      '--brand-ink-faint': softened(ink, paper, BODY_MIN),
+      /* Not text — a hairline — so this one stays a mix and stays faint. */
       '--brand-line': `color-mix(in srgb, ${ink} 14%, transparent)`,
     } as CSSProperties,
   }
