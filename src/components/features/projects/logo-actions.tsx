@@ -13,8 +13,13 @@ import { selectPrimaryLogo } from '@/server/actions/branding'
  *
  * These were 12px text links under a thumbnail — the most consequential control
  * on the page rendered as the least prominent thing on it. On the canvas they
- * are buttons, and the chosen state is a disabled button rather than a
- * disappearing one, so the row never changes shape under the pointer.
+ * are buttons, and the chosen state stays in place rather than disappearing, so
+ * the row never changes shape under the pointer.
+ *
+ * The unchosen state is the section's one emphatic control. It was a small
+ * secondary chip while an export ("Download brand kit") and an unrelated action
+ * ("New project") were full gradient buttons in the same viewport — two things
+ * outranking the decision the page exists to support.
  */
 export function SelectLogoButton({
   projectId,
@@ -33,8 +38,20 @@ export function SelectLogoButton({
   })
 
   if (isPrimary) {
+    /*
+     * `aria-disabled`, not `disabled`. A disabled button leaves the tab order,
+     * so a keyboard or screen-reader user tabbed straight past the canvas and
+     * never learned which concept is the brand's — the page's most important
+     * piece of state, unreachable. It stays focusable and announces itself;
+     * `aria-disabled` is what tells assistive tech it is not actionable, and
+     * there is no handler to guard because this branch has none.
+     */
     return (
-      <Button variant="secondary" size="sm" disabled className="disabled:opacity-100">
+      <Button
+        variant="secondary"
+        aria-disabled
+        className="cursor-default opacity-100"
+      >
         <Check className="text-brand" />
         {t('chosen')}
       </Button>
@@ -42,7 +59,7 @@ export function SelectLogoButton({
   }
 
   return (
-    <Button size="sm" disabled={isPending} onClick={() => execute({ projectId, fileId })}>
+    <Button disabled={isPending} onClick={() => execute({ projectId, fileId })}>
       {isPending && <Loader2 className="animate-spin" />}
       {t('useThisLogo')}
     </Button>

@@ -54,17 +54,29 @@ export function CopyButton({
       onClick={copy}
       aria-label={label ? `${t('copy')} — ${label}` : t('copy')}
       className={cn(
-        'inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-control px-2 py-1 text-xs text-fg-muted transition-colors hover:bg-elevated hover:text-fg',
+        /*
+         * `min-h-6 min-w-6` is the floor, not the look. These measured 30x22
+         * — under WCAG 2.5.8's 24x24 minimum on one axis, and there are more
+         * than twenty of them on a project page. The padding stays visually
+         * small; the hit area does not.
+         */
+        'inline-flex min-h-6 min-w-6 shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-control px-2 py-1 text-xs text-fg-muted transition-colors hover:bg-elevated hover:text-fg',
         copied && 'text-success hover:text-success',
         className,
       )}
     >
       {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
       {showLabel && <span>{copied ? t('copied') : t('copy')}</span>}
-      {/* Sighted users get the tick; everyone else gets this. */}
-      <span className="sr-only" aria-live="polite">
-        {copied ? t('copied') : ''}
-      </span>
+      {/*
+        Sighted users get the tick; everyone else gets this.
+
+        Deliberately not `aria-live`. Twenty of these on one page meant twenty
+        simultaneous live regions — `palette-grid.tsx` already reasoned its way
+        to a single announcement and this shared component never inherited it.
+        The label swap is announced when focus is on the button, which is the
+        only time anyone has pressed it.
+      */}
+      <span className="sr-only">{copied ? t('copied') : ''}</span>
     </button>
   )
 }

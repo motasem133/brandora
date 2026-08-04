@@ -7,7 +7,7 @@ import { useLayoutEffect, useRef, useState } from 'react'
 
 import { FieldError } from '@/components/ui/field-error'
 import { ResendVerification } from '@/components/features/settings/resend-verification'
-import { useRouter } from '@/i18n/navigation'
+import { Link, useRouter } from '@/i18n/navigation'
 import { cn } from '@/lib/utils'
 import { EVENTS, capture } from '@/lib/analytics'
 import { regenerateLogos } from '@/server/actions/generation'
@@ -29,6 +29,7 @@ export function LogoComposer({
   brief,
   cost,
   affordable,
+  creditBalance,
   isRunning,
   emailVerified,
   userEmail,
@@ -37,6 +38,8 @@ export function LogoComposer({
   brief: string | null
   cost: number
   affordable: boolean
+  /** Shown beside the cost, because "can I afford this?" is asked here. */
+  creditBalance: number
   isRunning: boolean
   /** A new round is a generation, so the same gate applies here. */
   emailVerified: boolean
@@ -134,8 +137,17 @@ export function LogoComposer({
           value={text}
           onChange={(event) => setText(event.target.value)}
           onKeyDown={(event) => {
-            // Enter sends, as in any message box. Shift+Enter still breaks a line.
-            if (event.key === 'Enter' && !event.shiftKey) {
+            /*
+             * Cmd/Ctrl+Enter sends. A bare Enter does not.
+             *
+             * This is a chat box everywhere except in what it costs: one press
+             * spends six credits of real money and starts a job that cannot be
+             * undone. The field is also seeded with the previous round's brief,
+             * so it is never empty on arrival — tabbing in and pressing Enter
+             * out of habit was enough to spend them. Every other composer in
+             * the world is free to send; this one has to ask for the modifier.
+             */
+            if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
               event.preventDefault()
               send()
             }
@@ -158,7 +170,7 @@ export function LogoComposer({
         <button
           onClick={send}
           disabled={disabled}
-          title={affordable ? t('sendDirection', { credits: cost }) : t('notEnoughCredits')}
+          title={t('sendDirection', { credits: cost })}
           /*
            * The label carries the state, because the icon cannot. A send
            * control that silently becomes a spinner tells a screen reader
@@ -185,7 +197,23 @@ export function LogoComposer({
       */}
       {emailVerified ? (
         <p className="px-1 text-xs text-fg-muted">
-          {busy ? t('regenerating') : t('composerHint', { credits: cost })}
+          {busy ? (
+            t('regenerating')
+          ) : affordable ? (
+            t('composerHint', { credits: cost, balance: creditBalance })
+          ) : (
+            /*
+             * Was a `title` on the disabled button: invisible on touch,
+             * unreliable in assistive tech, and the one message a customer
+             * most needs when the control stops responding.
+             */
+            <span className="text-warning">
+              {t('notEnoughCreditsHint', { credits: cost, balance: creditBalance })}{' '}
+              <Link href="/dashboard/billing" className="underline underline-offset-2">
+                {t('topUp')}
+              </Link>
+            </span>
+          )}
         </p>
       ) : (
         <div className="rounded-control border border-warning/30 bg-warning/[0.07] p-4">

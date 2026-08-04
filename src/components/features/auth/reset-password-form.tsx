@@ -32,7 +32,7 @@ export function ResetPasswordForm({
     return (
       <div className="space-y-4 text-center">
         <p className="text-sm text-danger">{t('resetLinkInvalid')}</p>
-        <Link href="/forgot-password" className="inline-block text-sm text-brand hover:underline">
+        <Link href="/forgot-password" className="inline-block text-sm accent-text hover:underline">
           {t('requestNewLink')}
         </Link>
       </div>

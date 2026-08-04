@@ -163,7 +163,12 @@ export default async function ProjectDetailPage({
             </Link>
           )}
           {kitFile && (
-            <a href={`/api/files/${kitFile.id}`} className={buttonVariants({ size: 'sm' })}>
+            /* Secondary: an export is downstream of the decision on the
+               canvas, and outranked it as a full gradient fill. */
+            <a
+              href={`/api/files/${kitFile.id}`}
+              className={buttonVariants({ variant: 'secondary', size: 'sm' })}
+            >
               <Download />
               {tb('downloadKit')}
             </a>

@@ -1,9 +1,7 @@
 import { ExternalLink } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 
-import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
-import { Card, CardTitle } from '@/components/ui/card'
 import { Link } from '@/i18n/navigation'
 import type { WebsiteAsset } from '@/server/db/schema'
 
@@ -11,20 +9,37 @@ type Block = { type: string } & Record<string, unknown>
 
 const PAGE_ORDER = ['home', 'about', 'services', 'contact'] as const
 
+/**
+ * The website, shown rather than described.
+ *
+ * This used to render every content block of every page as a bordered card
+ * inside a card inside a card, each one labelled with its block type — so a
+ * customer looking at their own brand book read the words `RICHTEXT` and
+ * `SERVICES`. Two thousand pixels of a CMS schema, on a surface that cannot
+ * edit any of it, duplicating what the builder opens one click away.
+ *
+ * The site is already published on this origin, so it can simply be shown. A
+ * real render of the real page answers "did I get a website" in one look, which
+ * is the only question this section is here to answer. Editing stays where
+ * editing happens.
+ */
 export async function WebsiteView({ website }: { website: WebsiteAsset }) {
   const t = await getTranslations('Website')
   const pages = website.pages as Record<string, Block[]>
 
+  const present = PAGE_ORDER.filter((page) => pages[page]?.length)
+  const live = website.isPublished && website.subdomain
+
   return (
-    <div className="space-y-6">
+    <section className="space-y-5">
       {/*
-        Published or not is the first thing anyone wants from this tab, and it
-        was a line of loose text floating above the cards. It gets a bar of its
-        own, with a dot carrying the state alongside the words rather than
+        Published or not is the first thing anyone wants from this section, and
+        it was a line of loose text floating above the cards. It gets a bar of
+        its own, with a dot carrying the state alongside the words rather than
         instead of them.
       */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-line bg-surface/60 px-5 py-3">
-        {website.isPublished && website.subdomain ? (
+        {live ? (
           <a
             href={`/sites/${website.subdomain}`}
             target="_blank"
@@ -33,7 +48,7 @@ export async function WebsiteView({ website }: { website: WebsiteAsset }) {
           >
             <span className="size-2 shrink-0 rounded-full bg-success" />
             <span className="text-fg-secondary">{t('liveAt')}</span>
-            <span dir="ltr" className="truncate text-brand group-hover:underline">
+            <span dir="ltr" className="truncate accent-text group-hover:underline">
               /sites/{website.subdomain}
             </span>
             <ExternalLink className="size-3.5 shrink-0 text-fg-muted" />
@@ -53,72 +68,108 @@ export async function WebsiteView({ website }: { website: WebsiteAsset }) {
         </Link>
       </div>
 
-      {PAGE_ORDER.filter((page) => pages[page]?.length).map((page) => (
-        <Card key={page} className="space-y-4">
-          <div className="flex items-center justify-between gap-3">
-            <CardTitle className="capitalize">{t(`pages.${page}`)}</CardTitle>
-            <Badge>{t('blockCount', { count: pages[page].length })}</Badge>
-          </div>
-
-          <div className="space-y-3">
-            {pages[page].map((block, index) => (
-              <BlockPreview key={index} block={block} />
-            ))}
-          </div>
-        </Card>
-      ))}
-    </div>
-  )
-}
-
-/**
- * Read-only preview of a content block.
- *
- * Renders from the same typed block data the builder and the published site
- * will use, so what is shown here cannot drift from what gets published.
- */
-function BlockPreview({ block }: { block: Block }) {
-  const items = (block.items ?? block.services) as
-    | { title: string; body: string; price?: string }[]
-    | undefined
-
-  return (
-    <div className="rounded-lg border border-line bg-elevated/40 p-4">
-      <p className="mb-2 text-xs uppercase tracking-wide text-fg-muted">{block.type}</p>
-
-      {typeof block.title === 'string' && (
-        <p className="font-display text-lg font-semibold">{block.title}</p>
-      )}
-      {typeof block.heading === 'string' && (
-        <p className="font-display text-lg font-semibold">{block.heading}</p>
-      )}
-      {typeof block.subtitle === 'string' && (
-        <p className="mt-1 text-sm text-fg-secondary">{block.subtitle}</p>
-      )}
-      {typeof block.body === 'string' && (
-        <p className="mt-1 text-sm leading-relaxed text-fg-secondary">{block.body}</p>
-      )}
-
-      {items && (
-        <ul className="mt-3 grid gap-3 sm:grid-cols-2">
-          {items.map((item, index) => (
-            <li key={index} className="rounded-md border border-line p-3">
-              <p className="text-sm font-medium">{item.title}</p>
-              <p className="mt-0.5 text-sm text-fg-secondary">{item.body}</p>
-              {item.price && <p className="mt-1 text-sm text-brand">{item.price}</p>}
+      {live ? (
+        <SitePreview subdomain={website.subdomain!} label={t('openSite')} />
+      ) : (
+        /*
+         * Nothing to render until it is published, so the pages are listed by
+         * what is actually on them — their own first heading — rather than by
+         * the block types that produce it.
+         */
+        <ul className="divide-y divide-line overflow-hidden rounded-card border border-line">
+          {present.map((page) => (
+            <li key={page} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-5 py-3.5">
+              <span className="text-sm font-medium capitalize">{t(`pages.${page}`)}</span>
+              <span className="min-w-0 flex-1 truncate text-sm text-fg-secondary">
+                {firstHeading(pages[page]) ?? t('blockCount', { count: pages[page].length })}
+              </span>
+              <span className="text-xs text-fg-muted">
+                {t('blockCount', { count: pages[page].length })}
+              </span>
             </li>
           ))}
         </ul>
       )}
+    </section>
+  )
+}
 
-      {typeof block.email === 'string' && (
-        <p className="mt-2 text-sm text-brand">{block.email}</p>
-      )}
-      {typeof block.cta === 'string' && (
-        <span className="mt-3 inline-block rounded-lg bg-brand px-3 py-1.5 text-xs font-medium text-brand-fg">
-          {block.cta}
+/** The page's own words, so a summary never has to name a block type. */
+function firstHeading(blocks: Block[]) {
+  for (const block of blocks) {
+    const heading = block.title ?? block.heading
+    if (typeof heading === 'string' && heading.trim()) return heading
+  }
+
+  return null
+}
+
+/**
+ * The live site, in a frame.
+ *
+ * Deliberately not sandboxed, after trying both alternatives.
+ *
+ * The framed document is this app's own `/sites/[subdomain]` route rendering
+ * typed block data through React, so every string is escaped and there is no
+ * path for injected markup — the only `dangerouslySetInnerHTML` in the codebase
+ * is the theme script, which this route does not include. There is no
+ * third-party content here to isolate from.
+ *
+ * Sandboxing costs more than it buys. A sandbox gives the frame an opaque
+ * origin, which makes every `_next/static` request cross-origin — and the dev
+ * server refuses those, including the stylesheet, so the preview renders as
+ * unstyled markup while you are building. An opaque origin cannot be added to
+ * `allowedDevOrigins` either, because it has no origin to name.
+ *
+ * `pointer-events-none` and `tabIndex={-1}` are what make it inert: this is a
+ * picture, not an application. Scrolling the page never gets captured by a
+ * frame in the middle of it, nothing inside can take focus, and the whole thing
+ * is one link to the real site.
+ */
+function SitePreview({ subdomain, label }: { subdomain: string; label: string }) {
+  return (
+    <a
+      href={`/sites/${subdomain}`}
+      target="_blank"
+      rel="noreferrer"
+      aria-label={label}
+      className="group block overflow-hidden rounded-card border border-line bg-surface transition-shadow duration-200 hover:shadow-[var(--shadow-lifted)]"
+    >
+      {/* The same browser-frame language the logo usage panel already uses. */}
+      <div className="flex items-center gap-2 border-b border-line bg-elevated/50 px-4 py-2.5">
+        <span aria-hidden className="flex gap-1.5">
+          <span className="size-2 rounded-full bg-fg-muted/30" />
+          <span className="size-2 rounded-full bg-fg-muted/30" />
+          <span className="size-2 rounded-full bg-fg-muted/30" />
         </span>
-      )}
-    </div>
+        <span
+          dir="ltr"
+          className="min-w-0 flex-1 truncate rounded-full bg-surface px-3 py-1 text-center text-xs text-fg-muted"
+        >
+          /sites/{subdomain}
+        </span>
+        <ExternalLink className="size-3.5 shrink-0 text-fg-muted transition-colors group-hover:text-fg" />
+      </div>
+
+      {/*
+        A clean crop, not a fade.
+
+        A gradient here has to fade to *something*, and the only colours
+        available are the app's dark surface or a hard-coded white — while what
+        is underneath is the customer's own page background, which is neither.
+        Fading dark navy over a white site read as a smear. The browser chrome
+        above already says "this is a window onto a page", so the cut does the
+        job the fade was invented for, and honestly.
+      */}
+      <div className="h-[26rem] bg-white">
+        <iframe
+          src={`/sites/${subdomain}`}
+          title={label}
+          loading="lazy"
+          tabIndex={-1}
+          className="pointer-events-none size-full border-0"
+        />
+      </div>
+    </a>
   )
 }

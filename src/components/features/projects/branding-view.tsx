@@ -127,6 +127,7 @@ export async function BrandingView({
             logoBrief={logoBrief}
             logoCost={logoCost}
             affordable={creditBalance >= logoCost}
+            creditBalance={creditBalance}
             isGenerating={isGenerating}
             palette={branding.colorPalette}
             emailVerified={emailVerified}

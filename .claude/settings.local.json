@@ -49,7 +49,13 @@
       "Bash(curl -s http://localhost:3000/en)",
       "Bash(node check.mjs)",
       "Skill(impeccable:impeccable)",
-      "Bash(node /Users/motasemmoner/.claude/plugins/cache/impeccable/impeccable/4.0.4/skills/impeccable/scripts/concept-seed.mjs --scope surface --mode operate)"
+      "Bash(node /Users/motasemmoner/.claude/plugins/cache/impeccable/impeccable/4.0.4/skills/impeccable/scripts/concept-seed.mjs --scope surface --mode operate)",
+      "Bash(DATABASE_URL=postgresql://placeholder:placeholder@localhost:5432/placeholder pnpm drizzle-kit generate --config=./drizzle.config.ts)",
+      "Bash(node /Users/motasemmoner/.claude/plugins/cache/impeccable/impeccable/4.0.4/skills/impeccable/scripts/context-signals.mjs)",
+      "Bash(node /Users/motasemmoner/.claude/plugins/cache/impeccable/impeccable/4.0.4/skills/impeccable/scripts/context.mjs --target PRODUCT.md)",
+      "Bash(awk '/CONTEXT_STALE/{f=1} f{print} f&&/^$/{c++; if\\(c>2\\) exit}')",
+      "Bash(node a-review2.mjs)",
+      "Bash(node -e *)"
     ]
   }
 }

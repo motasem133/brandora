@@ -155,7 +155,7 @@ export function PublishPanel({
               href={`/sites/${liveSubdomain}`}
               target="_blank"
               rel="noreferrer"
-              className="mt-3 inline-flex items-center gap-1.5 text-sm text-brand hover:underline"
+              className="mt-3 inline-flex items-center gap-1.5 text-sm accent-text hover:underline"
             >
               <ExternalLink className="size-3.5" />
               {t('viewSite')}

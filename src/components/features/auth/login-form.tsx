@@ -85,7 +85,7 @@ export function LoginForm() {
         <div>
           <div className="flex items-center justify-between">
             <Label htmlFor="password">{t('password')}</Label>
-            <Link href="/forgot-password" className="text-xs text-brand hover:underline">
+            <Link href="/forgot-password" className="text-xs accent-text hover:underline">
               {t('forgotPassword')}
             </Link>
           </div>
@@ -109,7 +109,7 @@ export function LoginForm() {
 
       <p className="text-center text-sm text-fg-secondary">
         {t('noAccount')}{' '}
-        <Link href="/register" className="text-brand hover:underline">
+        <Link href="/register" className="accent-text hover:underline">
           {t('signUp')}
         </Link>
       </p>
