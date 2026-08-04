@@ -42,7 +42,7 @@ export default async function PricingPage({
   return (
     <div className="min-h-dvh">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
-        <Link href="/" className="font-display text-xl font-bold gradient-text">
+        <Link href="/" className="font-display text-xl font-bold accent-text">
           Brandora
         </Link>
         <nav className="flex items-center gap-2">
