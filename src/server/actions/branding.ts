@@ -72,9 +72,19 @@ export const selectPrimaryLogo = orgAction
 
     if (!file) throw new AppError('NOT_FOUND', 'That logo does not belong to this project.')
 
+    /*
+     * Choosing a logo also resets the icon to follow it.
+     *
+     * The icon was left pointing wherever it pointed before, so picking a mark
+     * from a later round quietly kept cutting the favicon and every avatar out
+     * of a concept from two rounds ago — a choice nobody made and nothing on
+     * the page reported. Following the logo is the answer that needs no
+     * explanation; picking a text-free mark afterwards is the exception, and
+     * the usage previews show which one is in force either way.
+     */
     const [updated] = await db
       .update(brandingAssets)
-      .set({ primaryLogoFileId: file.id, updatedAt: new Date() })
+      .set({ primaryLogoFileId: file.id, markLogoFileId: null, updatedAt: new Date() })
       .where(eq(brandingAssets.projectId, parsedInput.projectId))
       .returning({ id: brandingAssets.id })
 

@@ -70,7 +70,7 @@ export function Logo({
   return (
     <span className={cn('inline-flex items-center gap-2', className)}>
       <LogoMark className={markClassName} animated={animated} id={id} />
-      <span className="font-display font-bold gradient-text">Brandora</span>
+      <span className="font-display font-bold accent-text">Brandora</span>
     </span>
   )
 }

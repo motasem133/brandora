@@ -34,6 +34,17 @@
   --text-muted: #6f7b96;
 
   /*
+   * The accent, for text that carries the brand: the wordmark, a slogan, a
+   * figure worth reading twice.
+   *
+   * A tint of the primary rather than the primary itself. #7c3aed on this
+   * ground is 3.4:1 — fine for a button's fill, not for words someone has to
+   * read. This lands at 7:1 in both themes, which is why the value differs
+   * either side and the ramp does not.
+   */
+  --text-accent: #a78bfa;
+
+  /*
    * Borders are translucent white rather than a grey line. A hard border is
    * the single thing that makes a dark interface look like a template.
    */
@@ -68,6 +79,10 @@
   --text-primary: #0b1020;
   --text-secondary: #4c5570;
   --text-muted: #6d7794;
+
+  /* A shade of the primary here, for the same reason the dark theme takes a
+     tint: the accent has to survive being read on white. */
+  --text-accent: #6d28d9;
 
   --border: color-mix(in srgb, #0b1020 8%, transparent);
   --border-strong: color-mix(in srgb, #0b1020 14%, transparent);
@@ -149,11 +164,17 @@
   }
 }
 
-@utility gradient-text {
-  background: var(--brand-gradient);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+/*
+ * Text that carries the brand, in one solid colour.
+ *
+ * This was the brand ramp clipped to the glyphs. A ramp across a word means
+ * nothing: it is decoration that costs legibility, because part of every
+ * letter is always sitting on the lowest-contrast stop, and the words vanish
+ * entirely wherever the clip is unsupported. The accent says the same thing
+ * about emphasis and can be read.
+ */
+@utility accent-text {
+  color: var(--text-accent);
 }
 
 @utility surface-card {
@@ -420,10 +441,7 @@
   font-family: var(--font-display);
   font-weight: 600;
   letter-spacing: -0.02em;
-  background: var(--brand-gradient);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--text-accent);
 }
 
 /* ------------------------------------------------------- system surfaces --- */
