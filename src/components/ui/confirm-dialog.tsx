@@ -1,5 +1,6 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import { useEffect, useRef } from 'react'
 
 import { Button } from '@/components/ui/button'
@@ -37,7 +38,8 @@ export function ConfirmDialog({
   onClose: () => void
   onConfirm: () => void
   title: string
-  body: string
+  /** A node, not a string, so a confirmation can carry a link out of itself. */
+  body: ReactNode
   confirmLabel: string
   cancelLabel: string
   /** Colours the confirm control and nothing else; the copy carries the weight. */
@@ -92,9 +94,9 @@ export function ConfirmDialog({
         <h2 id="confirm-title" className="font-display text-lg font-semibold tracking-[-0.02em]">
           {title}
         </h2>
-        <p id="confirm-body" className="mt-2 text-sm leading-relaxed text-fg-secondary">
+        <div id="confirm-body" className="mt-2 text-sm leading-relaxed text-fg-secondary">
           {body}
-        </p>
+        </div>
 
         <div className="mt-6 flex flex-wrap justify-end gap-2">
           <Button variant="ghost" size="sm" onClick={onClose} disabled={pending}>

@@ -235,6 +235,7 @@ export default async function BillingPage({
                           price={formatPrice(shownPrice.amount, shownPrice.currency, locale)}
                           interval={interval}
                           label={t('changePlan')}
+                          canManageCard={Boolean(org.polarCustomerId)}
                         />
                       ) : (
                         <CheckoutButton
