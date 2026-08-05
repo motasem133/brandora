@@ -1,7 +1,6 @@
 import 'server-only'
 
 import { and, eq, inArray } from 'drizzle-orm'
-import sharp from 'sharp'
 
 import { generateLogoImage, LOGO_STYLES, logoPrompt, type LogoStyle } from '@/server/ai/image'
 import type { ProjectBrief } from '@/server/ai/prompts'
@@ -95,6 +94,10 @@ export async function generateLogos(params: {
       const slug = style.replace(/\s+/g, '-')
 
       // Measure rather than assume: the provider decides final dimensions.
+      // Deferred for the same reason as in `vectorize`: a static import of this
+      // native binary runs its loader whenever anything in this graph is
+      // imported, which killed `/api/inngest` on startup.
+      const { default: sharp } = await import('sharp')
       const meta = await sharp(raster).metadata()
 
       // Round in the key, or the new images would overwrite the old ones in R2
