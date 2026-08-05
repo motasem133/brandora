@@ -407,7 +407,7 @@ export function Builder({
                         setSelected(null)
                       }}
                     >
-                      <BlockRenderer block={block} theme={theme} />
+                      <BlockRenderer block={block} theme={theme} preview />
                     </SortableBlock>
                   ))}
                 </SortableContext>

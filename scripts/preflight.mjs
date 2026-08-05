@@ -169,7 +169,7 @@ function checkEnvironment() {
   report(
     google ? 'pass' : 'warn',
     'Google sign-in',
-    google ? 'configured' : 'not configured — the button is shown but the provider is off',
+    google ? 'configured' : 'not configured — the sign-in button is hidden, so nothing is broken',
   )
 
   report(

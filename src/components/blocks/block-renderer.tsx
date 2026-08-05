@@ -48,7 +48,29 @@ export function resolveTheme(theme?: Theme): SiteTheme {
   }
 }
 
-export function BlockRenderer({ block, theme }: { block: Block; theme: SiteTheme }) {
+/**
+ * One block of a customer's site.
+ *
+ * `preview` is what tells the hero whether it is the top of its own document or
+ * a picture of one. Published, the hero's title is the page's `h1` and should
+ * be. Inside the builder it is a document within a document: the canvas already
+ * sits under the builder's own `h1`, so a second one there gives the editing
+ * page two competing top-level headings — which is what a screen reader hears
+ * and what made "the h1" ambiguous enough to fail a test.
+ *
+ * The tag changes; nothing about the look does. A visitor to the published site
+ * sees exactly what the customer arranged, and so does the customer.
+ */
+export function BlockRenderer({
+  block,
+  theme,
+  preview = false,
+}: {
+  block: Block
+  theme: SiteTheme
+  preview?: boolean
+}) {
+  const HeroHeading = preview ? 'p' : 'h1'
   const heading = { fontFamily: `'${theme.fontHeading}', sans-serif`, color: theme.safe.ink }
   const body = { fontFamily: `'${theme.fontBody}', sans-serif`, color: theme.safe.ink }
   /* The ink softened only as far as it can go and still be read, rather than a
@@ -68,9 +90,12 @@ export function BlockRenderer({ block, theme }: { block: Block; theme: SiteTheme
     case 'hero':
       return (
         <section className="px-8 py-20 text-center sm:py-28">
-          <h1 className="mx-auto max-w-3xl text-4xl font-bold leading-tight sm:text-5xl" style={heading}>
+          <HeroHeading
+            className="mx-auto max-w-3xl text-4xl font-bold leading-tight sm:text-5xl"
+            style={heading}
+          >
             {block.title}
-          </h1>
+          </HeroHeading>
           <p className="mx-auto mt-5 max-w-xl text-lg" style={muted}>
             {block.subtitle}
           </p>
