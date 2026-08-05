@@ -93,12 +93,27 @@ export async function generateLogos(params: {
 
       const slug = style.replace(/\s+/g, '-')
 
-      // Measure rather than assume: the provider decides final dimensions.
-      // Deferred for the same reason as in `vectorize`: a static import of this
-      // native binary runs its loader whenever anything in this graph is
-      // imported, which killed `/api/inngest` on startup.
-      const { default: sharp } = await import('sharp')
-      const meta = await sharp(raster).metadata()
+      /*
+       * Measuring is best-effort, like vectorising below it.
+       *
+       * This read the image's dimensions through `sharp` — a native binary —
+       * and it was the only thing standing between a generated logo and being
+       * saved. On the first production run every one of four concepts failed
+       * here, after the images had already been generated and paid for, and
+       * nothing reached storage. The columns it fills are nullable; an
+       * unmeasured logo is still a logo.
+       *
+       * The import stays deferred: a static one runs the loader whenever
+       * anything in this module graph is imported, which is what killed
+       * `/api/inngest` on startup.
+       */
+      let meta: { width?: number; height?: number } = {}
+      try {
+        const { default: sharp } = await import('sharp')
+        meta = await sharp(raster).metadata()
+      } catch (error) {
+        console.warn('[logos] could not measure the raster; storing it unmeasured', error)
+      }
 
       // Round in the key, or the new images would overwrite the old ones in R2
       // and every round would render as the newest one.
@@ -146,13 +161,33 @@ export async function generateLogos(params: {
     }),
   )
 
+  const failures: string[] = []
   for (const outcome of settled) {
     if (outcome.status === 'fulfilled') results.push(outcome.value)
-    else console.warn('[logos] concept failed', outcome.reason)
+    else {
+      const reason =
+        outcome.reason instanceof Error ? outcome.reason.message : String(outcome.reason)
+      failures.push(reason)
+      console.warn('[logos] concept failed', outcome.reason)
+    }
   }
 
   if (results.length === 0) {
-    throw new Error('Every logo concept failed to generate.')
+    /*
+     * The reason travels with the failure.
+     *
+     * "Every logo concept failed to generate." was the whole of what a run
+     * recorded, while the actual cause went to a console nobody reads — so a
+     * production failure that had already spent the customer's credits and
+     * eight image generations could not be diagnosed from the job at all.
+     * Distinct reasons only: four copies of one message is not four facts.
+     */
+    const distinct = [...new Set(failures)]
+    throw new Error(
+      distinct.length
+        ? `Every logo concept failed to generate. ${distinct.join(' | ')}`
+        : 'Every logo concept failed to generate.',
+    )
   }
 
   await db
