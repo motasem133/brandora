@@ -1,3 +1,4 @@
+import { checkedSiteColors, type CheckedSiteColors } from '@/lib/brand-theme'
 import type { Block, Theme } from '@/lib/blocks'
 
 /**
@@ -21,18 +22,45 @@ const FALLBACK: Required<Theme> = {
   fontBody: 'Inter',
 }
 
-export function resolveTheme(theme?: Theme): Required<Theme> {
-  return { ...FALLBACK, ...Object.fromEntries(Object.entries(theme ?? {}).filter(([, v]) => v)) }
+/**
+ * The theme as configured, plus the colours that are safe to put text on.
+ *
+ * A generated palette is not a designed one — it can pair near-black text with
+ * a near-black ground, or hand back a primary nobody can read a label on — and
+ * this renderer used every value raw. The checked set comes from the same
+ * arithmetic the in-app brand surfaces have always used.
+ */
+export type SiteTheme = Required<Theme> & { safe: CheckedSiteColors }
+
+export function resolveTheme(theme?: Theme): SiteTheme {
+  const merged = {
+    ...FALLBACK,
+    ...Object.fromEntries(Object.entries(theme ?? {}).filter(([, v]) => v)),
+  } as Required<Theme>
+
+  return {
+    ...merged,
+    safe: checkedSiteColors({
+      background: merged.backgroundColor,
+      text: merged.textColor,
+      primary: merged.primaryColor,
+    }),
+  }
 }
 
-export function BlockRenderer({ block, theme }: { block: Block; theme: Required<Theme> }) {
-  const heading = { fontFamily: `'${theme.fontHeading}', sans-serif`, color: theme.textColor }
-  const body = { fontFamily: `'${theme.fontBody}', sans-serif`, color: theme.textColor }
-  const muted = { ...body, opacity: 0.75 }
+export function BlockRenderer({ block, theme }: { block: Block; theme: SiteTheme }) {
+  const heading = { fontFamily: `'${theme.fontHeading}', sans-serif`, color: theme.safe.ink }
+  const body = { fontFamily: `'${theme.fontBody}', sans-serif`, color: theme.safe.ink }
+  /* The ink softened only as far as it can go and still be read, rather than a
+     flat opacity that cannot reach the floor for any pair of colours. */
+  const muted = { ...body, color: theme.safe.muted }
+  /* The primary when it can carry text on this ground, deepened when it cannot —
+     for a price, an email address, anything set in the brand's own colour. */
+  const accent = { ...body, color: theme.safe.accent }
 
   const button = {
-    backgroundColor: theme.primaryColor,
-    color: '#ffffff',
+    backgroundColor: theme.safe.primary,
+    color: theme.safe.onPrimary,
     fontFamily: `'${theme.fontBody}', sans-serif`,
   }
 
@@ -110,7 +138,7 @@ export function BlockRenderer({ block, theme }: { block: Block; theme: Required<
               <div
                 key={index}
                 className="rounded-xl p-6"
-                style={{ border: `1px solid ${theme.primaryColor}22` }}
+                style={{ border: `1px solid ${theme.safe.line}` }}
               >
                 <h3 className="text-lg font-semibold" style={heading}>
                   {service.title}
@@ -119,7 +147,7 @@ export function BlockRenderer({ block, theme }: { block: Block; theme: Required<
                   {service.body}
                 </p>
                 {service.price && (
-                  <p className="mt-3 font-semibold" style={{ ...body, color: theme.primaryColor }}>
+                  <p className="mt-3 font-semibold" style={accent}>
                     {service.price}
                   </p>
                 )}
@@ -158,7 +186,7 @@ export function BlockRenderer({ block, theme }: { block: Block; theme: Required<
           <p className="mx-auto mt-3 max-w-lg" style={muted}>
             {block.body}
           </p>
-          <p className="mt-6 text-lg font-medium" style={{ ...body, color: theme.primaryColor }}>
+          <p className="mt-6 text-lg font-medium" style={accent}>
             {block.email}
           </p>
           {block.phone && (
@@ -177,10 +205,10 @@ export function PageRenderer({
   theme,
 }: {
   blocks: Block[]
-  theme: Required<Theme>
+  theme: SiteTheme
 }) {
   return (
-    <div style={{ backgroundColor: theme.backgroundColor }}>
+    <div style={{ backgroundColor: theme.safe.paper }}>
       {blocks.map((block, index) => (
         <BlockRenderer key={index} block={block} theme={theme} />
       ))}

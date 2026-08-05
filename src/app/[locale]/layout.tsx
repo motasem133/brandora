@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { NextIntlClientProvider, hasLocale } from 'next-intl'
-import { setRequestLocale } from 'next-intl/server'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { IBM_Plex_Sans_Arabic, Plus_Jakarta_Sans } from 'next/font/google'
 import { notFound } from 'next/navigation'
 
@@ -49,6 +49,7 @@ export default async function LocaleLayout({
   if (!hasLocale(routing.locales, locale)) notFound()
 
   setRequestLocale(locale)
+  const t = await getTranslations('Common')
 
   return (
     <html
@@ -68,6 +69,18 @@ export default async function LocaleLayout({
       <body>
         <NextIntlClientProvider>
           <PostHogProvider />
+          {/*
+            The first thing in the tab order, hidden until it takes focus.
+            Every signed-in route puts ten chrome stops — a wordmark, a collapse
+            toggle, four nav rows, and four header controls — ahead of its
+            content, and a keyboard user paid that toll on every navigation.
+          */}
+          <a
+            href="#content"
+            className="sr-only rounded-control bg-surface px-4 py-2.5 text-sm font-medium text-fg shadow-[var(--shadow-lifted)] focus:not-sr-only focus:absolute focus:start-4 focus:top-4 focus:z-50"
+          >
+            {t('skipToContent')}
+          </a>
           {children}
         </NextIntlClientProvider>
       </body>

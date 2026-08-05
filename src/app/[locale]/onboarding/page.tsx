@@ -61,7 +61,7 @@ export default async function OnboardingPage({
     .limit(1)
 
   return (
-    <div className="flex min-h-dvh items-center justify-center px-4 py-12">
+    <main id="content" tabIndex={-1} className="flex min-h-dvh items-center justify-center px-4 py-12">
       <OnboardingWizard
         entitlements={entitlements}
         pricing={pricing}
@@ -78,6 +78,6 @@ export default async function OnboardingPage({
             : null
         }
       />
-    </div>
+    </main>
   )
 }

@@ -361,9 +361,17 @@ export function Builder({
         </aside>
 
         <main className="min-w-0 flex-1 overflow-y-auto bg-elevated/30 p-4 pb-24 xl:pb-4" data-testid="canvas">
+          {/*
+            The canvas takes the brand's own ground, as the published page does.
+            Hardcoded white, a dark-ground brand previewed at 1.18:1 here and
+            shipped at 15.4:1 — the file's promise that the preview cannot drift
+            from production was true of the blocks and false of what sits behind
+            them.
+          */}
           <div
+            style={{ backgroundColor: theme.safe.paper }}
             className={cn(
-              'mx-auto overflow-hidden rounded-card border border-line bg-white transition-all',
+              'mx-auto overflow-hidden rounded-card border border-line transition-all',
               device === 'mobile' ? 'max-w-sm' : 'max-w-4xl',
             )}
           >

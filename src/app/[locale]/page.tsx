@@ -104,7 +104,7 @@ export default async function HorizonDirection({
         />
       </noscript>
 
-      <main>
+      <main id="content" tabIndex={-1}>
       {/* ------------------------------------------------------------- hero */}
       <section className="relative overflow-hidden pb-0 pt-14 text-center sm:pt-20">
         <Horizon />

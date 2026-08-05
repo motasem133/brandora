@@ -7,7 +7,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <Link href="/" className="mb-8 animate-fade-in">
         <Logo className="text-2xl" markClassName="size-9" animated />
       </Link>
-      <div className="w-full max-w-sm animate-scale-in">{children}</div>
+      <main id="content" tabIndex={-1} className="w-full max-w-sm animate-scale-in">
+        {children}
+      </main>
     </div>
   )
 }

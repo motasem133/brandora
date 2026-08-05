@@ -252,6 +252,58 @@ export function brandTheme(palette: BrandPalette): BrandTheme {
 }
 
 /**
+ * The checked colours for a published customer site.
+ *
+ * The site renderer had none of this. It took the generated palette and used it
+ * raw: `textColor` on `backgroundColor` unchecked, `primaryColor` as the colour
+ * of a price and a contact email, `#ffffff` hardcoded on the primary for every
+ * button label, and `opacity: 0.75` for secondary text — the flat-percentage
+ * approach `softened` exists to replace. A light-primary brand rendered its call
+ * to action at 1.42:1 and its email at 1.39:1.
+ *
+ * This is the same arithmetic the in-app brand scopes have used all along,
+ * exported rather than duplicated. It is the difference between a generated
+ * palette degrading to plain and a customer publishing an unreadable page under
+ * their own client's name.
+ */
+export type CheckedSiteColors = {
+  /** The ground, as given, when it is usable at all. */
+  paper: string
+  /** Body and heading text, guaranteed readable on the ground. */
+  ink: string
+  /** Secondary text: the ink softened as far as it can go and still be read. */
+  muted: string
+  /** The brand's primary when it can carry text on the ground, deepened when it cannot. */
+  accent: string
+  /** The primary as a fill — unchecked by definition, never put text on it directly. */
+  primary: string
+  /** Text on that fill. */
+  onPrimary: string
+  /** A hairline mixed from the ink rather than drawn in grey. */
+  line: string
+}
+
+export function checkedSiteColors(input: {
+  background: string
+  text: string
+  primary: string
+}): CheckedSiteColors {
+  const paper = parseHex(input.background) ? input.background : '#ffffff'
+  const ink = readableOn(paper, [input.text])
+  const primary = parseHex(input.primary) ? input.primary : FALLBACK.primary
+
+  return {
+    paper,
+    ink,
+    muted: softened(ink, paper, BODY_MIN),
+    accent: deepened(primary, paper, BODY_MIN),
+    primary,
+    onPrimary: readableOn(primary, []),
+    line: `color-mix(in srgb, ${ink} 14%, transparent)`,
+  }
+}
+
+/**
  * A generated font name is a Google Fonts family the visitor may not have.
  * Rendering a specimen in it when they do and in the app's own face when they
  * do not is the honest behaviour — the family name is printed beside it either

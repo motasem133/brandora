@@ -21,7 +21,8 @@
     "signOut": "تسجيل الخروج",
     "copy": "نسخ",
     "copied": "تم النسخ",
-    "close": "إغلاق"
+    "close": "إغلاق",
+    "skipToContent": "تخطَّ إلى المحتوى"
   },
   "Landing": {
     "heroTitle": "موجز واحد. هويتك كاملة.",
