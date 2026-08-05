@@ -12,7 +12,14 @@ import { sendEmail } from './email/send'
 import { members } from './db/schema'
 import { createPersonalOrganization } from './services/organizations'
 
-const hasGoogle = Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET)
+/**
+ * Whether Google sign-in exists on this deployment.
+ *
+ * Exported because the sign-in and sign-up screens have to know: without these
+ * keys `socialProviders` below is empty, and a button offering a provider that
+ * is not registered is a control that fails when it is pressed.
+ */
+export const hasGoogle = Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET)
 
 export const auth = betterAuth({
   appName: 'Brandora',
