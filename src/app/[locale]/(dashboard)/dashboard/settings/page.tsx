@@ -13,25 +13,49 @@ export default async function SettingsPage({ params }: { params: Promise<{ local
   const t = await getTranslations('Settings')
   const { user, org, orgRole } = await requireOrg()
 
+  /*
+   * Two columns of settings, grouped by what they belong to.
+   *
+   * This was one 640px column holding four full-width cards, which on a laptop
+   * put every control in the left third of the screen and left the other two
+   * thirds empty — and made the fourth card, a single button, as tall a
+   * commitment as the one holding the whole profile form. Grouping them says
+   * something as well as saving the space: the left column is the person, the
+   * right is the workspace they are working in.
+   *
+   * `items-start` matters here. Grid children stretch by default, so the
+   * appearance card would grow to whatever height the workspace card next to it
+   * happened to be.
+   */
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="mx-auto max-w-5xl">
       <div>
         <h1 className="font-display text-2xl font-semibold">{t('title')}</h1>
         <p className="mt-1 text-sm text-fg-secondary">{t('subtitle')}</p>
       </div>
 
-      <ProfileCard
-        name={user.name}
-        email={user.email}
-        locale={(user.locale as 'en' | 'ar') ?? 'en'}
-        emailVerified={user.emailVerified}
-      />
+      <div className="mt-8 grid items-start gap-6 lg:grid-cols-2">
+        <div className="space-y-6">
+          <ProfileCard
+            name={user.name}
+            email={user.email}
+            locale={(user.locale as 'en' | 'ar') ?? 'en'}
+            emailVerified={user.emailVerified}
+          />
 
-      <PasswordCard />
+          <PasswordCard />
+        </div>
 
-      <OrganizationCard name={org.name} isOwner={orgRole === 'owner'} credits={org.creditBalance} />
+        <div className="space-y-6">
+          <OrganizationCard
+            name={org.name}
+            isOwner={orgRole === 'owner'}
+            credits={org.creditBalance}
+          />
 
-      <AppearanceCard />
+          <AppearanceCard />
+        </div>
+      </div>
     </div>
   )
 }

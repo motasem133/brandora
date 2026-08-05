@@ -1,6 +1,5 @@
 'use client'
 
-import { ArrowLeft } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 
 import { Link, usePathname } from '@/i18n/navigation'
@@ -16,11 +15,15 @@ const LINKS = [
 
 export function AdminNav() {
   const t = useTranslations('Admin')
+  const tn = useTranslations('Nav')
   const pathname = usePathname()
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-4">
-      <nav className="flex flex-wrap gap-1">
+      {/* The sections of administration. Getting back to the product is the
+          app bar's job now, and was a second link to a destination already in
+          it. */}
+      <nav aria-label={tn('admin')} className="flex flex-wrap gap-1">
         {LINKS.map(({ href, key }) => {
           const active = href === '/admin' ? pathname === href : pathname.startsWith(href)
           return (
@@ -28,8 +31,10 @@ export function AdminNav() {
               key={href}
               href={href}
               className={cn(
-                'rounded-control px-3 py-2 text-sm transition-colors',
-                active ? 'bg-elevated font-medium text-fg' : 'text-fg-secondary hover:text-fg',
+                'flex min-h-11 items-center rounded-full px-4 text-sm transition-colors',
+                active
+                  ? 'control-lit bg-elevated font-medium text-fg shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--brand-primary)_22%,transparent),var(--lit-inset)]'
+                  : 'text-fg-secondary hover:bg-elevated/60 hover:text-fg',
               )}
             >
               {t(`nav.${key}`)}
@@ -37,14 +42,6 @@ export function AdminNav() {
           )
         })}
       </nav>
-
-      <Link
-        href="/dashboard"
-        className="inline-flex items-center gap-1.5 text-sm text-fg-secondary hover:text-fg"
-      >
-        <ArrowLeft className="size-3.5 rtl:rotate-180" />
-        {t('backToApp')}
-      </Link>
     </div>
   )
 }

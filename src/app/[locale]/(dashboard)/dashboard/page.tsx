@@ -6,7 +6,7 @@ import { ResendVerification } from '@/components/features/settings/resend-verifi
 import { StatTile } from '@/components/features/dashboard/stat-tile'
 import { MomentumField, MomentumItem } from '@/components/ui/momentum'
 import { buttonVariants } from '@/components/ui/button'
-import { Cell } from '@/components/features/landing/horizon'
+import { Cell } from '@/components/ui/horizon'
 import { Link } from '@/i18n/navigation'
 import { dashboardTrends } from '@/server/db/queries/dashboard'
 import { countProjects, listBrandSpecimens } from '@/server/db/queries/projects'
@@ -78,18 +78,20 @@ export default async function OverviewPage({ params }: { params: Promise<{ local
         </section>
       )}
 
-      <header className="flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
-        <div>
-          <h1 className="font-display text-3xl font-semibold tracking-[-0.02em] sm:text-4xl">
-            {t('welcome', { name: user.name.split(' ')[0] })}
-          </h1>
-          <p className="mt-2 text-fg-secondary">{t('subtitle')}</p>
-        </div>
+      {/*
+        No "New project" control here.
 
-        <Link href="/onboarding" className={buttonVariants()}>
-          <Sparkles />
-          {tp('newProject')}
-        </Link>
+        It used to sit at the end of this line, and once the navigation became a
+        bar with the same action lit at the end of it, the page opened with the
+        product's primary action written twice within four hundred pixels. The
+        one in the bar is on every screen in the app; this one was on two. The
+        empty frame at the end of the grid below still offers it in place.
+      */}
+      <header>
+        <h1 className="font-display text-3xl font-semibold tracking-[-0.02em] sm:text-4xl">
+          {t('welcome', { name: user.name.split(' ')[0] })}
+        </h1>
+        <p className="mt-2 text-fg-secondary">{t('subtitle')}</p>
       </header>
 
       {/*

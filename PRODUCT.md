@@ -180,13 +180,18 @@ Violet `#7240FF` → indigo `#5B5CFB` → blue `#3B82F6` on Dark Navy `#0B1020`;
 Plus Jakarta Sans; Lucide icons; Framer Motion; 20–24px radii; premium, modern,
 elegant, minimal, AI-first.
 
-The mark is a flat violet "B" with a four-point sparkle cut out of it and three
-motion lines entering from the left. It supersedes the gradient monogram with
-two sparkles that was pinned before, and the ramp is anchored to its violet
-rather than the other way round — the mark and the interface are the same colour
-by construction. Supplied as a neon PNG render; the app draws it as SVG traced
-from that artwork with the product's own vectoriser, and a vector source would
-still be better than a trace.
+The mark is a four-point star with a smaller four-point star cut out of its
+centre, hard-edged, sweeping blue to violet. It supersedes the traced "B" that
+was pinned before, which itself superseded a gradient monogram, and the ramp is
+anchored to its violet rather than the other way round — the mark and the
+interface are the same colour by construction.
+
+Supplied as `logo.png`, with transparency, and the product uses **that file**.
+`scripts/derive-mark.mjs` trims it to the artwork and converts it to WebP;
+nothing else is done to it. Rerun that whenever `logo.png` changes.
+
+A vector source would still be better than a 1024px raster for print and for
+very large use, but nothing in the product needs it today.
 
 The reference for the visual world is the RedSun template the client supplied
 (`Design-reference.mov`): near-black ground, a light source rising behind the

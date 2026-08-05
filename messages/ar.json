@@ -149,7 +149,8 @@
     "assuranceCancel": "ألغِ في أي وقت — يستمر وصولك حتى نهاية الفترة",
     "closeTitle": "أحضر موجزاً.",
     "closeTitleAccent": "واخرج بعلامة.",
-    "planOneBrand": "علامة واحدة"
+    "planOneBrand": "علامة واحدة",
+    "howShot": "أول سؤال من ثمانية. كل ما تنتجه الجولة يُبنى على هذه الإجابات."
   },
   "Auth": {
     "signIn": "تسجيل الدخول",
@@ -184,7 +185,8 @@
     "setNewPassword": "حفظ كلمة المرور",
     "resetLinkInvalid": "انتهت صلاحية هذا الرابط أو تم استخدامه من قبل.",
     "requestNewLink": "طلب رابط جديد",
-    "passwordHint": "8 أحرف على الأقل."
+    "passwordHint": "8 أحرف على الأقل.",
+    "backHome": "العودة إلى الصفحة الرئيسية"
   },
   "Nav": {
     "overview": "نظرة عامة",
@@ -194,9 +196,9 @@
     "admin": "الإدارة",
     "newProject": "مشروع جديد",
     "signIn": "تسجيل الدخول",
-    "collapseSidebar": "طي القائمة",
-    "expandSidebar": "توسيع القائمة",
-    "sections": "الأقسام"
+    "sections": "الأقسام",
+    "credits": "رصيد",
+    "account": "الحساب"
   },
   "Dashboard": {
     "welcome": "أهلاً بعودتك، {name}",
