@@ -13,7 +13,8 @@ import { Label } from '@/components/ui/label'
 import { Link, useRouter } from '@/i18n/navigation'
 import { authClient } from '@/lib/auth-client'
 
-export function LoginForm() {
+/** `google` is false wherever the provider has no credentials behind it. */
+export function LoginForm({ google }: { google: boolean }) {
   const t = useTranslations('Auth')
   const tc = useTranslations('Common')
   const router = useRouter()
@@ -56,13 +57,30 @@ export function LoginForm() {
 
   return (
     <div className="space-y-5">
-      <GoogleButton label={t('continueWithGoogle')} />
+      {/*
+        Offered only where it can work.
 
-      <div className="flex items-center gap-3">
-        <div className="h-px flex-1 bg-line" />
-        <span className="text-xs text-fg-muted">{t('orContinueWith')}</span>
-        <div className="h-px flex-1 bg-line" />
-      </div>
+        The provider is configured server-side and `socialProviders` is empty
+        without its keys, but this button was rendered either way — so on a
+        deployment with no Google credentials it was a control that took a press
+        and failed. The rest of the product already follows this rule: the
+        builder hides the custom-domain section rather than offering a control
+        that cannot work.
+
+        The divider goes with it. A rule captioned "or continue with email"
+        above the only way to continue is a caption for a choice nobody has.
+      */}
+      {google && (
+        <>
+          <GoogleButton label={t('continueWithGoogle')} />
+
+          <div className="flex items-center gap-3">
+            <div className="h-px flex-1 bg-line" />
+            <span className="text-xs text-fg-muted">{t('orContinueWith')}</span>
+            <div className="h-px flex-1 bg-line" />
+          </div>
+        </>
+      )}
 
       {/*
         method="post" is defensive. If hydration fails, the browser falls back to
