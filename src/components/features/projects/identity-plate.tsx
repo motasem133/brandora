@@ -54,7 +54,7 @@ export async function IdentityPlate({
   return (
     <header
       style={theme.vars}
-      className="overflow-hidden rounded-panel bg-[var(--brand-paper)] shadow-[var(--shadow-soft)] ring-1 ring-[var(--brand-line)]"
+      className="overflow-hidden rounded-panel bg-[var(--guest-paper)] shadow-[var(--shadow-soft)] ring-1 ring-[var(--guest-line)]"
     >
       <div className="flex flex-wrap items-center gap-x-10 gap-y-7 p-8 sm:p-12">
         <div className="grid size-28 shrink-0 place-items-center sm:size-44">
@@ -66,7 +66,7 @@ export async function IdentityPlate({
               className="size-full object-contain"
             />
           ) : (
-            <Sparkles className="size-8" style={{ color: 'var(--brand-ink-faint)' }} />
+            <Sparkles className="size-8" style={{ color: 'var(--guest-ink-faint)' }} />
           )}
         </div>
 
@@ -80,7 +80,7 @@ export async function IdentityPlate({
           <h1
             lang={project.language}
             dir="auto"
-            style={{ fontFamily: fontStack(fonts?.heading), color: 'var(--brand-ink)' }}
+            style={{ fontFamily: fontStack(fonts?.heading), color: 'var(--guest-ink)' }}
             className="text-balance text-3xl font-semibold leading-[1.05] tracking-[-0.035em] sm:text-5xl"
           >
             {name}
@@ -98,14 +98,14 @@ export async function IdentityPlate({
                * where it matters most.
                */
               dir="auto"
-              style={{ fontFamily: fontStack(fonts?.body), color: 'var(--brand-accent)' }}
+              style={{ fontFamily: fontStack(fonts?.body), color: 'var(--guest-accent)' }}
               className="mt-3 text-lg sm:text-xl"
             >
               {slogan}
             </p>
           )}
 
-          <p dir="auto" style={{ color: 'var(--brand-ink-faint)' }} className="mt-5 text-sm">
+          <p dir="auto" style={{ color: 'var(--guest-ink-faint)' }} className="mt-5 text-sm">
             {project.industry} · {project.country} ·{' '}
             {t('createdOn', { date: formatDate(project.createdAt, locale) })}
           </p>

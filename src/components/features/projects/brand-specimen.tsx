@@ -63,7 +63,7 @@ export async function BrandSpecimen({
       <article
         style={theme.vars}
         className={cn(
-          'flex h-full flex-col overflow-hidden rounded-panel bg-[var(--brand-paper)]',
+          'flex h-full flex-col overflow-hidden rounded-panel bg-[var(--guest-paper)]',
           'shadow-[var(--shadow-soft)] transition-shadow duration-200',
           'group-hover:shadow-[var(--shadow-lifted)]',
           /*
@@ -71,7 +71,7 @@ export async function BrandSpecimen({
            * fixed app-coloured border around a brand's ground is the exact
            * thing that made every project look like the same template.
            */
-          'ring-1 ring-[var(--brand-line)] group-focus-visible:ring-2 group-focus-visible:ring-brand',
+          'ring-1 ring-[var(--guest-line)] group-focus-visible:ring-2 group-focus-visible:ring-brand',
         )}
       >
         <div
@@ -98,7 +98,7 @@ export async function BrandSpecimen({
              * drawn one exists, which is both honest and the right shape.
              */
             <p
-              style={{ fontFamily: fontStack(fonts?.heading), color: 'var(--brand-ink)' }}
+              style={{ fontFamily: fontStack(fonts?.heading), color: 'var(--guest-ink)' }}
               className={cn(
                 'text-balance text-center font-semibold tracking-[-0.03em]',
                 feature ? 'text-4xl sm:text-5xl' : 'text-2xl',
@@ -112,7 +112,7 @@ export async function BrandSpecimen({
         <div className="px-6 pb-5">
           {unfinished && (
             <p
-              style={{ color: 'var(--brand-ink-soft)' }}
+              style={{ color: 'var(--guest-ink-soft)' }}
               className="mb-2 flex items-center gap-1.5 text-xs font-medium"
             >
               <span className={cn('size-1.5 rounded-full', STATE_DOT[project.status])} />
@@ -121,7 +121,7 @@ export async function BrandSpecimen({
           )}
 
           <h3
-            style={{ fontFamily: fontStack(fonts?.heading), color: 'var(--brand-ink)' }}
+            style={{ fontFamily: fontStack(fonts?.heading), color: 'var(--guest-ink)' }}
             className={cn(
               'truncate font-semibold tracking-[-0.02em]',
               feature ? 'text-2xl' : 'text-lg',
@@ -132,7 +132,7 @@ export async function BrandSpecimen({
 
           {slogan && (
             <p
-              style={{ color: 'var(--brand-ink-soft)' }}
+              style={{ color: 'var(--guest-ink-soft)' }}
               className="mt-1 truncate text-sm"
               /* The brand's own body face, so the specimen shows the pairing
                  and not just the display cut. */
@@ -143,7 +143,7 @@ export async function BrandSpecimen({
             </p>
           )}
 
-          <p style={{ color: 'var(--brand-ink-faint)' }} className="mt-2.5 text-xs">
+          <p style={{ color: 'var(--guest-ink-faint)' }} className="mt-2.5 text-xs">
             {project.industry} · {project.country} ·{' '}
             {t('createdOn', { date: formatDate(project.createdAt, locale) })}
           </p>

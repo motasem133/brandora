@@ -2,8 +2,9 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { UserRow } from '@/components/features/admin/user-row'
 import { Card, CardDescription } from '@/components/ui/card'
-import { Link } from '@/i18n/navigation'
-import { cn } from '@/lib/utils'
+import { Input } from '@/components/ui/input'
+import { SegmentedControl, SegmentedLink } from '@/components/ui/segmented-control'
+import { Table, TBody, TH, THead } from '@/components/ui/table'
 import { listUsers } from '@/server/db/queries/admin'
 import { requireAdmin } from '@/server/session'
 
@@ -33,54 +34,54 @@ export default async function AdminUsersPage({
 
       <div className="flex flex-wrap items-center gap-3">
         {/* A GET form keeps search in the URL and needs no client JavaScript. */}
-        <form className="flex gap-2">
-          <input
+        <form className="flex gap-2" role="search">
+          {/* The placeholder was the only label this field had. */}
+          <label htmlFor="user-search" className="sr-only">
+            {t('users.search')}
+          </label>
+          <Input
+            id="user-search"
             name="q"
+            type="search"
             defaultValue={q ?? ''}
             placeholder={t('users.search')}
-            className="h-10 w-64 rounded-lg border border-line bg-surface px-3.5 text-sm focus:border-brand focus:outline-none"
+            className="w-64"
           />
           {status && <input type="hidden" name="status" value={status} />}
         </form>
 
-        <div className="inline-flex rounded-lg border border-line p-0.5">
+        <SegmentedControl label={t('users.status')}>
           {FILTERS.map((filter) => (
-            <Link
+            <SegmentedLink
               key={filter}
               href={`/admin/users?status=${filter}${q ? `&q=${encodeURIComponent(q)}` : ''}`}
-              className={cn(
-                'rounded-md px-3 py-1.5 text-xs font-medium capitalize transition-colors',
-                (status ?? 'all') === filter ? 'bg-elevated text-fg' : 'text-fg-secondary hover:text-fg',
-              )}
+              active={(status ?? 'all') === filter}
+              className="capitalize"
             >
               {t(`users.filters.${filter}`)}
-            </Link>
+            </SegmentedLink>
           ))}
-        </div>
+        </SegmentedControl>
       </div>
 
       <Card className="space-y-2 p-0">
         {users.length === 0 ? (
           <CardDescription className="p-6">{t('users.none')}</CardDescription>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-line text-xs uppercase tracking-wide text-fg-muted">
-                  <th className="p-4 text-start font-medium">{t('users.user')}</th>
-                  <th className="p-4 text-start font-medium">{t('users.organization')}</th>
-                  <th className="p-4 text-end font-medium">{t('users.projects')}</th>
-                  <th className="p-4 text-start font-medium">{t('users.status')}</th>
-                  <th className="p-4 text-end font-medium">{t('users.actions')}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-line">
-                {users.map((user) => (
-                  <UserRow key={user.id} user={user} isSelf={user.id === session.user.id} />
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table caption={t('users.title')}>
+            <THead>
+              <TH>{t('users.user')}</TH>
+              <TH>{t('users.organization')}</TH>
+              <TH align="end">{t('users.projects')}</TH>
+              <TH>{t('users.status')}</TH>
+              <TH align="end">{t('users.actions')}</TH>
+            </THead>
+            <TBody>
+              {users.map((user) => (
+                <UserRow key={user.id} user={user} isSelf={user.id === session.user.id} />
+              ))}
+            </TBody>
+          </Table>
         )}
       </Card>
     </div>

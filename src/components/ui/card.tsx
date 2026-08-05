@@ -17,8 +17,24 @@ export function Card({ className, children, ...props }: React.ComponentProps<'di
   )
 }
 
-export function CardTitle({ className, ...props }: React.ComponentProps<'h3'>) {
-  return <h3 className={cn('font-display text-lg font-semibold text-fg', className)} {...props} />
+/**
+ * A card's heading.
+ *
+ * It was an `h3` under a page's `h1`, with no `h2` in between — a skipped level
+ * on eight routes, which is what a screen reader's "list the headings" turns
+ * into a hole. A card is nearly always a section of its page, so `h2` is the
+ * honest default; `level={3}` is there for the cards that genuinely sit inside
+ * a section that already has one.
+ */
+export function CardTitle({
+  className,
+  level = 2,
+  ...props
+}: React.ComponentProps<'h2'> & { level?: 2 | 3 }) {
+  const Heading = level === 3 ? 'h3' : 'h2'
+  return (
+    <Heading className={cn('font-display text-lg font-semibold text-fg', className)} {...props} />
+  )
 }
 
 export function CardDescription({ className, ...props }: React.ComponentProps<'p'>) {

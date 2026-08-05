@@ -1,3 +1,4 @@
+import { useId } from 'react'
 import { cn } from '@/lib/utils'
 
 /**
@@ -13,7 +14,7 @@ import { cn } from '@/lib/utils'
  */
 export function LogoMark({
   className,
-  id = 'brandora',
+  id,
   animated = false,
 }: {
   className?: string
@@ -21,7 +22,15 @@ export function LogoMark({
   /** Sparkles drift and shimmer. For hero use, not for a 24px header icon. */
   animated?: boolean
 }) {
-  const gradientId = `${id}-mark-gradient`
+  /*
+   * The default was the string 'brandora', which is not per-instance at all —
+   * the sidebar mark and the topbar mark both emitted
+   * `id="brandora-mark-gradient"`, so the document carried a duplicate id and
+   * both marks resolved to whichever defs block rendered first. `useId` makes
+   * the namespacing the comment above claims.
+   */
+  const reactId = useId()
+  const gradientId = `${id ?? reactId}-mark-gradient`
 
   return (
     <svg

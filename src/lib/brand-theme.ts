@@ -11,6 +11,14 @@ import type { CSSProperties } from 'react'
  * nobody can read a label on. Every colour that ends up under text here is
  * checked against it and replaced when it fails, so a bad generation degrades
  * to something plain rather than to something unreadable.
+ *
+ * Every variable this emits is namespaced `--guest-*`. It used to re-bind
+ * `--brand-primary` and `--brand-secondary` — the names the app's own chrome is
+ * built from — so inside a brand scope the customer's palette silently repainted
+ * things it was never checked for: `:focus-visible` draws its outline from
+ * `--brand-primary`, which meant a brand whose primary was pale cream on cream
+ * paper rendered an invisible keyboard focus ring on its own dashboard card.
+ * Chrome tokens are not shadowable by untrusted input.
  */
 
 export type BrandPalette = {
@@ -27,9 +35,15 @@ export type BrandFonts = {
   accent?: string
 } | null
 
-/** WCAG's contrast floors, named so the call sites read as intent. */
+/**
+ * WCAG's body-text floor, named so the call sites read as intent.
+ *
+ * The large-text floor of 3:1 used to live here too, applied to the accent —
+ * which is worn by an 18–20px regular slogan, where that allowance does not
+ * apply. It starts at 24px, or 18.66px bold. Nothing in this file is large
+ * enough to earn it, so the constant is gone rather than left as a temptation.
+ */
 const BODY_MIN = 4.5
-const LARGE_MIN = 3
 
 function parseHex(value: string | undefined | null): [number, number, number] | null {
   if (!value) return null
@@ -120,6 +134,40 @@ function softened(ink: string, paper: string, min: number) {
   return ink
 }
 
+/**
+ * The colour itself when it can be read on the paper, otherwise the same hue
+ * deepened until it can.
+ *
+ * The alternative — falling back to the ink — throws the brand's colour away at
+ * exactly the moment it is meant to speak, and it was being applied on the wrong
+ * floor anyway: the accent was gated at 3:1 and then used for the slogan at
+ * 18–20px regular, where WCAG's large-text allowance does not apply (it starts
+ * at 24px, or 18.66px bold). Deepening toward whichever of black or white the
+ * paper is not keeps the hue and earns the ratio.
+ */
+function deepened(color: string, paper: string, min: number) {
+  if (contrast(color, paper) >= min) return color
+
+  const rgb = parseHex(color)
+  const paperRgb = parseHex(paper)
+  if (!rgb || !paperRgb) return readableOn(paper, [color], min)
+
+  const toward: [number, number, number] =
+    luminance(paperRgb) > 0.5 ? [0, 0, 0] : [255, 255, 255]
+
+  for (let strength = 0.9; strength >= 0; strength -= 0.1) {
+    const mixed = toHex([
+      rgb[0] * strength + toward[0] * (1 - strength),
+      rgb[1] * strength + toward[1] * (1 - strength),
+      rgb[2] * strength + toward[2] * (1 - strength),
+    ] as [number, number, number])
+
+    if (contrast(mixed, paper) >= min) return mixed
+  }
+
+  return readableOn(paper, [color], min)
+}
+
 export type BrandTheme = {
   /** The brand's own ground — what its mark is drawn to sit on. */
   paper: string
@@ -160,12 +208,11 @@ export function brandTheme(palette: BrandPalette): BrandTheme {
   const secondary = parseHex(source.secondary) ? source.secondary : FALLBACK.secondary
 
   /*
-   * The brand's primary is only allowed to carry text on the brand's own ground
-   * when it can be read there; otherwise headings fall back to the ink. This is
-   * the check that stops a pale-yellow primary from rendering a heading
-   * invisible on white.
+   * Body-size text carries this, so it is held to the body floor rather than the
+   * large-text one. A pale-yellow primary on white does not render a heading
+   * invisible; it renders a deeper yellow that is still recognisably the brand.
    */
-  const accentOnPaper = contrast(primary, paper) >= LARGE_MIN ? primary : ink
+  const accentOnPaper = deepened(primary, paper, BODY_MIN)
 
   const isDark = contrast('#ffffff', paper) > contrast('#000000', paper)
 
@@ -177,13 +224,16 @@ export function brandTheme(palette: BrandPalette): BrandTheme {
     secondary,
     isDark,
     vars: {
-      '--brand-paper': paper,
-      '--brand-ink': ink,
-      '--brand-accent': accentOnPaper,
-      '--brand-primary': primary,
-      '--brand-on-primary': readableOn(primary, []),
-      '--brand-secondary': secondary,
+      '--guest-paper': paper,
+      '--guest-ink': ink,
+      '--guest-accent': accentOnPaper,
       /*
+       * The raw palette is deliberately not published as a variable. Nothing
+       * reads it, and an unchecked colour sitting in scope next to checked ones
+       * is an invitation to put text on it later. It stays on the returned
+       * object, in TypeScript, where a caller has to ask for it by name —
+       * `theme.primary` for a swatch, `theme.isDark` for choosing an asset.
+       *
        * Secondary text and hairlines are mixed from the ink rather than set to
        * a grey. Grey on a coloured ground reads as dirt; the same hue at lower
        * strength reads as quiet.
@@ -193,10 +243,10 @@ export function brandTheme(palette: BrandPalette): BrandTheme {
        * `faint` differ in intent, not in legibility: one is quieter, neither is
        * allowed to be unreadable, so both clear 4.5:1 against this paper.
        */
-      '--brand-ink-soft': softened(ink, paper, BODY_MIN),
-      '--brand-ink-faint': softened(ink, paper, BODY_MIN),
+      '--guest-ink-soft': softened(ink, paper, BODY_MIN),
+      '--guest-ink-faint': softened(ink, paper, BODY_MIN),
       /* Not text — a hairline — so this one stays a mix and stays faint. */
-      '--brand-line': `color-mix(in srgb, ${ink} 14%, transparent)`,
+      '--guest-line': `color-mix(in srgb, ${ink} 14%, transparent)`,
     } as CSSProperties,
   }
 }

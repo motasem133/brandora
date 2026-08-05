@@ -7,8 +7,8 @@ import { useState } from 'react'
 import { GoogleButton } from '@/components/features/auth/google-button'
 import { Button } from '@/components/ui/button'
 import { FieldError } from '@/components/ui/field-error'
+import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Link, useRouter } from '@/i18n/navigation'
 import { authClient } from '@/lib/auth-client'
 
@@ -80,58 +80,31 @@ export function RegisterForm() {
         in the URL and the browser history.
       */}
       <form method="post" onSubmit={onSubmit} className="space-y-4" noValidate>
-        <div>
-          <Label htmlFor="name">{t('name')}</Label>
-          <Input
-            id="name"
-            name="name"
-            autoComplete="name"
-            aria-invalid={Boolean(errors.name)}
-            className="mt-1.5"
-          />
-          <FieldError message={errors.name} />
-        </div>
+        <Field label={t('name')} error={errors.name}>
+          <Input name="name" autoComplete="name" className="mt-1.5" />
+        </Field>
 
-        <div>
-          <Label htmlFor="email">{t('email')}</Label>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            required
-            aria-invalid={Boolean(errors.email)}
-            className="mt-1.5"
-          />
-          <FieldError message={errors.email} />
-        </div>
+        <Field label={t('email')} error={errors.email} required>
+          <Input name="email" type="email" autoComplete="email" required className="mt-1.5" />
+        </Field>
 
-        <div>
-          <Label htmlFor="password">{t('password')}</Label>
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            autoComplete="new-password"
-            aria-invalid={Boolean(errors.password)}
-            className="mt-1.5"
-          />
-          <FieldError message={errors.password} />
-        </div>
+        {/* The rule is stated before the field is used, not after it is
+            refused — it was only discoverable by submitting and failing. */}
+        <Field label={t('password')} error={errors.password} hint={t('passwordHint')} required>
+          <Input name="password" type="password" autoComplete="new-password" className="mt-1.5" />
+        </Field>
 
-        <div>
-          <Label htmlFor="confirmPassword">{t('confirmPassword')}</Label>
+        <Field label={t('confirmPassword')} error={errors.confirmPassword} required>
           <Input
-            id="confirmPassword"
             name="confirmPassword"
             type="password"
             autoComplete="new-password"
-            aria-invalid={Boolean(errors.confirmPassword)}
             className="mt-1.5"
           />
-          <FieldError message={errors.confirmPassword} />
-        </div>
+        </Field>
 
+        {/* The form-level failure — a rejected sign-up, a taken email —
+            announces itself through FieldError's alert role. */}
         <FieldError message={errors.form} />
 
         <Button type="submit" className="w-full" disabled={pending}>

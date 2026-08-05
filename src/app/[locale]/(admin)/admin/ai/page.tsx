@@ -1,9 +1,9 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { RangePicker } from '@/components/features/admin/range-picker'
-import { Stat } from '@/components/features/admin/stat'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardDescription, CardTitle } from '@/components/ui/card'
+import { Table, TBody, TD, TH, THead, TRowHeader } from '@/components/ui/table'
 import { formatPrice } from '@/lib/utils'
 import {
   getCostPerGeneration,
@@ -57,22 +57,46 @@ export default async function AdminAiPage({
         <RangePicker active={range} />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label={t('ai.totalSpend')} value={usd(totalSpend)} hint={t('ai.inRange', { days: range })} />
-        <Stat
-          label={t('ai.perGeneration')}
-          value={latest ? usd(latest.per_generation) : '—'}
-          hint={t('ai.perGenerationHint')}
-          tone={latest && latest.per_generation > 0.45 ? 'danger' : undefined}
-        />
-        <Stat label={t('ai.imageShare')} value={`${imageShare.toFixed(0)}%`} hint={t('ai.imageShareHint')} />
-        <Stat
-          label={t('ai.unprofitable')}
-          value={unprofitable.length}
-          tone={unprofitable.length > 0 ? 'danger' : 'success'}
-          hint={t('ai.unprofitableHint')}
-        />
-      </div>
+      {/*
+        The four figures as a line, not as four cards — same decision as the
+        overview, and for the same reason. Two of them can be alarming, so the
+        alarm is a word beside the number rather than a colour on it: a red
+        digit says nothing to anyone who cannot see red.
+      */}
+      <dl className="flex flex-wrap items-center gap-x-7 gap-y-2 border-y border-line py-3.5 text-sm">
+        <div className="flex items-baseline gap-2">
+          <dt className="text-fg-muted">{t('ai.totalSpend')}</dt>
+          <dd className="font-semibold tabular-nums text-fg">{usd(totalSpend)}</dd>
+          <dd className="text-fg-muted">{t('ai.inRange', { days: range })}</dd>
+        </div>
+
+        <div className="flex items-baseline gap-2">
+          <dt className="text-fg-muted">{t('ai.perGeneration')}</dt>
+          <dd className="font-semibold tabular-nums text-fg">
+            {latest ? usd(latest.per_generation) : '—'}
+          </dd>
+          {latest && latest.per_generation > 0.45 && (
+            <dd>
+              <Badge tone="danger">{t('ai.overBudget')}</Badge>
+            </dd>
+          )}
+        </div>
+
+        <div className="flex items-baseline gap-2">
+          <dt className="text-fg-muted">{t('ai.imageShare')}</dt>
+          <dd className="font-semibold tabular-nums text-fg">{imageShare.toFixed(0)}%</dd>
+        </div>
+
+        <div className="flex items-baseline gap-2">
+          <dt className="text-fg-muted">{t('ai.unprofitable')}</dt>
+          <dd className="font-semibold tabular-nums text-fg">{unprofitable.length}</dd>
+          <dd>
+            <Badge tone={unprofitable.length > 0 ? 'danger' : 'success'}>
+              {unprofitable.length > 0 ? t('ai.losingMoney') : t('ai.allProfitable')}
+            </Badge>
+          </dd>
+        </div>
+      </dl>
 
       <Card className="space-y-4">
         <div>
@@ -105,42 +129,44 @@ export default async function AdminAiPage({
           <CardTitle>{t('ai.models')}</CardTitle>
           <CardDescription className="mt-1">{t('ai.modelsHint')}</CardDescription>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-line text-xs uppercase tracking-wide text-fg-muted">
-                <th className="pb-2 text-start font-medium">{t('ai.model')}</th>
-                <th className="pb-2 text-end font-medium">{t('ai.calls')}</th>
-                <th className="pb-2 text-end font-medium">{t('ai.errorRate')}</th>
-                <th className="pb-2 text-end font-medium">{t('ai.latency')}</th>
-                <th className="pb-2 text-end font-medium">{t('ai.avgCost')}</th>
-                <th className="pb-2 text-end font-medium">{t('ai.spend')}</th>
+        <Table caption={t('ai.models')} className="[&_td]:py-2.5 [&_th]:px-0 [&_td]:px-0">
+          <THead>
+            <TH>{t('ai.model')}</TH>
+            <TH align="end">{t('ai.calls')}</TH>
+            <TH align="end">{t('ai.errorRate')}</TH>
+            <TH align="end">{t('ai.latency')}</TH>
+            <TH align="end">{t('ai.avgCost')}</TH>
+            <TH align="end">{t('ai.spend')}</TH>
+          </THead>
+          <TBody>
+            {models.map((model) => (
+              <tr key={model.model}>
+                <TRowHeader className="font-mono text-xs">{model.model}</TRowHeader>
+                <TD align="end" className="tabular-nums">
+                  {model.calls}
+                </TD>
+                <TD align="end">
+                  {model.error_rate > 0 ? (
+                    <Badge tone={model.error_rate > 20 ? 'danger' : 'warning'}>
+                      {model.error_rate.toFixed(0)}%
+                    </Badge>
+                  ) : (
+                    <span className="text-fg-muted">0%</span>
+                  )}
+                </TD>
+                <TD align="end" className="tabular-nums">
+                  {model.avg_latency_ms ? `${(model.avg_latency_ms / 1000).toFixed(1)}s` : '—'}
+                </TD>
+                <TD align="end" className="tabular-nums">
+                  {usd(model.avg_cost ?? 0)}
+                </TD>
+                <TD align="end" className="tabular-nums">
+                  {usd(model.spend)}
+                </TD>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-line">
-              {models.map((model) => (
-                <tr key={model.model}>
-                  <td className="py-2.5 font-mono text-xs">{model.model}</td>
-                  <td className="py-2.5 text-end">{model.calls}</td>
-                  <td className="py-2.5 text-end">
-                    {model.error_rate > 0 ? (
-                      <Badge tone={model.error_rate > 20 ? 'danger' : 'warning'}>
-                        {model.error_rate.toFixed(0)}%
-                      </Badge>
-                    ) : (
-                      <span className="text-fg-muted">0%</span>
-                    )}
-                  </td>
-                  <td className="py-2.5 text-end">
-                    {model.avg_latency_ms ? `${(model.avg_latency_ms / 1000).toFixed(1)}s` : '—'}
-                  </td>
-                  <td className="py-2.5 text-end">{usd(model.avg_cost ?? 0)}</td>
-                  <td className="py-2.5 text-end">{usd(model.spend)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </TBody>
+        </Table>
       </Card>
 
       <Card className="space-y-4">
@@ -148,32 +174,41 @@ export default async function AdminAiPage({
           <CardTitle>{t('ai.margin')}</CardTitle>
           <CardDescription className="mt-1">{t('ai.marginHint')}</CardDescription>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-line text-xs uppercase tracking-wide text-fg-muted">
-                <th className="pb-2 text-start font-medium">{t('ai.organization')}</th>
-                <th className="pb-2 text-start font-medium">{t('ai.plan')}</th>
-                <th className="pb-2 text-end font-medium">{t('ai.revenue')}</th>
-                <th className="pb-2 text-end font-medium">{t('ai.cost')}</th>
-                <th className="pb-2 text-end font-medium">{t('ai.marginColumn')}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line">
-              {margins.map((org) => (
-                <tr key={org.id}>
-                  <td className="py-2.5">{org.name}</td>
-                  <td className="py-2.5 text-fg-secondary">{org.plan ?? t('ai.free')}</td>
-                  <td className="py-2.5 text-end">{formatPrice(org.revenue_cents, 'usd', locale)}</td>
-                  <td className="py-2.5 text-end">{usd(org.cost)}</td>
-                  <td className={`py-2.5 text-end ${org.margin < 0 ? 'text-danger' : 'text-success'}`}>
+        <Table caption={t('ai.margin')} className="[&_td]:py-2.5 [&_th]:px-0 [&_td]:px-0">
+          <THead>
+            <TH>{t('ai.organization')}</TH>
+            <TH>{t('ai.plan')}</TH>
+            <TH align="end">{t('ai.revenue')}</TH>
+            <TH align="end">{t('ai.cost')}</TH>
+            <TH align="end">{t('ai.marginColumn')}</TH>
+          </THead>
+          <TBody>
+            {margins.map((org) => (
+              <tr key={org.id}>
+                <TRowHeader>{org.name}</TRowHeader>
+                <TD className="text-fg-secondary">{org.plan ?? t('ai.free')}</TD>
+                <TD align="end" className="tabular-nums">
+                  {formatPrice(org.revenue_cents, 'usd', locale)}
+                </TD>
+                <TD align="end" className="tabular-nums">
+                  {usd(org.cost)}
+                </TD>
+                {/*
+                  A negative margin is the one number on this page somebody acts
+                  on, so it carries a word as well as a colour.
+                */}
+                <TD align="end" className="tabular-nums">
+                  <span className={org.margin < 0 ? 'text-danger' : 'text-success'}>
                     ${org.margin.toFixed(2)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  </span>
+                  {org.margin < 0 && (
+                    <span className="ms-2 text-xs text-danger">{t('ai.losingMoney')}</span>
+                  )}
+                </TD>
+              </tr>
+            ))}
+          </TBody>
+        </Table>
       </Card>
     </div>
   )

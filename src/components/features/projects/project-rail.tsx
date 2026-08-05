@@ -120,7 +120,7 @@ export async function ProjectRail({
                       src={publicUrl(cover.r2Key) ?? `/api/files/${cover.id}`}
                       alt=""
                       loading="lazy"
-                      className="size-10 shrink-0 rounded-lg bg-white object-contain p-1"
+                      className="size-10 shrink-0 rounded-control bg-white object-contain p-1"
                     />
                     <div className="min-w-0">
                       <p

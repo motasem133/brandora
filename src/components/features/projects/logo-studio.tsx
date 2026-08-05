@@ -98,9 +98,14 @@ export async function LogoStudio({
           */}
           <div
             style={theme.vars}
+            /* The shimmer is the only sign a round is running, and it is the
+               first thing `prefers-reduced-motion` removes — so the state is
+               announced rather than merely animated. */
+            role={isGenerating ? 'status' : undefined}
+            aria-label={isGenerating ? t('generating') : undefined}
             className={cn(
               'grid min-h-72 place-items-center rounded-card p-8 sm:min-h-96',
-              'bg-[var(--brand-paper)] ring-1 ring-[var(--brand-line)]',
+              'bg-[var(--guest-paper)] ring-1 ring-[var(--guest-line)]',
               isGenerating && 'shimmer-surface',
             )}
           >
@@ -112,7 +117,7 @@ export async function LogoStudio({
                 className="max-h-56 w-auto max-w-full object-contain sm:max-h-80"
               />
             ) : (
-              <div className="text-center text-sm" style={{ color: 'var(--brand-ink-faint)' }}>
+              <div className="text-center text-sm" style={{ color: 'var(--guest-ink-faint)' }}>
                 <Sparkles className="mx-auto mb-2 size-6" />
                 {t('noLogos')}
               </div>
@@ -135,7 +140,7 @@ export async function LogoStudio({
                       title={String(option.metadata?.style ?? '')}
                       style={theme.vars}
                       className={cn(
-                        'relative block shrink-0 rounded-control border-2 bg-[var(--brand-paper)] p-1 transition-colors',
+                        'relative block shrink-0 rounded-control border-2 bg-[var(--guest-paper)] p-1 transition-colors',
                         current ? 'border-brand' : 'border-line hover:border-line-strong',
                       )}
                     >

@@ -29,6 +29,37 @@ test.describe('website builder', () => {
     await expect(page.getByRole('button', { name: /Publish|Published/ })).toBeVisible()
   })
 
+  test('says whose site it is, and offers the way back', async ({ page }) => {
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+    await expect(page.getByRole('link', { name: /Back to brand/ })).toHaveAttribute(
+      'href',
+      new RegExp(`/dashboard/projects/${projectId}$`),
+    )
+  })
+
+  test('a section can be selected and edited with the keyboard alone', async ({ page }) => {
+    const select = page.getByTestId('canvas-block').first().getByRole('button', { name: /^Select / })
+    await select.focus()
+    await expect(select).toBeFocused()
+    await page.keyboard.press('Enter')
+
+    await expect(select).toHaveAttribute('aria-pressed', 'true')
+    await expect(page.getByTestId('inspector').locator('input, textarea').first()).toBeVisible()
+  })
+
+  test('every editing control is reachable on a phone', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+
+    await page.getByTestId('add-section').click()
+    const library = page.getByRole('dialog')
+    await expect(library.getByRole('button', { name: 'Text section' })).toBeVisible()
+    await page.keyboard.press('Escape')
+
+    await page.getByTestId('canvas-block').first().getByRole('button', { name: /^Select / }).click()
+    await page.getByTestId('edit-section').click()
+    await expect(page.getByRole('dialog').locator('input, textarea').first()).toBeVisible()
+  })
+
   test('adding a section renders it and autosaves', async ({ page }) => {
     const sections = page.getByTestId('canvas').locator('section')
     const before = await sections.count()
@@ -42,7 +73,9 @@ test.describe('website builder', () => {
   })
 
   test('editing a field updates the canvas and persists', async ({ page }) => {
-    await page.getByTestId('canvas').locator('section').first().click()
+    // Selection is a control over the section, not the section itself — which
+    // is what makes it reachable without a pointer.
+    await page.getByTestId('canvas-block').first().getByRole('button', { name: /^Select / }).click()
 
     const inspector = page.getByTestId('inspector')
     const field = inspector.locator('input, textarea').first()
@@ -78,7 +111,7 @@ test.describe('website builder', () => {
 
     const first = blocks.first()
     await first.hover()
-    await first.getByRole('button', { name: 'Delete' }).click()
+    await first.getByRole('button', { name: /^Delete / }).click()
 
     await expect(blocks).toHaveCount(before - 1)
     await expect(page.getByTestId('save-status')).toHaveAttribute('data-state', 'saved', {

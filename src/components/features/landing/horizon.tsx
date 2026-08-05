@@ -64,13 +64,32 @@ export function Horizon() {
         turned down; widening the line makes it read as a light with something
         burning behind it.
       */}
-      <motion.path
+      {/*
+        Two arcs of fixed width, cross-fading — rather than one whose width
+        animates.
+
+        The intent above is unchanged: the line still swells, so it still reads
+        as a light with something burning behind it. But `strokeWidth` changes
+        the geometry the glow filter is computed from, which made the browser
+        re-run `feGaussianBlur` at stdDeviation 26 on every frame, forever. Two
+        static geometries let the filter result be cached and leave opacity —
+        which the compositor can do on its own — as the only thing moving.
+      */}
+      <path
         d="M -200 420 Q 800 -110 1800 420"
         fill="none"
         stroke="url(#horizon-line)"
         strokeWidth={2.5}
         filter="url(#horizon-glow)"
-        animate={reduced ? undefined : { strokeWidth: [2.5, 4.4, 2.5] }}
+      />
+      <motion.path
+        d="M -200 420 Q 800 -110 1800 420"
+        fill="none"
+        stroke="url(#horizon-line)"
+        strokeWidth={4.4}
+        filter="url(#horizon-glow)"
+        initial={{ opacity: 0 }}
+        animate={reduced ? undefined : { opacity: [0, 1, 0] }}
         transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
       />
     </svg>
@@ -86,28 +105,37 @@ export function Horizon() {
 
   return (
     <motion.div
+      data-reveal
       aria-hidden
       className="pointer-events-none absolute inset-x-0 top-[34%] z-0 flex justify-center overflow-hidden"
       style={{ y, opacity: fade }}
     >
       <motion.div
+        data-reveal
         className="relative flex justify-center"
         initial={{ y: 120, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 1.8, ease: EASE, delay: 0.15 }}
       >
         {/* The bloom the crest throws up into the copy. */}
+        {/*
+          Opacity only. Animating `scale` on a 120px blur over a 736px box makes
+          the browser re-rasterise the blur every frame; the breathing reads the
+          same from a fade, and costs one composited property instead.
+        */}
         <motion.div
+          data-reveal
           className="absolute -top-[15rem] left-1/2 size-[46rem] -translate-x-1/2 rounded-full blur-[120px]"
           style={{
             background:
               'radial-gradient(circle, rgba(139,92,246,0.42), rgba(79,70,229,0.18) 45%, transparent 70%)',
           }}
-          animate={{ opacity: [0.7, 1, 0.7], scale: [1, 1.07, 1] }}
+          animate={{ opacity: [0.7, 1, 0.7] }}
           transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
         />
 
         <motion.div
+          data-reveal
           animate={{ opacity: [0.85, 1, 0.85] }}
           transition={{ duration: 6.5, repeat: Infinity, ease: 'easeInOut' }}
         >
@@ -151,14 +179,21 @@ export function SectionArc({ className }: { className?: string }) {
         of these down the page, and an arc pulsing in a section nobody is
         looking at is a rAF loop that costs battery and shows nothing.
       */}
-      <motion.path
+      <path
         d="M -200 300 Q 800 -40 1800 300"
         fill="none"
         stroke="url(#section-line)"
         strokeWidth={1.5}
         filter="url(#section-glow)"
-        initial={false}
-        whileInView={reduced ? undefined : { strokeWidth: [1.5, 2.9, 1.5] }}
+      />
+      <motion.path
+        d="M -200 300 Q 800 -40 1800 300"
+        fill="none"
+        stroke="url(#section-line)"
+        strokeWidth={2.9}
+        filter="url(#section-glow)"
+        initial={{ opacity: 0 }}
+        whileInView={reduced ? undefined : { opacity: [0, 1, 0] }}
         viewport={{ once: false }}
         transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
       />
@@ -177,6 +212,7 @@ export function SectionArc({ className }: { className?: string }) {
 
   return (
     <motion.div
+      data-reveal
       aria-hidden
       className={wrapper}
       initial={{ opacity: 0, y: 40 }}
@@ -198,6 +234,7 @@ export function ProductFrame({ children }: { children: React.ReactNode }) {
 
   return (
     <motion.div
+      data-reveal
       ref={ref}
       style={reduced ? undefined : { y }}
       initial={reduced ? false : { opacity: 0, y: 90, rotateX: 9, filter: 'blur(12px)' }}
@@ -224,6 +261,7 @@ export function SectionReveal({
 
   return (
     <motion.div
+      data-reveal
       className={className}
       initial={reduced ? false : { opacity: 0, y: 26, filter: 'blur(8px)' }}
       whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
@@ -258,6 +296,7 @@ export function Cell({
 
   return (
     <motion.div
+      data-reveal
       initial={reduced ? false : { opacity: 0, y: 22, filter: 'blur(6px)' }}
       whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
       viewport={{ once: true, margin: '-10%' }}
@@ -282,6 +321,7 @@ export function LightSweep() {
 
   return (
     <motion.div
+      data-reveal
       aria-hidden
       className="pointer-events-none absolute inset-y-0 w-[42rem] skew-x-[-18deg]"
       style={{

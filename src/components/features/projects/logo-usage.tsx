@@ -60,6 +60,9 @@ export async function LogoUsage({
             {/* A browser window, cropped to the only part that shows a favicon. */}
             <div className="flex-1 overflow-hidden rounded-control border border-line bg-elevated/50">
               <div className="flex items-end gap-1 px-2 pt-2">
+                {/* eslint-disable-next-line no-restricted-syntax --
+                    A drawing of a browser tab, not a control in this product.
+                    Its corner is the browser's, and 8px is what a browser uses. */}
                 <div className="flex min-w-0 items-center gap-1.5 rounded-t-lg bg-surface px-2.5 py-1.5">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -70,6 +73,7 @@ export async function LogoUsage({
                   <span className="truncate text-xs text-fg-secondary">{name}</span>
                   <X className="size-2.5 shrink-0 text-fg-muted" />
                 </div>
+                {/* eslint-disable-next-line no-restricted-syntax -- as above */}
                 <div className="h-6 w-12 rounded-t-lg bg-surface/40" />
               </div>
 

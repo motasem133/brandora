@@ -49,6 +49,9 @@ export default async function BuilderPage({
   return (
     <Builder
       projectId={project.id}
+      /* The brand's chosen name if it has one, and the project title until
+         then — the same fallback the project page itself uses. */
+      projectName={project.businessName || project.title}
       initialPages={normalisePages(website.pages)}
       initialTheme={(website.customStyles ?? {}) as Theme}
       initialSubdomain={website.subdomain}

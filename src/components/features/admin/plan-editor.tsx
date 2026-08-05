@@ -24,7 +24,6 @@ type Plan = {
   brandAssistant: boolean
   customDomain: boolean
   polarProductIdMonthly: string | null
-  polarProductIdYearly: string | null
 }
 
 const FLAGS = [
@@ -69,7 +68,6 @@ export function PlanEditor({ plan }: { plan: Plan }) {
       brandAssistant: data.get('brandAssistant') === 'on',
       customDomain: data.get('customDomain') === 'on',
       polarProductIdMonthly: productId(data.get('polarProductIdMonthly')),
-      polarProductIdYearly: productId(data.get('polarProductIdYearly')),
     })
   }
 
@@ -81,17 +79,9 @@ export function PlanEditor({ plan }: { plan: Plan }) {
           <p className="mt-0.5 text-sm text-fg-secondary">{plan.price}</p>
         </div>
         {/* Without a Polar product, checkout cannot resolve anything to sell. */}
-        {/* Per interval: a plan with only a monthly product can be bought
-            monthly and not yearly, and reading one badge for both hid exactly
-            that. */}
-        <div className="flex flex-wrap justify-end gap-1.5">
-          <Badge tone={plan.polarProductIdMonthly ? 'success' : 'warning'}>
-            {t('plans.monthly')}
-          </Badge>
-          <Badge tone={plan.polarProductIdYearly ? 'success' : 'warning'}>
-            {t('plans.yearly')}
-          </Badge>
-        </div>
+        <Badge tone={plan.polarProductIdMonthly ? 'success' : 'warning'}>
+          {t('plans.sellable')}
+        </Badge>
       </div>
 
       <form ref={formRef} className="space-y-3" onChange={() => setSaved(false)}>
@@ -102,17 +92,12 @@ export function PlanEditor({ plan }: { plan: Plan }) {
             type="number"
             min={0}
             defaultValue={plan.monthlyCredits}
-            className="h-10 w-32 rounded-lg border border-line bg-surface px-3 text-sm focus:border-brand focus:outline-none"
+            className="h-10 w-32 rounded-control border border-line bg-surface px-3 text-sm focus:border-brand focus:outline-none"
           />
         </label>
 
         <div className="grid gap-3 sm:grid-cols-2">
-          {(
-            [
-              ['polarProductIdMonthly', plan.polarProductIdMonthly],
-              ['polarProductIdYearly', plan.polarProductIdYearly],
-            ] as const
-          ).map(([field, value]) => (
+          {([['polarProductIdMonthly', plan.polarProductIdMonthly]] as const).map(([field, value]) => (
             <label key={field} className="block">
               <span className="mb-1 block text-xs text-fg-secondary">
                 {t(`plans.${field}`)}
@@ -122,7 +107,7 @@ export function PlanEditor({ plan }: { plan: Plan }) {
                 defaultValue={value ?? ''}
                 placeholder={t('plans.productIdPlaceholder')}
                 spellCheck={false}
-                className="h-10 w-full rounded-lg border border-line bg-surface px-3 font-mono text-xs focus:border-brand focus:outline-none"
+                className="h-10 w-full rounded-control border border-line bg-surface px-3 font-mono text-xs focus:border-brand focus:outline-none"
               />
             </label>
           ))}

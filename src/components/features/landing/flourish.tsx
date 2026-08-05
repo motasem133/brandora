@@ -46,8 +46,9 @@ export function PaletteDeal({ colors, className }: { colors: string[]; className
     <div className={className}>
       {colors.map((hex, index) => (
         <motion.div
+          data-reveal
           key={hex}
-          className="flex-1 rounded-xl"
+          className="flex-1 rounded-card"
           style={{ backgroundColor: hex }}
           initial={reduced ? false : { opacity: 0, y: 30, rotate: jitter(index, 9) }}
           whileInView={{ opacity: 1, y: 0, rotate: 0 }}
@@ -93,6 +94,7 @@ export function PillFan({ items, className }: { items: string[]; className?: str
     <ul className={className} onMouseLeave={() => setActive(null)}>
       {items.map((item, index) => (
         <motion.li
+          data-reveal
           key={item}
           initial={reduced ? false : { opacity: 0, y: 14, rotate: jitter(index, 7) }}
           whileInView={{ opacity: 1, y: 0, rotate: 0 }}
@@ -101,6 +103,7 @@ export function PillFan({ items, className }: { items: string[]; className?: str
           onMouseEnter={reduced ? undefined : () => setActive(index)}
         >
           <motion.span
+            data-reveal
             className="block rounded-full border border-white/10 px-3 py-1.5 text-xs text-white/60 transition-colors"
             style={{ borderColor: active === index ? 'rgba(167,139,250,0.5)' : undefined }}
             animate={{
@@ -139,6 +142,7 @@ export function StepMark({
 
   return (
     <motion.span
+      data-reveal
       className={className}
       initial={reduced ? false : { scale: 0, rotate: -20, y: -16 }}
       whileInView={{ scale: 1, rotate: 0, y: 0 }}

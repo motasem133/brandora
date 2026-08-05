@@ -2,45 +2,36 @@ import { eq } from 'drizzle-orm'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { CurrencySwitch } from '@/components/features/billing/currency-switch'
-import { IntervalSwitch } from '@/components/features/billing/interval-switch'
+import { PricingPlans } from '@/components/features/landing/pricing-plans'
 import { buttonVariants } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardTitle } from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 import { Link } from '@/i18n/navigation'
-import {
-  formatPrice,
-  isCurrency,
-  isInterval,
-  pickPrice,
-  yearlySavingPercent,
-  type BillingInterval,
-  type Currency,
-} from '@/lib/utils'
+import { formatPrice, isCurrency, pickPrice, type Currency } from '@/lib/utils'
 import { db } from '@/server/db'
-import { creditPacks, plans } from '@/server/db/schema'
+import { creditPacks } from '@/server/db/schema'
 
 export default async function PricingPage({
   params,
   searchParams,
 }: {
   params: Promise<{ locale: string }>
-  searchParams: Promise<{ currency?: string; interval?: string }>
+  searchParams: Promise<{ currency?: string }>
 }) {
   const { locale } = await params
-  const { currency: requested, interval: requestedInterval } = await searchParams
+  const { currency: requested } = await searchParams
   setRequestLocale(locale)
 
   const t = await getTranslations('Pricing')
   const currency: Currency = isCurrency(requested) ? requested : locale === 'ar' ? 'aed' : 'usd'
-  const interval: BillingInterval = isInterval(requestedInterval) ? requestedInterval : 'monthly'
 
-  const [allPlans, packs] = await Promise.all([
-    db.select().from(plans).where(eq(plans.isActive, true)).orderBy(plans.sortOrder),
-    db.select().from(creditPacks).where(eq(creditPacks.isActive, true)).orderBy(creditPacks.sortOrder),
-  ])
+  const packs = await db
+    .select()
+    .from(creditPacks)
+    .where(eq(creditPacks.isActive, true))
+    .orderBy(creditPacks.sortOrder)
 
   return (
-    <div className="min-h-dvh">
+    <div className="world-dark min-h-dvh">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
         <Link href="/" className="font-display text-xl font-bold accent-text">
           Brandora
@@ -55,7 +46,7 @@ export default async function PricingPage({
         </nav>
       </header>
 
-      <section className="mx-auto max-w-6xl px-6 pb-20">
+      <main className="mx-auto max-w-6xl px-6 pb-20">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="font-display text-3xl font-bold sm:text-4xl">{t('title')}</h1>
@@ -63,71 +54,18 @@ export default async function PricingPage({
           </div>
           {/* Prices are shown in both currencies because Polar charges in the
               customer's, and a figure that differs from the invoice erodes trust. */}
-          <div className="flex flex-wrap items-center gap-2">
-            <IntervalSwitch active={interval} currency={currency} href="/pricing" />
-            <CurrencySwitch active={currency} interval={interval} href="/pricing" />
-          </div>
+          <CurrencySwitch active={currency} href="/pricing" />
         </div>
 
-        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {allPlans.map((plan) => {
-            const yearly = interval === 'yearly'
-            const shown = pickPrice(
-              currency,
-              yearly
-                ? { usd: plan.priceYearly, aed: plan.priceYearlyAed }
-                : { usd: plan.priceMonthly, aed: plan.priceMonthlyAed },
-            )
-            const saving = yearlySavingPercent(plan.priceMonthly, plan.priceYearly)
-            const features = (plan.features as Record<string, string[]>)?.[locale] ?? []
-            const highlighted = plan.slug === 'pro'
-
-            return (
-              <Card key={plan.id} className={highlighted ? 'border-brand' : undefined}>
-                <div className="flex items-baseline justify-between gap-2">
-                  <CardTitle>{plan.name}</CardTitle>
-                  {highlighted && <Badge tone="brand">{t('popular')}</Badge>}
-                </div>
-
-                <p className="mt-3 font-display text-3xl font-semibold">
-                  {formatPrice(shown.amount, shown.currency, locale)}
-                  <span className="text-sm font-normal text-fg-muted">
-                    {yearly ? t('perYear') : t('perMonth')}
-                  </span>
-                </p>
-                {yearly && saving !== null && (
-                  <Badge tone="success" className="mt-1">
-                    {t('savePercent', { percent: saving })}
-                  </Badge>
-                )}
-                {shown.alternate && (
-                  <p className="text-xs text-fg-muted">
-                    ≈ {formatPrice(shown.alternate.amount, shown.alternate.currency, locale)}
-                  </p>
-                )}
-
-                <p className="mt-2 text-sm text-fg-secondary">
-                  {t('credits', { credits: plan.monthlyCredits })}
-                </p>
-
-                <ul className="mt-5 space-y-2 text-sm text-fg-secondary">
-                  {features.map((feature) => (
-                    <li key={feature}>· {feature}</li>
-                  ))}
-                </ul>
-
-                <Link
-                  href="/register"
-                  className={`mt-6 w-full ${buttonVariants({
-                    variant: highlighted ? 'primary' : 'secondary',
-                    size: 'sm',
-                  })}`}
-                >
-                  {plan.priceMonthly === 0 ? t('startFree') : t('choose', { plan: plan.name })}
-                </Link>
-              </Card>
-            )
-          })}
+        {/*
+          The same ladder the landing page shows, from the same table that
+          bills for it. This page used to render its own — different type,
+          different shapes, a `·` where the landing used a check icon, and its
+          own feature list — so a visitor who clicked through from the hero
+          arrived at what read as a second product.
+        */}
+        <div className="mt-10">
+          <PricingPlans locale={locale} currency={currency} />
         </div>
 
         <div className="mt-12">
@@ -157,7 +95,7 @@ export default async function PricingPage({
             })}
           </div>
         </div>
-      </section>
+      </main>
     </div>
   )
 }

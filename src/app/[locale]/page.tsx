@@ -1,5 +1,5 @@
 import { ArrowRight, Check } from 'lucide-react'
-import { setRequestLocale } from 'next-intl/server'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
 import Image from 'next/image'
 
 import { HeroBadge } from '@/components/features/landing/float'
@@ -13,7 +13,7 @@ import {
   SectionReveal,
 } from '@/components/features/landing/horizon'
 import { AfterHeadline, HeadlineWords } from '@/components/features/landing/motion-hero'
-import { PLANS, STEPS } from '@/components/features/landing/landing-data'
+import { PricingPlans } from '@/components/features/landing/pricing-plans'
 import { LogoMark } from '@/components/ui/logo'
 import { MomentumField, MomentumItem } from '@/components/ui/momentum'
 import { Link } from '@/i18n/navigation'
@@ -40,19 +40,6 @@ const LOGOS = [
 
 const PALETTE = ['#6F4E37', '#D4A574', '#C08552', '#FAF6F0', '#2D1B0E']
 
-const REST = [
-  'Brand story',
-  'Brand voice',
-  'Brand values',
-  'Social kit — 9 posts',
-  'Bios and hashtags',
-  'Ad copy',
-  'Favicon',
-  'Avatars',
-  'OG card',
-  'Brand kit ZIP',
-]
-
 export default async function HorizonDirection({
   params,
 }: {
@@ -61,65 +48,103 @@ export default async function HorizonDirection({
   const { locale } = await params
   setRequestLocale(locale)
 
+  /*
+   * Every string on this page comes from the catalogue.
+   *
+   * The page previously called `setRequestLocale` and then hardcoded English,
+   * so `/ar` rendered English inside an RTL frame — the bidi algorithm
+   * reordering it into "brand entire Your ,identity" on the one surface that
+   * has to prove the product generates Arabic natively.
+   */
+  const t = await getTranslations('Landing')
+  const rest = t.raw('restItems') as string[]
+  const steps = t.raw('steps') as { name: string; body: string }[]
+
   return (
-    <div className="min-h-dvh overflow-x-hidden bg-[#05070f] text-white">
+    <div className="world-dark min-h-dvh overflow-x-hidden">
       <header className="relative z-20 mx-auto flex max-w-7xl items-center justify-between px-8 py-6">
         <span className="flex items-center gap-2.5">
           <LogoMark className="size-6" id="horizon" />
           <span className="font-semibold tracking-[-0.01em]">Brandora</span>
         </span>
 
-        <nav className="hidden items-center gap-8 text-sm text-white/60 md:flex">
+        <nav className="hidden items-center gap-8 text-sm text-fg-secondary md:flex">
           <a href="#kit" className="transition-colors hover:text-white">
-            What you get
+            {t('navKit')}
           </a>
           <a href="#how" className="transition-colors hover:text-white">
-            How it works
+            {t('navHow')}
           </a>
           <a href="#pricing" className="transition-colors hover:text-white">
-            Pricing
+            {t('navPricing')}
           </a>
         </nav>
 
         <Link
           href="/register"
-          className="inline-flex items-center gap-2 rounded-full bg-[image:linear-gradient(100deg,#7C3AED,#4F46E5_55%,#3B82F6)] px-5 py-2.5 text-sm font-semibold shadow-[0_0_28px_-6px_#4F46E5] transition-transform duration-200 hover:scale-[1.03]"
+          className="inline-flex items-center gap-2 rounded-full bg-[image:var(--brand-gradient)] px-5 py-2.5 text-sm font-semibold shadow-[0_0_28px_-6px_var(--brand-indigo)] transition-transform duration-200 hover:scale-[1.03]"
         >
-          Start free
+          {t('ctaPrimary')}
           <ArrowRight className="size-4 rtl:rotate-180" />
         </Link>
       </header>
 
+      {/*
+        Without JavaScript, 49 elements below the fold stayed at `opacity: 0`
+        for good — about four thousand pixels of blank ground on a phone,
+        because the reveal never fired. The reveal is an enhancement; the
+        content is not conditional on it.
+      */}
+      <noscript>
+        <style
+          dangerouslySetInnerHTML={{
+            __html:
+              '[data-reveal]{opacity:1!important;transform:none!important;filter:none!important}',
+          }}
+        />
+      </noscript>
+
+      <main>
       {/* ------------------------------------------------------------- hero */}
       <section className="relative overflow-hidden pb-0 pt-14 text-center sm:pt-20">
         <Horizon />
 
         <div className="relative z-10 mx-auto max-w-4xl px-8">
           <HeroBadge>
-            <span className="inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/[0.04] py-1 pe-4 ps-1 text-sm backdrop-blur">
-              <span className="rounded-full bg-[image:linear-gradient(100deg,#7C3AED,#3B82F6)] px-3 py-1 text-xs font-semibold">
-                One run
+            <span className="inline-flex items-center gap-2.5 rounded-full border border-line bg-elevated/40 py-1 pe-4 ps-1 text-sm backdrop-blur">
+              <span className="rounded-full bg-[image:var(--brand-gradient)] px-3 py-1 text-xs font-semibold">
+                {t('badgePill')}
               </span>
-              <span className="text-white/70">Ten deliverables, not a logo</span>
+              <span className="text-fg-secondary">{t('badgeText')}</span>
             </span>
           </HeroBadge>
 
           <div className="mt-8">
-            <HeadlineWords
-              text="Your entire brand identity,"
-              className="text-[clamp(2.6rem,6.2vw,4.6rem)] font-bold leading-[1.05] tracking-[-0.035em]"
-            />
-            <AfterHeadline delay={0.3}>
-              <p className="text-[clamp(2.6rem,6.2vw,4.6rem)] font-bold leading-[1.05] tracking-[-0.035em] text-white/45">
-                generated in one run.
-              </p>
-            </AfterHeadline>
+            {/*
+              One sentence, one heading. The second clause was a `<p>` at
+              identical display size, which left the page's accessible title as
+              the fragment "Your entire brand identity,".
+
+              Word-level split, which is what keeps this legible in Arabic:
+              characters join, so a per-letter animation would break the script
+              outright. Arabic also gets its own leading at display size:
+              1.05 is Latin display leading, and it is wrong for a script that
+              carries its vowels above the line: `تُولَّد` puts a shadda and a
+              damma over the same letter, and at 4.6rem they landed inside the
+              line above. Tracking goes too — negative letter-spacing pulls
+              joined letterforms into each other rather than tightening a word.
+            */}
+            <h1 className="text-[clamp(2.6rem,6.2vw,4.6rem)] font-bold leading-[1.05] tracking-[-0.035em] rtl:leading-[1.4] rtl:tracking-normal">
+              <HeadlineWords text={t('heroHeadline')} />{' '}
+              <AfterHeadline delay={0.3}>
+                <span className="block text-fg-secondary">{t('heroHeadlineAfter')}</span>
+              </AfterHeadline>
+            </h1>
           </div>
 
           <AfterHeadline delay={0.5}>
-            <p className="mx-auto mt-7 max-w-[52ch] text-lg leading-relaxed text-white/55">
-              Names, logos, palette, typography, a brand story, a live website and a social kit —
-              all decided together, so they agree with each other.
+            <p className="mx-auto mt-7 max-w-[52ch] text-lg leading-relaxed text-fg-secondary">
+              {t('heroDeck')}
             </p>
           </AfterHeadline>
 
@@ -127,15 +152,15 @@ export default async function HorizonDirection({
             <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
               <Link
                 href="/pricing"
-                className="rounded-full border border-white/12 bg-white/[0.06] px-6 py-3 text-sm font-medium backdrop-blur transition-colors hover:bg-white/[0.12]"
+                className="rounded-full border border-line-strong bg-elevated/50 px-6 py-3 text-sm font-medium backdrop-blur transition-colors hover:bg-elevated"
               >
-                See pricing
+                {t('ctaSecondary')}
               </Link>
               <Link
                 href="/register"
-                className="inline-flex items-center gap-2 rounded-full bg-[image:linear-gradient(100deg,#7C3AED,#4F46E5_55%,#3B82F6)] px-6 py-3 text-sm font-semibold shadow-[0_0_40px_-8px_#4F46E5] transition-transform duration-200 hover:scale-[1.03]"
+                className="inline-flex items-center gap-2 rounded-full bg-[image:var(--brand-gradient)] px-6 py-3 text-sm font-semibold shadow-[0_0_40px_-8px_var(--brand-indigo)] transition-transform duration-200 hover:scale-[1.03]"
               >
-                Start free
+                {t('ctaPrimary')}
                 <ArrowRight className="size-4 rtl:rotate-180" />
               </Link>
             </div>
@@ -145,13 +170,13 @@ export default async function HorizonDirection({
         {/* The product, framed in front of the light and cropped by the fold. */}
         <div className="relative z-10 mx-auto mt-28 max-w-6xl px-8 sm:mt-36">
           <ProductFrame>
-            <div className="rounded-t-[1.75rem] border border-white/10 bg-white/[0.03] p-2 shadow-[0_-10px_80px_-20px_rgba(99,102,241,0.6)] backdrop-blur">
+            <div className="rounded-t-panel border border-line bg-elevated/30 p-2 shadow-[0_-10px_80px_-20px_color-mix(in_srgb,var(--brand-indigo)_60%,transparent)] backdrop-blur">
               <Image
                 src="/marketing/app-dashboard.webp"
-                alt="The Brandora dashboard"
+                alt={t('productAlt')}
                 width={1600}
-                height={1000}
-                className="w-full rounded-t-[1.35rem]"
+                height={900}
+                className="w-full rounded-t-card"
                 sizes="(max-width: 1024px) 100vw, 1100px"
                 priority
               />
@@ -161,14 +186,14 @@ export default async function HorizonDirection({
       </section>
 
       {/* -------------------------------------------------------------- kit */}
-      <section id="kit" className="relative overflow-hidden border-t border-white/[0.06] bg-[#070a14]">
+      <section id="kit" className="relative overflow-hidden border-t border-line bg-surface/50">
         <SectionArc className="top-0" />
         <LightSweep />
         <div className="relative z-10 mx-auto max-w-7xl px-8 py-28">
           <SectionReveal>
-            <h2 className="max-w-2xl text-[clamp(2rem,4vw,3.2rem)] font-bold leading-[1.08] tracking-[-0.03em]">
-              One brief in.
-              <span className="text-white/45"> Everything a brand needs out.</span>
+            <h2 className="max-w-2xl text-[clamp(2rem,4vw,3.2rem)] font-bold leading-[1.08] tracking-[-0.03em] rtl:leading-[1.4] rtl:tracking-normal">
+              {t('kitTitle')}
+              <span className="text-fg-secondary"> {t('kitTitleAccent')}</span>
             </h2>
           </SectionReveal>
 
@@ -184,17 +209,31 @@ export default async function HorizonDirection({
               behaviour scaled all four whenever the cell was hovered, which
               told you the cell was hoverable and nothing about the logos.
             */}
-            <Cell index={0} className="col-span-2 row-span-2" lift={false}>
-              <div className="relative h-full rounded-2xl bg-[image:linear-gradient(180deg,rgba(167,139,250,0.35),rgba(255,255,255,0.04)_38%)] p-px">
-                <div className="flex h-full flex-col rounded-[calc(1rem-1px)] bg-[#080c16] p-7">
-                  <p className="text-sm text-white/45">Four logo concepts</p>
-                  <MomentumField className="mt-5 grid flex-1 grid-cols-2 gap-3">
+            {/*
+              The row span is what the inner grid measures itself against. Set
+              to one row's height while spanning two, the four concept tiles
+              overflowed this card by 179px and the two at the bottom were
+              covered by the tile beneath — so the one place a visitor can look
+              at real output showed half of it.
+            */}
+            <Cell index={0} className="col-span-2 row-span-2 min-h-0" lift={false}>
+              <div className="relative h-full rounded-card bg-[image:linear-gradient(180deg,color-mix(in_srgb,var(--text-accent)_35%,transparent),color-mix(in_srgb,var(--text-primary)_4%,transparent)_38%)] p-px">
+                <div className="flex h-full min-h-0 flex-col rounded-[calc(var(--radius-card)-1px)] bg-surface p-7">
+                  <p className="text-sm text-fg-secondary">{t('kitLogos')}</p>
+                  {/*
+                    Two explicit rows. The inner grid's rows were `auto`, so
+                    each one took the natural height of a square image at half
+                    the card's width — about 500px of content in 300px of card,
+                    which is how two of the four concepts ended up underneath
+                    the tile below.
+                  */}
+                  <MomentumField className="mt-5 grid min-h-0 flex-1 grid-cols-2 grid-rows-2 gap-3">
                     {LOGOS.map((logo) => (
                       <MomentumItem key={logo} throwGain={0.4} spinGain={0.09}>
-                        <div className="h-full overflow-hidden rounded-xl bg-white/95">
+                        <div className="h-full min-h-0 overflow-hidden rounded-control bg-white/95">
                           <Image
                             src={logo}
-                            alt="A logo concept generated by Brandora"
+                            alt={t('kitLogoAlt')}
                             width={720}
                             height={720}
                             className="size-full object-contain p-2"
@@ -204,17 +243,17 @@ export default async function HorizonDirection({
                       </MomentumItem>
                     ))}
                   </MomentumField>
-                  <p className="mt-4 text-xs text-white/35">PNG and traced SVG, plus favicon and avatars</p>
+                  <p className="mt-4 text-xs text-fg-muted">{t('kitLogosNote')}</p>
                 </div>
               </div>
             </Cell>
 
             <Cell index={1} className="col-span-2">
-              <div className="h-full rounded-2xl bg-[image:linear-gradient(180deg,rgba(167,139,250,0.28),rgba(255,255,255,0.04)_38%)] p-px">
-                <div className="flex h-full flex-col rounded-[calc(1rem-1px)] bg-[#080c16] p-7">
-                  <p className="text-sm text-white/45">Colour palette</p>
+              <div className="h-full rounded-card bg-[image:linear-gradient(180deg,color-mix(in_srgb,var(--text-accent)_28%,transparent),color-mix(in_srgb,var(--text-primary)_4%,transparent)_38%)] p-px">
+                <div className="flex h-full flex-col rounded-[calc(var(--radius-card)-1px)] bg-surface p-7">
+                  <p className="text-sm text-fg-secondary">{t('kitPalette')}</p>
                   <PaletteDeal colors={PALETTE} className="mt-5 flex flex-1 gap-2" />
-                  <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 font-mono text-xs text-white/35">
+                  <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 font-mono text-xs text-fg-muted">
                     {PALETTE.map((hex) => (
                       <span key={hex}>{hex}</span>
                     ))}
@@ -224,13 +263,13 @@ export default async function HorizonDirection({
             </Cell>
 
             <Cell index={2}>
-              <div className="h-full rounded-2xl bg-[image:linear-gradient(180deg,rgba(167,139,250,0.28),rgba(255,255,255,0.04)_38%)] p-px">
-                <div className="flex h-full flex-col justify-between rounded-[calc(1rem-1px)] bg-[#080c16] p-7">
-                  <p className="text-sm text-white/45">Names, with reasoning</p>
+              <div className="h-full rounded-card bg-[image:linear-gradient(180deg,color-mix(in_srgb,var(--text-accent)_28%,transparent),color-mix(in_srgb,var(--text-primary)_4%,transparent)_38%)] p-px">
+                <div className="flex h-full flex-col justify-between rounded-[calc(var(--radius-card)-1px)] bg-surface p-7">
+                  <p className="text-sm text-fg-secondary">{t('kitNames')}</p>
                   <div>
                     <p className="text-2xl font-semibold tracking-[-0.02em]">Makān</p>
-                    <p className="mt-1.5 text-xs leading-relaxed text-white/40">
-                      Arabic for &ldquo;place&rdquo; — a space to think and find clarity.
+                    <p className="mt-1.5 text-xs leading-relaxed text-fg-muted">
+                      {t('kitNameReason')}
                     </p>
                   </div>
                 </div>
@@ -238,41 +277,41 @@ export default async function HorizonDirection({
             </Cell>
 
             <Cell index={3}>
-              <div className="h-full rounded-2xl bg-[image:linear-gradient(180deg,rgba(167,139,250,0.28),rgba(255,255,255,0.04)_38%)] p-px">
-                <div className="flex h-full flex-col justify-between rounded-[calc(1rem-1px)] bg-[#080c16] p-7">
-                  <p className="text-sm text-white/45">Typography</p>
+              <div className="h-full rounded-card bg-[image:linear-gradient(180deg,color-mix(in_srgb,var(--text-accent)_28%,transparent),color-mix(in_srgb,var(--text-primary)_4%,transparent)_38%)] p-px">
+                <div className="flex h-full flex-col justify-between rounded-[calc(var(--radius-card)-1px)] bg-surface p-7">
+                  <p className="text-sm text-fg-secondary">{t('kitType')}</p>
                   <div>
                     <p className="text-3xl font-semibold tracking-[-0.03em]">Sora</p>
-                    <p className="text-sm text-white/50">Inter · DM Serif Display</p>
+                    <p className="text-sm text-fg-secondary">Inter · DM Serif Display</p>
                   </div>
                 </div>
               </div>
             </Cell>
 
             <Cell index={4} className="col-span-2">
-              <div className="group h-full overflow-hidden rounded-2xl bg-[image:linear-gradient(180deg,rgba(167,139,250,0.3),rgba(255,255,255,0.04)_38%)] p-px">
-                <div className="relative h-full overflow-hidden rounded-[calc(1rem-1px)] bg-[#080c16]">
+              <div className="group h-full overflow-hidden rounded-card bg-[image:linear-gradient(180deg,color-mix(in_srgb,var(--text-accent)_30%,transparent),color-mix(in_srgb,var(--text-primary)_4%,transparent)_38%)] p-px">
+                <div className="relative h-full overflow-hidden rounded-[calc(var(--radius-card)-1px)] bg-surface">
                   <Image
                     src="/marketing/makan-website.webp"
-                    alt="A website generated and published by Brandora"
+                    alt={t('kitWebsiteAlt')}
                     width={1200}
                     height={806}
                     className="size-full object-cover object-top opacity-80 transition-transform duration-500 group-hover:scale-[1.03]"
                     sizes="(max-width: 1024px) 100vw, 560px"
                   />
-                  <div className="absolute inset-x-0 bottom-0 bg-[image:linear-gradient(0deg,#080c16,transparent)] p-6 pt-16">
-                    <p className="text-sm font-semibold">A published website</p>
-                    <p className="text-xs text-white/45">multi-page, editable, on its own address</p>
+                  <div className="absolute inset-x-0 bottom-0 bg-[image:linear-gradient(0deg,var(--bg-surface),transparent)] p-6 pt-16">
+                    <p className="text-sm font-semibold">{t('kitWebsite')}</p>
+                    <p className="text-xs text-fg-secondary">{t('kitWebsiteNote')}</p>
                   </div>
                 </div>
               </div>
             </Cell>
 
             <Cell index={5} className="col-span-2">
-              <div className="h-full rounded-2xl bg-[image:linear-gradient(180deg,rgba(167,139,250,0.28),rgba(255,255,255,0.04)_38%)] p-px">
-                <div className="flex h-full flex-col justify-between rounded-[calc(1rem-1px)] bg-[#080c16] p-7">
-                  <p className="text-sm text-white/45">And the rest of it</p>
-                  <PillFan items={REST} className="flex flex-wrap gap-2" />
+              <div className="h-full rounded-card bg-[image:linear-gradient(180deg,color-mix(in_srgb,var(--text-accent)_28%,transparent),color-mix(in_srgb,var(--text-primary)_4%,transparent)_38%)] p-px">
+                <div className="flex h-full flex-col justify-between rounded-[calc(var(--radius-card)-1px)] bg-surface p-7">
+                  <p className="text-sm text-fg-secondary">{t('kitRest')}</p>
+                  <PillFan items={rest} className="flex flex-wrap gap-2" />
                 </div>
               </div>
             </Cell>
@@ -281,12 +320,12 @@ export default async function HorizonDirection({
       </section>
 
       {/* -------------------------------------------------------------- how */}
-      <section id="how" className="relative overflow-hidden border-t border-white/[0.06]">
+      <section id="how" className="relative overflow-hidden border-t border-line">
         <SectionArc className="top-0" />
         <div className="relative z-10 mx-auto max-w-5xl px-8 py-28">
           <SectionReveal>
-            <h2 className="text-[clamp(2rem,4vw,3.2rem)] font-bold tracking-[-0.03em]">
-              How a run works
+            <h2 className="text-[clamp(2rem,4vw,3.2rem)] font-bold tracking-[-0.03em] rtl:tracking-normal">
+              {t('howTitle')}
             </h2>
           </SectionReveal>
 
@@ -295,154 +334,116 @@ export default async function HorizonDirection({
             a row of equal boxes said nothing about order. The rail carries the
             eye down it, and each stage states what it produces.
           */}
-          <ol className="relative mt-16">
+          {/*
+            The rail sits outside the list now. An `<ol>` may contain only
+            `<li>`, and this one held a decorative div plus a motion wrapper
+            around every item — enough for several screen readers to drop the
+            list semantics, so "How a run works" stopped announcing five steps.
+          */}
+          <div className="relative mt-16">
             <div
               aria-hidden
               className="absolute bottom-8 start-[1.55rem] top-4 w-px"
               style={{
                 background:
-                  'linear-gradient(180deg, rgba(167,139,250,0.7), rgba(96,165,250,0.5), transparent)',
+                  'linear-gradient(180deg, color-mix(in srgb, var(--text-accent) 70%, transparent), color-mix(in srgb, var(--brand-secondary) 50%, transparent), transparent)',
               }}
             />
 
-            {STEPS.map((step, index) => (
-              <Cell key={step.n} index={index}>
-                <li className="relative grid grid-cols-[3.5rem_1fr] items-start gap-x-6 pb-14 last:pb-0">
+            <ol>
+              {steps.map((step, index) => (
+                <li key={step.name} className="pb-14 last:pb-0">
+                  {/* The reveal wraps a real box: under `display: contents` it
+                      would generate none, and animate nothing. */}
+                  <Cell
+                    index={index}
+                    className="relative grid grid-cols-[3.5rem_1fr] items-start gap-x-6"
+                  >
                   <StepMark
                     index={index}
-                    className="relative z-10 flex size-14 items-center justify-center rounded-2xl border border-white/10 bg-[#0a0f1c] text-lg font-semibold shadow-[0_0_34px_-8px_rgba(139,92,246,0.9)]"
+                    className="relative z-10 flex size-14 items-center justify-center rounded-card border border-line bg-surface text-lg font-semibold shadow-[0_0_34px_-8px_color-mix(in_srgb,var(--text-accent)_90%,transparent)]"
                   >
                     {index + 1}
                   </StepMark>
 
-                  <div className="pt-2.5">
-                    <p className="text-2xl font-semibold tracking-[-0.02em]">{step.n}</p>
-                    <p className="mt-2 max-w-[58ch] leading-relaxed text-white/45">{step.body}</p>
-                  </div>
+                    <div className="pt-2.5">
+                      <p className="text-2xl font-semibold tracking-[-0.02em]">{step.name}</p>
+                      <p className="mt-2 max-w-[58ch] leading-relaxed text-fg-secondary">
+                        {step.body}
+                      </p>
+                    </div>
+                  </Cell>
                 </li>
-              </Cell>
-            ))}
-          </ol>
+              ))}
+            </ol>
+          </div>
         </div>
       </section>
 
       {/* ---------------------------------------------------------- pricing */}
-      <section id="pricing" className="relative overflow-hidden border-t border-white/[0.06] bg-[#070a14]">
+      <section id="pricing" className="relative overflow-hidden border-t border-line bg-surface/50">
         <SectionArc className="top-0" />
 
         <div className="relative z-10 mx-auto max-w-7xl px-8 py-28">
           <SectionReveal>
             <div className="flex flex-wrap items-end justify-between gap-6">
-              <h2 className="text-[clamp(2rem,4vw,3.2rem)] font-bold tracking-[-0.03em]">Pricing</h2>
-              <p className="max-w-[42ch] text-white/50">
-                Every plan generates the full identity. What changes is how many brands you can
-                run, and where the site can live.
-              </p>
+              <h2 className="text-[clamp(2rem,4vw,3.2rem)] font-bold tracking-[-0.03em] rtl:tracking-normal">
+                {t('pricingHeading')}
+              </h2>
+              <p className="max-w-[42ch] text-fg-secondary">{t('pricingDeck')}</p>
             </div>
           </SectionReveal>
 
-          <div className="mt-16 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
-            {PLANS.map((plan, index) => {
-              const featured = index === 2
-
-              return (
-                <Cell key={plan.name} index={index}>
-                  <div
-                    className={
-                      featured
-                        ? 'relative h-full rounded-3xl bg-[image:linear-gradient(160deg,#7C3AED,#4F46E5_55%,#3B82F6)] p-px shadow-[0_0_70px_-20px_#4F46E5]'
-                        : 'h-full rounded-3xl bg-[image:linear-gradient(180deg,rgba(167,139,250,0.28),rgba(255,255,255,0.05)_40%)] p-px'
-                    }
-                  >
-                    <div className="flex h-full flex-col rounded-[calc(1.5rem-1px)] bg-[#080c16] p-7">
-                      {featured && (
-                        <span className="absolute -top-3 end-6 rounded-full bg-[image:linear-gradient(100deg,#7C3AED,#3B82F6)] px-3 py-1 text-xs font-semibold">
-                          Most chosen
-                        </span>
-                      )}
-
-                      <p className="text-sm text-white/50">{plan.name}</p>
-
-                      <p className="mt-4 flex items-baseline gap-1.5">
-                        <span className="text-5xl font-bold tracking-[-0.04em]">
-                          {plan.price === 0 ? 'Free' : `$${plan.price}`}
-                        </span>
-                        {plan.price > 0 && (
-                          <span className="text-sm text-white/40">/month</span>
-                        )}
-                      </p>
-
-                      {/* The number that actually decides the plan. */}
-                      <p className="mt-5 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3.5 py-2.5 text-sm">
-                        <span className="font-semibold">{plan.runs}</span>
-                        <span className="text-white/40"> · {plan.credits}</span>
-                      </p>
-
-                      <ul className="mt-6 flex-1 space-y-3">
-                        {plan.features.map((feature) => (
-                          <li key={feature} className="flex items-start gap-2.5 text-sm">
-                            <Check className="mt-0.5 size-4 shrink-0 text-[#a78bfa]" />
-                            <span className="text-white/65">{feature}</span>
-                          </li>
-                        ))}
-                      </ul>
-
-                      <Link
-                        href="/register"
-                        className={
-                          featured
-                            ? 'mt-8 flex items-center justify-center rounded-full bg-[image:linear-gradient(100deg,#7C3AED,#3B82F6)] py-3 text-sm font-semibold transition-transform duration-200 hover:scale-[1.02]'
-                            : 'mt-8 flex items-center justify-center rounded-full border border-white/12 bg-white/[0.05] py-3 text-sm font-medium transition-colors hover:bg-white/[0.12]'
-                        }
-                      >
-                        {plan.price === 0 ? 'Start free' : `Choose ${plan.name}`}
-                      </Link>
-                    </div>
-                  </div>
-                </Cell>
-              )
-            })}
+          {/*
+            The same component the pricing page renders, from the same table
+            that bills for it. These were two hand-written ladders that could —
+            and did — disagree about what a plan includes.
+          */}
+          <div className="mt-16">
+            <PricingPlans locale={locale} />
           </div>
 
-          <p className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-white/40">
+          <p className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-fg-muted">
             <span className="flex items-center gap-2">
-              <Check className="size-4 text-[#7cabff]" />
-              No card for the free plan
+              <Check className="size-4 accent-text" />
+              {t('assuranceCard')}
             </span>
             <span className="flex items-center gap-2">
-              <Check className="size-4 text-[#7cabff]" />
-              Credits never expire on paid plans
+              <Check className="size-4 accent-text" />
+              {t('assuranceCredits')}
             </span>
             <span className="flex items-center gap-2">
-              <Check className="size-4 text-[#7cabff]" />
-              Cancel any time — access runs to the end of the period
+              <Check className="size-4 accent-text" />
+              {t('assuranceCancel')}
             </span>
           </p>
         </div>
       </section>
 
-      <section className="relative overflow-hidden border-t border-white/[0.06]">
+      <section className="relative overflow-hidden border-t border-line">
         <SectionArc className="top-[38%]" />
         <div className="relative z-10 mx-auto max-w-7xl px-8 py-28 text-center">
           <SectionReveal>
-            <h2 className="mx-auto max-w-3xl text-[clamp(2.2rem,5vw,4rem)] font-bold leading-[1.05] tracking-[-0.035em]">
-              Bring a brief.
-              <span className="text-white/45"> Leave with a brand.</span>
+            <h2 className="mx-auto max-w-3xl text-[clamp(2.2rem,5vw,4rem)] font-bold leading-[1.05] tracking-[-0.035em] rtl:leading-[1.4] rtl:tracking-normal">
+              {t('closeTitle')}
+              <span className="text-fg-secondary"> {t('closeTitleAccent')}</span>
             </h2>
           </SectionReveal>
           <SectionReveal delay={0.1}>
             <Link
               href="/register"
-              className="mt-10 inline-flex items-center gap-2 rounded-full bg-[image:linear-gradient(100deg,#7C3AED,#4F46E5_55%,#3B82F6)] px-8 py-4 text-sm font-semibold shadow-[0_0_50px_-10px_#4F46E5] transition-transform duration-200 hover:scale-[1.03]"
+              className="mt-10 inline-flex items-center gap-2 rounded-full bg-[image:var(--brand-gradient)] px-8 py-4 text-sm font-semibold shadow-[0_0_50px_-10px_var(--brand-indigo)] transition-transform duration-200 hover:scale-[1.03]"
             >
-              Start free
+              {t('ctaPrimary')}
               <ArrowRight className="size-4 rtl:rotate-180" />
             </Link>
           </SectionReveal>
         </div>
       </section>
 
-      <footer className="border-t border-white/[0.06]">
+      </main>
+
+      <footer className="border-t border-line">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-8 py-10">
           <span className="flex items-center gap-2.5">
             <LogoMark className="size-5" id="horizon-foot" />
@@ -450,9 +451,9 @@ export default async function HorizonDirection({
           </span>
           <Link
             href="/register"
-            className="text-sm text-white/50 transition-colors hover:text-white"
+            className="text-sm text-fg-secondary transition-colors hover:text-white"
           >
-            Start free
+            {t('ctaPrimary')}
           </Link>
         </div>
       </footer>

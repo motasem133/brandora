@@ -179,14 +179,17 @@ export default async function ProjectDetailPage({
 
       <BrandFonts fonts={brandingAsset?.fontRecommendations ?? null} />
 
-      <IdentityPlate
-        project={project}
-        palette={brandingAsset?.colorPalette ?? null}
-        fonts={brandingAsset?.fontRecommendations ?? null}
-        slogan={brandingAsset?.slogan ?? null}
-        logo={primaryLogo}
-        locale={locale}
-      />
+      {/* The completion note scrolls here, so the brand needs a name to call. */}
+      <div id="brand" className="scroll-mt-6">
+        <IdentityPlate
+          project={project}
+          palette={brandingAsset?.colorPalette ?? null}
+          fonts={brandingAsset?.fontRecommendations ?? null}
+          slogan={brandingAsset?.slogan ?? null}
+          logo={primaryLogo}
+          locale={locale}
+        />
+      </div>
 
       <GenerationPanel
         projectId={project.id}
@@ -197,6 +200,7 @@ export default async function ProjectDetailPage({
         creditCost={creditsForSections(sections)}
         emailVerified={user.emailVerified}
         userEmail={user.email}
+        brandName={project.businessName || project.title}
       />
 
       {/*

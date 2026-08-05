@@ -1,27 +1,13 @@
 'use client'
 
-import {
-  CreditCard,
-  LayoutDashboard,
-  PanelLeftClose,
-  PanelLeftOpen,
-  Settings,
-  Shield,
-  Sparkles,
-} from 'lucide-react'
+import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 
+import { ADMIN_NAV, NAV, isNavActive } from '@/components/features/dashboard/nav-items'
 import { Logo, LogoMark } from '@/components/ui/logo'
 import { Link, usePathname } from '@/i18n/navigation'
 import { cn } from '@/lib/utils'
-
-const NAV = [
-  { href: '/dashboard', key: 'overview', icon: LayoutDashboard },
-  { href: '/dashboard/projects', key: 'projects', icon: Sparkles },
-  { href: '/dashboard/billing', key: 'billing', icon: CreditCard },
-  { href: '/dashboard/settings', key: 'settings', icon: Settings },
-] as const
 
 /**
  * A project page is a document, and the rail is chrome around it.
@@ -109,7 +95,7 @@ export function Sidebar({ isAdmin }: { isAdmin: boolean }) {
             aria-expanded={!collapsed}
             aria-label={collapsed ? t('expandSidebar') : t('collapseSidebar')}
             title={collapsed ? t('expandSidebar') : t('collapseSidebar')}
-            className="grid size-9 shrink-0 place-items-center rounded-xl text-fg-muted transition-colors hover:bg-elevated hover:text-fg"
+            className="grid size-9 shrink-0 place-items-center rounded-control text-fg-muted transition-colors hover:bg-elevated hover:text-fg"
           >
             {/* The glyph points the way the rail will move, mirrored for RTL. */}
             {collapsed ? (
@@ -122,14 +108,13 @@ export function Sidebar({ isAdmin }: { isAdmin: boolean }) {
 
         <nav className="flex flex-col gap-1">
           {NAV.map(({ href, key, icon: Icon }) => {
-            // Exact match for the index route, prefix match for the rest, so
-            // /dashboard doesn't stay highlighted on /dashboard/projects.
-            const active = href === '/dashboard' ? pathname === href : pathname.startsWith(href)
+            const active = isNavActive(pathname, href)
 
             return (
               <Link
                 key={href}
                 href={href}
+                aria-current={active ? 'page' : undefined}
                 /*
                  * The label is the accessible name either way — collapsing the
                  * rail must not turn four named destinations into four
@@ -142,7 +127,7 @@ export function Sidebar({ isAdmin }: { isAdmin: boolean }) {
                    * on the item you moved to, so the eye follows the change
                    * instead of hunting for which row changed shade.
                    */
-                  'group relative flex items-center rounded-xl py-2.5 text-sm transition-all duration-200',
+                  'group relative flex min-h-11 items-center rounded-control py-2.5 text-sm transition-all duration-200',
                   'before:absolute before:inset-y-2 before:-start-1 before:w-0.5 before:rounded-full before:bg-brand before:transition-transform before:duration-200 before:content-[""]',
                   collapsed ? 'justify-center px-0' : 'gap-3 px-3',
                   active
@@ -158,17 +143,18 @@ export function Sidebar({ isAdmin }: { isAdmin: boolean }) {
 
           {isAdmin && (
             <Link
-              href="/admin"
+              href={ADMIN_NAV.href}
               title={collapsed ? t('admin') : undefined}
+              aria-current={pathname.startsWith(ADMIN_NAV.href) ? 'page' : undefined}
               className={cn(
-                'mt-4 flex items-center rounded-lg py-2.5 text-sm transition-colors',
+                'mt-4 flex min-h-11 items-center rounded-control py-2.5 text-sm transition-colors',
                 collapsed ? 'justify-center px-0' : 'gap-3 px-3',
                 pathname.startsWith('/admin')
                   ? 'bg-elevated font-medium text-fg'
                   : 'text-fg-secondary hover:bg-elevated hover:text-fg',
               )}
             >
-              <Shield className="size-4 shrink-0" />
+              <ADMIN_NAV.icon className="size-4 shrink-0" />
               <span className={cn(collapsed && 'sr-only')}>{t('admin')}</span>
             </Link>
           )}

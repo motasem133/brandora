@@ -49,38 +49,17 @@ export function isCurrency(value: unknown): value is Currency {
   return value === 'usd' || value === 'aed'
 }
 
+/**
+ * Which period a subscription is billed on.
+ *
+ * Only `monthly` is sold. The type keeps both because the column does: a row
+ * written while annual existed is still readable, and the display honours it.
+ */
 export type BillingInterval = 'monthly' | 'yearly'
 
-export function isInterval(value: unknown): value is BillingInterval {
-  return value === 'monthly' || value === 'yearly'
-}
-
-/**
- * Currency and interval both live in the URL, so every link that changes one
- * has to carry the other — otherwise picking "yearly" silently resets a
- * customer's currency back to the locale default.
- */
-export function billingHref(
-  base: string,
-  params: { currency: Currency; interval: BillingInterval },
-) {
-  return `${base}?currency=${params.currency}&interval=${params.interval}`
-}
-
-/**
- * What a year up front saves against paying monthly, as a whole percentage.
- *
- * Derived from the prices themselves rather than stated in copy, so a plan
- * whose annual price is edited can never advertise a discount it does not give.
- * Returns null when there is nothing to claim.
- */
-export function yearlySavingPercent(priceMonthly: number, priceYearly: number): number | null {
-  if (priceMonthly <= 0 || priceYearly <= 0) return null
-
-  const full = priceMonthly * 12
-  if (priceYearly >= full) return null
-
-  return Math.round(((full - priceYearly) / full) * 100)
+/** The currency choice lives in the URL, so prices stay server-rendered. */
+export function billingHref(base: string, params: { currency: Currency }) {
+  return `${base}?currency=${params.currency}`
 }
 
 /**

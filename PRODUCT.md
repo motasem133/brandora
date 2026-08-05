@@ -58,13 +58,37 @@ Supporting truths, real but not the headline:
   monochrome mark and a brand-kit ZIP.
 - Published customer sites are live on a subdomain, and Business plans can
   attach their own domain.
-- Pricing is real and seeded: Free, Basic $29, Pro $79, Business $199 monthly,
-  each with an annual price at ten months.
+- Pricing is real and seeded: Free, Basic $29, Pro $79, Business $199 — monthly,
+  and only monthly.
 - A run costs credits per section: branding 1, logos 6, website 1, social 1. A
   fresh set of logo concepts is therefore the most expensive thing a customer
   can ask for, and the only one they ask for repeatedly.
 - Generation is gated on a verified email address. Free credits are the obvious
   abuse target, so verification gates spending rather than sign-in.
+
+## Billing and access policy
+
+Settled decisions about money. Future work must not quietly reverse them.
+
+- **Billing is monthly. There is no annual plan.** Annual prices existed in the
+  plans table with no product behind them in Polar, so the yearly view priced
+  something nobody could buy. The period switch and the annual figures come out
+  of the product rather than advertising a period that does not exist.
+- **Access ends at the first failed charge.** A subscription whose payment fails
+  stops entitling its plan immediately; it is not carried through the retry
+  window. The account, the brands and any credits already granted are untouched,
+  and the plan returns the moment a payment succeeds.
+- **Credits already granted are never taken back.** They were paid for. A
+  downgrade, a cancellation and the end of access all leave them in the account.
+  The single exception is a refund, which reverses in proportion to the amount
+  actually refunded.
+- **An upgrade pays out when it is charged.** Moving to a larger plan mid-period
+  grants the credit difference at once, because Polar charges the prorated
+  difference at once. A downgrade grants nothing and removes nothing, and moving
+  between plans repeatedly cannot repeat a grant.
+- **What the product shows as charged is what the card was charged**, tax
+  included. Polar is Merchant of Record and collects the tax, so the receipt in
+  the payment history is the total, not the net that reaches the business.
 
 ## What may NOT be claimed
 

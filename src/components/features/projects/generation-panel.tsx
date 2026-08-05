@@ -33,6 +33,7 @@ export function GenerationPanel({
   creditCost,
   emailVerified,
   userEmail,
+  brandName,
 }: {
   projectId: string
   sections: string[]
@@ -43,6 +44,8 @@ export function GenerationPanel({
   /** Generation is gated on it, so the panel has to be able to say so. */
   emailVerified: boolean
   userEmail: string
+  /** What to call the brand when the run that made it finishes. */
+  brandName: string
 }) {
   const t = useTranslations('Generation')
   const ts = useTranslations('Settings')
@@ -60,6 +63,37 @@ export function GenerationPanel({
   const [status, setStatus] = useState(initialStatus)
   const sourceRef = useRef<EventSource | null>(null)
 
+  /*
+   * True only for a run that finished while somebody was watching.
+   *
+   * The distinction is the whole design. Arriving at a brand generated last
+   * week should show nothing; the ninety seconds that just passed should be
+   * acknowledged. Keyed on the transition rather than on the status, so the
+   * moment cannot re-fire on a refresh — and so the freelancer on their tenth
+   * run is not congratulated ten times a day for the same thing.
+   */
+  const [justFinished, setJustFinished] = useState(false)
+
+  /*
+   * What the job actually took.
+   *
+   * A run that fails halfway is charged for the sections it delivered and
+   * refunded the rest, and the panel used to offer "Try again" without saying
+   * either — so the one question a customer has after a failure ("did that
+   * cost me nine credits?") had no answer on the screen where it was asked.
+   */
+  const [charged, setCharged] = useState<number | null>(null)
+
+  /*
+   * Whether this page has actually seen the job running.
+   *
+   * The stream replays its `done` event to whoever connects, so a completed
+   * project announces itself as finished on every single mount — which made
+   * the note appear when simply arriving at a brand generated last week. The
+   * moment belongs to the transition, so the transition is what is recorded.
+   */
+  const witnessedRun = useRef(false)
+
   const isRunning = status === 'queued' || status === 'generating' || status === 'running'
 
   /*
@@ -69,6 +103,10 @@ export function GenerationPanel({
    * and tear down and reopen the stream on every render.
    */
   const producesLogos = sections.includes('branding')
+
+  useEffect(() => {
+    if (isRunning) witnessedRun.current = true
+  }, [isRunning])
 
   /** Opens the SSE stream and mirrors job state into local state. */
   const subscribe = useCallback(() => {
@@ -98,6 +136,8 @@ export function GenerationPanel({
       if (payload.status === 'idle') return
 
       setStatus(payload.status)
+      if (typeof payload.creditsCharged === 'number') setCharged(payload.creditsCharged)
+      if (payload.status === 'completed' && witnessedRun.current) setJustFinished(true)
 
       /*
        * A run that drew new logos invalidates any round pinned in the URL.
@@ -158,6 +198,57 @@ export function GenerationPanel({
   }, [subscribe, tab])
 
   const canAfford = creditBalance >= creditCost
+
+  /*
+   * The end of the run, which used to be a component unmounting.
+   *
+   * Everything this product sells happens in the ninety seconds that just
+   * passed, and the interface marked it by disappearing: `return null`, content
+   * silently in its place. This names what arrived and points at it, then
+   * retires — it is a handover, not a trophy, so there is no confetti and no
+   * sound, and it is gone the moment it has been read.
+   */
+  if (status === 'completed' && justFinished) {
+    return (
+      <Card className="space-y-5 glow-brand">
+        <div className="flex items-start gap-3">
+          <span className="grid size-9 shrink-0 place-items-center rounded-full bg-brand/15">
+            <Sparkles className="size-4 text-brand" />
+          </span>
+          <div className="min-w-0">
+            <CardTitle>{t('doneTitle', { brand: brandName })}</CardTitle>
+            <CardDescription className="mt-1">{t('doneBody')}</CardDescription>
+          </div>
+        </div>
+
+        {/* What arrived, named — the run's own manifest rather than a count. */}
+        <ul className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+          {sections.map((section) => (
+            <li key={section} className="flex items-center gap-2.5">
+              <Check className="size-4 shrink-0 text-success" />
+              <span className="text-fg-secondary">{t(`produced.${section}`)}</span>
+            </li>
+          ))}
+        </ul>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            onClick={() => {
+              document
+                .getElementById('brand')
+                ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              setJustFinished(false)
+            }}
+          >
+            {t('doneCta')}
+          </Button>
+          <Button variant="ghost" onClick={() => setJustFinished(false)}>
+            {t('doneDismiss')}
+          </Button>
+        </div>
+      </Card>
+    )
+  }
 
   /*
    * Hidden rather than unmounted: returning null still runs the effect above,
@@ -226,7 +317,7 @@ export function GenerationPanel({
                 key={section}
                 style={{ '--i': index } as React.CSSProperties}
                 className={cn(
-                  'relative flex items-center gap-3 overflow-hidden rounded-lg border border-line px-4 py-3 text-sm transition-colors duration-300',
+                  'relative flex items-center gap-3 overflow-hidden rounded-control border border-line px-4 py-3 text-sm transition-colors duration-300',
                   state === 'running' && 'border-brand/40 bg-brand/5',
                   state === 'done' && 'border-success/30',
                 )}
@@ -256,6 +347,13 @@ export function GenerationPanel({
             )
           })}
         </ol>
+      )}
+
+      {/* Said before the retry, because it is what decides whether to retry. */}
+      {(status === 'failed' || status === 'partial') && charged !== null && (
+        <p className="text-sm text-fg-secondary">
+          {charged > 0 ? t('failedCharged', { credits: charged }) : t('failedNoCharge')}
+        </p>
       )}
 
       {!canAfford && !isRunning && (

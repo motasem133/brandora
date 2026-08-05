@@ -23,7 +23,19 @@
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-:root {
+/*
+ * The dark palette, declared for the document and for any subtree that is dark
+ * on purpose.
+ *
+ * `.world-dark` exists for the marketing pages. They are dark because the brand
+ * is dark — it is a pinned commitment, not a default picked by category — and
+ * they used to say so in hardcoded hex, which meant 44 colour literals, no
+ * response to anything, and text tuned by eye at `white/35` (3.11:1). Written
+ * as a token scope instead, they stay dark under `[data-theme='light']` while
+ * every value in them is the measured one.
+ */
+:root,
+.world-dark {
   /* Dark Navy, and two steps lifted out of it rather than grey panels. */
   --bg-base: #05070f;
   --bg-surface: #0a0f1c;
@@ -135,6 +147,13 @@
 @layer base {
   * {
     border-color: var(--border);
+  }
+
+  /* A dark subtree carries its own ground and ink rather than inheriting the
+     document's, which may be light. */
+  .world-dark {
+    background-color: var(--bg-base);
+    color: var(--text-primary);
   }
 
   body {
@@ -302,6 +321,23 @@
   animation: scale-in 0.28s var(--ease-spring) both;
 }
 
+@keyframes sheet-up {
+  from {
+    transform: translateY(1.5rem);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* The panel arrives from the edge it is attached to, which is the one gesture
+   that says where it came from and where dismissing it will send it. */
+@utility animate-sheet-up {
+  animation: sheet-up 0.24s var(--ease-out-soft) both;
+}
+
 /*
  * Stagger without a JS timeline: each child declares its index as --i and the
  * delay falls out of it. Capped so a long list never leaves the last row
@@ -378,17 +414,51 @@
  * fast animation is still motion.
  */
 @media (prefers-reduced-motion: reduce) {
+  /*
+   * Motion is removed; feedback is not.
+   *
+   * This was a blanket kill on every animation and every transition, and it
+   * took the product's two live signals with it: the loading skeleton's
+   * shimmer and the running job's pulse both collapsed to a single frame, so a
+   * generation in progress rendered as a static gradient with nothing to say
+   * it was working. A fast animation is still motion — but a colour easing
+   * over 100ms is not motion, it is the interface answering.
+   */
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  /* Transforms and filters are the motion; colour, shadow and opacity are the
+     response to a press or a hover, and they stay. */
+  *,
+  *::before,
+  *::after {
+    transition-property: color, background-color, border-color, box-shadow, opacity,
+      text-decoration-color, fill, stroke !important;
+    transition-duration: 120ms !important;
   }
 
   .interactive:hover {
     transform: none;
+  }
+
+  /*
+   * The two states that exist only as movement get a still form instead of
+   * nothing: a steady tint that says "this surface is not finished yet".
+   */
+  .shimmer-surface {
+    background-image: none;
+    background-color: color-mix(in srgb, var(--brand-primary) 12%, var(--bg-elevated));
+  }
+
+  /* The class in markup is `pulse-brand`; `pulse-ring` is the keyframe name.
+     Aimed at the keyframe, this substitution silently applied to nothing. */
+  .pulse-brand {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-primary) 35%, transparent) !important;
   }
 }
 
@@ -439,7 +509,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 0.75rem;
+  /* A chip is something you operate, so it takes the control radius. */
+  border-radius: var(--radius-control);
   padding: 0.625rem;
   color: var(--brand-primary);
   background: linear-gradient(

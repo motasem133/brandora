@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { FieldError } from '@/components/ui/field-error'
 import { useRouter } from '@/i18n/navigation'
-import type { BillingInterval } from '@/lib/utils'
 import { changePlan } from '@/server/actions/billing'
 
 /**
@@ -30,14 +29,12 @@ export function ChangePlanButton({
   slug,
   planName,
   price,
-  interval,
   label,
   canManageCard,
 }: {
   slug: string
   planName: string
   price: string
-  interval: BillingInterval
   label: string
   /**
    * Whether this organization has a Polar customer behind it.
@@ -76,7 +73,7 @@ export function ChangePlanButton({
         open={asking}
         pending={isPending}
         onClose={() => setAsking(false)}
-        onConfirm={() => execute({ slug, interval })}
+        onConfirm={() => execute({ slug })}
         title={t('changeTitle', { plan: planName })}
         body={
           <>

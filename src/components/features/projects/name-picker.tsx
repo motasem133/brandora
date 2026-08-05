@@ -34,7 +34,7 @@ export function NamePicker({
           <li
             key={idea.name}
             className={cn(
-              'flex items-start gap-3 rounded-lg border p-3 transition-colors',
+              'flex items-start gap-3 rounded-control border p-3 transition-colors',
               isSelected ? 'border-brand bg-brand/5' : 'border-line',
             )}
           >
@@ -52,7 +52,7 @@ export function NamePicker({
               <button
                 onClick={() => execute({ projectId, name: idea.name })}
                 disabled={isPending}
-                className="shrink-0 rounded-lg border border-line px-3 py-1.5 text-xs transition-colors hover:border-brand hover:accent-text disabled:opacity-50"
+                className="shrink-0 rounded-control border border-line px-3 py-1.5 text-xs transition-colors hover:border-brand hover:accent-text disabled:opacity-50"
               >
                 {saving ? <Loader2 className="size-3.5 animate-spin" /> : t('useThisName')}
               </button>

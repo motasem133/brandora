@@ -2,6 +2,7 @@ import { setRequestLocale } from 'next-intl/server'
 import { redirect } from 'next/navigation'
 
 import { AnalyticsIdentity } from '@/components/analytics/posthog-provider'
+import { MobileNav } from '@/components/features/dashboard/mobile-nav'
 import { Sidebar } from '@/components/features/dashboard/sidebar'
 import { Topbar } from '@/components/features/dashboard/topbar'
 import { getEntitlements } from '@/server/db/queries/plans'
@@ -41,6 +42,8 @@ export default async function DashboardLayout({
       <Sidebar isAdmin={session.user.role === 'admin'} />
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar user={{ name: session.user.name, email: session.user.email }} />
+        {/* The rail's destinations, kept reachable where the rail is not. */}
+        <MobileNav isAdmin={session.user.role === 'admin'} />
         {/*
           Content arrives rather than snapping in. Deliberately not keyed on
           the pathname: keying would remount the subtree on every navigation

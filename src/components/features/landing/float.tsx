@@ -40,12 +40,14 @@ export function FloatCard({
 
   return (
     <motion.div
+      data-reveal
       className={className}
       initial={{ opacity: 0, y: 48, rotate: tilt * 2.2, filter: 'blur(10px)' }}
       animate={{ opacity: 1, y: 0, rotate: tilt, filter: 'blur(0px)' }}
       transition={{ duration: 1, ease: EASE, delay }}
     >
       <motion.div
+        data-reveal
         animate={{ y: [0, -drift, 0] }}
         transition={{ duration, repeat: Infinity, ease: 'easeInOut', delay }}
       >
@@ -61,6 +63,7 @@ export function HeroBadge({ children }: { children: React.ReactNode }) {
 
   return (
     <motion.div
+      data-reveal
       initial={reduced ? false : { opacity: 0, y: -10, filter: 'blur(6px)' }}
       animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
       transition={{ duration: 0.7, ease: EASE }}
