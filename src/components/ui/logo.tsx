@@ -4,13 +4,16 @@ import { cn } from '@/lib/utils'
 /**
  * The Brandora mark.
  *
- * Inline SVG rather than an <img> for three reasons: it inherits the page's
- * gradient tokens instead of baking a colour, it costs no request, and the
- * sparkles can be animated independently of the letterform.
+ * Traced from the artwork the client supplied, with the product's own
+ * vectoriser — the same code path a customer's logo goes through. The source is
+ * a neon render on grey: the glow is baked in and the sparkle is a lighter
+ * violet rather than a hole, so the trace separates the two tones and keeps only
+ * the mark, which is why the sparkle reads as negative space here.
  *
- * The gradient id is namespaced per instance — two marks on one page with the
- * same id would both resolve to whichever defs block rendered first, which is
- * how a logo silently loses its colour in a header that also has a footer.
+ * Inline SVG rather than an `<img>`: it inherits the page's colour tokens
+ * instead of baking one, and it costs no request. Flat rather than gradient-
+ * filled, because the supplied artwork is one flat violet — and that violet is
+ * now `--brand-primary`, so the mark and the interface cannot drift apart.
  */
 export function LogoMark({
   className,
@@ -19,47 +22,33 @@ export function LogoMark({
 }: {
   className?: string
   id?: string
-  /** Sparkles drift and shimmer. For hero use, not for a 24px header icon. */
+  /** A slow shimmer across the mark. For hero use, not a 24px header icon. */
   animated?: boolean
 }) {
-  /*
-   * The default was the string 'brandora', which is not per-instance at all —
-   * the sidebar mark and the topbar mark both emitted
-   * `id="brandora-mark-gradient"`, so the document carried a duplicate id and
-   * both marks resolved to whichever defs block rendered first. `useId` makes
-   * the namespacing the comment above claims.
-   */
   const reactId = useId()
-  const gradientId = `${id ?? reactId}-mark-gradient`
+  const gradientId = `${id ?? reactId}-mark-sheen`
 
   return (
-    <svg
-      viewBox="0 0 100 100"
-      className={cn('size-8', className)}
-      role="img"
-      aria-label="Brandora"
-    >
-      <defs>
-        <linearGradient id={gradientId} x1="0.1" y1="0" x2="0.9" y2="1">
-          <stop offset="0" stopColor="var(--brand-primary)" />
-          <stop offset="1" stopColor="var(--brand-secondary)" />
-        </linearGradient>
-      </defs>
+    <svg viewBox="0 0 986 872" className={cn('size-8', className)} role="img" aria-label="Brandora">
+      {animated && (
+        <defs>
+          {/* A sheen that travels across the letterform, rather than the two
+              sparkles the previous mark animated — this artwork has one, and it
+              is cut out of the shape rather than drawn on top of it. */}
+          <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stopColor="var(--brand-primary)" />
+            <stop offset="0.5" stopColor="var(--brand-secondary)" />
+            <stop offset="1" stopColor="var(--brand-primary)" />
+          </linearGradient>
+        </defs>
+      )}
 
-      <g fill={`url(#${gradientId})`}>
-        <path
-          fillRule="evenodd"
-          d="M38 11h24c14 0 24 9 24 21 0 7-3 13-9 16 7 4 11 10 11 18 0 13-10 22-26 22H38V11zm16 15v13h8c5 0 8-2 8-6.5S67 26 62 26h-8zm0 27v16h10c6 0 10-3 10-8s-4-8-10-8H54z"
-        />
-        <path
-          className={animated ? 'logo-sparkle' : undefined}
-          d="M26 28c2.4 13.2 8.4 19.2 21.6 21.6C34.4 52 28.4 58 26 71.2 23.6 58 17.6 52 4.4 49.6 17.6 47.2 23.6 41.2 26 28z"
-        />
-        <path
-          className={animated ? 'logo-sparkle logo-sparkle-delayed' : undefined}
-          d="M21 6c1.1 6.2 3.9 9 10.1 10.1C24.9 17.2 22.1 20 21 26.2 19.9 20 17.1 17.2 10.9 16.1 17.1 15 19.9 12.2 21 6z"
-        />
-      </g>
+      <path
+        fillRule="evenodd"
+        className={animated ? 'logo-sparkle' : undefined}
+        fill={animated ? `url(#${gradientId})` : 'var(--brand-primary)'}
+        d="M287.8 51.6h108.3l122 .2h174c2.9.2 2.9.2 4.9 1.2l8 .5c7.7.4 7.7.4 10 1.5l5 .2c6.5.5 12.3 2.1 18.5 4q5.9 1.7 11.7 2.7c5.4 1 10.1 3.3 15 5.5q4.6 2 9.4 3.6a214 214 0 0 1 49.2 26.1l4.2 2.9v2l2.3.9c2.7 1.1 2.7 1.1 5.7 3.1v2h2v2l2.3.9c2.7 1.1 2.7 1.1 5.7 3.1v2h2v2h2v2h2v2h2v2h2v2h2v2h2v2h2v2h2c4 5.4 4 5.4 4 8h2v2h2v2h2a109 109 0 0 1 6.3 9.2c1.7 2.8 1.7 2.8 1.7 4.8h2c1.7 2.3 1.7 2.3 3.6 5.6l1 1.8 3.4 5.6 2 3.4a244 244 0 0 1 20 42.6l1.2 3.4c1.8 5.3 3 10.1 3.8 15.6l1.4 4.3c3 8.5 3.9 16.8 4.3 25.8.3 2.9.3 2.9 1.3 4.9l.1 6.9V313c-.1 1.9-.1 1.9-1.1 3.9l-.4 5.4c-.5 6.4-2 12.4-3.6 18.6l-.7 2.9A133 133 0 0 1 896 396h-2l-.9 2.3C892 401 892 401 890 404h-2v2h-2v2h-2v2h-2v2h-2v2h-2v2h-2v2c-5.4 4-5.4 4-8 4v2l-6 3.9-1.8 1c-7.9 4.7-15.5 8-24.2 10.9-3 1.2-3 1.2-5 4.2a28 28 0 0 0 8.2 4.7l2.7 1.1 6.6 2.5c8.6 3.5 16.3 7.9 24 13l2.8 1.9c5 3.4 5 3.4 6.7 4.8v2l2.3.9c2.7 1.1 2.7 1.1 5.7 3.1v2h2v2h2v2h2v2h2v2h2v2h2v2h2v2h2v2h2c4 5.4 4 5.4 4 8h2a148 148 0 0 1 28 60c2.5 9 2.6 18 2.8 27.1.2 1.9.2 1.9 1.2 3.9l.2 5v2.6c-.2 2.4-.2 2.4-2.2 5.4-.2 2.2-.2 2.2-.2 4.8v2.8l.1 3 .1 5.7v2.6c0 2.1 0 2.1-1 4.1l-.4 4.5c-.4 4.6-1.4 8.6-2.9 13q-1 3.6-1.5 7.1c-2.3 12.2-8.2 24-13.2 35.4l-1.5 3.5a191 191 0 0 1-15.9 27.4l-1.6 2.4-1.5 2.3-1.3 2-1.2 1.4h-2v2h-2v2h-2l-.9 2.3C894 739 894 739 892 742h-2v2h-2v2h-2v2h-2v2h-2v2h-2v2h-2v2h-2v2h-2v2h-2v2h-2v2c-5.4 4-5.4 4-8 4v2h-2v2h-2v2c-1.9 1.5-1.9 1.5-4.5 3.2l-2.9 1.8-3.1 2-3.2 2.1a250 250 0 0 1-87.5 35.5c-1.8.4-1.8.4-3.8 1.4l-7.7.7c-2.3.3-2.3.3-4.3 1.3l-10.2.6c-5.6.3-5.6.3-7.8 1.4l-6.4.1H675l-31.7.1h-92.2l-115.9.1H331.9c-2.9-.3-2.9-.3-4.8-1.7-1.7-2.4-1.5-4.4-1.5-7.3v-35.1l-.2-27.7v-49.4l-.1-8.8v-12.8c-.3-2.5-.3-2.5-2.3-4.5-2-.3-2-.3-4.5-.3h-60.2l-19.7-.1h-21.1c-8-.2-15-1.8-21.4-7a27 27 0 0 1-6.4-22.6q1.4-9 8.4-14.8c8.6-5.2 16.8-5 26.5-5h62.8l84.6.2c8.7 0 16.8 0 25-3.4l3.1-1.2 1.9-.8v-2h2c3.6-9.3 4-15.6 0-24.8l-1-2.2-1-3c-6-3.5-13.2-3.5-19.9-3.8-3.1-.2-3.1-.2-5.4-.8-1.7-.4-1.7-.4-3.7.6l-4 .1h-2.1c-1.9-.1-1.9-.1-3.9-1.1l-8.8-.1H231l-33.7-.1h-43.4c-22 .1-22 .1-29.9-6.8-6-7.2-7-14.3-6.5-23.4A19 19 0 0 1 122 544h2v-2h2v-2a34 34 0 0 1 18.7-6.3H198l76.2-.1h48.6l47-.1H430l12.4-.1h10c3-.5 5-1.7 7.6-3.4h2v-2h2v-2h2v-2h2a30 30 0 0 0 1.3-8.9v-3a15 15 0 0 0-3.3-8.1v-2h-2v-2h-2v-2a53 53 0 0 0-21.6-3.4H276.3l-114.7-.1H158c-7 0-12-1.1-18.1-4.5v-2h-2v-2h-2v-2h-2a34 34 0 0 1-4-23c1-2.8 2.2-4.6 4-7h2v-2h2v-2l2.2-1 2.7-1.4 2.8-1.4c2.3-1.2 2.3-1.2 3.3-2.2l6.2-.1H196l31.1-.1H374l57.7-.1h91.7A74 74 0 0 1 572 462c4 5.3 4 5.3 4 8h2v2h2c8 14 13.9 26.8 14.8 43.2.2 1.8.2 1.8 1.2 3.8l.7 7.7c.3 2.3.3 2.3 1.3 4.3l.6 10.2c.3 5.6.3 5.6 1.4 7.8l.1 4.9v2.6c-.1 2.5-.1 2.5-.8 4.6l-.3 1.9 1.4 1.8c2.2 3 2 5.6 2.2 9.3.3 6.7.3 6.7 1.4 8.9l.3 4.5.1 2.7.2 5.6.1 2.7.1 2.5c.2 2 .2 2 1.2 4l.3 5 .1 2.9.2 6.2.1 3 .1 2.7c.2 2.2.2 2.2 1.2 4.2l.6 5.6.2 3 .2 2.4h2v-1.9l.4-8.5.2-3v-2.8l.2-2.6c.2-2.2.2-2.2 1.2-4.2l.3-5 .1-2.9.1-3.1.2-6 .1-2.8c.2-2.2.2-2.2 1.2-4.2l.5-8c.4-7.7.4-7.7 1.5-10l.5-7c.4-6.8.4-6.8 1.5-9l.5-7c.4-6.8.4-6.8 1.5-9l.4-4.4q.8-7.4 3-14.6.9-4 1.1-8.3c.3-3.9 1.2-7 2.7-10.5q1.4-4 2.2-8.2c1-4.7 2.5-8 5.4-11.9 1.2-2.1 1.2-2.1 2-5.8 1.2-5 3.8-9 6.7-13.3l1.5-2.4c2.8-4.1 2.8-4.1 4-5.6h2v-2h2v-2h2v-2h2v-2h2v-2h2v-2h2v-2h2v-2l7.6-5.2 2.4-1.5a134 134 0 0 1 61.2-22.1c1.8-.2 1.8-.2 3.8-1.2l7.7-.7c2.3-.3 2.3-.3 4.3-1.3l7.7-.7c2.3-.3 2.3-.3 4.3-1.3l10.8-.7c3.2-.3 3.2-.3 5.2-1.3l4.5-.3h2.7l5.6-.3 2.7-.1 2.5-.1c2-.2 2-.2 4-1.2l10.8-.7c3.2-.3 3.2-.3 5.2-1.3l7.7-.7c2.3-.3 2.3-.3 4.3-1.3l4.4-.4c7-.6 13.9-2.4 20.6-4.6v-2h-2l-20.5-.4-7.7-.1-11-.2H808l-2.8-.1c-2.3-.2-2.3-.2-4.3-1.2l-4.5-.3h-2.7l-2.8-.2-5.5-.2-2.5-.1c-2-.2-2-.2-4-1.2l-9.4-.4a14 14 0 0 1-9.6-3.6c-2.7 0-2.7 0-5.6.4-5.2.7-5.2.7-7.4-.4l-4-.3c-7.5-.6-14.6-3-21.8-5l-5.6-1.5c-13.6-3.2-28-10.4-39.6-18.2v-2l-2.3-.9C671 356 671 356 668 354v-2h-2v-2l-2.2-.7c-4.4-2-7-4.7-9.1-9.1l-.7-2.2h-2v-2h-2v-2h-2c-1.2-1.6-1.2-1.6-2.4-3.7l-1.4-2.4-1.5-2.7-1.5-2.6q-5.4-9.4-9.2-19.6l-.7-2q-5.1-13.8-7.6-28.3a119 119 0 0 0-2.3-10q-1.8-6.8-2.2-13.7c-.2-2-.2-2-1.2-4l-.7-9.3c-.3-2.7-.3-2.7-1.3-4.7l-.7-10.8c-.3-3.2-.3-3.2-1.3-5.2l-.3-4v-2.5l-.3-5-.1-2.4-.1-2.3c-.2-1.8-.2-1.8-1.2-3.8l-.4-7.2-.2-5.6-.1-2.7-.1-2.5c-.2-2-.2-2-1.2-4l-.6-6.6-.2-3.6-.2-2.8h-2v1.9l-.4 8.5-.2 3v2.8l-.2 2.6c-.2 2.2-.2 2.2-1.2 4.2l-.4 7.2-.1 2.8-.2 5.5-.1 2.5c-.2 2-.2 2-1.2 4l-.5 7c-.4 6.8-.4 6.8-1.5 9l-.5 7c-.4 6.8-.4 6.8-1.5 9l-.5 5c-.4 4.8-.4 4.8-1.5 7l-.5 6c-.4 5.8-.4 5.8-1.5 8l-.4 4.4a87 87 0 0 1-2.9 14.7l-1.5 7.5q-4 19.4-14.2 36.4l-1.7 3c-3 5.2-3 5.2-4.3 7h-2v2h-2v2h-2v2h-2v2h-2v2h-2v2h-2v2h-2v2h-2v2h-2v2a131 131 0 0 1-55.3 22.3q-5 1-10 2.3-7.4 2-15.3 2.2c-2.4.2-2.4.2-4.4 1.2l-10.2.6c-5.6.3-5.6.3-7.8 1.4l-5.4.3-3.2.1-6.8.2-3.2.1-3 .1c-2.4.2-2.4.2-4.4 1.2l-5.5.1h-54.3l-22.9.1h-54.8c-2.5-.2-2.5-.2-4.5-2.2-.2-2.8-.2-2.8-.2-6.4v-2l.1-11.4.1-10.3.2-16.2q0-18.8.3-37.4l.3-34.3.2-16.2v-10l.1-4.7.1-10c-.2-3.1-1-5.2-2.2-8.1l1-6-1-2-.2-5.4-.1-2.9c.4-3.1 1.3-4.3 3.3-6.7-.3-3-1.2-4.4-3-7q-.3-3.8-.2-7.7v-21c0-5 0-5 1.2-7.3l.4-10.6.2-8v-2.8c1-39.3 1-39.3-1.6-44.6l-.1-8v-2.2c0-5.5 0-5.5 1.1-7.8.2-5.5.2-5.5-1-8-.4-5.3-.4-5.3 1-7.7 3-2 5.3-1.7 8.8-1.7M720.4 293l-2.5 1.6-1.9 1.5v2l-2.3.9c-2.7 1-2.7 1-5.7 3v2h-2v2h-2v2l-2.3.9C699 310 699 310 696 312v2h-2v2l-2.2.7a20 20 0 0 0-7.8 6.3c-.5 3.3-.6 5 1.1 7.9 2.8 1.6 4.8 1.4 7.9 1.1l3-2v-2h2v-2h2v-2h2v-2h2v-2h2v-2h2c4-5.4 4-5.4 4-8h2v-2h2c4-5.4 4-5.4 4-8h2c1.3-1.7 1.3-1.7 2.6-3.9l1.4-2.2c1-1.9 1-1.9 1-3.9-2.8 0-4.3 1.3-6.6 2.9M492 294l-2 3 2 3h2l.9 2.3c1.1 2.7 1.1 2.7 3.1 5.7h2v2h2v2h2v2h2v2h2l.9 2.3c1.1 2.7 1.1 2.7 3.1 5.7h2v2h2v2c7.6 4.9 7.6 4.9 13 4 2.4-1.5 2.9-2.6 3.6-5.3-1-4.3-4-6.3-7.6-8.7-3-1.4-3-1.4-5-2v-2h-2v-2h-2v-2l-5.9-4.1q-1.6-1.2-3.3-2.2C504 302 504 302 502 302v-2c-2.2-1.5-2.2-1.5-5-3.1l-2.8-1.7zm193.2 175.2c-1.2 1.8-1.2 1.8-1.2 4a25 25 0 0 0 12 14.8h2v2h2v2h2v2c5.4 4 5.4 4 8 4v2h2v2c5.4 4 5.4 4 8 4v2l6 3c1-3 1-3 0-5-.1-.4-.1-.4-1.3-2.2l-1.4-2.2-1.3-1.6h-2v-2h-2l-.9-2.3C716 493 716 493 714 490h-2v-2h-2v-2h-2v-2h-2v-2h-2v-2h-2v-2h-2v-2h-2v-2h-2v-2h-2v-2c-3.2-2.2-5.3-3-8.8-.8M77.6 537l4.4 3v2h2v2h2c4.9 7.8 5 16.1 4 25-1 3-2 4.6-4 7h-2v2h-2v2c-9 6.7-18.1 7.5-29 6-3.4-.9-6-2.1-9-4l-3.2-1.6q-7.9-6.6-9.3-17c-.2-7.2.7-13 4.5-19.4h2v-2h2v-2c11.3-6.8 25.5-9.7 37.6-3"
+      />
     </svg>
   )
 }

@@ -52,12 +52,12 @@
    * The accent, for text that carries the brand: the wordmark, a slogan, a
    * figure worth reading twice.
    *
-   * A tint of the primary rather than the primary itself. #7c3aed on this
-   * ground is 3.4:1 — fine for a button's fill, not for words someone has to
-   * read. This lands at 7:1 in both themes, which is why the value differs
-   * either side and the ramp does not.
+   * A tint of the primary rather than the primary itself. #7240ff on this
+   * ground is 3.73:1 — fine for a button's fill, not for words someone has to
+   * read. This lands at 7.57:1 dark and 7.53:1 light, which is why the value
+   * differs either side and the ramp does not.
    */
-  --text-accent: #a78bfa;
+  --text-accent: #aa8cff;
 
   /*
    * Borders are translucent white rather than a grey line. A hard border is
@@ -66,8 +66,18 @@
   --border: color-mix(in srgb, #ffffff 9%, transparent);
   --border-strong: color-mix(in srgb, #ffffff 16%, transparent);
 
-  --brand-primary: #7c3aed;
-  --brand-indigo: #4f46e5;
+  /*
+   * The ramp, anchored to the mark.
+   *
+   * The logo is #7240ff — a bluer, more saturated violet than the #7c3aed this
+   * system was built on. Re-anchoring rather than adding: everything from the
+   * focus ring to the lit card edge reads `--brand-primary`, so the mark and
+   * the interface stay the same colour by construction rather than by
+   * agreement. The indigo midpoint is interpolated between the new anchor and
+   * the blue end so the gradient keeps its shape.
+   */
+  --brand-primary: #7240ff;
+  --brand-indigo: #5b5cfb;
   --brand-secondary: #3b82f6;
   --brand-fg: #ffffff;
   /*
@@ -76,18 +86,18 @@
    * --brand-secondary (#3b82f6) is correct as a palette colour and stays that
    * way, but white 14px label text over it measures 3.68:1. This gradient is
    * what every primary button is filled with, so its blue stop is the deeper
-   * #2563eb (5.17:1) — the same hue, far enough down to carry a label.
+   * #2e65c0 (5.62:1) — the same hue, far enough down to carry a label.
    */
   --brand-gradient: linear-gradient(
     135deg,
     var(--brand-primary),
     var(--brand-indigo) 52%,
-    #2563eb
+    #2e65c0
   );
 
   /* Soft, wide, and tinted with the brand rather than pure black. */
   --shadow-soft: 0 1px 2px rgba(5, 8, 20, 0.4), 0 12px 32px -16px rgba(5, 8, 20, 0.8);
-  --shadow-lifted: 0 2px 4px rgba(5, 8, 20, 0.35), 0 26px 56px -24px rgba(79, 70, 229, 0.55);
+  --shadow-lifted: 0 2px 4px rgba(5, 8, 20, 0.35), 0 26px 56px -24px rgba(91, 92, 251, 0.55);
 
   --success: #22c55e;
   --warning: #f5a524;
@@ -107,14 +117,15 @@
   --text-muted: #67708c;
 
   /* A shade of the primary here, for the same reason the dark theme takes a
-     tint: the accent has to survive being read on white. */
-  --text-accent: #6d28d9;
+     tint: the accent has to survive being read on white. 7.53:1 on surface,
+     7.09:1 on the base ground. */
+  --text-accent: #5b33cc;
 
   --border: color-mix(in srgb, #0b1020 8%, transparent);
   --border-strong: color-mix(in srgb, #0b1020 14%, transparent);
 
   --shadow-soft: 0 1px 2px rgba(11, 16, 32, 0.05), 0 10px 30px -18px rgba(11, 16, 32, 0.25);
-  --shadow-lifted: 0 2px 6px rgba(11, 16, 32, 0.06), 0 24px 48px -24px rgba(124, 58, 237, 0.35);
+  --shadow-lifted: 0 2px 6px rgba(11, 16, 32, 0.06), 0 24px 48px -24px rgba(114, 64, 255, 0.35);
 
   /*
    * Status, darkened for a light ground.
