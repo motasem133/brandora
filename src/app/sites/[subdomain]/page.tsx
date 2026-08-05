@@ -79,14 +79,16 @@ export default async function PublishedSite({
   // Fonts are linked from the layout's <head>, where React can resolve their
   // precedence without being told.
   return (
-    <div style={{ backgroundColor: theme.backgroundColor, minHeight: '100dvh' }}>
+    <div style={{ backgroundColor: theme.safe.paper, minHeight: '100dvh' }}>
         <header
           className="flex flex-wrap items-center justify-between gap-4 px-8 py-5"
-          style={{ borderBottom: `1px solid ${theme.primaryColor}1a` }}
+          style={{ borderBottom: `1px solid ${theme.safe.line}` }}
         >
           <span
             className="text-lg font-bold"
-            style={{ fontFamily: `'${theme.fontHeading}', sans-serif`, color: theme.primaryColor }}
+            /* The brand's own colour when it can be read on the brand's own
+               ground, deepened when it cannot — this is the site's name. */
+            style={{ fontFamily: `'${theme.fontHeading}', sans-serif`, color: theme.safe.accent }}
           >
             {name}
           </span>
@@ -103,10 +105,11 @@ export default async function PublishedSite({
                  */
                 href={`?page=${key}`}
                 className="text-sm capitalize hover:underline"
+                /* The inactive state is a checked softer ink rather than an
+                   opacity multiplier, which cannot reach the contrast floor. */
                 style={{
                   fontFamily: `'${theme.fontBody}', sans-serif`,
-                  color: theme.textColor,
-                  opacity: key === active ? 1 : 0.7,
+                  color: key === active ? theme.safe.ink : theme.safe.muted,
                 }}
               >
                 {key}
@@ -121,9 +124,8 @@ export default async function PublishedSite({
           className="px-8 py-10 text-center text-sm"
           style={{
             fontFamily: `'${theme.fontBody}', sans-serif`,
-            color: theme.textColor,
-            opacity: 0.6,
-            borderTop: `1px solid ${theme.primaryColor}1a`,
+            color: theme.safe.muted,
+            borderTop: `1px solid ${theme.safe.line}`,
           }}
         >
           © {new Date().getFullYear()} {name}

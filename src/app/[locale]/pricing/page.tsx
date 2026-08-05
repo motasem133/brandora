@@ -46,7 +46,7 @@ export default async function PricingPage({
         </nav>
       </header>
 
-      <main className="mx-auto max-w-6xl px-6 pb-20">
+      <main id="content" tabIndex={-1} className="mx-auto max-w-6xl px-6 pb-20">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="font-display text-3xl font-bold sm:text-4xl">{t('title')}</h1>

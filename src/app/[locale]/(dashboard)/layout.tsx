@@ -49,7 +49,7 @@ export default async function DashboardLayout({
           the pathname: keying would remount the subtree on every navigation
           and throw away client state the project tabs and assistant rely on.
         */}
-        <main className="flex-1 px-6 py-8 animate-fade-up lg:px-10">{children}</main>
+        <main id="content" tabIndex={-1} className="flex-1 px-6 py-8 animate-fade-up lg:px-10">{children}</main>
       </div>
     </div>
   )

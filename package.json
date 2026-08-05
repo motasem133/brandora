@@ -21,6 +21,7 @@
     "auth:generate": "npx @better-auth/cli generate --config src/server/auth.ts",
     "test:system": "node scripts/system-test.mjs",
     "test:billing": "node scripts/billing-test.mjs",
+    "test:contrast": "tsx scripts/contrast-test.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "db:seed:test": "node scripts/seed-test-data.mjs"

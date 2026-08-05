@@ -27,7 +27,9 @@ export default async function AdminLayout({
   return (
     <div className="mx-auto max-w-7xl px-6 py-8 lg:px-10">
       <AdminNav />
-      <div className="mt-6">{children}</div>
+      <main id="content" tabIndex={-1} className="mt-6">
+        {children}
+      </main>
     </div>
   )
 }
