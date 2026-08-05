@@ -14,9 +14,11 @@ import {
 } from '@/components/features/landing/horizon'
 import { AfterHeadline, HeadlineWords } from '@/components/features/landing/motion-hero'
 import { PricingPlans } from '@/components/features/landing/pricing-plans'
+import { buttonVariants } from '@/components/ui/button'
 import { LogoMark } from '@/components/ui/logo'
 import { MomentumField, MomentumItem } from '@/components/ui/momentum'
 import { Link } from '@/i18n/navigation'
+import { cn } from '@/lib/utils'
 
 /**
  * Direction D — Horizon.
@@ -80,14 +82,23 @@ export default async function HorizonDirection({
           </a>
         </nav>
 
-        <Link
-          href="/register"
-          className="inline-flex items-center gap-2 rounded-full bg-[image:var(--brand-gradient)] px-5 py-2.5 text-sm font-semibold shadow-[0_0_28px_-6px_var(--brand-indigo)] transition-transform duration-200 hover:scale-[1.03]"
-        >
+        {/*
+          The same control the app uses, in the marketing world's shape.
+
+          These CTAs were four hand-rolled copies of the primary button that had
+          already drifted apart — three padding pairs, three shadow radii, none
+          of them the component. `shape="pill"` is what the reference does with
+          every control and what this page was reaching for by hand.
+        */}
+        <Link href="/register" className={buttonVariants({ shape: 'pill' })}>
           {t('ctaPrimary')}
           <ArrowRight className="size-4 rtl:rotate-180" />
         </Link>
       </header>
+
+      {/* The header's rule stops before the edges. A line running corner to
+          corner is the clearest signal a page is a template. */}
+      <div aria-hidden className="rule-fade relative z-20" />
 
       {/*
         Without JavaScript, 49 elements below the fold stayed at `opacity: 0`
@@ -127,17 +138,17 @@ export default async function HorizonDirection({
 
               Word-level split, which is what keeps this legible in Arabic:
               characters join, so a per-letter animation would break the script
-              outright. Arabic also gets its own leading at display size:
-              1.05 is Latin display leading, and it is wrong for a script that
-              carries its vowels above the line: `تُولَّد` puts a shadda and a
-              damma over the same letter, and at 4.6rem they landed inside the
-              line above. Tracking goes too — negative letter-spacing pulls
-              joined letterforms into each other rather than tightening a word.
+              outright.
+
+              Size, weight, leading and both Arabic overrides now live in
+              `type-display`. They were spelled out here and in four other
+              headings on this page, which is how one of them ended up a step
+              off from the rest.
             */}
-            <h1 className="text-[clamp(2.6rem,6.2vw,4.6rem)] font-bold leading-[1.05] tracking-[-0.035em] rtl:leading-[1.4] rtl:tracking-normal">
+            <h1 className="type-display">
               <HeadlineWords text={t('heroHeadline')} />{' '}
               <AfterHeadline delay={0.3}>
-                <span className="block text-fg-secondary">{t('heroHeadlineAfter')}</span>
+                <span className="type-trail block">{t('heroHeadlineAfter')}</span>
               </AfterHeadline>
             </h1>
           </div>
@@ -152,14 +163,11 @@ export default async function HorizonDirection({
             <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
               <Link
                 href="/pricing"
-                className="rounded-full border border-line-strong bg-elevated/50 px-6 py-3 text-sm font-medium backdrop-blur transition-colors hover:bg-elevated"
+                className={buttonVariants({ variant: 'outline', shape: 'pill' })}
               >
                 {t('ctaSecondary')}
               </Link>
-              <Link
-                href="/register"
-                className="inline-flex items-center gap-2 rounded-full bg-[image:var(--brand-gradient)] px-6 py-3 text-sm font-semibold shadow-[0_0_40px_-8px_var(--brand-indigo)] transition-transform duration-200 hover:scale-[1.03]"
-              >
+              <Link href="/register" className={buttonVariants({ shape: 'pill' })}>
                 {t('ctaPrimary')}
                 <ArrowRight className="size-4 rtl:rotate-180" />
               </Link>
@@ -191,9 +199,9 @@ export default async function HorizonDirection({
         <LightSweep />
         <div className="relative z-10 mx-auto max-w-7xl px-8 py-28">
           <SectionReveal>
-            <h2 className="max-w-2xl text-[clamp(2rem,4vw,3.2rem)] font-bold leading-[1.08] tracking-[-0.03em] rtl:leading-[1.4] rtl:tracking-normal">
+            <h2 className="type-section max-w-2xl">
               {t('kitTitle')}
-              <span className="text-fg-secondary"> {t('kitTitleAccent')}</span>
+              <span className="type-trail"> {t('kitTitleAccent')}</span>
             </h2>
           </SectionReveal>
 
@@ -217,8 +225,16 @@ export default async function HorizonDirection({
               at real output showed half of it.
             */}
             <Cell index={0} className="col-span-2 row-span-2 min-h-0" lift={false}>
-              <div className="relative h-full rounded-card bg-[image:linear-gradient(180deg,color-mix(in_srgb,var(--text-accent)_35%,transparent),color-mix(in_srgb,var(--text-primary)_4%,transparent)_38%)] p-px">
-                <div className="flex h-full min-h-0 flex-col rounded-[calc(var(--radius-card)-1px)] bg-surface p-7">
+              {/*
+                `lit` and `lit-inner`, not a sixth hand-written copy of them.
+
+                All six cells in this grid spelled the edge out inline and had
+                drifted to three different accent strengths — 28%, 30% and 35% —
+                for no reason anyone recorded. They were also lit from the top,
+                which is the light this system no longer has.
+              */}
+              <div className="lit relative h-full">
+                <div className="lit-inner flex min-h-0 flex-col p-7">
                   <p className="text-sm text-fg-secondary">{t('kitLogos')}</p>
                   {/*
                     Two explicit rows. The inner grid's rows were `auto`, so
@@ -249,8 +265,8 @@ export default async function HorizonDirection({
             </Cell>
 
             <Cell index={1} className="col-span-2">
-              <div className="h-full rounded-card bg-[image:linear-gradient(180deg,color-mix(in_srgb,var(--text-accent)_28%,transparent),color-mix(in_srgb,var(--text-primary)_4%,transparent)_38%)] p-px">
-                <div className="flex h-full flex-col rounded-[calc(var(--radius-card)-1px)] bg-surface p-7">
+              <div className="lit h-full">
+                <div className="lit-inner flex flex-col p-7">
                   <p className="text-sm text-fg-secondary">{t('kitPalette')}</p>
                   <PaletteDeal colors={PALETTE} className="mt-5 flex flex-1 gap-2" />
                   <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 font-mono text-xs text-fg-muted">
@@ -263,8 +279,8 @@ export default async function HorizonDirection({
             </Cell>
 
             <Cell index={2}>
-              <div className="h-full rounded-card bg-[image:linear-gradient(180deg,color-mix(in_srgb,var(--text-accent)_28%,transparent),color-mix(in_srgb,var(--text-primary)_4%,transparent)_38%)] p-px">
-                <div className="flex h-full flex-col justify-between rounded-[calc(var(--radius-card)-1px)] bg-surface p-7">
+              <div className="lit h-full">
+                <div className="lit-inner flex flex-col justify-between p-7">
                   <p className="text-sm text-fg-secondary">{t('kitNames')}</p>
                   <div>
                     <p className="text-2xl font-semibold tracking-[-0.02em]">Makān</p>
@@ -277,11 +293,11 @@ export default async function HorizonDirection({
             </Cell>
 
             <Cell index={3}>
-              <div className="h-full rounded-card bg-[image:linear-gradient(180deg,color-mix(in_srgb,var(--text-accent)_28%,transparent),color-mix(in_srgb,var(--text-primary)_4%,transparent)_38%)] p-px">
-                <div className="flex h-full flex-col justify-between rounded-[calc(var(--radius-card)-1px)] bg-surface p-7">
+              <div className="lit h-full">
+                <div className="lit-inner flex flex-col justify-between p-7">
                   <p className="text-sm text-fg-secondary">{t('kitType')}</p>
                   <div>
-                    <p className="text-3xl font-semibold tracking-[-0.03em]">Sora</p>
+                    <p className="text-3xl font-semibold tracking-[-0.02em]">Sora</p>
                     <p className="text-sm text-fg-secondary">Inter · DM Serif Display</p>
                   </div>
                 </div>
@@ -289,8 +305,8 @@ export default async function HorizonDirection({
             </Cell>
 
             <Cell index={4} className="col-span-2">
-              <div className="group h-full overflow-hidden rounded-card bg-[image:linear-gradient(180deg,color-mix(in_srgb,var(--text-accent)_30%,transparent),color-mix(in_srgb,var(--text-primary)_4%,transparent)_38%)] p-px">
-                <div className="relative h-full overflow-hidden rounded-[calc(var(--radius-card)-1px)] bg-surface">
+              <div className="lit group h-full overflow-hidden">
+                <div className="lit-inner relative overflow-hidden">
                   <Image
                     src="/marketing/makan-website.webp"
                     alt={t('kitWebsiteAlt')}
@@ -308,8 +324,8 @@ export default async function HorizonDirection({
             </Cell>
 
             <Cell index={5} className="col-span-2">
-              <div className="h-full rounded-card bg-[image:linear-gradient(180deg,color-mix(in_srgb,var(--text-accent)_28%,transparent),color-mix(in_srgb,var(--text-primary)_4%,transparent)_38%)] p-px">
-                <div className="flex h-full flex-col justify-between rounded-[calc(var(--radius-card)-1px)] bg-surface p-7">
+              <div className="lit h-full">
+                <div className="lit-inner flex flex-col justify-between p-7">
                   <p className="text-sm text-fg-secondary">{t('kitRest')}</p>
                   <PillFan items={rest} className="flex flex-wrap gap-2" />
                 </div>
@@ -324,9 +340,7 @@ export default async function HorizonDirection({
         <SectionArc className="top-0" />
         <div className="relative z-10 mx-auto max-w-5xl px-8 py-28">
           <SectionReveal>
-            <h2 className="text-[clamp(2rem,4vw,3.2rem)] font-bold tracking-[-0.03em] rtl:tracking-normal">
-              {t('howTitle')}
-            </h2>
+            <h2 className="type-section">{t('howTitle')}</h2>
           </SectionReveal>
 
           {/*
@@ -341,14 +355,9 @@ export default async function HorizonDirection({
             list semantics, so "How a run works" stopped announcing five steps.
           */}
           <div className="relative mt-16">
-            <div
-              aria-hidden
-              className="absolute bottom-8 start-[1.55rem] top-4 w-px"
-              style={{
-                background:
-                  'linear-gradient(180deg, color-mix(in srgb, var(--text-accent) 70%, transparent), color-mix(in srgb, var(--brand-secondary) 50%, transparent), transparent)',
-              }}
-            />
+            {/* `rail` is the utility for exactly this and had no adopters,
+                while its hand-written equivalent lived here. */}
+            <div aria-hidden className="rail absolute bottom-8 start-[1.55rem] top-4 w-px" />
 
             <ol>
               {steps.map((step, index) => (
@@ -361,7 +370,7 @@ export default async function HorizonDirection({
                   >
                   <StepMark
                     index={index}
-                    className="relative z-10 flex size-14 items-center justify-center rounded-card border border-line bg-surface text-lg font-semibold shadow-[0_0_34px_-8px_color-mix(in_srgb,var(--text-accent)_90%,transparent)]"
+                    className="rail-node relative z-10 flex size-14 items-center justify-center rounded-card text-lg font-semibold"
                   >
                     {index + 1}
                   </StepMark>
@@ -387,9 +396,7 @@ export default async function HorizonDirection({
         <div className="relative z-10 mx-auto max-w-7xl px-8 py-28">
           <SectionReveal>
             <div className="flex flex-wrap items-end justify-between gap-6">
-              <h2 className="text-[clamp(2rem,4vw,3.2rem)] font-bold tracking-[-0.03em] rtl:tracking-normal">
-                {t('pricingHeading')}
-              </h2>
+              <h2 className="type-section">{t('pricingHeading')}</h2>
               <p className="max-w-[42ch] text-fg-secondary">{t('pricingDeck')}</p>
             </div>
           </SectionReveal>
@@ -424,15 +431,18 @@ export default async function HorizonDirection({
         <SectionArc className="top-[38%]" />
         <div className="relative z-10 mx-auto max-w-7xl px-8 py-28 text-center">
           <SectionReveal>
-            <h2 className="mx-auto max-w-3xl text-[clamp(2.2rem,5vw,4rem)] font-bold leading-[1.05] tracking-[-0.035em] rtl:leading-[1.4] rtl:tracking-normal">
+            {/* The page's closing heading was a fifth size — 2.2rem to 4rem
+                against the hero's 2.6 to 4.6 — for no reason anyone recorded.
+                It takes the display step, like the hero. */}
+            <h2 className="type-display mx-auto max-w-3xl">
               {t('closeTitle')}
-              <span className="text-fg-secondary"> {t('closeTitleAccent')}</span>
+              <span className="type-trail"> {t('closeTitleAccent')}</span>
             </h2>
           </SectionReveal>
           <SectionReveal delay={0.1}>
             <Link
               href="/register"
-              className="mt-10 inline-flex items-center gap-2 rounded-full bg-[image:var(--brand-gradient)] px-8 py-4 text-sm font-semibold shadow-[0_0_50px_-10px_var(--brand-indigo)] transition-transform duration-200 hover:scale-[1.03]"
+              className={cn(buttonVariants({ size: 'lg', shape: 'pill' }), 'mt-10')}
             >
               {t('ctaPrimary')}
               <ArrowRight className="size-4 rtl:rotate-180" />

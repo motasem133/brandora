@@ -26,8 +26,8 @@ export function Select({ className, children, ...props }: React.ComponentProps<'
     <div className="relative">
       <select
         className={cn(
-          'h-11 w-full appearance-none rounded-control border border-line bg-elevated/60 pe-10 ps-3.5 text-sm text-fg',
-          'transition-shadow duration-200 focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--brand-primary)_22%,transparent)]',
+          'field-lit h-11 w-full appearance-none rounded-control border border-line bg-elevated/60 pe-10 ps-3.5 text-sm text-fg',
+          'transition-shadow duration-200',
           'focus:border-brand focus:outline-none',
           'disabled:cursor-not-allowed disabled:opacity-50',
           'aria-[invalid=true]:border-danger',

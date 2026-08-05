@@ -7,22 +7,22 @@
       "signal-violet": {
         "role": "primary",
         "displayName": "Signal Violet",
-        "canonical": "#7c3aed",
+        "canonical": "#7240ff",
         "tonalRamp": [
-          "oklch(22% 0.12 293)",
-          "oklch(32% 0.17 293)",
-          "oklch(42% 0.22 293)",
-          "oklch(53% 0.26 293)",
-          "oklch(63% 0.22 293)",
-          "oklch(74% 0.16 293)",
-          "oklch(85% 0.09 293)",
-          "oklch(95% 0.03 293)"
+          "oklch(22% 0.12 286)",
+          "oklch(32% 0.17 286)",
+          "oklch(42% 0.22 286)",
+          "oklch(53% 0.26 286)",
+          "oklch(63% 0.22 286)",
+          "oklch(74% 0.16 286)",
+          "oklch(85% 0.09 286)",
+          "oklch(95% 0.03 286)"
         ]
       },
       "indigo-core": {
         "role": "primary",
         "displayName": "Indigo Core",
-        "canonical": "#4f46e5",
+        "canonical": "#5b5cfb",
         "tonalRamp": [
           "oklch(21% 0.11 275)",
           "oklch(30% 0.16 275)",
@@ -52,18 +52,18 @@
       "lit-violet": {
         "role": "primary",
         "displayName": "Lit Violet",
-        "canonical": "#a78bfa",
-        "lightThemeValue": "#6d28d9",
+        "canonical": "#aa8cff",
+        "lightThemeValue": "#5b33cc",
         "purpose": "The readable member of the ramp. All accent text, in both themes.",
         "tonalRamp": [
-          "oklch(28% 0.10 292)",
-          "oklch(38% 0.14 292)",
-          "oklch(48% 0.17 292)",
-          "oklch(58% 0.18 292)",
-          "oklch(68% 0.15 292)",
-          "oklch(78% 0.11 292)",
-          "oklch(88% 0.06 292)",
-          "oklch(96% 0.02 292)"
+          "oklch(28% 0.10 294)",
+          "oklch(38% 0.14 294)",
+          "oklch(48% 0.17 294)",
+          "oklch(58% 0.18 294)",
+          "oklch(68% 0.15 294)",
+          "oklch(78% 0.11 294)",
+          "oklch(88% 0.06 294)",
+          "oklch(96% 0.02 294)"
         ]
       },
       "room-black": {
@@ -145,17 +145,17 @@
       "bloom-violet": {
         "role": "primary",
         "displayName": "Bloom Violet",
-        "canonical": "#8b5cf6",
+        "canonical": "#8f66ff",
         "purpose": "The stop between Signal Violet and Lit Violet; carries the horizon bloom and sits inside both arc gradients.",
         "tonalRamp": [
-          "oklch(25% 0.11 292)",
-          "oklch(35% 0.15 292)",
-          "oklch(45% 0.19 292)",
-          "oklch(56% 0.22 292)",
-          "oklch(66% 0.18 292)",
-          "oklch(77% 0.13 292)",
-          "oklch(87% 0.07 292)",
-          "oklch(96% 0.02 292)"
+          "oklch(25% 0.11 291)",
+          "oklch(35% 0.15 291)",
+          "oklch(45% 0.19 291)",
+          "oklch(56% 0.22 291)",
+          "oklch(66% 0.18 291)",
+          "oklch(77% 0.13 291)",
+          "oklch(87% 0.07 291)",
+          "oklch(96% 0.02 291)"
         ]
       }
     },
@@ -193,34 +193,39 @@
         "paper-white": "#0b1020",
         "reading-grey": "#4c5570",
         "quiet-grey": "#67708c",
-        "lit-violet": "#6d28d9"
+        "lit-violet": "#5b33cc"
       }
     },
     "gradients": [
       {
         "name": "brand-gradient",
-        "value": "linear-gradient(135deg, #7c3aed, #4f46e5 52%, #2563eb)",
-        "purpose": "The primary button fill and the lit edge source. One per view. Closes on #2563eb rather than Horizon Blue because white label text over #3b82f6 measures 3.7:1."
+        "value": "linear-gradient(0deg, #7240ff, #4b46c9 55%, #1e4585)",
+        "purpose": "The primary control fill and the lit edge source. One per view. Vertical and value-graded rather than a 135deg hue sweep: the light in this system is below the content, so the fill is brightest along its bottom edge. Every stop carries a 14px white label — 5.44:1 at the violet bottom, 7.00:1 in the middle, 9.47:1 at the deep blue top."
       },
       {
         "name": "lit-edge",
-        "value": "linear-gradient(180deg, color-mix(in srgb, #7c3aed 34%, transparent), color-mix(in srgb, #ffffff 4%, transparent) 38%)",
-        "purpose": "The 1px padding ring that lights a surface from above."
+        "value": "linear-gradient(0deg, color-mix(in srgb, #7240ff 34%, transparent), color-mix(in srgb, #ffffff 4%, transparent) 38%)",
+        "purpose": "The hairline on what matters, lit along its bottom edge by the arc rising behind the fold."
       },
       {
         "name": "horizon-arc",
-        "value": "linear-gradient(90deg, #7c3aed 0%, #8b5cf6 18%, #ddd6fe 42%, #ffffff 52%, #93c5fd 64%, #3b82f6 86%, #2563eb 100%)",
-        "purpose": "The marketing hero crest, stroked onto an SVG path and bloomed. Interpolates through white at its centre because it is light, not a surface."
+        "value": "linear-gradient(90deg, #7240ff 0%, #8f66ff 18%, #ded1ff 42%, #ffffff 52%, #93c5fd 64%, #3b82f6 86%, #1e4585 100%)",
+        "purpose": "The rim across the hero's arc. Its named stops read the tokens at the source so a re-anchored ramp moves the arc with it; the pale stops between them are samples along that ramp rather than palette members."
       },
       {
         "name": "section-arc",
-        "value": "linear-gradient(90deg, #4f46e5 0%, #8b5cf6 30%, #c4b5fd 50%, #60a5fa 70%, #3b82f6 100%)",
+        "value": "linear-gradient(90deg, #5b5cfb 0%, #8f66ff 30%, #c4b5fd 50%, #60a5fa 70%, #3b82f6 100%)",
         "purpose": "The same light further away: thinner, dimmer, rising from a section base."
       },
       {
         "name": "horizon-bloom",
-        "value": "radial-gradient(circle, rgba(139,92,246,0.42), rgba(79,70,229,0.18) 45%, transparent 70%)",
+        "value": "radial-gradient(circle, rgba(143,102,255,0.42), rgba(91,92,251,0.18) 45%, transparent 70%)",
         "purpose": "The haze the crest throws up into the copy above it."
+      },
+      {
+        "name": "horizon-body",
+        "value": "linear-gradient(180deg, rgba(222,209,255,0.5) 0%, rgba(114,64,255,0.3) 14%, rgba(59,130,246,0.1) 52%, rgba(59,130,246,0) 100%)",
+        "purpose": "The lit band under the rim. The reference carries eighty-odd pixels of colour below its rim before the disc goes dark, and that band is most of what makes the arc read as an object with light behind it rather than as a drawn line."
       }
     ],
     "shadows": [
@@ -231,17 +236,17 @@
       },
       {
         "name": "lifted",
-        "value": "0 2px 4px rgba(5,8,20,0.35), 0 26px 56px -24px rgba(79,70,229,0.55)",
+        "value": "0 2px 4px rgba(5,8,20,0.35), 0 26px 56px -24px rgba(91,92,251,0.55)",
         "purpose": "Hover and active elevation. The indigo tint is what makes it read as light rather than darkness."
       },
       {
         "name": "glow-brand",
-        "value": "0 0 0 1px color-mix(in srgb, #7c3aed 22%, transparent), 0 18px 40px -20px color-mix(in srgb, #7c3aed 55%, transparent)",
-        "purpose": "Reserved for the brand-carrying moment — a primary action, a running job."
+        "value": "0 0 0 1px color-mix(in srgb, #7240ff 25%, transparent), 0 0 24px -4px color-mix(in srgb, #7240ff 55%, transparent), 0 0 64px -8px color-mix(in srgb, #7240ff 38%, transparent)",
+        "purpose": "The brand-carrying moment. Both blur layers centred rather than offset downward: measured off the reference, this is a light with a halo, not a raised box."
       },
       {
         "name": "focus-ring",
-        "value": "0 0 0 3px color-mix(in srgb, #7c3aed 22%, transparent)",
+        "value": "0 0 0 3px color-mix(in srgb, #7240ff 22%, transparent)",
         "purpose": "Field focus. A bloom outside the border, not an outline."
       }
     ],
@@ -298,7 +303,7 @@
       "refersTo": "button-primary",
       "description": "The one gradient fill in the system. Normally one per view.",
       "html": "<button class=\"ds-btn-primary\">Create my brand</button>",
-      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; height: 2.75rem; padding: 0 1.25rem; border: none; border-radius: 0.875rem; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; font-weight: 600; color: #ffffff; cursor: pointer; background-image: linear-gradient(135deg, #7c3aed, #4f46e5 52%, #3b82f6); background-size: 180% auto; background-position: left center; box-shadow: 0 10px 24px -14px #7c3aed; transition: background-position 500ms cubic-bezier(0.22,1,0.36,1), box-shadow 500ms cubic-bezier(0.22,1,0.36,1), transform 200ms cubic-bezier(0.22,1,0.36,1); } .ds-btn-primary:hover { background-position: right center; box-shadow: 0 14px 30px -12px #7c3aed; } .ds-btn-primary:focus-visible { outline: 2px solid #7c3aed; outline-offset: 2px; } .ds-btn-primary:active { transform: scale(0.98); transition-duration: 75ms; }"
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; height: 2.75rem; padding: 0 1.25rem; border: none; border-radius: 0.875rem; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; font-weight: 600; color: #ffffff; cursor: pointer; background-image: linear-gradient(135deg, #7240ff, #5b5cfb 52%, #3b82f6); background-size: 180% auto; background-position: left center; box-shadow: 0 10px 24px -14px #7240ff; transition: background-position 500ms cubic-bezier(0.22,1,0.36,1), box-shadow 500ms cubic-bezier(0.22,1,0.36,1), transform 200ms cubic-bezier(0.22,1,0.36,1); } .ds-btn-primary:hover { background-position: right center; box-shadow: 0 14px 30px -12px #7240ff; } .ds-btn-primary:focus-visible { outline: 2px solid #7240ff; outline-offset: 2px; } .ds-btn-primary:active { transform: scale(0.98); transition-duration: 75ms; }"
     },
     {
       "name": "Secondary Button",
@@ -306,7 +311,7 @@
       "refersTo": "button-secondary",
       "description": "The default non-committal action: raised ground, hairline edge.",
       "html": "<button class=\"ds-btn-secondary\">Resend verification email</button>",
-      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; height: 2.75rem; padding: 0 1.25rem; border: 1px solid rgba(255,255,255,0.09); border-radius: 0.875rem; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; font-weight: 600; color: #ffffff; background-color: #121a2e; cursor: pointer; transition: background-color 200ms cubic-bezier(0.22,1,0.36,1), transform 200ms cubic-bezier(0.22,1,0.36,1); } .ds-btn-secondary:hover { background-color: rgba(18,26,46,0.7); } .ds-btn-secondary:focus-visible { outline: 2px solid #7c3aed; outline-offset: 2px; } .ds-btn-secondary:active { transform: scale(0.98); transition-duration: 75ms; }"
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; height: 2.75rem; padding: 0 1.25rem; border: 1px solid rgba(255,255,255,0.09); border-radius: 0.875rem; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; font-weight: 600; color: #ffffff; background-color: #121a2e; cursor: pointer; transition: background-color 200ms cubic-bezier(0.22,1,0.36,1), transform 200ms cubic-bezier(0.22,1,0.36,1); } .ds-btn-secondary:hover { background-color: rgba(18,26,46,0.7); } .ds-btn-secondary:focus-visible { outline: 2px solid #7240ff; outline-offset: 2px; } .ds-btn-secondary:active { transform: scale(0.98); transition-duration: 75ms; }"
     },
     {
       "name": "Ghost Button",
@@ -314,7 +319,7 @@
       "refersTo": "button-ghost",
       "description": "Text until hovered. For the quieter half of a pair.",
       "html": "<button class=\"ds-btn-ghost\">Back</button>",
-      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; height: 2.75rem; padding: 0 1.25rem; border: none; border-radius: 0.875rem; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; font-weight: 600; color: #a3aec9; background: transparent; cursor: pointer; transition: background-color 200ms cubic-bezier(0.22,1,0.36,1), color 200ms cubic-bezier(0.22,1,0.36,1); } .ds-btn-ghost:hover { background-color: #121a2e; color: #ffffff; } .ds-btn-ghost:focus-visible { outline: 2px solid #7c3aed; outline-offset: 2px; }"
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; height: 2.75rem; padding: 0 1.25rem; border: none; border-radius: 0.875rem; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; font-weight: 600; color: #a3aec9; background: transparent; cursor: pointer; transition: background-color 200ms cubic-bezier(0.22,1,0.36,1), color 200ms cubic-bezier(0.22,1,0.36,1); } .ds-btn-ghost:hover { background-color: #121a2e; color: #ffffff; } .ds-btn-ghost:focus-visible { outline: 2px solid #7240ff; outline-offset: 2px; }"
     },
     {
       "name": "Text Field",
@@ -322,7 +327,7 @@
       "refersTo": "input",
       "description": "44px tall, hairline edge, and a violet bloom on focus rather than an outline.",
       "html": "<input class=\"ds-input\" placeholder=\"e.g. TechFlow\" />",
-      "css": ".ds-input { width: 100%; height: 2.75rem; padding: 0 0.875rem; border: 1px solid rgba(255,255,255,0.09); border-radius: 0.875rem; background-color: rgba(18,26,46,0.6); color: #ffffff; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; transition: border-color 200ms ease, box-shadow 200ms cubic-bezier(0.22,1,0.36,1); } .ds-input::placeholder { color: #6f7b96; } .ds-input:focus { outline: none; border-color: #7c3aed; box-shadow: 0 0 0 3px color-mix(in srgb, #7c3aed 22%, transparent); } .ds-input[aria-invalid='true'] { border-color: #ef4444; }"
+      "css": ".ds-input { width: 100%; height: 2.75rem; padding: 0 0.875rem; border: 1px solid rgba(255,255,255,0.09); border-radius: 0.875rem; background-color: rgba(18,26,46,0.6); color: #ffffff; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; transition: border-color 200ms ease, box-shadow 200ms cubic-bezier(0.22,1,0.36,1); } .ds-input::placeholder { color: #6f7b96; } .ds-input:focus { outline: none; border-color: #7240ff; box-shadow: 0 0 0 3px color-mix(in srgb, #7240ff 22%, transparent); } .ds-input[aria-invalid='true'] { border-color: #ef4444; }"
     },
     {
       "name": "Lit Card",
@@ -330,7 +335,7 @@
       "refersTo": "card",
       "description": "The signature surface: a 1px gradient ring lit from above around an inner ground. Two elements, because a border cannot hold a gradient and a background at once.",
       "html": "<div class=\"ds-card\"><div class=\"ds-card-inner\"><h3 class=\"ds-card-title\">Colour palette</h3><p class=\"ds-card-body\">Click a colour to copy its hex code.</p></div></div>",
-      "css": ".ds-card { padding: 1px; border-radius: 1.25rem; background-image: linear-gradient(180deg, color-mix(in srgb, #7c3aed 34%, transparent), color-mix(in srgb, #ffffff 4%, transparent) 38%); box-shadow: 0 1px 2px rgba(5,8,20,0.4), 0 12px 32px -16px rgba(5,8,20,0.8); transition: box-shadow 200ms cubic-bezier(0.22,1,0.36,1); } .ds-card:hover { box-shadow: 0 2px 4px rgba(5,8,20,0.35), 0 26px 56px -24px rgba(79,70,229,0.55); } .ds-card-inner { background-color: #0a0f1c; border-radius: calc(1.25rem - 1px); padding: 1.75rem; } .ds-card-title { margin: 0; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 1.25rem; font-weight: 600; letter-spacing: -0.02em; color: #ffffff; } .ds-card-body { margin: 0.375rem 0 0; font-size: 0.875rem; line-height: 1.6; color: #a3aec9; }"
+      "css": ".ds-card { padding: 1px; border-radius: 1.25rem; background-image: linear-gradient(180deg, color-mix(in srgb, #7240ff 34%, transparent), color-mix(in srgb, #ffffff 4%, transparent) 38%); box-shadow: 0 1px 2px rgba(5,8,20,0.4), 0 12px 32px -16px rgba(5,8,20,0.8); transition: box-shadow 200ms cubic-bezier(0.22,1,0.36,1); } .ds-card:hover { box-shadow: 0 2px 4px rgba(5,8,20,0.35), 0 26px 56px -24px rgba(91,92,251,0.55); } .ds-card-inner { background-color: #0a0f1c; border-radius: calc(1.25rem - 1px); padding: 1.75rem; } .ds-card-title { margin: 0; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 1.25rem; font-weight: 600; letter-spacing: -0.02em; color: #ffffff; } .ds-card-body { margin: 0.375rem 0 0; font-size: 0.875rem; line-height: 1.6; color: #a3aec9; }"
     },
     {
       "name": "Status Badge",
@@ -338,7 +343,7 @@
       "refersTo": "badge-brand",
       "description": "A state, not a control — which is why it is a full pill. The word always rides with the colour.",
       "html": "<span class=\"ds-badge ds-badge-success\">Completed</span> <span class=\"ds-badge ds-badge-warning\">Generating</span> <span class=\"ds-badge ds-badge-brand\">Chosen</span>",
-      "css": ".ds-badge { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.625rem; border-radius: 9999px; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 0.75rem; font-weight: 500; } .ds-badge-success { background-color: color-mix(in srgb, #22c55e 15%, transparent); color: #22c55e; } .ds-badge-warning { background-color: color-mix(in srgb, #f5a524 15%, transparent); color: #f5a524; } .ds-badge-brand { background-color: color-mix(in srgb, #7c3aed 15%, transparent); color: #a78bfa; }"
+      "css": ".ds-badge { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.625rem; border-radius: 9999px; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 0.75rem; font-weight: 500; } .ds-badge-success { background-color: color-mix(in srgb, #22c55e 15%, transparent); color: #22c55e; } .ds-badge-warning { background-color: color-mix(in srgb, #f5a524 15%, transparent); color: #f5a524; } .ds-badge-brand { background-color: color-mix(in srgb, #7240ff 15%, transparent); color: #aa8cff; }"
     },
     {
       "name": "Rail Navigation Item",
@@ -346,13 +351,13 @@
       "refersTo": "nav-item-active",
       "description": "The active marker is a violet bar that grows from nothing on the item you moved to, so the eye follows the change rather than hunting for which row changed shade.",
       "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-item ds-nav-item-active\" href=\"#\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"3\" width=\"7\" height=\"7\" rx=\"1\"/><rect x=\"14\" y=\"3\" width=\"7\" height=\"7\" rx=\"1\"/><rect x=\"3\" y=\"14\" width=\"7\" height=\"7\" rx=\"1\"/><rect x=\"14\" y=\"14\" width=\"7\" height=\"7\" rx=\"1\"/></svg>Overview</a><a class=\"ds-nav-item\" href=\"#\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z\"/></svg>Projects</a></nav>",
-      "css": ".ds-nav { display: flex; flex-direction: column; gap: 0.25rem; width: 15rem; } .ds-nav-item { position: relative; display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 0.875rem; border-radius: 0.875rem; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; color: #a3aec9; text-decoration: none; transition: background-color 200ms cubic-bezier(0.22,1,0.36,1), color 200ms cubic-bezier(0.22,1,0.36,1); } .ds-nav-item::before { content: ''; position: absolute; inset-block: 0.5rem; inset-inline-start: -0.25rem; width: 2px; border-radius: 9999px; background-color: #7c3aed; transform: scaleY(0); transition: transform 200ms cubic-bezier(0.22,1,0.36,1); } .ds-nav-item:hover { background-color: #121a2e; color: #ffffff; } .ds-nav-item-active { background-image: linear-gradient(100deg, color-mix(in srgb, #7c3aed 22%, transparent), transparent 70%); box-shadow: inset 0 0 0 1px color-mix(in srgb, #7c3aed 20%, transparent); color: #ffffff; font-weight: 500; } .ds-nav-item-active::before { transform: scaleY(1); }"
+      "css": ".ds-nav { display: flex; flex-direction: column; gap: 0.25rem; width: 15rem; } .ds-nav-item { position: relative; display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 0.875rem; border-radius: 0.875rem; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; color: #a3aec9; text-decoration: none; transition: background-color 200ms cubic-bezier(0.22,1,0.36,1), color 200ms cubic-bezier(0.22,1,0.36,1); } .ds-nav-item::before { content: ''; position: absolute; inset-block: 0.5rem; inset-inline-start: -0.25rem; width: 2px; border-radius: 9999px; background-color: #7240ff; transform: scaleY(0); transition: transform 200ms cubic-bezier(0.22,1,0.36,1); } .ds-nav-item:hover { background-color: #121a2e; color: #ffffff; } .ds-nav-item-active { background-image: linear-gradient(100deg, color-mix(in srgb, #7240ff 22%, transparent), transparent 70%); box-shadow: inset 0 0 0 1px color-mix(in srgb, #7240ff 20%, transparent); color: #ffffff; font-weight: 500; } .ds-nav-item-active::before { transform: scaleY(1); }"
     },
     {
       "name": "Brand Specimen",
       "kind": "custom",
       "description": "A brand shown as itself: its mark on its own paper, its name in its own heading face, its palette along the base as the sheet's own edge. The unit of the contact sheet. Every colour here comes from the guest brand, not from Brandora.",
-      "html": "<article class=\"ds-specimen\"><div class=\"ds-specimen-stage\"><span class=\"ds-specimen-mark\">Marra</span></div><div class=\"ds-specimen-meta\"><h3 class=\"ds-specimen-name\">Marra</h3><p class=\"ds-specimen-slogan\">Built to be understood.</p><p class=\"ds-specimen-facts\">Food &amp; beverage · United Arab Emirates</p></div><div class=\"ds-specimen-band\"><span style=\"background:#7c3aed\"></span><span style=\"background:#06b6d4\"></span><span style=\"background:#111827\"></span><span style=\"background:#1f2937\"></span></div></article>",
+      "html": "<article class=\"ds-specimen\"><div class=\"ds-specimen-stage\"><span class=\"ds-specimen-mark\">Marra</span></div><div class=\"ds-specimen-meta\"><h3 class=\"ds-specimen-name\">Marra</h3><p class=\"ds-specimen-slogan\">Built to be understood.</p><p class=\"ds-specimen-facts\">Food &amp; beverage · United Arab Emirates</p></div><div class=\"ds-specimen-band\"><span style=\"background:#7240ff\"></span><span style=\"background:#06b6d4\"></span><span style=\"background:#111827\"></span><span style=\"background:#1f2937\"></span></div></article>",
       "css": ".ds-specimen { --brand-paper: #f9fafb; --brand-ink: #1f2937; --brand-line: color-mix(in srgb, #1f2937 14%, transparent); display: flex; flex-direction: column; overflow: hidden; border-radius: 1.5rem; background-color: var(--brand-paper); box-shadow: 0 1px 2px rgba(5,8,20,0.4), 0 12px 32px -16px rgba(5,8,20,0.8); box-shadow: 0 1px 2px rgba(5,8,20,0.4), 0 12px 32px -16px rgba(5,8,20,0.8), 0 0 0 1px var(--brand-line); } .ds-specimen-stage { display: grid; place-items: center; min-height: 10rem; padding: 2.5rem 2rem; } .ds-specimen-mark { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 2rem; font-weight: 600; letter-spacing: -0.03em; color: var(--brand-ink); } .ds-specimen-meta { padding: 0 1.5rem 1.25rem; } .ds-specimen-name { margin: 0; font-size: 1.125rem; font-weight: 600; letter-spacing: -0.02em; color: var(--brand-ink); } .ds-specimen-slogan { margin: 0.25rem 0 0; font-size: 0.875rem; color: color-mix(in srgb, var(--brand-ink) 66%, var(--brand-paper)); } .ds-specimen-facts { margin: 0.625rem 0 0; font-size: 0.75rem; color: color-mix(in srgb, var(--brand-ink) 42%, var(--brand-paper)); } .ds-specimen-band { display: flex; height: 0.625rem; } .ds-specimen-band span { flex: 1; }"
     }
   ],
@@ -421,7 +426,7 @@
     ],
     "dos": [
       "Do delegate colour outward on any surface showing a generated brand, and contrast-check every guest colour that ends up under text.",
-      "Do use Lit Violet (#a78bfa / #6d28d9) for accent text and Signal Violet (#7c3aed) for fills. They are not interchangeable.",
+      "Do use Lit Violet (#aa8cff / #5b33cc) for accent text and Signal Violet (#7240ff) for fills. They are not interchangeable.",
       "Do mix borders from white at 9% or 16% into the ground rather than drawing a grey line.",
       "Do put a lit gradient edge on what matters and a plain hairline on what does not.",
       "Do pick the radius by role: 14px to operate, 20px for a card, 24px for a panel of cards.",

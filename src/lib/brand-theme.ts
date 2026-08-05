@@ -184,9 +184,11 @@ export type BrandTheme = {
 }
 
 const FALLBACK: NonNullable<BrandPalette> = {
-  primary: '#7c3aed',
+  // Brandora's own ramp, for a brand that arrived without one. Re-anchored with
+  // the rest of the system when the mark's #7240ff replaced #7c3aed.
+  primary: '#7240ff',
   secondary: '#3b82f6',
-  accent: '#4f46e5',
+  accent: '#5b5cfb',
   background: '#ffffff',
   text: '#0b1020',
 }

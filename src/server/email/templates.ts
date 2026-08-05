@@ -118,12 +118,15 @@ function layout(params: {
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:14px;padding:32px;text-align:${align};">
             <tr>
               <td>
-                <p style="margin:0 0 24px;font-size:20px;font-weight:700;color:#7c3aed;">Brandora</p>
+                <p style="margin:0 0 24px;font-size:20px;font-weight:700;color:#7240ff;">Brandora</p>
                 <h1 style="margin:0 0 12px;font-size:22px;line-height:1.3;color:#111827;">${escape(params.heading)}</h1>
                 <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#4b5563;">${escape(params.body)}</p>
-                <a href="${params.url}" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-size:15px;font-weight:500;">${escape(params.button)}</a>
+                <a href="${params.url}" style="display:inline-block;background:#7240ff;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-size:15px;font-weight:500;">${escape(params.button)}</a>
                 <p style="margin:24px 0 6px;font-size:12px;color:#9ca3af;">${escape(COPY[locale].fallbackNote)}</p>
-                <p style="margin:0 0 24px;font-size:12px;word-break:break-all;"><a href="${params.url}" style="color:#7c3aed;">${params.url}</a></p>
+                <!-- The fallback URL is 12px, so it takes the light theme's
+                     readable accent (7.53:1 on white) rather than the fill
+                     colour, which measures 5.44:1. Same rule as the app. -->
+                <p style="margin:0 0 24px;font-size:12px;word-break:break-all;"><a href="${params.url}" style="color:#5b33cc;">${params.url}</a></p>
                 <hr style="border:none;border-top:1px solid #e5e7eb;margin:0 0 16px;" />
                 <p style="margin:0;font-size:12px;line-height:1.6;color:#9ca3af;">${escape(params.footer)}</p>
               </td>

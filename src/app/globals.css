@@ -81,19 +81,39 @@
   --brand-secondary: #3b82f6;
   --brand-fg: #ffffff;
   /*
-   * The ramp's blue end, deepened for fills only.
+   * The ramp, turned to face the horizon.
    *
-   * --brand-secondary (#3b82f6) is correct as a palette colour and stays that
-   * way, but white 14px label text over it measures 3.68:1. This gradient is
-   * what every primary button is filled with, so its blue stop is the deeper
-   * #2e65c0 (5.62:1) — the same hue, far enough down to carry a label.
+   * This was a 135deg sweep whose three stops all sat within 3% of each other
+   * in luminance — by design, because each one had to carry a white label. That
+   * makes a beautiful hue journey and a completely flat object: rotate it
+   * vertical and it reads as a colour change, not as a lit surface.
+   *
+   * The reference lights every control from below, and it gets away with it
+   * because its two stops really do climb: #f6711c to #ff863d is a 35% rise in
+   * luminance. So this ramp is graded as well as rotated. The bottom edge is
+   * the mark's violet at full strength — the brightest point, nearest the
+   * light — and it sinks through indigo into a deep blue at the top.
+   *
+   * Measured white-on-fill down the ramp: 5.44:1 at the violet bottom, 7.00:1
+   * at the indigo middle, 9.47:1 at the blue top. Every stop carries a 14px
+   * label, which is the constraint that decided how dark the top could go.
+   *
+   * The hue order is the ramp's, unchanged. #2e65c0 gave way to #1e4585 for the
+   * top stop because the top is now the far end from the light and has to look
+   * like it.
    */
-  --brand-gradient: linear-gradient(
-    135deg,
-    var(--brand-primary),
-    var(--brand-indigo) 52%,
-    #2e65c0
-  );
+  --brand-gradient: linear-gradient(0deg, var(--brand-primary), #4b46c9 55%, #1e4585);
+
+  /*
+   * The two inner edges every control carries: a faint neutral line along the
+   * top and an accent-tinted one along the bottom, where the light is.
+   *
+   * A token rather than a repeated literal because `control-lit` and
+   * `field-lit` both need the exact same pair, and the second has to restate
+   * them alongside its focus ring — `box-shadow` does not stack across rules.
+   */
+  --lit-inset: inset 0 1px 0 0 color-mix(in srgb, #ffffff 5%, transparent),
+    inset 0 -1px 0 0 color-mix(in srgb, var(--brand-primary) 32%, transparent);
 
   /* Soft, wide, and tinted with the brand rather than pure black. */
   --shadow-soft: 0 1px 2px rgba(5, 8, 20, 0.4), 0 12px 32px -16px rgba(5, 8, 20, 0.8);
@@ -123,6 +143,11 @@
 
   --border: color-mix(in srgb, #0b1020 8%, transparent);
   --border-strong: color-mix(in srgb, #0b1020 14%, transparent);
+
+  /* White into a white ground is nothing. The top edge inverts; the lit bottom
+     edge keeps the accent and eases off, because it has less room to sit in. */
+  --lit-inset: inset 0 1px 0 0 color-mix(in srgb, #0b1020 4%, transparent),
+    inset 0 -1px 0 0 color-mix(in srgb, var(--brand-primary) 26%, transparent);
 
   --shadow-soft: 0 1px 2px rgba(11, 16, 32, 0.05), 0 10px 30px -18px rgba(11, 16, 32, 0.25);
   --shadow-lifted: 0 2px 6px rgba(11, 16, 32, 0.06), 0 24px 48px -24px rgba(114, 64, 255, 0.35);
@@ -237,6 +262,68 @@
   color: var(--text-accent);
 }
 
+/* ------------------------------------------------------------------ type --- */
+
+/*
+ * The two display sizes, as utilities rather than as a string repeated on
+ * every heading.
+ *
+ * There were five of these on the landing page alone, each spelling out its own
+ * clamp, weight, leading, tracking and both RTL overrides — which is how one of
+ * them ended up a step off from the others. The same failure the `Eyebrow`
+ * token was written to fix.
+ *
+ * Measured off the reference: its display sets a 48px cap height on a 77px line
+ * advance, which is a leading of 1.13 against the 1.05 this had, and a 6px stem
+ * on that 48px cap, which is a weight of about 500 against the 700 this had.
+ * Large, light and airy rather than tight and heavy. Weight lands on 600 here
+ * rather than 500 — Plus Jakarta Sans is not the reference's face, and at 500 it
+ * goes thin against a near-black ground.
+ *
+ * Tracking opens with it, from -0.035em to -0.02em. Negative tracking exists to
+ * stop heavy letterforms from colliding; drop the weight and the need drops
+ * with it, and holding the old value on a lighter face just looks cramped.
+ *
+ * Arabic keeps its own leading and no negative tracking at all: it carries
+ * vowels above the line, and negative letter-spacing pulls joined letterforms
+ * into each other rather than tightening a word.
+ */
+@utility type-display {
+  font-size: clamp(2.6rem, 6.2vw, 4.6rem);
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+
+  [dir='rtl'] & {
+    line-height: 1.4;
+    letter-spacing: normal;
+  }
+}
+
+@utility type-section {
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+
+  [dir='rtl'] & {
+    line-height: 1.4;
+    letter-spacing: normal;
+  }
+}
+
+/*
+ * The trailing clause of a heading, dropped to the secondary ink.
+ *
+ * The reference does this on every section title — "Pricing Plans for
+ * *Success*" measures #ffffff then #b7b8ba — and it is the cheapest way to give
+ * a headline a shape without a second size or a second colour. The product
+ * already did it by hand in three places; this names it.
+ */
+@utility type-trail {
+  color: var(--text-secondary);
+}
+
 @utility surface-card {
   background-color: var(--bg-surface);
   border: 1px solid var(--border);
@@ -297,17 +384,6 @@
   }
   to {
     background-position: 250% 0;
-  }
-}
-
-/* The brand gradient drifting, used behind the hero and on running work. */
-@keyframes gradient-pan {
-  0%,
-  100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
   }
 }
 
@@ -408,17 +484,6 @@
   }
 }
 
-@utility gradient-animated {
-  background: linear-gradient(
-    120deg,
-    var(--brand-primary),
-    var(--brand-secondary),
-    var(--brand-primary)
-  );
-  background-size: 220% 220%;
-  animation: gradient-pan 9s ease-in-out infinite;
-}
-
 @utility pulse-brand {
   animation: pulse-ring 1.9s var(--ease-out-soft) infinite;
 }
@@ -499,28 +564,24 @@
  * plain border on what does not — without turning every card into a gradient.
  */
 
-/* A hairline gradient edge. Two layers, because a border cannot hold a
-   gradient and a background at once. */
-@utility card-lit {
-  position: relative;
-  background:
-    linear-gradient(var(--bg-surface), var(--bg-surface)) padding-box,
-    linear-gradient(
-        135deg,
-        color-mix(in srgb, var(--brand-primary) 55%, transparent),
-        color-mix(in srgb, var(--brand-secondary) 35%, transparent) 45%,
-        var(--border) 75%
-      )
-      border-box;
-  border: 1px solid transparent;
-  border-radius: var(--radius-card);
-}
-
-/* The glow that follows a hover, sized to feel like light rather than shadow. */
+/*
+ * The glow, measured off the reference rather than guessed.
+ *
+ * Eleven pixels above the reference's primary control the ground still reads
+ * the accent at 15%, and it is still reading it at the edge of the frame. That
+ * is not a drop shadow with a downward offset — it is a light source with a
+ * halo around it, which is why both layers here are centred and why the wide
+ * one is allowed to be enormous.
+ *
+ * `glow-brand` was a 1px ring plus a 40px shadow pushed 20px down. It said
+ * "raised". This says "lit", which is the whole difference between the
+ * reference's world and a dark template.
+ */
 @utility glow-brand {
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--brand-primary) 22%, transparent),
-    0 18px 40px -20px color-mix(in srgb, var(--brand-primary) 55%, transparent);
+    0 0 0 1px color-mix(in srgb, var(--brand-primary) 25%, transparent),
+    0 0 24px -4px color-mix(in srgb, var(--brand-primary) 55%, transparent),
+    0 0 64px -8px color-mix(in srgb, var(--brand-primary) 38%, transparent);
 }
 
 /* Frosted bar for anything that floats over scrolling content. */
@@ -561,23 +622,85 @@
 /*
  * The landing page's language, available to every screen behind the login.
  *
- * A lit top edge instead of a hairline border: the light in this product comes
- * from above, and a uniform 1px outline is what made the app read as a
- * template next to its own marketing.
+ * A lit edge instead of a hairline border: a uniform 1px outline on all four
+ * sides is what made the app read as a template next to its own marketing.
+ *
+ * The lit edge is at the bottom, not the top. The light in this product is the
+ * arc rising behind the fold — one source, below the content, which is what
+ * the reference does and the reason its controls and its horizon look like the
+ * same idea. This edge used to be at the top, from a ceiling that nothing in
+ * the product ever drew.
  */
 @utility lit {
   background-image: linear-gradient(
-    180deg,
+    0deg,
     color-mix(in srgb, var(--brand-primary) 34%, transparent),
     color-mix(in srgb, #ffffff 4%, transparent) 38%
   );
   padding: 1px;
-  border-radius: var(--radius-card);
+  /* A panel of cards sets `--lit-radius` to the panel step. Everything else
+     gets the card step, which is what a lit edge is nearly always around. */
+  border-radius: var(--lit-radius, var(--radius-card));
+}
+
+/*
+ * The same light on something you operate.
+ *
+ * The reference's secondary control has a fill of #181619 with a #27201d top
+ * edge and a #36251c bottom edge — both lift out of the fill, the bottom lifts
+ * roughly twice as far, and the bottom one is warm where the top one is not.
+ * So: a faint neutral line along the top, and an accent-tinted one along the
+ * bottom where the light lands.
+ *
+ * Inset shadows rather than borders, because the control already has a border
+ * and a second one would round differently.
+ */
+@utility control-lit {
+  box-shadow: var(--lit-inset);
+}
+
+/*
+ * The same edges on a field, plus the focus bloom.
+ *
+ * One utility rather than two rules, because `box-shadow` does not stack across
+ * declarations: a focus ring written separately replaces the lit edges instead
+ * of joining them, and the field loses its light at exactly the moment someone
+ * is looking at it.
+ */
+@utility field-lit {
+  box-shadow: var(--lit-inset);
+
+  &:focus {
+    box-shadow: var(--lit-inset), 0 0 0 3px color-mix(in srgb, var(--brand-primary) 22%, transparent);
+  }
+}
+
+/*
+ * A rule that stops before it reaches the edges.
+ *
+ * The reference's header rule measures white at 4% in the middle and is simply
+ * gone by the last 60px either side. A border-bottom cannot do that — it runs
+ * corner to corner or it does not exist — so this is a gradient on a 1px box.
+ *
+ * It matters more than it sounds. A full-bleed line is the single clearest
+ * signal that a page is a template; the same line stopping short reads as a
+ * horizon rather than as a frame.
+ */
+@utility rule-fade {
+  block-size: 1px;
+  border: 0;
+  background-image: linear-gradient(
+    90deg,
+    transparent,
+    var(--border) 8%,
+    var(--border) 92%,
+    transparent
+  );
 }
 
 @utility lit-inner {
   background-color: var(--bg-surface);
-  border-radius: calc(var(--radius-card) - 1px);
+  border-radius: calc(var(--lit-radius, var(--radius-card)) - 1px);
   height: 100%;
 }
 
