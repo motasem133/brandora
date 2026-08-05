@@ -3,8 +3,9 @@ import { getTranslations } from 'next-intl/server'
 import { eq } from 'drizzle-orm'
 
 import { Cell } from '@/components/features/landing/horizon'
+import { buttonVariants } from '@/components/ui/button'
 import { Link } from '@/i18n/navigation'
-import { formatPrice, pickPrice, type Currency } from '@/lib/utils'
+import { cn, formatPrice, pickPrice, type Currency } from '@/lib/utils'
 import { CREDIT_COSTS } from '@/server/billing/credits'
 import { db } from '@/server/db'
 import { plans } from '@/server/db/schema'
@@ -51,14 +52,24 @@ export async function PricingPlans({
 
         return (
           <Cell key={plan.id} index={index}>
+            {/*
+              The reference marks its recommended plan with one thing: the
+              hairline goes solid accent while the other two stay neutral. No
+              fill, no size change, no second badge. That is the cheapest
+              possible "this one" and it survives being seen at a glance.
+
+              `--lit-radius` moves both this edge and its inner corner to the
+              panel step, because a plan card contains cards.
+            */}
             <div
-              className={
+              className={cn(
+                'h-full [--lit-radius:var(--radius-panel)]',
                 featured
-                  ? 'relative h-full rounded-panel bg-[image:var(--brand-gradient)] p-px shadow-[0_0_70px_-20px_var(--brand-indigo)]'
-                  : 'h-full rounded-panel bg-[image:linear-gradient(180deg,color-mix(in_srgb,var(--text-accent)_28%,transparent),color-mix(in_srgb,var(--text-primary)_5%,transparent)_40%)] p-px'
-              }
+                  ? 'relative rounded-panel bg-[image:var(--brand-gradient)] p-px shadow-[0_0_70px_-20px_var(--brand-primary)]'
+                  : 'lit',
+              )}
             >
-              <div className="flex h-full flex-col rounded-[calc(var(--radius-panel)-1px)] bg-surface p-7">
+              <div className="lit-inner flex flex-col p-7">
                 {featured && (
                   <span className="absolute -top-3 end-6 rounded-full bg-[image:var(--brand-gradient)] px-3 py-1 text-xs font-semibold text-brand-fg">
                     {t('pricingChosen')}
@@ -68,7 +79,7 @@ export async function PricingPlans({
                 <p className="text-sm text-fg-secondary">{plan.name}</p>
 
                 <p className="mt-4 flex items-baseline gap-1.5">
-                  <span className="font-display text-5xl font-bold tracking-[-0.04em]">
+                  <span className="font-display text-5xl font-semibold tracking-[-0.02em]">
                     {plan.priceMonthly === 0
                       ? t('pricingFree')
                       : formatPrice(price.amount, price.currency, locale)}
@@ -102,11 +113,13 @@ export async function PricingPlans({
 
                 <Link
                   href="/register"
-                  className={
-                    featured
-                      ? 'mt-8 flex items-center justify-center rounded-full bg-[image:var(--brand-gradient)] py-3 text-sm font-semibold text-brand-fg transition-transform duration-200 hover:scale-[1.02]'
-                      : 'mt-8 flex items-center justify-center rounded-full border border-line-strong bg-elevated/50 py-3 text-sm font-medium transition-colors hover:bg-elevated'
-                  }
+                  className={cn(
+                    buttonVariants({
+                      variant: featured ? 'primary' : 'outline',
+                      shape: 'pill',
+                    }),
+                    'mt-8 w-full',
+                  )}
                 >
                   {plan.priceMonthly === 0
                     ? t('pricingCta')

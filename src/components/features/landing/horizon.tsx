@@ -34,14 +34,40 @@ export function Horizon() {
   const arc = (
     <svg viewBox="0 0 1600 420" className="w-[110rem] max-w-none" preserveAspectRatio="xMidYMin slice">
       <defs>
+        {/*
+          The rim, across the arc.
+
+          Named colours come from the tokens, so re-anchoring the ramp moves
+          this with it — which is the whole point and exactly what did not
+          happen last time: the anchor moved to #7240ff and this arc went on
+          being drawn in the violet it replaced. The pale stops in between stay
+          literal because they are samples along a ramp rather than members of
+          the palette, which is what the Rendered Light Rule says they are.
+        */}
         <linearGradient id="horizon-line" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="#7C3AED" stopOpacity="0" />
-          <stop offset="18%" stopColor="#8B5CF6" stopOpacity="0.85" />
-          <stop offset="42%" stopColor="#DDD6FE" />
-          <stop offset="52%" stopColor="#FFFFFF" />
-          <stop offset="64%" stopColor="#93C5FD" />
-          <stop offset="86%" stopColor="#3B82F6" stopOpacity="0.8" />
-          <stop offset="100%" stopColor="#2563EB" stopOpacity="0" />
+          <stop offset="0%" stopColor="var(--brand-primary)" stopOpacity="0" />
+          <stop offset="18%" stopColor="#8f66ff" stopOpacity="0.85" />
+          <stop offset="42%" stopColor="#ded1ff" />
+          <stop offset="52%" stopColor="#ffffff" />
+          <stop offset="64%" stopColor="#93c5fd" />
+          <stop offset="86%" stopColor="var(--brand-secondary)" stopOpacity="0.8" />
+          <stop offset="100%" stopColor="#2563eb" stopOpacity="0" />
+        </linearGradient>
+
+        {/*
+          The body of the ring, under the rim.
+
+          Measured off the reference: below its rim there are eighty-odd pixels
+          of lit colour before the disc goes dark, and that band is most of what
+          makes the thing read as an object with light behind it. This page drew
+          the rim and the haze and nothing in between, so the arc read as a
+          drawn line rather than as a horizon.
+        */}
+        <linearGradient id="horizon-body" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#ded1ff" stopOpacity="0.5" />
+          <stop offset="14%" stopColor="var(--brand-primary)" stopOpacity="0.3" />
+          <stop offset="52%" stopColor="var(--brand-secondary)" stopOpacity="0.1" />
+          <stop offset="100%" stopColor="var(--brand-secondary)" stopOpacity="0" />
         </linearGradient>
 
         <filter id="horizon-glow" x="-30%" y="-120%" width="160%" height="360%">
@@ -55,6 +81,10 @@ export function Horizon() {
           </feMerge>
         </filter>
       </defs>
+
+      {/* The lit band, closed along the section's base so it fills under the
+          curve. Drawn first, so the rim sits on top of it. */}
+      <path d="M -200 420 Q 800 -110 1800 420 Z" fill="url(#horizon-body)" />
 
       {/*
         One wide, shallow curve: the top of a circle far larger than the page.
@@ -128,7 +158,7 @@ export function Horizon() {
           className="absolute -top-[15rem] left-1/2 size-[46rem] -translate-x-1/2 rounded-full blur-[120px]"
           style={{
             background:
-              'radial-gradient(circle, rgba(139,92,246,0.42), rgba(79,70,229,0.18) 45%, transparent 70%)',
+              'radial-gradient(circle, rgba(143,102,255,0.42), rgba(91,92,251,0.18) 45%, transparent 70%)',
           }}
           animate={{ opacity: [0.7, 1, 0.7] }}
           transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
@@ -160,11 +190,11 @@ export function SectionArc({ className }: { className?: string }) {
     <svg viewBox="0 0 1600 300" className="w-[90rem] max-w-none" preserveAspectRatio="xMidYMin slice">
       <defs>
         <linearGradient id="section-line" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="#4F46E5" stopOpacity="0" />
-          <stop offset="30%" stopColor="#8B5CF6" stopOpacity="0.5" />
-          <stop offset="50%" stopColor="#C4B5FD" stopOpacity="0.9" />
-          <stop offset="70%" stopColor="#60A5FA" stopOpacity="0.5" />
-          <stop offset="100%" stopColor="#3B82F6" stopOpacity="0" />
+          <stop offset="0%" stopColor="var(--brand-indigo)" stopOpacity="0" />
+          <stop offset="30%" stopColor="#8f66ff" stopOpacity="0.5" />
+          <stop offset="50%" stopColor="#cbb8ff" stopOpacity="0.9" />
+          <stop offset="70%" stopColor="#60a5fa" stopOpacity="0.5" />
+          <stop offset="100%" stopColor="var(--brand-secondary)" stopOpacity="0" />
         </linearGradient>
         <filter id="section-glow" x="-30%" y="-150%" width="160%" height="400%">
           <feGaussianBlur stdDeviation="18" result="w" />
@@ -326,7 +356,7 @@ export function LightSweep() {
       className="pointer-events-none absolute inset-y-0 w-[42rem] skew-x-[-18deg]"
       style={{
         background:
-          'linear-gradient(90deg, transparent, rgba(167,139,250,0.09) 45%, rgba(147,197,253,0.06) 60%, transparent)',
+          'linear-gradient(90deg, transparent, rgba(170,140,255,0.09) 45%, rgba(147,197,253,0.06) 60%, transparent)',
       }}
       initial={{ x: '-60vw' }}
       animate={{ x: '120vw' }}

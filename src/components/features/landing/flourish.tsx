@@ -104,8 +104,19 @@ export function PillFan({ items, className }: { items: string[]; className?: str
         >
           <motion.span
             data-reveal
-            className="block rounded-full border border-white/10 px-3 py-1.5 text-xs text-white/60 transition-colors"
-            style={{ borderColor: active === index ? 'rgba(167,139,250,0.5)' : undefined }}
+            className="block rounded-full border border-line px-3 py-1.5 text-xs text-fg-secondary transition-colors"
+            /*
+             * The reference marks the one card that matters with its accent on
+             * the hairline and nothing else — no fill, no badge. Same here.
+             * This was `rgba(167,139,250,0.5)`, a literal of the tint the ramp
+             * used before it was re-anchored, over hand-mixed white borders.
+             */
+            style={{
+              borderColor:
+                active === index
+                  ? 'color-mix(in srgb, var(--brand-primary) 55%, transparent)'
+                  : undefined,
+            }}
             animate={{
               x: offset(index),
               scale: active === index ? 1.08 : 1,

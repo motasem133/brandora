@@ -6,8 +6,11 @@ import { cn } from '@/lib/utils'
  * The app's panel.
  *
  * Two elements rather than one: the outer carries a gradient edge lit from
- * above, the inner carries the surface. A single bordered box cannot do that,
+ * below, the inner carries the surface. A single bordered box cannot do that,
  * and the border is what made every screen read as a template.
+ *
+ * Below, because the light in this product is the arc rising behind the fold
+ * and there is only one of it. See the `lit` utility.
  */
 export function Card({ className, children, ...props }: React.ComponentProps<'div'>) {
   return (

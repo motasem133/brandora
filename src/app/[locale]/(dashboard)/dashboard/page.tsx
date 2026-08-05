@@ -76,7 +76,7 @@ export default async function OverviewPage({ params }: { params: Promise<{ local
 
       <header className="flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
         <div>
-          <h1 className="font-display text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">
+          <h1 className="font-display text-3xl font-semibold tracking-[-0.02em] sm:text-4xl">
             {t('welcome', { name: user.name.split(' ')[0] })}
           </h1>
           <p className="mt-2 text-fg-secondary">{t('subtitle')}</p>
