@@ -1,6 +1,8 @@
 'use client'
 
 import { Loader2 } from 'lucide-react'
+
+import { Button } from '@/components/ui/button'
 import { useTranslations } from 'next-intl'
 import { useAction } from 'next-safe-action/hooks'
 
@@ -54,8 +56,19 @@ export function UserRow({ user, isSelf }: { user: User; isSelf: boolean }) {
           // administrator out through its own UI.
           <span className="text-xs text-fg-muted">{t('users.you')}</span>
         ) : (
-          <div className="flex justify-end gap-3">
-            <button
+          /*
+            Real controls, not 12px text.
+
+            Suspending an account and granting it administration are the two
+            most consequential things anyone can do in this product, and they
+            were bare text with no hit area to speak of — under the 44px floor
+            every other control in the system clears, and carrying none of the
+            light that now says "this can be pressed". They are Buttons.
+          */
+          <div className="flex justify-end gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
               disabled={busy}
               onClick={() =>
                 status.execute({
@@ -63,19 +76,22 @@ export function UserRow({ user, isSelf }: { user: User; isSelf: boolean }) {
                   status: user.status === 'active' ? 'suspended' : 'active',
                 })
               }
-              className="text-xs text-fg-secondary hover:text-danger disabled:opacity-50"
+              className="hover:text-danger"
             >
-              {busy ? <Loader2 className="size-3 animate-spin" /> : user.status === 'active' ? t('users.suspend') : t('users.activate')}
-            </button>
-            <button
+              {busy && <Loader2 className="animate-spin" />}
+              {user.status === 'active' ? t('users.suspend') : t('users.activate')}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
               disabled={busy}
               onClick={() =>
                 role.execute({ userId: user.id, role: user.role === 'admin' ? 'user' : 'admin' })
               }
-              className="text-xs text-fg-secondary hover:accent-text disabled:opacity-50"
+              className="hover:accent-text"
             >
               {user.role === 'admin' ? t('users.demote') : t('users.promote')}
-            </button>
+            </Button>
           </div>
         )}
       </TD>
