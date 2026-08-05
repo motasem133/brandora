@@ -132,10 +132,13 @@ there it is bounded: nothing loops forever except a running job and a loading
 skeleton.
 
 The visual anti-reference is the admin template — same-size cards of icon plus
-heading plus text, a row of stat tiles whose largest type is the digit 1, and a
-grey 1px border around everything. Those were all present and all removed
-deliberately; a change that reintroduces them is a regression regardless of how
-it looks in isolation.
+heading plus text, figures that restate a count nobody asked for, and a grey 1px
+border around everything. Those were all present and all removed deliberately; a
+change that reintroduces them is a regression regardless of how it looks in
+isolation.
+
+The row of stat tiles is the one item that came off that list, and it came off
+by measurement rather than by taste. See the Measured Figure Rule.
 
 **Key Characteristics:**
 
@@ -396,12 +399,57 @@ WCAG relative luminance and swapped for readable fallbacks when the generated
 values fail. Everything inside reads those variables, so a server component can
 hand its whole subtree to another brand's colours through CSS instead of props.
 
+### Stat Tile
+
+A measured figure: a label in the `label` step, a delta, the value, and a
+twelve-week sparkline. Four of them open the dashboard.
+
+- **Value:** display face, semibold, ~1.875rem, and the font's *proportional*
+  figures. `tabular-nums` gives every digit the width of a zero, which is right
+  in a column of numbers and looks gappy on one large one.
+- **Delta:** signed, against a period named in the accessible text, and **absent
+  rather than zero** where there is no prior period to compare with. Flat is its
+  own state — neither arrow, no status colour.
+- **Sparkline:** one series, so no legend; the label names it. Muted ink, 2px,
+  with only the final segment and its endpoint in the accent. A flat series is
+  drawn on the mid-line rather than stretched to fill the box, because a
+  straight line at full height reads as a value at its maximum.
+- **Direction is separate from goodness.** Only a metric with a real direction
+  gets green or red, and the arrow carries the direction so colour is never
+  alone in saying it.
+
+**The Measured Figure Rule.** This composition was banned outright — "a row of
+stat tiles whose largest type is the digit 1" — and the ban was lifted after
+three versions of the dashboard were built and measured against a twelve-week,
+nine-brand account. The tiles started 50px lower down the page than the contact
+sheet they replaced and still put six brands in the fold against its two.
+
+What the ban was protecting is now the rule, and it is stricter than a ban: a
+figure earns its tile by being measurable. Every series is bucketed from a real
+timestamp. Where the data cannot support a trend the tile shows none rather than
+a decorative line. A level takes no percentage — credits going from 36 to 494 is
+"+1,272%", arithmetically true and meaningless, because the denominator is
+whatever the account happened to hold at an arbitrary earlier moment. And a
+metric with no good direction says so: spending credits is what credits are for.
+
+The corollary is that removing a figure is a design decision, not a data one.
+"Brands finished" has no tile because a project's completion is current state
+with no date beside it; its weekly series would be creation dates filtered by
+today's status, a number that rewrites its own history.
+
 ### Specimen (signature)
 
 A brand shown as itself: its mark centred on its own paper, its name set in its
 own heading face, its palette laid along the base as the sheet's own edge. Not a
 container around a database row — the card *is* the brand's ground. Used as the
-unit of the contact sheet on the dashboard and the projects list.
+unit of the even grid on the dashboard and the projects list.
+
+One size, and no lead frame. Marking the newest brand by printing it across two
+columns was defended on the grounds that a grid of identical cells is a
+spreadsheet — which is true of cells that are chrome and false of these. A
+specimen wears its own brand's paper, ink and palette, so six of them are six
+different objects without any help from the layout, and measured at nine brands
+the lead frame cost four of its neighbours their place in the fold.
 
 ## Do's and Don'ts
 
@@ -421,7 +469,8 @@ unit of the contact sheet on the dashboard and the projects list.
 - **Don't** clip the brand gradient to text. It was removed for legibility: part of every glyph sits on the lowest-contrast stop, and the words vanish entirely where the clip is unsupported.
 - **Don't** introduce a second accent colour, or a solid grey 1px border, or a shadow made of pure black.
 - **Don't** nest a card inside a card. Drop the inner one to a plain region with a hairline rule.
-- **Don't** build a page as a stack of same-size cards of icon plus heading plus text, or open a screen with a row of stat tiles. Both were removed deliberately.
+- **Don't** build a page as a stack of same-size cards of icon plus heading plus text. That one stands.
+- **Don't** show a figure this system cannot measure — no invented trend, no percentage on a level, no delta against a period nobody named. See the Measured Figure Rule.
 - **Don't** leave a persistent side rail holding less than a screen of content — give it more or let it collapse.
 - **Don't** animate headlines letter by letter; split on words, because Arabic letterforms join.
 - **Don't** signal a state with colour alone; the word rides with the dot.

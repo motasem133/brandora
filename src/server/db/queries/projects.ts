@@ -111,17 +111,3 @@ export async function countProjects(organizationId: string) {
   return row?.value ?? 0
 }
 
-export async function countProjectsByStatus(organizationId: string, status: 'completed') {
-  const [row] = await db
-    .select({ value: count() })
-    .from(projects)
-    .where(
-      and(
-        eq(projects.organizationId, organizationId),
-        eq(projects.status, status),
-        isNull(projects.deletedAt),
-      ),
-    )
-
-  return row?.value ?? 0
-}
