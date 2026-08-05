@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useAction } from 'next-safe-action/hooks'
 
 import { Badge } from '@/components/ui/badge'
+import { TD, TRowHeader } from '@/components/ui/table'
 import { useRouter } from '@/i18n/navigation'
 import { updateUserRole, updateUserStatus } from '@/server/actions/admin'
 
@@ -29,13 +30,16 @@ export function UserRow({ user, isSelf }: { user: User; isSelf: boolean }) {
 
   return (
     <tr>
-      <td className="p-4">
-        <p className="font-medium">{user.name}</p>
-        <p className="text-xs text-fg-muted">{user.email}</p>
-      </td>
-      <td className="p-4 text-fg-secondary">{user.org_name ?? '—'}</td>
-      <td className="p-4 text-end">{user.projects}</td>
-      <td className="p-4">
+      {/* The person is what this row is about, so their cell heads it. */}
+      <TRowHeader>
+        <span className="font-medium">{user.name}</span>
+        <span className="mt-0.5 block text-xs text-fg-muted">{user.email}</span>
+      </TRowHeader>
+      <TD className="text-fg-secondary">{user.org_name ?? '—'}</TD>
+      <TD align="end" className="tabular-nums">
+        {user.projects}
+      </TD>
+      <TD>
         <div className="flex flex-wrap gap-1.5">
           <Badge tone={user.status === 'active' ? 'success' : 'danger'}>
             {t(`users.filters.${user.status}`)}
@@ -43,8 +47,8 @@ export function UserRow({ user, isSelf }: { user: User; isSelf: boolean }) {
           {user.role === 'admin' && <Badge tone="brand">{t('users.admin')}</Badge>}
           {!user.email_verified && <Badge tone="warning">{t('users.unverified')}</Badge>}
         </div>
-      </td>
-      <td className="p-4 text-end">
+      </TD>
+      <TD align="end">
         {isSelf ? (
           // Suspending or demoting yourself could lock the platform's last
           // administrator out through its own UI.
@@ -74,7 +78,7 @@ export function UserRow({ user, isSelf }: { user: User; isSelf: boolean }) {
             </button>
           </div>
         )}
-      </td>
+      </TD>
     </tr>
   )
 }

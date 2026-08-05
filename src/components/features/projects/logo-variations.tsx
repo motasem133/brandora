@@ -130,7 +130,7 @@ export async function LogoVariations({
               <img
                 src={src}
                 alt={label}
-                className="aspect-square w-full rounded-lg border border-line bg-white object-contain p-2"
+                className="aspect-square w-full rounded-control border border-line bg-white object-contain p-2"
                 loading="lazy"
               />
               <figcaption>

@@ -40,11 +40,11 @@ export async function BrandSystem({
       {fonts && (
         <section
           style={theme.vars}
-          className="overflow-hidden rounded-panel bg-[var(--brand-paper)] shadow-[var(--shadow-soft)] ring-1 ring-[var(--brand-line)]"
+          className="overflow-hidden rounded-panel bg-[var(--guest-paper)] shadow-[var(--shadow-soft)] ring-1 ring-[var(--guest-line)]"
         >
           <div className="space-y-6 p-7">
             <h2
-              style={{ color: 'var(--brand-ink-faint)' }}
+              style={{ color: 'var(--guest-ink-faint)' }}
               className="text-xs font-semibold uppercase tracking-[0.12em]"
             >
               {t('fonts')}
@@ -54,7 +54,7 @@ export async function BrandSystem({
               <p
                 lang={language}
                 dir="auto"
-                style={{ fontFamily: fontStack(fonts.heading), color: 'var(--brand-ink)' }}
+                style={{ fontFamily: fontStack(fonts.heading), color: 'var(--guest-ink)' }}
                 className="text-balance text-4xl font-semibold leading-[1.08] tracking-[-0.03em]"
               >
                 {name}
@@ -62,14 +62,14 @@ export async function BrandSystem({
               <p
                 lang={language}
                 dir="auto"
-                style={{ fontFamily: fontStack(fonts.body), color: 'var(--brand-ink-soft)' }}
+                style={{ fontFamily: fontStack(fonts.body), color: 'var(--guest-ink-soft)' }}
                 className="mt-3 text-base leading-relaxed"
               >
                 {slogan ?? t('fontsSpecimen')}
               </p>
             </div>
 
-            <dl className="space-y-2 border-t pt-5" style={{ borderColor: 'var(--brand-line)' }}>
+            <dl className="space-y-2 border-t pt-5" style={{ borderColor: 'var(--guest-line)' }}>
               {(
                 [
                   [t('fontHeading'), fonts.heading],
@@ -79,7 +79,7 @@ export async function BrandSystem({
                 .filter(([, family]) => Boolean(family))
                 .map(([role, family]) => (
                   <div key={role} className="flex items-center justify-between gap-3">
-                    <dt style={{ color: 'var(--brand-ink-faint)' }} className="text-xs">
+                    <dt style={{ color: 'var(--guest-ink-faint)' }} className="text-xs">
                       {role}
                     </dt>
                     <dd className="flex min-w-0 items-center gap-1.5">
@@ -87,7 +87,7 @@ export async function BrandSystem({
                         href={`https://fonts.google.com/?query=${encodeURIComponent(family)}`}
                         target="_blank"
                         rel="noreferrer"
-                        style={{ color: 'var(--brand-ink)' }}
+                        style={{ color: 'var(--guest-ink)' }}
                         className="truncate text-sm font-medium underline decoration-transparent underline-offset-4 transition-[text-decoration-color] hover:decoration-current"
                       >
                         {family}

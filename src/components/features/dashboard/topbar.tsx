@@ -23,14 +23,26 @@ export function Topbar({ user }: { user: { name: string; email: string } }) {
 
   return (
     <header className="glass sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b border-line px-6 lg:px-10">
-      <Link href="/dashboard" className="lg:hidden">
+      {/*
+        The mark stands in for the rail between `sm` and `lg`, and steps aside
+        on the narrowest phones: with the primary action carrying its label
+        again, the header ran five pixels past a 390px viewport, and this link
+        was the one thing in it that duplicated a destination — the row below
+        already carries Overview, labelled, with the same icon.
+      */}
+      <Link href="/dashboard" className="hidden sm:block lg:hidden">
         <Logo className="text-lg" markClassName="size-6" />
       </Link>
 
       <div className="ms-auto flex items-center gap-2">
+        {/*
+          The label stays at every width. Collapsed to a bare `+`, the product's
+          primary action was an unlabelled glyph on exactly the screens where a
+          first-time visitor is least able to guess at it.
+        */}
         <Button size="sm" onClick={() => router.push('/onboarding')}>
           <Plus />
-          <span className="hidden sm:inline">{t('newProject')}</span>
+          {t('newProject')}
         </Button>
 
         {/*

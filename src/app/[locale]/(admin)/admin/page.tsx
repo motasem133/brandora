@@ -1,8 +1,7 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
-import { Stat } from '@/components/features/admin/stat'
-import { Badge } from '@/components/ui/badge'
 import { Card, CardTitle } from '@/components/ui/card'
+import { Table, TBody, TD, TH, THead, TRowHeader } from '@/components/ui/table'
 import { formatPrice } from '@/lib/utils'
 import { getOverview, getSubscriptionsByPlan } from '@/server/db/queries/admin'
 
@@ -24,52 +23,62 @@ export default async function AdminOverviewPage({
         <p className="mt-1 text-sm text-fg-secondary">{t('overview.subtitle')}</p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat
-          label={t('overview.mrr')}
-          value={formatPrice(overview.mrr_cents, 'usd', locale)}
-          hint={t('overview.mrrHint', { count: overview.active_subscriptions })}
-        />
-        <Stat
-          label={t('overview.users')}
-          value={overview.users}
-          hint={t('overview.newThisMonth', { count: overview.users_this_month })}
-        />
-        <Stat
-          label={t('overview.projects')}
-          value={overview.projects}
-          hint={t('overview.completed', { count: overview.projects_completed })}
-        />
-        <Stat
-          label={t('overview.creditsOutstanding')}
-          value={overview.credits_outstanding}
-          hint={t('overview.creditsHint')}
-        />
-      </div>
+      {/*
+        The figures, once, as a line of meta.
 
-      <Card className="space-y-4">
-        <CardTitle>{t('overview.byPlan')}</CardTitle>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-line text-start text-xs uppercase tracking-wide text-fg-muted">
-                <th className="pb-2 text-start font-medium">{t('overview.plan')}</th>
-                <th className="pb-2 text-end font-medium">{t('overview.subscribers')}</th>
-                <th className="pb-2 text-end font-medium">{t('overview.mrr')}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line">
-              {byPlan.map((plan) => (
-                <tr key={plan.slug}>
-                  <td className="py-2.5">{plan.name}</td>
-                  <td className="py-2.5 text-end">{plan.count}</td>
-                  <td className="py-2.5 text-end">{formatPrice(plan.mrr_cents, 'usd', locale)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        They were four cards across the top of the page — the exact composition
+        DESIGN.md names as its anti-reference, and the one the product's own
+        dashboard was rebuilt to remove. They are true and worth knowing, and
+        that is the whole of what they earn. The substance of this page is the
+        table underneath, which answers a question rather than stating a number.
+      */}
+      <dl className="flex flex-wrap items-center gap-x-7 gap-y-2 border-y border-line py-3.5 text-sm">
+        {[
+          [t('overview.mrr'), formatPrice(overview.mrr_cents, 'usd', locale)],
+          [t('overview.users'), overview.users],
+          [t('overview.projects'), overview.projects],
+          [t('overview.creditsOutstanding'), overview.credits_outstanding],
+          [t('overview.orgsLabel'), overview.orgs],
+        ].map(([label, value]) => (
+          <div key={String(label)} className="flex items-baseline gap-2">
+            <dt className="text-fg-muted">{label}</dt>
+            <dd className="font-semibold tabular-nums text-fg">{value}</dd>
+          </div>
+        ))}
+      </dl>
+
+      <Card className="p-0">
+        <div className="p-7 pb-4">
+          <CardTitle>{t('overview.byPlan')}</CardTitle>
+          <p className="mt-1 text-sm text-fg-secondary">
+            {t('overview.byPlanHint', {
+              active: overview.active_subscriptions,
+              newUsers: overview.users_this_month,
+              completed: overview.projects_completed,
+            })}
+          </p>
         </div>
-        <Badge>{t('overview.orgs', { count: overview.orgs })}</Badge>
+
+        <Table caption={t('overview.byPlan')}>
+          <THead>
+            <TH>{t('overview.plan')}</TH>
+            <TH align="end">{t('overview.subscribers')}</TH>
+            <TH align="end">{t('overview.mrr')}</TH>
+          </THead>
+          <TBody>
+            {byPlan.map((plan) => (
+              <tr key={plan.slug}>
+                <TRowHeader>{plan.name}</TRowHeader>
+                <TD align="end" className="tabular-nums">
+                  {plan.count}
+                </TD>
+                <TD align="end" className="tabular-nums">
+                  {formatPrice(plan.mrr_cents, 'usd', locale)}
+                </TD>
+              </tr>
+            ))}
+          </TBody>
+        </Table>
       </Card>
     </div>
   )

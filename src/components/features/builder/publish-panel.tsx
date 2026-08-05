@@ -6,6 +6,8 @@ import { useAction } from 'next-safe-action/hooks'
 import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { Field } from '@/components/ui/field'
 import { FieldError } from '@/components/ui/field-error'
 import { Input } from '@/components/ui/input'
 import { EVENTS, capture } from '@/lib/analytics'
@@ -47,6 +49,14 @@ export function PublishPanel({
   const t = useTranslations('Builder')
 
   const [open, setOpen] = useState(false)
+  const [confirming, setConfirming] = useState(false)
+  /*
+   * Resolved when the dialog is opened rather than during render. Reading
+   * `window` in the render body made the server emit a bare path and the client
+   * a full URL, which is a hydration mismatch on every load; an event handler
+   * only ever runs on the client, so there is nothing to disagree about.
+   */
+  const [liveUrl, setLiveUrl] = useState('')
   const [subdomain, setSubdomain] = useState(initialSubdomain ?? '')
   const [published, setPublished] = useState(isPublished)
   const [liveSubdomain, setLiveSubdomain] = useState(initialSubdomain)
@@ -102,37 +112,74 @@ export function PublishPanel({
     )
   }
 
+
   return (
     <div className="relative">
+      <ConfirmDialog
+        open={confirming}
+        pending={publish.isPending}
+        onClose={() => setConfirming(false)}
+        onConfirm={() => {
+          publish.execute({ projectId, subdomain })
+          setConfirming(false)
+        }}
+        title={t('confirmTitle')}
+        body={
+          <>
+            {t('confirmBody')}
+            <span className="mt-2 block break-all font-mono text-xs text-fg">{liveUrl}</span>
+          </>
+        }
+        confirmLabel={t('publish')}
+        cancelLabel={t('notYet')}
+      />
+
       <Button size="sm" onClick={() => setOpen((value) => !value)}>
         <Globe />
         {published ? t('published') : t('publish')}
       </Button>
 
+      {/*
+        Fixed at 20rem, the panel ran off the edge of a 390px screen — the
+        address field for a site about to go public, half of it past the
+        viewport. Its width is now whichever is smaller: the panel it wants to
+        be, or the screen it has, minus the page's own gutters.
+      */}
       {open && (
-        <div className="absolute end-0 top-full z-20 mt-2 w-80 rounded-xl border border-line bg-surface p-4 shadow-lg">
-          <label className="block">
-            <span className="mb-1.5 block text-sm font-medium">{t('address')}</span>
+        <div className="absolute end-0 top-full z-20 mt-2 w-[min(20rem,calc(100vw-3rem))] rounded-card border border-line bg-surface p-4 shadow-lg">
+          <Field
+            label={t('address')}
+            hint={`${t('willBeLiveAt')} /sites/${subdomain || 'my-brand'}`}
+            error={publish.result?.serverError}
+          >
             <Input
               value={subdomain}
               onChange={(event) => setSubdomain(slugify(event.target.value))}
               placeholder="my-brand"
               autoFocus
             />
-          </label>
-
-          <p className="mt-1.5 break-all text-xs text-fg-muted">
-            {t('willBeLiveAt')} /sites/{subdomain || 'my-brand'}
-          </p>
-
-          <FieldError message={publish.result?.serverError} />
+          </Field>
 
           <div className="mt-4 flex gap-2">
+            {/*
+              Publishing puts a customer's site on the open internet under
+              their client's name, and it used to take one press of a small
+              button — less friction than deleting a draft, which has always
+              asked. Updating an already-published site does not ask again:
+              the address is already public and the question has been answered.
+            */}
             <Button
               size="sm"
               className="flex-1"
               disabled={publish.isPending || subdomain.length < 3}
-              onClick={() => publish.execute({ projectId, subdomain })}
+              onClick={() => {
+                if (published) {
+                  publish.execute({ projectId, subdomain })
+                  return
+                }
+                setLiveUrl(`${window.location.origin}/sites/${subdomain}`)
+                setConfirming(true)
+              }}
             >
               {publish.isPending && <Loader2 className="animate-spin" />}
               {published ? t('update') : t('publish')}
@@ -164,19 +211,18 @@ export function PublishPanel({
 
           {canUseCustomDomain && published && (
             <div className="mt-4 border-t border-line pt-4">
-              <span className="mb-1.5 block text-sm font-medium">{t('customDomain')}</span>
-
               {!domain ? (
                 <>
-                  <Input
-                    value={domainInput}
-                    onChange={(event) => setDomainInput(event.target.value)}
-                    placeholder="example.com"
-                    inputMode="url"
-                    autoCapitalize="off"
-                    spellCheck={false}
-                  />
-                  <FieldError message={attach.result?.serverError} />
+                  <Field label={t('customDomain')} error={attach.result?.serverError}>
+                    <Input
+                      value={domainInput}
+                      onChange={(event) => setDomainInput(event.target.value)}
+                      placeholder="example.com"
+                      inputMode="url"
+                      autoCapitalize="off"
+                      spellCheck={false}
+                    />
+                  </Field>
                   <Button
                     size="sm"
                     variant="secondary"
@@ -190,6 +236,7 @@ export function PublishPanel({
                 </>
               ) : (
                 <>
+                  <span className="mb-1.5 block text-sm font-medium">{t('customDomain')}</span>
                   <p className="flex items-center gap-1.5 break-all text-sm">
                     {domain.verified && !domain.misconfigured && (
                       <CheckCircle2 className="size-3.5 shrink-0 text-success" />
@@ -206,7 +253,7 @@ export function PublishPanel({
                   {/* The customer has to create these at their own DNS host —
                       nothing here can do it for them. */}
                   {domain.records.length > 0 && !(domain.verified && !domain.misconfigured) && (
-                    <dl className="mt-2 space-y-1 rounded-lg bg-elevated p-2.5 font-mono text-xs">
+                    <dl className="mt-2 space-y-1 rounded-control bg-elevated p-2.5 font-mono text-xs">
                       {domain.records.map((record) => (
                         <div key={`${record.type}-${record.name}`} className="flex gap-2">
                           <dt className="shrink-0 text-fg-muted">{record.type}</dt>

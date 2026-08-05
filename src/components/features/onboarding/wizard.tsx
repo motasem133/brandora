@@ -4,17 +4,22 @@ import { ArrowLeft, ArrowRight, Check, Loader2, Lock } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useLocale, useTranslations } from 'next-intl'
 import { useAction } from 'next-safe-action/hooks'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { Field } from '@/components/ui/field'
 import { FieldError } from '@/components/ui/field-error'
 import { Input } from '@/components/ui/input'
 import { Logo } from '@/components/ui/logo'
+import { Select } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
 import { Link, useRouter } from '@/i18n/navigation'
 import { EVENTS, capture } from '@/lib/analytics'
+import { contrast } from '@/lib/brand-theme'
 import { cn } from '@/lib/utils'
 import { BRAND_STYLES, COUNTRIES, INDUSTRY_KEYS } from '@/lib/validations/project'
+import { generateProject } from '@/server/actions/generation'
 import { createProject } from '@/server/actions/projects'
 
 const TOTAL_STEPS = 8
@@ -33,10 +38,29 @@ const CHAPTERS = [
   { key: 'chapterKit', steps: [7, 8] },
 ] as const
 
+/**
+ * Colour choices, each with a name.
+ *
+ * The buttons used to contain nothing but a tick when selected, so an
+ * unselected swatch had no text node at all and a screen reader announced ten
+ * anonymous buttons. The name is what makes a colour a choice rather than a
+ * square.
+ */
 const SWATCHES = [
-  '#7c3aed', '#06b6d4', '#f43f5e', '#f59e0b', '#10b981',
-  '#3b82f6', '#ec4899', '#14b8a6', '#111827', '#d4af37',
-]
+  { hex: '#7c3aed', key: 'violet' },
+  { hex: '#06b6d4', key: 'cyan' },
+  { hex: '#f43f5e', key: 'rose' },
+  { hex: '#f59e0b', key: 'amber' },
+  { hex: '#10b981', key: 'emerald' },
+  { hex: '#3b82f6', key: 'blue' },
+  { hex: '#ec4899', key: 'pink' },
+  { hex: '#14b8a6', key: 'teal' },
+  { hex: '#111827', key: 'ink' },
+  { hex: '#d4af37', key: 'gold' },
+] as const
+
+/** Three is the cap the model works best from — and it is now said out loud. */
+const MAX_COLORS = 3
 
 /** The point at which the brief carries enough for the model to work from. */
 const BRIEF_MIN = 20
@@ -69,7 +93,28 @@ export type WizardEntitlements = {
   socialMediaKit: boolean
 }
 
-export function OnboardingWizard({ entitlements }: { entitlements: WizardEntitlements }) {
+export type WizardPricing = { base: number; website: number; social: number }
+
+export type CarriedOver = {
+  from: string
+  industry: string
+  country: string
+  brandStyle: (typeof BRAND_STYLES)[number]
+} | null
+
+export function OnboardingWizard({
+  entitlements,
+  pricing,
+  balance,
+  emailVerified,
+  carriedOver,
+}: {
+  entitlements: WizardEntitlements
+  pricing: WizardPricing
+  balance: number
+  emailVerified: boolean
+  carriedOver: CarriedOver
+}) {
   const t = useTranslations('Onboarding')
   const tc = useTranslations('Common')
   const locale = useLocale()
@@ -81,19 +126,70 @@ export function OnboardingWizard({ entitlements }: { entitlements: WizardEntitle
   const [direction, setDirection] = useState(1)
   const [form, setForm] = useState<FormState>({
     ...INITIAL,
+    /*
+     * The answers that stay true between one client and the next arrive filled
+     * in, marked as carried over so they read as a starting point rather than
+     * as something already decided.
+     */
+    industry: carriedOver?.industry ?? '',
+    country: carriedOver?.country ?? '',
+    brandStyle: carriedOver?.brandStyle ?? '',
     // Start locked features off, so what the user sees is what gets created.
     needsWebsite: entitlements.websiteBuilder,
     needsSocialMedia: entitlements.socialMediaKit,
   })
   const [error, setError] = useState<string>()
   const [leaving, setLeaving] = useState(false)
+  const headingRef = useRef<HTMLHeadingElement>(null)
+
+  /*
+   * What this run costs, live, as the deliverables are chosen.
+   *
+   * PRODUCT.md's second principle is that anything which can spend credits says
+   * so before it does, at the control that spends them. The wizard asked eight
+   * questions and never mentioned that the answer cost anything; the price was
+   * first stated on the next page, after the decision.
+   */
+  const cost =
+    pricing.base +
+    (form.needsWebsite ? pricing.website : 0) +
+    (form.needsSocialMedia ? pricing.social : 0)
+
+  const affordable = balance >= cost
+  const blocked = !emailVerified || !affordable
+
+  const generate = useAction(generateProject)
 
   const { execute, isPending, result } = useAction(createProject, {
-    onSuccess: ({ data }) => {
+    onSuccess: async ({ data }) => {
       capture(EVENTS.projectCreated)
-      if (data?.projectId) router.push(`/dashboard/projects/${data.projectId}`)
+      if (!data?.projectId) return
+
+      /*
+       * One intent, one commitment. Creating the project and starting its run
+       * used to be two presses on two screens, the second one worded as though
+       * nothing had happened yet.
+       *
+       * If the run cannot start the project still exists, and the project page
+       * is where the reason lives — so the destination is the same either way.
+       */
+      await generate.executeAsync({ projectId: data.projectId })
+      router.push(`/dashboard/projects/${data.projectId}`)
     },
   })
+
+  /**
+   * True while a carried-over answer is untouched.
+   *
+   * It stops being marked the moment it is edited, because after that it is
+   * this brand's answer rather than the last one's.
+   */
+  const carried = (key: 'industry' | 'country' | 'brandStyle') =>
+    Boolean(carriedOver) && form[key] === carriedOver![key]
+
+  useEffect(() => {
+    headingRef.current?.focus({ preventScroll: true })
+  }, [step])
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }))
@@ -205,22 +301,11 @@ export function OnboardingWizard({ entitlements }: { entitlements: WizardEntitle
           type="button"
           onClick={cancel}
           disabled={isPending}
-          className="rounded-control px-3 py-1.5 text-sm text-fg-muted transition-colors hover:bg-elevated hover:text-fg disabled:opacity-50"
+          className="min-h-11 rounded-control px-3 text-sm text-fg-muted transition-colors hover:bg-elevated hover:text-fg disabled:opacity-50"
         >
           {tc('cancel')}
         </button>
       </div>
-
-      <ConfirmDialog
-        open={leaving}
-        onClose={() => setLeaving(false)}
-        onConfirm={() => router.push('/dashboard')}
-        title={t('cancelTitle')}
-        body={t('cancelConfirm')}
-        confirmLabel={t('discard')}
-        cancelLabel={t('keepGoing')}
-        destructive
-      />
 
       <h1 className="text-center font-display text-2xl font-semibold tracking-[-0.02em]">
         {t('title')}
@@ -239,7 +324,13 @@ export function OnboardingWizard({ entitlements }: { entitlements: WizardEntitle
           animates the one height change that remains, and the card breathes
           between a short question and a long one instead of jumping.
         */}
-        <motion.div layout={!reduced} transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}>
+        <motion.div
+          role="group"
+          aria-live="polite"
+          aria-label={t('stepOf', { step, total: TOTAL_STEPS })}
+          layout={!reduced}
+          transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+        >
           <AnimatePresence mode="popLayout" custom={direction} initial={false}>
             <motion.div
               key={step}
@@ -255,7 +346,23 @@ export function OnboardingWizard({ entitlements }: { entitlements: WizardEntitle
               transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
             >
               <div>
-                <h2 className="font-display text-xl font-semibold tracking-[-0.02em]">
+                {/*
+                  The heading takes focus on each step and the region announces
+                  itself: pressing Next used to change the panel silently,
+                  leaving focus on a button whose label had not changed and a
+                  screen reader with nothing to read.
+
+                  Focus moves in an effect keyed on the step — never in a ref
+                  callback. React re-attaches an inline callback ref on every
+                  render, and this panel re-renders on every keystroke, so
+                  calling `.focus()` there stole the caret back to the heading
+                  after each character: typing "Acme" left "A" in the field.
+                */}
+                <h2
+                  ref={headingRef}
+                  tabIndex={-1}
+                  className="font-display text-xl font-semibold tracking-[-0.02em] focus:outline-none"
+                >
                   {t(`step${step}Title`)}
                 </h2>
                 <p className="mt-1.5 text-sm text-fg-secondary">{t(`step${step}Subtitle`)}</p>
@@ -273,6 +380,11 @@ export function OnboardingWizard({ entitlements }: { entitlements: WizardEntitle
 
                 {step === 2 && (
                   <div className="space-y-4">
+                    {carried('industry') && (
+                      <p className="text-xs text-fg-muted">
+                        {t('carriedOver', { from: carriedOver!.from })}
+                      </p>
+                    )}
                     <Stagger className="grid grid-cols-2 gap-2 sm:grid-cols-3" reduced={reduced}>
                       {INDUSTRY_KEYS.map((key) => {
                         const label = t(`industries.${key}`)
@@ -296,18 +408,21 @@ export function OnboardingWizard({ entitlements }: { entitlements: WizardEntitle
                 )}
 
                 {step === 3 && (
-                  <select
-                    value={form.country}
-                    onChange={(e) => set('country', e.target.value)}
-                    className="h-11 w-full rounded-control border border-line bg-surface px-3.5 text-sm text-fg focus:border-brand focus:outline-none"
+                  <Field
+                    label={t('step3Label')}
+                    hint={carried('country') ? t('carriedOver', { from: carriedOver!.from }) : undefined}
                   >
-                    <option value="">—</option>
-                    {COUNTRIES.map((country) => (
-                      <option key={country} value={country}>
-                        {country}
-                      </option>
-                    ))}
-                  </select>
+                    <Select value={form.country} onChange={(e) => set('country', e.target.value)}>
+                      {/* An em dash is not a prompt. The empty option now says
+                          what choosing one would mean. */}
+                      <option value="">{t('step3Placeholder')}</option>
+                      {COUNTRIES.map((country) => (
+                        <option key={country} value={country}>
+                          {country}
+                        </option>
+                      ))}
+                    </Select>
+                  </Field>
                 )}
 
                 {step === 4 && (
@@ -319,6 +434,12 @@ export function OnboardingWizard({ entitlements }: { entitlements: WizardEntitle
                     short={t('step4Short')}
                     good={t('step4Good')}
                   />
+                )}
+
+                {step === 5 && carried('brandStyle') && (
+                  <p className="mb-3 text-xs text-fg-muted">
+                    {t('carriedOver', { from: carriedOver!.from })}
+                  </p>
                 )}
 
                 {step === 5 && (
@@ -345,28 +466,55 @@ export function OnboardingWizard({ entitlements }: { entitlements: WizardEntitle
                 )}
 
                 {step === 6 && (
-                  <Stagger className="flex flex-wrap gap-3" reduced={reduced}>
-                    {SWATCHES.map((color) => {
-                      const selected = form.preferredColors.includes(color)
-                      return (
-                        <button
-                          key={color}
-                          type="button"
-                          aria-pressed={selected}
-                          onClick={() => toggleColor(color)}
-                          style={{ backgroundColor: color }}
-                          className={cn(
-                            'flex size-11 items-center justify-center rounded-full transition-transform',
-                            selected
-                              ? 'scale-110 ring-2 ring-brand ring-offset-2 ring-offset-surface'
-                              : 'hover:scale-105',
-                          )}
-                        >
-                          {selected && <Check className="size-4 text-white drop-shadow" />}
-                        </button>
-                      )
-                    })}
-                  </Stagger>
+                  <fieldset>
+                    {/*
+                      The cap was enforced silently: a fourth press did nothing,
+                      with no counter and no message, so the control simply
+                      stopped responding and did not say why.
+                    */}
+                    <legend className="mb-3 text-sm text-fg-secondary">
+                      {t('colorsChosen', { chosen: form.preferredColors.length, max: MAX_COLORS })}
+                    </legend>
+
+                    <Stagger className="flex flex-wrap gap-3" reduced={reduced}>
+                      {SWATCHES.map(({ hex, key }) => {
+                        const selected = form.preferredColors.includes(hex)
+                        const full = form.preferredColors.length >= MAX_COLORS && !selected
+
+                        return (
+                          <button
+                            key={hex}
+                            type="button"
+                            aria-pressed={selected}
+                            aria-label={t(`colors.${key}`)}
+                            disabled={full}
+                            onClick={() => toggleColor(hex)}
+                            style={{ backgroundColor: hex }}
+                            className={cn(
+                              'flex size-11 items-center justify-center rounded-full transition-transform',
+                              selected && 'scale-110 ring-2 ring-brand ring-offset-2 ring-offset-surface',
+                              full && 'cursor-not-allowed opacity-40',
+                              !selected && !full && 'hover:scale-105',
+                            )}
+                          >
+                            {/*
+                              The tick is the only mark of selection, so it is
+                              picked per swatch: white measured 2.10:1 on the
+                              gold and 2.15:1 on the amber.
+                            */}
+                            {selected && (
+                              <Check
+                                className={cn(
+                                  'size-4',
+                                  contrast('#ffffff', hex) >= 3 ? 'text-white' : 'text-black',
+                                )}
+                              />
+                            )}
+                          </button>
+                        )
+                      })}
+                    </Stagger>
+                  </fieldset>
                 )}
 
                 {step === 7 &&
@@ -403,7 +551,44 @@ export function OnboardingWizard({ entitlements }: { entitlements: WizardEntitle
           </AnimatePresence>
         </motion.div>
 
-        <FieldError message={error ?? result?.serverError} />
+        <FieldError message={error ?? result?.serverError ?? generate.result?.serverError} />
+
+        {/*
+          On the last step the price and the two things that can stop the run
+          are stated above the control that spends the credits — not on the
+          page after it.
+        */}
+        {step === TOTAL_STEPS && (
+          <div className="mt-6 space-y-3">
+            {/*
+              The balance here, the price on the button. Stating the cost in
+              both places put the same changing number forty pixels from
+              itself; between them the two facts PRODUCT.md requires are each
+              said once, at the control that spends them.
+            */}
+            <p className="border-t border-line pt-4 text-sm text-fg-secondary">
+              {t('balanceLine', { balance })}
+            </p>
+
+            {!emailVerified && (
+              <p className="text-sm text-warning">
+                {t('verifyFirst')}{' '}
+                <Link href="/dashboard/settings" className="accent-text hover:underline">
+                  {t('verifyCta')}
+                </Link>
+              </p>
+            )}
+
+            {emailVerified && !affordable && (
+              <p className="text-sm text-warning">
+                {t('notEnoughCredits', { cost, balance })}{' '}
+                <Link href="/dashboard/billing" className="accent-text hover:underline">
+                  {t('topUp')}
+                </Link>
+              </p>
+            )}
+          </div>
+        )}
 
         <div className="mt-8 flex items-center justify-between gap-3">
           <Button variant="ghost" onClick={back} disabled={step === 1 || isPending}>
@@ -411,17 +596,35 @@ export function OnboardingWizard({ entitlements }: { entitlements: WizardEntitle
             {tc('back')}
           </Button>
 
-          <Button onClick={next} disabled={isPending}>
+          <Button onClick={next} disabled={isPending || (step === TOTAL_STEPS && blocked)}>
             {isPending && <Loader2 className="animate-spin" />}
             {step === TOTAL_STEPS
               ? isPending
-                ? t('creating')
-                : t('createProject')
+                ? t('starting')
+                : t('generateCta', { credits: cost })
               : tc('next')}
             {step < TOTAL_STEPS && <ArrowRight className="rtl:rotate-180" />}
           </Button>
         </div>
       </div>
+
+      {/*
+        Rendered last on purpose. A native `<dialog>` is placed in the top layer
+        wherever it is declared, so its position in the document costs nothing
+        visually — and declared first, its title was the first heading on the
+        page: a screen-reader user browsing by heading met "Leave without
+        creating your brand?" before the question they had come to answer.
+      */}
+      <ConfirmDialog
+        open={leaving}
+        onClose={() => setLeaving(false)}
+        onConfirm={() => router.push('/dashboard')}
+        title={t('cancelTitle')}
+        body={t('cancelConfirm')}
+        confirmLabel={t('discard')}
+        cancelLabel={t('keepGoing')}
+        destructive
+      />
     </div>
   )
 }
@@ -440,10 +643,14 @@ function ChapterRail({ step, label }: { step: number; label: (key: string) => st
     <div className="my-8">
       <div className="relative">
         <div className="absolute inset-x-0 top-[0.4375rem] h-px bg-line" />
+        {/*
+          Scaled rather than widened. Animating `width` is a layout property —
+          it re-runs layout every frame, eight times a session, for a line.
+        */}
         <motion.div
-          className="absolute start-0 top-[0.4375rem] h-px bg-brand"
+          className="absolute inset-x-0 top-[0.4375rem] h-px origin-[left] bg-brand rtl:origin-[right]"
           initial={false}
-          animate={{ width: `${travelled * 100}%` }}
+          animate={{ scaleX: travelled }}
           transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
         />
 
@@ -508,13 +715,18 @@ function BrandBrief({
 
   return (
     <div className="space-y-3">
-      <textarea
+      {/*
+        16px against the app's 14px: this is the one field where somebody writes
+        a sentence rather than fills a slot, and it is also what stops iOS
+        zooming the page when it takes focus.
+      */}
+      <Textarea
         autoFocus
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         rows={6}
-        className="min-h-40 w-full resize-y rounded-control border border-line bg-elevated/60 px-3.5 py-3 text-base leading-relaxed text-fg transition-shadow duration-200 placeholder:text-fg-muted focus:border-brand focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--brand-primary)_22%,transparent)] focus:outline-none"
+        className="min-h-40 text-base leading-relaxed"
       />
 
       <ul className="flex flex-wrap gap-x-2 gap-y-1.5 text-xs text-fg-muted">
@@ -558,11 +770,16 @@ function Stagger({
       animate="shown"
       variants={{ hidden: {}, shown: { transition: { staggerChildren: 0.03 } } }}
     >
+      {/*
+        `display: contents` generates no box, so opacity and transform on this
+        wrapper had no rendering effect whatsoever — Framer wrote styles every
+        frame for an animation that could not be seen. The wrapper is a real
+        box now, and `contents` is gone.
+      */}
       {Array.isArray(children)
         ? children.map((child, index) => (
             <motion.div
               key={index}
-              className="contents"
               variants={{
                 hidden: { opacity: 0, y: 6 },
                 shown: { opacity: 1, y: 0, transition: { duration: 0.3 } },

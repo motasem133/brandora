@@ -118,28 +118,24 @@ async function main() {
   check('Arabic renders dir="rtl"', rtl.includes('dir="rtl"'))
 
   /*
-   * Annual pricing is read straight from the plans table, so this asserts the
-   * page actually switches period rather than merely accepting the parameter —
-   * the failure it guards against is a yearly view still quoting monthly money.
+   * Pricing is read straight from the plans table, so this asserts the page
+   * quotes what the product actually charges. Billing is monthly: a page
+   * offering an annual period would be pricing something nobody can buy.
    */
   const [paid] = await sql`
     SELECT price_monthly, price_yearly FROM plans
-    WHERE price_yearly > 0 ORDER BY sort_order LIMIT 1`
+    WHERE price_monthly > 0 ORDER BY sort_order LIMIT 1`
 
   if (paid) {
     const asMoney = (minor) => `$${(minor / 100).toLocaleString('en-US')}`
-    const yearlyPage = await (await request('/en/pricing?interval=yearly')).text()
+    const pricingPage = await (await request('/en/pricing')).text()
 
-    check('yearly pricing quotes the annual price', yearlyPage.includes(asMoney(paid.price_yearly)))
-    check('yearly pricing is labelled per year', yearlyPage.includes('/year'))
-
-    const monthlyPage = await (await request('/en/pricing')).text()
-    check(
-      'monthly pricing quotes the monthly price',
-      monthlyPage.includes(asMoney(paid.price_monthly)),
-    )
+    check('pricing quotes the monthly price', pricingPage.includes(asMoney(paid.price_monthly)))
+    check('pricing is labelled per month', pricingPage.includes('/month'))
+    check('pricing offers no annual period', !pricingPage.includes('/year'))
+    check('no plan carries an annual price', paid.price_yearly === 0, `${paid.price_yearly}`)
   } else {
-    check('a plan with an annual price exists', false, 'none found')
+    check('a paid plan exists', false, 'none found')
   }
 
   /* ------------------------------------------------------------- auth gate */
@@ -312,8 +308,6 @@ async function main() {
     ['/en/dashboard/billing', 'billing'],
     ['/en/onboarding', 'onboarding wizard'],
     ['/en/dashboard/billing?currency=aed', 'billing in AED'],
-    ['/en/dashboard/billing?interval=yearly', 'billing yearly'],
-    ['/en/dashboard/billing?currency=aed&interval=yearly', 'billing yearly in AED'],
     ['/ar/dashboard', 'dashboard in Arabic'],
   ]) {
     const res = await request(path, { cookies: intruder })

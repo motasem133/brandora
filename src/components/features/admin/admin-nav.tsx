@@ -28,7 +28,7 @@ export function AdminNav() {
               key={href}
               href={href}
               className={cn(
-                'rounded-lg px-3 py-2 text-sm transition-colors',
+                'rounded-control px-3 py-2 text-sm transition-colors',
                 active ? 'bg-elevated font-medium text-fg' : 'text-fg-secondary hover:text-fg',
               )}
             >

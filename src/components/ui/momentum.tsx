@@ -160,7 +160,22 @@ export function MomentumItem({
 
   return (
     <div ref={anchor} className={className} onMouseEnter={flick}>
-      <motion.div style={{ x, y, rotate }} className="h-full will-change-transform">
+      {/*
+        `will-change` is promised on the way in and released on the way out,
+        rather than declared for the life of the page. Left on, it held a
+        compositor layer per card — eleven of them on the dashboard alone, each
+        costing memory for a transform that only runs during a hover flick.
+      */}
+      <motion.div
+        style={{ x, y, rotate }}
+        className="h-full"
+        onMouseEnter={(event) => {
+          event.currentTarget.style.willChange = 'transform'
+        }}
+        onMouseLeave={(event) => {
+          event.currentTarget.style.willChange = 'auto'
+        }}
+      >
         {children}
       </motion.div>
     </div>

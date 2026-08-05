@@ -9,9 +9,10 @@ import { Badge } from '@/components/ui/badge'
 import { ResendVerification } from './resend-verification'
 import { Button } from '@/components/ui/button'
 import { Card, CardTitle } from '@/components/ui/card'
+import { Field } from '@/components/ui/field'
 import { FieldError } from '@/components/ui/field-error'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Select } from '@/components/ui/select'
 import { useRouter } from '@/i18n/navigation'
 import { updateProfile } from '@/server/actions/settings'
 
@@ -43,19 +44,18 @@ export function ProfileCard({
     <Card className="space-y-4">
       <CardTitle>{t('profile')}</CardTitle>
 
-      <div>
-        <Label htmlFor="name">{t('name')}</Label>
+      <Field label={t('name')}>
         <Input
-          id="name"
           ref={nameRef}
           defaultValue={name}
           onChange={() => setSaved(false)}
           className="mt-1.5"
         />
-      </div>
+      </Field>
 
-      <div>
-        <Label>{t('email')}</Label>
+      {/* The label carried no `htmlFor` and the input no `id`, so this was the
+          one field in the product a screen reader announced unnamed. */}
+      <Field label={t('email')}>
         <div className="mt-1.5 flex items-center gap-2">
           {/* Changing an email would need re-verification, so it is read-only
               until that flow exists rather than silently doing nothing. */}
@@ -71,22 +71,19 @@ export function ProfileCard({
             <ResendVerification email={email} />
           </div>
         )}
-      </div>
+      </Field>
 
-      <div>
-        <Label htmlFor="locale">{t('language')}</Label>
-        <select
-          id="locale"
+      <Field label={t('language')} hint={t('languageHint')}>
+        <Select
           ref={localeRef}
           defaultValue={locale}
           onChange={() => setSaved(false)}
-          className="mt-1.5 h-11 w-full rounded-lg border border-line bg-surface px-3.5 text-sm focus:border-brand focus:outline-none"
+          className="mt-1.5"
         >
           <option value="en">English</option>
           <option value="ar">العربية</option>
-        </select>
-        <p className="mt-1 text-xs text-fg-muted">{t('languageHint')}</p>
-      </div>
+        </Select>
+      </Field>
 
       <div className="flex items-center gap-3">
         <Button

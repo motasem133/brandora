@@ -6,20 +6,16 @@ import { useAction } from 'next-safe-action/hooks'
 import { Button } from '@/components/ui/button'
 import { FieldError } from '@/components/ui/field-error'
 import { EVENTS, capture } from '@/lib/analytics'
-import type { BillingInterval } from '@/lib/utils'
 import { createCheckout } from '@/server/actions/billing'
 
 export function CheckoutButton({
   kind,
   slug,
   label,
-  interval = 'monthly',
 }: {
   kind: 'plan' | 'pack'
   slug: string
   label: string
-  /** Packs are one-off purchases, so they keep the monthly default. */
-  interval?: BillingInterval
 }) {
   const { execute, isPending, result } = useAction(createCheckout, {
     onSuccess: ({ data }) => {
@@ -35,8 +31,8 @@ export function CheckoutButton({
         className="w-full"
         disabled={isPending}
         onClick={() => {
-          capture(EVENTS.checkoutStarted, { kind, slug, interval })
-          execute({ kind, slug, interval })
+          capture(EVENTS.checkoutStarted, { kind, slug })
+          execute({ kind, slug })
         }}
       >
         {isPending && <Loader2 className="animate-spin" />}

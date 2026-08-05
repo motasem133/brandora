@@ -49,18 +49,9 @@ type LedgerEntry = {
  */
 export async function writeLedgerEntry(entry: LedgerEntry) {
   return db.transaction(async (tx) => {
-    if (entry.idempotencyKey) {
-      const existing = await tx
-        .select({ id: creditTransactions.id })
-        .from(creditTransactions)
-        .where(eq(creditTransactions.idempotencyKey, entry.idempotencyKey))
-        .limit(1)
-
-      if (existing.length > 0) return null
-    }
-
     // Locking the organization row serialises concurrent spends, so two
-    // generations started at once cannot both pass the balance check.
+    // generations started at once cannot both pass the balance check — and so
+    // two deliveries of the same webhook queue up rather than racing.
     const [org] = await tx
       .select()
       .from(organizations)
@@ -79,7 +70,17 @@ export async function writeLedgerEntry(entry: LedgerEntry) {
       )
     }
 
-    const [row] = await tx
+    /*
+     * The unique index decides whether this entry is new, rather than a read
+     * that precedes the write.
+     *
+     * Checking for the key first and inserting afterwards is correct until two
+     * deliveries arrive at once: both read nothing, both insert, and the loser
+     * aborts on the unique index. The money stayed right — the index saw to
+     * that — but the request failed with a 500, and Polar answers a 500 by
+     * delivering again. Under a burst of retries that was most of them.
+     */
+    const inserted = await tx
       .insert(creditTransactions)
       .values({
         organizationId: entry.organizationId,
@@ -92,14 +93,19 @@ export async function writeLedgerEntry(entry: LedgerEntry) {
         idempotencyKey: entry.idempotencyKey ?? null,
         metadata: entry.metadata ?? {},
       })
+      .onConflictDoNothing({ target: creditTransactions.idempotencyKey })
       .returning()
+
+    // Nothing inserted means the key already landed: the effect is applied, so
+    // this is a success that must not move the balance a second time.
+    if (inserted.length === 0) return null
 
     await tx
       .update(organizations)
       .set({ creditBalance: balanceAfter })
       .where(eq(organizations.id, entry.organizationId))
 
-    return row
+    return inserted[0]
   })
 }
 

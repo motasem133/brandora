@@ -10,6 +10,7 @@ import { orgAction, orgOwnerAction } from '@/server/actions/safe-action'
 import { getPolar } from '@/server/billing/polar'
 import { syncBillingFromPolar } from '@/server/billing/sync'
 import { db } from '@/server/db'
+import { getCurrentSubscription, hasLiveSubscription } from '@/server/db/queries/subscriptions'
 import { creditPacks, plans, subscriptions } from '@/server/db/schema'
 
 /**
@@ -25,7 +26,6 @@ export const createCheckout = orgAction
     z.object({
       kind: z.enum(['plan', 'pack']),
       slug: z.string().min(1),
-      interval: z.enum(['monthly', 'yearly']).default('monthly'),
     }),
   )
   .action(async ({ parsedInput, ctx }) => {
@@ -78,11 +78,7 @@ export const createCheckout = orgAction
     return { url: checkout.url }
   })
 
-async function resolveProductId(input: {
-  kind: 'plan' | 'pack'
-  slug: string
-  interval: 'monthly' | 'yearly'
-}) {
+async function resolveProductId(input: { kind: 'plan' | 'pack'; slug: string }) {
   if (input.kind === 'pack') {
     const [pack] = await db
       .select()
@@ -94,9 +90,10 @@ async function resolveProductId(input: {
   }
 
   const [plan] = await db.select().from(plans).where(eq(plans.slug, input.slug)).limit(1)
-  if (!plan) return null
 
-  return input.interval === 'yearly' ? plan.polarProductIdYearly : plan.polarProductIdMonthly
+  // Billing is monthly. The yearly column stays in the schema for the data
+  // already in it; nothing sells against it.
+  return plan?.polarProductIdMonthly ?? null
 }
 
 /**
@@ -121,29 +118,30 @@ async function resolveProductId(input: {
 export const changePlan = orgOwnerAction
   .metadata({ name: 'change-plan' })
   .inputSchema(
-    z.object({
-      slug: z.string().min(1),
-      interval: z.enum(['monthly', 'yearly']).default('monthly'),
-    }),
+    z.object({ slug: z.string().min(1) }),
   )
   .action(async ({ parsedInput, ctx }) => {
-    const [subscription] = await db
-      .select()
-      .from(subscriptions)
-      .where(eq(subscriptions.organizationId, ctx.orgId))
-      .limit(1)
+    /*
+     * The subscription that governs, not whichever row the database returned
+     * first — an organization that cancelled and subscribed again holds both,
+     * and moving the dead one would fail against Polar while the live one
+     * carried on billing the old plan.
+     */
+    const subscription = await getCurrentSubscription(ctx.orgId)
 
-    if (!subscription?.polarSubscriptionId || subscription.status !== 'active') {
+    /*
+     * A failed payment loses the plan but not the subscription, so changing
+     * plan stays available: it is one of the two things — with fixing the card
+     * — that can end the failure.
+     */
+    if (!subscription?.polarSubscriptionId || !hasLiveSubscription(subscription.status)) {
       throw new AppError('NOT_FOUND', 'There is no active subscription to change.')
     }
 
     const productId = await resolveProductId({ kind: 'plan', ...parsedInput })
 
     if (!productId) {
-      throw new AppError(
-        'VALIDATION',
-        'This plan is not available on that billing period yet.',
-      )
+      throw new AppError('VALIDATION', 'This plan is not available for purchase yet.')
     }
 
     const polar = getPolar()
@@ -187,13 +185,9 @@ export const cancelSubscription = orgOwnerAction
   .metadata({ name: 'cancel-subscription' })
   .inputSchema(z.object({}))
   .action(async ({ ctx }) => {
-    const [subscription] = await db
-      .select()
-      .from(subscriptions)
-      .where(eq(subscriptions.organizationId, ctx.orgId))
-      .limit(1)
+    const subscription = await getCurrentSubscription(ctx.orgId)
 
-    if (!subscription?.polarSubscriptionId) {
+    if (!subscription?.polarSubscriptionId || !hasLiveSubscription(subscription.status)) {
       throw new AppError('NOT_FOUND', 'There is no active subscription to cancel.')
     }
 

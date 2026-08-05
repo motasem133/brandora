@@ -8,20 +8,11 @@ import { CancelSubscriptionButton } from '@/components/features/billing/cancel-b
 import { Badge } from '@/components/ui/badge'
 import { Card, CardDescription, CardTitle } from '@/components/ui/card'
 import { CurrencySwitch } from '@/components/features/billing/currency-switch'
-import { IntervalSwitch } from '@/components/features/billing/interval-switch'
-import {
-  formatDate,
-  formatPrice,
-  isCurrency,
-  isInterval,
-  pickPrice,
-  yearlySavingPercent,
-  type BillingInterval,
-  type Currency,
-} from '@/lib/utils'
+import { formatDate, formatPrice, isCurrency, pickPrice, type Currency } from '@/lib/utils'
 import { db } from '@/server/db'
 import { getOrgPlan } from '@/server/db/queries/plans'
-import { creditPacks, creditTransactions, orders, plans, subscriptions } from '@/server/db/schema'
+import { entitles, getCurrentSubscription, hasLiveSubscription } from '@/server/db/queries/subscriptions'
+import { creditPacks, creditTransactions, orders, plans } from '@/server/db/schema'
 import { requireOrg } from '@/server/session'
 
 export default async function BillingPage({
@@ -29,10 +20,10 @@ export default async function BillingPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>
-  searchParams: Promise<{ checkout?: string; currency?: string; interval?: string }>
+  searchParams: Promise<{ checkout?: string; currency?: string }>
 }) {
   const { locale } = await params
-  const { checkout, currency: requested, interval: requestedInterval } = await searchParams
+  const { checkout, currency: requested } = await searchParams
   setRequestLocale(locale)
 
   // Arabic readers are almost always billing in the UAE, so default to dirhams
@@ -42,12 +33,16 @@ export default async function BillingPage({
   const t = await getTranslations('Billing')
   const { org, orgRole } = await requireOrg()
 
-  const [currentPlan, allPlans, packs, [subscription], recentOrders, recentCredits] =
+  const [currentPlan, allPlans, packs, subscription, recentOrders, recentCredits] =
     await Promise.all([
       getOrgPlan(org.id),
       db.select().from(plans).where(eq(plans.isActive, true)).orderBy(plans.sortOrder),
       db.select().from(creditPacks).where(eq(creditPacks.isActive, true)).orderBy(creditPacks.sortOrder),
-      db.select().from(subscriptions).where(eq(subscriptions.organizationId, org.id)).limit(1),
+      // Deliberately the same resolution the entitlement lookup uses: an
+      // organization can hold more than one subscription row, and the page must
+      // describe the one that actually governs rather than whichever row came
+      // back first.
+      getCurrentSubscription(org.id),
       db
         .select()
         .from(orders)
@@ -65,16 +60,18 @@ export default async function BillingPage({
   const isOwner = orgRole === 'owner'
 
   /*
-   * Default to the period the customer is already on, so someone billed
-   * yearly opens on yearly figures rather than monthly ones they are not
-   * paying. An explicit ?interval= still wins.
+   * Two different questions, and answering them with one flag was the bug.
+   *
+   * `isEntitled` is what the customer currently gets; a failed payment ends it
+   * at once. `isSubscribed` is whether a subscription still exists at Polar —
+   * which it does while the card is being retried — and Polar refuses a second
+   * subscription for a customer who has one. So someone in `past_due` is on the
+   * free plan and is still offered a plan change rather than a checkout that
+   * would turn them away.
    */
-  const interval: BillingInterval = isInterval(requestedInterval)
-    ? requestedInterval
-    : (subscription?.status === 'active' ? subscription.interval : 'monthly')
-
-  /* Anything that already bills recurringly changes plan rather than buys one. */
-  const isSubscribed = subscription?.status === 'active' || subscription?.status === 'trialing'
+  const isEntitled = Boolean(subscription && entitles(subscription.status))
+  const isSubscribed = Boolean(subscription && hasLiveSubscription(subscription.status))
+  const paymentFailed = subscription?.status === 'past_due'
 
   return (
     <div className="mx-auto max-w-5xl space-y-8">
@@ -83,10 +80,7 @@ export default async function BillingPage({
           <h1 className="font-display text-2xl font-semibold">{t('title')}</h1>
           <p className="mt-1 text-sm text-fg-secondary">{t('subtitle')}</p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <IntervalSwitch active={interval} currency={currency} />
-          <CurrencySwitch active={currency} interval={interval} />
-        </div>
+        <CurrencySwitch active={currency} />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -95,7 +89,8 @@ export default async function BillingPage({
           <p className="mt-1 font-display text-2xl font-semibold">{currentPlan?.name ?? 'Free'}</p>
           {subscription?.status === 'active' && !subscription.cancelAtPeriodEnd && (
             <p className="mt-1 text-xs text-fg-muted">
-              {t(subscription.interval === 'yearly' ? 'billedYearly' : 'billedMonthly')}
+              {/* Billing is monthly, and no row has ever been written yearly. */}
+              {t('billedMonthly')}
               {subscription.currentPeriodEnd
                 ? ` · ${t('renewsOn', { date: formatDate(subscription.currentPeriodEnd, locale) })}`
                 : ''}
@@ -109,6 +104,19 @@ export default async function BillingPage({
                   : '—',
               })}
             </Badge>
+          )}
+          {/*
+            A plan that vanished needs its reason next to it. The card failed,
+            the plan stopped, and the one action that restores it is a payment
+            method — which lives in Polar's portal, so the link goes there.
+          */}
+          {paymentFailed && (
+            <>
+              <Badge tone="danger" className="mt-2">
+                {t('paymentFailed')}
+              </Badge>
+              <p className="mt-2 text-xs text-fg-secondary">{t('paymentFailedBody')}</p>
+            </>
           )}
         </Card>
 
@@ -131,7 +139,7 @@ export default async function BillingPage({
                 {t('openPortal')}
               </a>
             )}
-            {isOwner && subscription?.status === 'active' && !subscription.cancelAtPeriodEnd && (
+            {isOwner && isEntitled && !subscription?.cancelAtPeriodEnd && (
               <CancelSubscriptionButton />
             )}
             <BillingSync auto={checkout === 'success'} />
@@ -148,12 +156,10 @@ export default async function BillingPage({
 
             /* The price for the period on show, resolved once for both the
                headline figure and the confirmation that quotes it. */
-            const shownPrice = pickPrice(
-              currency,
-              interval === 'yearly'
-                ? { usd: plan.priceYearly, aed: plan.priceYearlyAed }
-                : { usd: plan.priceMonthly, aed: plan.priceMonthlyAed },
-            )
+            const shownPrice = pickPrice(currency, {
+              usd: plan.priceMonthly,
+              aed: plan.priceMonthlyAed,
+            })
 
             return (
               <Card key={plan.id} className={isCurrent ? 'border-brand' : undefined}>
@@ -162,43 +168,22 @@ export default async function BillingPage({
                   {isCurrent && <Badge tone="brand">{t('current')}</Badge>}
                 </div>
 
-                {(() => {
-                  const yearly = interval === 'yearly'
-                  const shown = pickPrice(
-                    currency,
-                    yearly
-                      ? { usd: plan.priceYearly, aed: plan.priceYearlyAed }
-                      : { usd: plan.priceMonthly, aed: plan.priceMonthlyAed },
-                  )
-                  const saving = yearlySavingPercent(plan.priceMonthly, plan.priceYearly)
-                  return (
-                    <>
-                      <p className="mt-2 font-display text-2xl font-semibold">
-                        {formatPrice(shown.amount, shown.currency, locale)}
-                        <span className="text-sm font-normal text-fg-muted">
-                          {yearly ? t('perYear') : t('perMonth')}
-                        </span>
-                      </p>
-                      {yearly && saving !== null && (
-                        <Badge tone="success" className="mt-1">
-                          {t('savePercent', { percent: saving })}
-                        </Badge>
-                      )}
-                      {/* The other currency, so what Polar charges is never a surprise. */}
-                      {shown.alternate && (
-                        <p className="text-xs text-fg-muted">
-                          {t('approx', {
-                            price: formatPrice(
-                              shown.alternate.amount,
-                              shown.alternate.currency,
-                              locale,
-                            ),
-                          })}
-                        </p>
-                      )}
-                    </>
-                  )
-                })()}
+                <p className="mt-2 font-display text-2xl font-semibold">
+                  {formatPrice(shownPrice.amount, shownPrice.currency, locale)}
+                  <span className="text-sm font-normal text-fg-muted">{t('perMonth')}</span>
+                </p>
+                {/* The other currency, so what Polar charges is never a surprise. */}
+                {shownPrice.alternate && (
+                  <p className="text-xs text-fg-muted">
+                    {t('approx', {
+                      price: formatPrice(
+                        shownPrice.alternate.amount,
+                        shownPrice.alternate.currency,
+                        locale,
+                      ),
+                    })}
+                  </p>
+                )}
                 <p className="mt-1 text-sm text-fg-secondary">
                   {t('creditsPerMonth', { credits: plan.monthlyCredits })}
                 </p>
@@ -212,14 +197,12 @@ export default async function BillingPage({
                 {!isCurrent && plan.priceMonthly > 0 && isOwner && (
                   <div className="mt-4">
                     {/*
-                      A plan is only buyable on a period that has a Polar
-                      product behind it. Offering the button regardless sends
-                      the customer to a checkout that refuses them, which reads
-                      as a broken payment rather than an unsold option.
+                      A plan is only buyable once it has a Polar product behind
+                      it. Offering the button regardless sends the customer to a
+                      checkout that refuses them, which reads as a broken
+                      payment rather than an unsold option.
                     */}
-                    {(interval === 'yearly'
-                      ? plan.polarProductIdYearly
-                      : plan.polarProductIdMonthly) ? (
+                    {plan.polarProductIdMonthly ? (
                       /*
                         Two different actions wearing similar buttons. Someone
                         with no subscription is buying, and that is a checkout.
@@ -233,20 +216,14 @@ export default async function BillingPage({
                           slug={plan.slug}
                           planName={plan.name}
                           price={formatPrice(shownPrice.amount, shownPrice.currency, locale)}
-                          interval={interval}
                           label={t('changePlan')}
                           canManageCard={Boolean(org.polarCustomerId)}
                         />
                       ) : (
-                        <CheckoutButton
-                          kind="plan"
-                          slug={plan.slug}
-                          interval={interval}
-                          label={t('upgrade')}
-                        />
+                        <CheckoutButton kind="plan" slug={plan.slug} label={t('upgrade')} />
                       )
                     ) : (
-                      <p className="text-xs text-fg-muted">{t('intervalUnavailable')}</p>
+                      <p className="text-xs text-fg-muted">{t('planUnavailable')}</p>
                     )}
                   </div>
                 )}

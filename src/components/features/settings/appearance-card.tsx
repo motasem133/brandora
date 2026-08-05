@@ -3,6 +3,7 @@
 import { Moon, Sun } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 
+import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardTitle } from '@/components/ui/card'
 import { toggleTheme } from '@/lib/theme'
 
@@ -16,15 +17,19 @@ export function AppearanceCard() {
         <CardDescription className="mt-1">{t('appearanceHint')}</CardDescription>
       </div>
 
-      <button
-        onClick={() => toggleTheme()}
-        className="inline-flex items-center gap-2 rounded-lg border border-line px-4 py-2.5 text-sm transition-colors hover:border-brand"
-      >
-        {/* Icons swap in CSS so no render is needed to pick one. */}
+      {/*
+        The icons swap in CSS, which is why no render is needed to pick one —
+        and why the control said nothing about its own state to anyone who
+        could not see them. The current theme is now written out, in text, for
+        the same reason the icon exists: so you can tell what pressing does.
+      */}
+      <Button variant="outline" onClick={() => toggleTheme()}>
         <Sun className="icon-when-dark size-4" />
         <Moon className="icon-when-light size-4" />
         {t('toggleTheme')}
-      </button>
+        <span className="icon-when-dark text-fg-muted">· {t('themeDark')}</span>
+        <span className="icon-when-light text-fg-muted">· {t('themeLight')}</span>
+      </Button>
     </Card>
   )
 }

@@ -18,13 +18,31 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { GripVertical, Monitor, Plus, Redo2, Smartphone, Trash2, Undo2 } from 'lucide-react'
+import {
+  ArrowLeft,
+  ChevronDown,
+  ChevronUp,
+  GripVertical,
+  Monitor,
+  Pencil,
+  Plus,
+  Redo2,
+  Smartphone,
+  Trash2,
+  Undo2,
+} from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useAction } from 'next-safe-action/hooks'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { BlockRenderer, resolveTheme } from '@/components/blocks/block-renderer'
 import { Button } from '@/components/ui/button'
+import { Field } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import { SegmentedButton, SegmentedControl } from '@/components/ui/segmented-control'
+import { Sheet } from '@/components/ui/sheet'
+import { Textarea } from '@/components/ui/textarea'
+import { Link } from '@/i18n/navigation'
 import { cn } from '@/lib/utils'
 import {
   BLOCK_TYPES,
@@ -32,7 +50,6 @@ import {
   createBlock,
   PAGE_KEYS,
   type Block,
-
   type PageKey,
   type Pages,
   type Theme,
@@ -42,8 +59,33 @@ import { PublishPanel } from './publish-panel'
 
 const MAX_HISTORY = 50
 
+/**
+ * Reading order for a section's fields.
+ *
+ * `Object.entries` walks the stored JSON, whose key order is whatever the
+ * generator happened to write — which put "Body text" above "Heading" on a text
+ * section. Fields are shown in the order somebody reads them on the page.
+ */
+const FIELD_ORDER = ['title', 'subtitle', 'heading', 'body', 'cta', 'email', 'phone']
+
+/**
+ * The website editor.
+ *
+ * Rebuilt against the design system after a review found it was the one surface
+ * in the product that could not be operated at all without a mouse: a section
+ * was selected by clicking a bare `<div>`, and selecting is the only route to
+ * the inspector. Below 1280px it was worse than unusable — the library and the
+ * inspector were display-hidden while delete and reorder stayed, so a phone
+ * could destroy sections but not create or edit them.
+ *
+ * Three things changed structurally. Selection is a real control. The panels
+ * become sheets rather than disappearing. And the editor says whose site it is,
+ * with a way back to the brand it belongs to — it used to render no heading at
+ * all, so its accessible outline began with the fixture site's own "About us".
+ */
 export function Builder({
   projectId,
+  projectName,
   initialPages,
   initialTheme,
   initialSubdomain,
@@ -53,6 +95,7 @@ export function Builder({
   canUseCustomDomain,
 }: {
   projectId: string
+  projectName: string
   initialPages: Pages
   initialTheme: Theme
   initialSubdomain: string | null
@@ -68,6 +111,7 @@ export function Builder({
   const [selected, setSelected] = useState<number | null>(null)
   const [device, setDevice] = useState<'desktop' | 'mobile'>('desktop')
   const [dirty, setDirty] = useState(false)
+  const [sheet, setSheet] = useState<'library' | 'inspector' | null>(null)
 
   // Snapshots of the whole page map. Cheap at this size, and it makes undo
   // correct across page switches rather than only within one page.
@@ -76,6 +120,7 @@ export function Builder({
 
   const theme = resolveTheme(initialTheme)
   const blocks = pages[page]
+  const selectedBlock = selected !== null ? blocks[selected] : undefined
 
   const { execute: save, isPending: saving } = useAction(updateWebsiteContent, {
     onSuccess: () => setDirty(false),
@@ -115,6 +160,33 @@ export function Builder({
     setSelected(null)
   }, [pages])
 
+  /** Reordering without a pointer, and without a drag anyone has to discover. */
+  const move = useCallback(
+    (from: number, direction: -1 | 1) => {
+      const to = from + direction
+      if (to < 0 || to >= blocks.length) return
+      setBlocks(arrayMove(blocks, from, to))
+      setSelected(to)
+    },
+    [blocks, setBlocks],
+  )
+
+  const addBlock = useCallback(
+    (type: (typeof BLOCK_TYPES)[number]) => {
+      setBlocks([...blocks, createBlock(type)])
+      setSelected(blocks.length)
+      setSheet(null)
+    },
+    [blocks, setBlocks],
+  )
+
+  const removeSelected = useCallback(() => {
+    if (selected === null) return
+    setBlocks(blocks.filter((_, index) => index !== selected))
+    setSelected(null)
+    setSheet(null)
+  }, [blocks, selected, setBlocks])
+
   // Autosave rather than relying on the user to press Save. The 1.5s debounce
   // keeps a burst of typing to a single write.
   useEffect(() => {
@@ -148,10 +220,114 @@ export function Builder({
     setSelected(to)
   }
 
+  const inspector = (inSheet: boolean) => selectedBlock ? (
+    <Inspector
+      block={selectedBlock}
+      showTitle={!inSheet}
+      index={selected as number}
+      count={blocks.length}
+      onChange={(next) =>
+        setBlocks(blocks.map((block, i) => (i === selected ? next : block)))
+      }
+      onMove={(direction) => move(selected as number, direction)}
+      onDelete={removeSelected}
+    />
+  ) : null
+
+  const library = (
+    <div className="space-y-1">
+      {BLOCK_TYPES.map((type) => (
+        <button
+          key={type}
+          onClick={() => addBlock(type)}
+          className="flex min-h-11 w-full items-center gap-2 rounded-control px-2.5 text-start text-sm text-fg-secondary transition-colors hover:bg-elevated hover:text-fg"
+        >
+          <Plus className="size-3.5 shrink-0" />
+          {t(`blocks.${type}`)}
+        </button>
+      ))}
+    </div>
+  )
+
   return (
     <div className="flex h-dvh flex-col">
-      <header className="flex shrink-0 flex-wrap items-center gap-3 border-b border-line px-4 py-3">
-        <div className="flex gap-1" data-testid="page-tabs">
+      <header className="shrink-0 border-b border-line">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3">
+          {/*
+            Whose site this is, and the way back to it. The editor used to carry
+            neither: no heading, no mark, no link — you reached the project page
+            again through Projects and finding it a second time.
+          */}
+          <Link
+            href={`/dashboard/projects/${projectId}`}
+            className="flex min-h-11 items-center gap-2 rounded-control px-2 text-sm text-fg-secondary transition-colors hover:bg-elevated hover:text-fg"
+          >
+            <ArrowLeft className="size-4 rtl:rotate-180" />
+            <span className="sr-only sm:not-sr-only">{t('backToBrand')}</span>
+          </Link>
+
+          {/* The space is a real text node: without it the accessible name
+              read "Fixture CoWebsite", since margin is not a word break. */}
+          <h1 className="min-w-0 truncate font-display text-sm font-semibold">
+            {projectName}{' '}
+            <span className="font-sans text-xs font-normal text-fg-muted">{t('website')}</span>
+          </h1>
+
+          <div className="ms-auto flex items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={undo} aria-label={t('undo')}>
+              <Undo2 />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={redo} aria-label={t('redo')}>
+              <Redo2 />
+            </Button>
+
+            <SegmentedControl label={t('preview')} className="hidden sm:inline-flex">
+              <SegmentedButton
+                active={device === 'desktop'}
+                onClick={() => setDevice('desktop')}
+                label={t('desktop')}
+              >
+                <Monitor className="size-4" />
+              </SegmentedButton>
+              <SegmentedButton
+                active={device === 'mobile'}
+                onClick={() => setDevice('mobile')}
+                label={t('mobile')}
+              >
+                <Smartphone className="size-4" />
+              </SegmentedButton>
+            </SegmentedControl>
+
+            {/*
+              Autosave state, announced. It changed silently before, which is
+              the one thing an autosaving editor must not do: the only signal
+              that work is safe was eight pixels of grey text.
+            */}
+            <span
+              role="status"
+              aria-live="polite"
+              className="text-xs text-fg-muted"
+              data-testid="save-status"
+              data-state={saving ? 'saving' : dirty ? 'dirty' : 'saved'}
+            >
+              {saving ? t('saving') : dirty ? t('unsaved') : t('saved')}
+            </span>
+
+            <PublishPanel
+              projectId={projectId}
+              initialSubdomain={initialSubdomain}
+              initialCustomDomain={initialCustomDomain}
+              isPublished={isPublished}
+              canPublish={canPublish}
+              canUseCustomDomain={canUseCustomDomain}
+            />
+          </div>
+        </div>
+
+        <nav
+          aria-label={t('pagesLabel')}
+          data-testid="page-tabs"
+          className="flex gap-1 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {PAGE_KEYS.map((key) => (
             <button
               key={key}
@@ -159,94 +335,49 @@ export function Builder({
                 setPage(key)
                 setSelected(null)
               }}
+              aria-current={key === page ? 'page' : undefined}
               className={cn(
-                'rounded-lg px-3 py-1.5 text-sm capitalize transition-colors',
-                key === page ? 'bg-elevated font-medium text-fg' : 'text-fg-secondary hover:text-fg',
+                'min-h-11 shrink-0 rounded-control px-3 text-sm capitalize transition-colors',
+                key === page
+                  ? 'bg-elevated font-medium text-fg'
+                  : 'text-fg-secondary hover:text-fg',
               )}
             >
               {t(`pages.${key}`)}
             </button>
           ))}
-        </div>
-
-        <div className="ms-auto flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={undo} aria-label={t('undo')}>
-            <Undo2 />
-          </Button>
-          <Button variant="ghost" size="icon" onClick={redo} aria-label={t('redo')}>
-            <Redo2 />
-          </Button>
-
-          <div className="flex rounded-lg border border-line">
-            <button
-              onClick={() => setDevice('desktop')}
-              aria-label={t('desktop')}
-              className={cn('px-2.5 py-2', device === 'desktop' && 'bg-elevated')}
-            >
-              <Monitor className="size-4" />
-            </button>
-            <button
-              onClick={() => setDevice('mobile')}
-              aria-label={t('mobile')}
-              className={cn('px-2.5 py-2', device === 'mobile' && 'bg-elevated')}
-            >
-              <Smartphone className="size-4" />
-            </button>
-          </div>
-
-          <span
-            className="text-xs text-fg-muted"
-            data-testid="save-status"
-            data-state={saving ? 'saving' : dirty ? 'dirty' : 'saved'}
-          >
-            {saving ? t('saving') : dirty ? t('unsaved') : t('saved')}
-          </span>
-
-          <PublishPanel
-            projectId={projectId}
-            initialSubdomain={initialSubdomain}
-            initialCustomDomain={initialCustomDomain}
-            isPublished={isPublished}
-            canPublish={canPublish}
-            canUseCustomDomain={canUseCustomDomain}
-          />
-        </div>
+        </nav>
       </header>
 
       <div className="flex min-h-0 flex-1">
         <aside
-          className="hidden w-48 shrink-0 overflow-y-auto border-e border-line p-3 lg:block"
+          className="hidden w-48 shrink-0 overflow-y-auto border-e border-line p-3 xl:block"
           data-testid="block-library"
         >
-          <p className="mb-2 px-1 text-xs font-medium uppercase tracking-wide text-fg-muted">
+          <p className="mb-2 px-1 text-xs font-semibold uppercase tracking-[0.12em] text-fg-muted">
             {t('addSection')}
           </p>
-          {BLOCK_TYPES.map((type) => (
-            <button
-              key={type}
-              onClick={() => {
-                setBlocks([...blocks, createBlock(type)])
-                setSelected(blocks.length)
-              }}
-              className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-start text-sm text-fg-secondary hover:bg-elevated hover:text-fg"
-            >
-              <Plus className="size-3.5" />
-              {t(`blocks.${type}`)}
-            </button>
-          ))}
+          {library}
         </aside>
 
-        <main className="min-w-0 flex-1 overflow-y-auto bg-elevated/30 p-4" data-testid="canvas">
+        <main className="min-w-0 flex-1 overflow-y-auto bg-elevated/30 p-4 pb-24 xl:pb-4" data-testid="canvas">
           <div
             className={cn(
-              'mx-auto overflow-hidden rounded-xl border border-line bg-white transition-all',
+              'mx-auto overflow-hidden rounded-card border border-line bg-white transition-all',
               device === 'mobile' ? 'max-w-sm' : 'max-w-4xl',
             )}
           >
             {blocks.length === 0 ? (
-              <p className="p-16 text-center text-sm text-gray-500">{t('emptyPage')}</p>
+              <p className="p-16 text-center text-sm text-fg-muted">{t('emptyPage')}</p>
             ) : (
               <DndContext
+                /*
+                 * Without an explicit id, dnd-kit numbers its descriptions from
+                 * a module counter that differs between the server render and
+                 * the client one — which was the only console error in the
+                 * product, on every load of this page.
+                 */
+                id="builder-blocks"
                 sensors={sensors}
                 collisionDetection={closestCenter}
                 modifiers={[restrictToVerticalAxis]}
@@ -260,6 +391,7 @@ export function Builder({
                     <SortableBlock
                       key={blockKey(index)}
                       id={blockKey(index)}
+                      name={t(`blocks.${block.type}`)}
                       selected={selected === index}
                       onSelect={() => setSelected(index)}
                       onDelete={() => {
@@ -280,35 +412,93 @@ export function Builder({
           className="hidden w-80 shrink-0 overflow-y-auto border-s border-line p-4 xl:block"
           data-testid="inspector"
         >
-          {selected !== null && blocks[selected] ? (
-            <Inspector
-              block={blocks[selected]}
-              onChange={(next) =>
-                setBlocks(blocks.map((block, i) => (i === selected ? next : block)))
-              }
-            />
-          ) : (
-            <p className="text-sm text-fg-muted">{t('selectPrompt')}</p>
-          )}
+          {inspector(false) ?? <p className="text-sm text-fg-muted">{t('selectPrompt')}</p>}
         </aside>
       </div>
+
+      {/*
+        Below the width that fits three columns, the panels become sheets rather
+        than vanishing. Every edit available at 1440px is available here; one
+        panel at a time is the only difference.
+      */}
+      <div className="fixed inset-x-0 bottom-0 z-20 flex items-center gap-2 border-t border-line bg-surface/95 px-4 py-2.5 backdrop-blur xl:hidden">
+        <Button
+          variant="secondary"
+          size="sm"
+          className="flex-1"
+          data-testid="edit-section"
+          disabled={!selectedBlock}
+          onClick={() => setSheet('inspector')}
+        >
+          <Pencil />
+          {selectedBlock ? t(`blocks.${selectedBlock.type}`) : t('editSection')}
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
+          data-testid="add-section"
+          onClick={() => setSheet('library')}
+        >
+          <Plus />
+          {t('add')}
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={t('moveUp')}
+          disabled={selected === null || selected === 0}
+          onClick={() => selected !== null && move(selected, -1)}
+        >
+          <ChevronUp />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={t('moveDown')}
+          disabled={selected === null || selected === blocks.length - 1}
+          onClick={() => selected !== null && move(selected, 1)}
+        >
+          <ChevronDown />
+        </Button>
+      </div>
+
+      <Sheet
+        open={sheet === 'library'}
+        onClose={() => setSheet(null)}
+        title={t('addSection')}
+      >
+        {library}
+      </Sheet>
+
+      <Sheet
+        open={sheet === 'inspector'}
+        onClose={() => setSheet(null)}
+        title={selectedBlock ? t(`blocks.${selectedBlock.type}`) : t('editSection')}
+      >
+        {/* The sheet's own header already names the section; repeating it
+            inside would be the title twice, forty pixels apart. */}
+        {inspector(true)}
+      </Sheet>
     </div>
   )
 }
 
 function SortableBlock({
   id,
+  name,
   selected,
   onSelect,
   onDelete,
   children,
 }: {
   id: string
+  name: string
   selected: boolean
   onSelect: () => void
   onDelete: () => void
   children: React.ReactNode
 }) {
+  const t = useTranslations('Builder')
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
 
   return (
@@ -316,19 +506,37 @@ function SortableBlock({
       ref={setNodeRef}
       data-testid="canvas-block"
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      onClick={onSelect}
       className={cn(
-        'group relative cursor-pointer',
-        selected && 'ring-2 ring-inset ring-violet-500',
+        'group relative',
+        selected && 'ring-2 ring-inset ring-brand',
         isDragging && 'opacity-50',
       )}
     >
-      <div className="absolute end-2 top-2 z-10 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+      {/*
+        Selection is a button covering the section, rather than a click handler
+        on the section itself. A rendered block contains its own headings and
+        links, so it cannot legally be a button — and a `<div onClick>` is
+        reachable by exactly one input device. This is keyboard-operable, states
+        what it selects, and reports whether it is the current selection.
+      */}
+      <button
+        type="button"
+        onClick={onSelect}
+        aria-pressed={selected}
+        aria-label={t('selectSection', { section: name })}
+        className="absolute inset-0 z-10 cursor-pointer focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand"
+      />
+
+      {/*
+        Visible on hover *and* on focus. They were hover-only, so a keyboard
+        user tabbed into controls they could not see.
+      */}
+      <div className="absolute end-2 top-2 z-20 flex gap-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
         <button
           {...attributes}
           {...listeners}
-          className="cursor-grab rounded-md bg-gray-900/80 p-1.5 text-white"
-          aria-label="Reorder"
+          className="cursor-grab rounded-control bg-fg/80 p-1.5 text-bg"
+          aria-label={t('reorderSection', { section: name })}
         >
           <GripVertical className="size-3.5" />
         </button>
@@ -337,12 +545,13 @@ function SortableBlock({
             event.stopPropagation()
             onDelete()
           }}
-          className="rounded-md bg-red-600/90 p-1.5 text-white"
-          aria-label="Delete"
+          className="rounded-control bg-danger/90 p-1.5 text-white"
+          aria-label={t('deleteSection', { section: name })}
         >
           <Trash2 className="size-3.5" />
         </button>
       </div>
+
       {children}
     </div>
   )
@@ -353,8 +562,27 @@ function SortableBlock({
  *
  * Driven by the block's own shape rather than a per-type form, so adding a
  * block type to the schema does not require a matching editor to be written.
+ * The labels are looked up rather than derived: the schema's keys are
+ * `ctaHref` and `subtitle`, and printing those capitalised put an engineer's
+ * vocabulary in front of a customer editing their own website.
  */
-function Inspector({ block, onChange }: { block: Block; onChange: (next: Block) => void }) {
+function Inspector({
+  block,
+  index,
+  count,
+  showTitle,
+  onChange,
+  onMove,
+  onDelete,
+}: {
+  block: Block
+  index: number
+  count: number
+  showTitle: boolean
+  onChange: (next: Block) => void
+  onMove: (direction: -1 | 1) => void
+  onDelete: () => void
+}) {
   const t = useTranslations('Builder')
 
   const set = (key: string, value: unknown) => onChange({ ...block, [key]: value } as Block)
@@ -366,59 +594,104 @@ function Inspector({ block, onChange }: { block: Block; onChange: (next: Block) 
 
   return (
     <div className="space-y-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-fg-muted">
-        {t(`blocks.${block.type}`)}
-      </p>
+      <div className="flex items-center justify-between gap-2">
+        {showTitle ? (
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-fg-muted">
+            {t(`blocks.${block.type}`)}
+          </p>
+        ) : (
+          <span />
+        )}
+
+        {/* Reordering that does not require a drag — the same move the grip
+            makes, available to a keyboard and to a thumb. */}
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={t('moveUp')}
+            disabled={index === 0}
+            onClick={() => onMove(-1)}
+          >
+            <ChevronUp />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={t('moveDown')}
+            disabled={index === count - 1}
+            onClick={() => onMove(1)}
+          >
+            <ChevronDown />
+          </Button>
+          <Button variant="ghost" size="icon" aria-label={t('delete')} onClick={onDelete}>
+            <Trash2 />
+          </Button>
+        </div>
+      </div>
 
       {Object.entries(block)
         .filter(([key]) => !['type', 'items', 'services'].includes(key))
+        .sort(([a], [b]) => FIELD_ORDER.indexOf(a) - FIELD_ORDER.indexOf(b))
         .map(([key, value]) => (
-          <label key={key} className="block">
-            <span className="mb-1 block text-xs capitalize text-fg-secondary">{key}</span>
+          <Field key={key} label={t(`fields.${key}`)}>
             {typeof value === 'string' && value.length > 90 ? (
-              <textarea
-                value={value}
-                onChange={(event) => set(key, event.target.value)}
-                className="min-h-28 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm focus:border-brand focus:outline-none"
-              />
+              <Textarea value={value} onChange={(event) => set(key, event.target.value)} />
             ) : (
-              <input
-                value={String(value ?? '')}
-                onChange={(event) => set(key, event.target.value)}
-                className="h-10 w-full rounded-lg border border-line bg-surface px-3 text-sm focus:border-brand focus:outline-none"
-              />
+              <Input value={String(value ?? '')} onChange={(event) => set(key, event.target.value)} />
             )}
-          </label>
+          </Field>
         ))}
 
       {list && listKey && (
-        <div className="space-y-3 border-t border-line pt-3">
-          {list.map((item, index) => (
-            <div key={index} className="space-y-2 rounded-lg border border-line p-3">
-              <input
-                value={item.title}
-                onChange={(event) =>
-                  set(
-                    listKey,
-                    list.map((entry, i) =>
-                      i === index ? { ...entry, title: event.target.value } : entry,
-                    ),
-                  )
-                }
-                className="h-9 w-full rounded-md border border-line bg-surface px-2.5 text-sm focus:border-brand focus:outline-none"
-              />
-              <textarea
-                value={item.body}
-                onChange={(event) =>
-                  set(
-                    listKey,
-                    list.map((entry, i) =>
-                      i === index ? { ...entry, body: event.target.value } : entry,
-                    ),
-                  )
-                }
-                className="min-h-20 w-full rounded-md border border-line bg-surface px-2.5 py-2 text-sm focus:border-brand focus:outline-none"
-              />
+        <div className="space-y-3 border-t border-line pt-4">
+          {list.map((item, itemIndex) => (
+            <div key={itemIndex} className="space-y-3 rounded-control border border-line p-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-fg-muted">
+                {t('itemNumber', { number: itemIndex + 1 })}
+              </p>
+              <Field label={t('fields.title')}>
+                <Input
+                  value={item.title}
+                  onChange={(event) =>
+                    set(
+                      listKey,
+                      list.map((entry, i) =>
+                        i === itemIndex ? { ...entry, title: event.target.value } : entry,
+                      ),
+                    )
+                  }
+                />
+              </Field>
+              <Field label={t('fields.body')}>
+                <Textarea
+                  value={item.body}
+                  className="min-h-20"
+                  onChange={(event) =>
+                    set(
+                      listKey,
+                      list.map((entry, i) =>
+                        i === itemIndex ? { ...entry, body: event.target.value } : entry,
+                      ),
+                    )
+                  }
+                />
+              </Field>
+              {item.price !== undefined && (
+                <Field label={t('fields.price')}>
+                  <Input
+                    value={item.price}
+                    onChange={(event) =>
+                      set(
+                        listKey,
+                        list.map((entry, i) =>
+                          i === itemIndex ? { ...entry, price: event.target.value } : entry,
+                        ),
+                      )
+                    }
+                  />
+                </Field>
+              )}
             </div>
           ))}
         </div>

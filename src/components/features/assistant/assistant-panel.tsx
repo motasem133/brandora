@@ -8,6 +8,7 @@ import { useEffect, useRef } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { EmptyState } from '@/components/ui/empty-state'
 import { useRouter } from '@/i18n/navigation'
 import { cn } from '@/lib/utils'
 
@@ -114,26 +115,29 @@ export function AssistantPanel({
     <Card className="flex h-[36rem] flex-col p-0">
       <div ref={listRef} className="flex-1 space-y-4 overflow-y-auto p-5">
         {messages.length === 0 && (
-          <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
-            <div className="rounded-full bg-brand/15 p-3">
-              <Sparkles className="size-5 text-brand" />
-            </div>
-            <div>
-              <p className="font-display font-semibold">{t('emptyTitle')}</p>
-              <p className="mt-1 text-sm text-fg-secondary">{t('emptyBody')}</p>
-            </div>
-            <div className="flex flex-wrap justify-center gap-2">
-              {SUGGESTIONS.map((key) => (
-                <button
-                  key={key}
-                  onClick={() => submit(t(`suggestions.${key}`))}
-                  className="rounded-full border border-line px-3 py-1.5 text-xs text-fg-secondary transition-colors hover:border-brand hover:text-fg"
-                >
-                  {t(`suggestions.${key}`)}
-                </button>
-              ))}
-            </div>
-          </div>
+          <EmptyState
+            className="h-full"
+            icon={
+              <span className="grid size-11 place-items-center rounded-full bg-brand/15">
+                <Sparkles className="size-5 text-brand" />
+              </span>
+            }
+            title={t('emptyTitle')}
+            body={t('emptyBody')}
+            action={
+              <div className="flex flex-wrap justify-center gap-2">
+                {SUGGESTIONS.map((key) => (
+                  <button
+                    key={key}
+                    onClick={() => submit(t(`suggestions.${key}`))}
+                    className="rounded-full border border-line px-3 py-1.5 text-xs text-fg-secondary transition-colors hover:border-brand hover:text-fg"
+                  >
+                    {t(`suggestions.${key}`)}
+                  </button>
+                ))}
+              </div>
+            }
+          />
         )}
 
         {messages.map((message) => (
@@ -144,7 +148,7 @@ export function AssistantPanel({
                   <div
                     key={index}
                     className={cn(
-                      'max-w-[85%] whitespace-pre-line rounded-xl px-4 py-2.5 text-sm leading-relaxed',
+                      'max-w-[85%] whitespace-pre-line rounded-card px-4 py-2.5 text-sm leading-relaxed',
                       message.role === 'user'
                         ? 'ms-auto bg-brand text-brand-fg'
                         : 'bg-elevated text-fg',
@@ -164,7 +168,7 @@ export function AssistantPanel({
                 return (
                   <div
                     key={index}
-                    className="flex items-center gap-2 rounded-lg border border-line bg-elevated/40 px-3 py-2 text-xs"
+                    className="flex items-center gap-2 rounded-control border border-line bg-elevated/40 px-3 py-2 text-xs"
                   >
                     {done ? (
                       <Check className={cn('size-3.5', output?.ok ? 'text-success' : 'text-danger')} />
@@ -214,7 +218,7 @@ export function AssistantPanel({
           }}
           rows={1}
           placeholder={t('placeholder')}
-          className="max-h-32 min-h-11 flex-1 resize-none rounded-lg border border-line bg-surface px-3.5 py-3 text-sm focus:border-brand focus:outline-none"
+          className="max-h-32 min-h-11 flex-1 resize-none rounded-control border border-line bg-surface px-3.5 py-3 text-sm focus:border-brand focus:outline-none"
         />
         <Button type="submit" size="icon" disabled={busy} aria-label={t('send')}>
           {busy ? <Loader2 className="animate-spin" /> : <ArrowUp />}

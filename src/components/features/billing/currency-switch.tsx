@@ -1,8 +1,8 @@
 import { getTranslations } from 'next-intl/server'
 
-import { Link } from '@/i18n/navigation'
-import { billingHref, cn } from '@/lib/utils'
-import { CURRENCIES, type BillingInterval, type Currency } from '@/lib/utils'
+import { SegmentedControl, SegmentedLink } from '@/components/ui/segmented-control'
+import { billingHref } from '@/lib/utils'
+import { CURRENCIES, type Currency } from '@/lib/utils'
 
 /**
  * Currency switch as links rather than client state.
@@ -12,30 +12,25 @@ import { CURRENCIES, type BillingInterval, type Currency } from '@/lib/utils'
  */
 export async function CurrencySwitch({
   active,
-  interval,
   href = '/dashboard/billing',
 }: {
   active: Currency
-  interval: BillingInterval
   href?: string
 }) {
   const t = await getTranslations('Billing')
 
   return (
-    <div className="inline-flex rounded-lg border border-line p-0.5" role="group" aria-label={t('currency')}>
+    <SegmentedControl label={t('currency')}>
       {CURRENCIES.map((currency) => (
-        <Link
+        <SegmentedLink
           key={currency}
-          href={billingHref(href, { currency, interval })}
-          scroll={false}
-          className={cn(
-            'rounded-md px-3 py-1.5 text-xs font-medium uppercase transition-colors',
-            currency === active ? 'bg-elevated text-fg' : 'text-fg-secondary hover:text-fg',
-          )}
+          href={billingHref(href, { currency })}
+          active={currency === active}
+          className="uppercase"
         >
           {currency}
-        </Link>
+        </SegmentedLink>
       ))}
-    </div>
+    </SegmentedControl>
   )
 }

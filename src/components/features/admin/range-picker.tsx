@@ -1,7 +1,6 @@
 import { getTranslations } from 'next-intl/server'
 
-import { Link } from '@/i18n/navigation'
-import { cn } from '@/lib/utils'
+import { SegmentedControl, SegmentedLink } from '@/components/ui/segmented-control'
 import type { Range } from '@/server/db/queries/admin'
 
 const RANGES: Range[] = [7, 30, 90]
@@ -11,20 +10,16 @@ export async function RangePicker({ active }: { active: Range }) {
   const t = await getTranslations('Admin')
 
   return (
-    <div className="inline-flex rounded-lg border border-line p-0.5">
+    <SegmentedControl label={t('ai.range')}>
       {RANGES.map((range) => (
-        <Link
+        <SegmentedLink
           key={range}
           href={`/admin/ai?range=${range}`}
-          scroll={false}
-          className={cn(
-            'rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
-            range === active ? 'bg-elevated text-fg' : 'text-fg-secondary hover:text-fg',
-          )}
+          active={range === active}
         >
           {t('ai.days', { days: range })}
-        </Link>
+        </SegmentedLink>
       ))}
-    </div>
+    </SegmentedControl>
   )
 }

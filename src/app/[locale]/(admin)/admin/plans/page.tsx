@@ -35,7 +35,6 @@ export default async function AdminPlansPage({ params }: { params: Promise<{ loc
               brandAssistant: plan.brandAssistant,
               customDomain: plan.customDomain,
               polarProductIdMonthly: plan.polarProductIdMonthly,
-              polarProductIdYearly: plan.polarProductIdYearly,
             }}
           />
         ))}

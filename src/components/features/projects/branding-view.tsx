@@ -95,7 +95,7 @@ export async function BrandingView({
                   src={publicUrl(cover.r2Key) ?? `/api/files/${cover.id}`}
                   alt=""
                   loading="lazy"
-                  className="size-8 rounded-md bg-white object-contain p-0.5"
+                  className="size-8 rounded-control bg-white object-contain p-0.5"
                 />
                 <span
                   className={cn(

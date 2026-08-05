@@ -1,9 +1,10 @@
-import { Sparkles } from 'lucide-react'
+import { ArrowRight, Sparkles } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Suspense } from 'react'
 
 import { BrandSpecimen } from '@/components/features/projects/brand-specimen'
 import { buttonVariants } from '@/components/ui/button'
+import { EmptyState } from '@/components/ui/empty-state'
 import { Cell } from '@/components/features/landing/horizon'
 import { MomentumField, MomentumItem } from '@/components/ui/momentum'
 import { Link } from '@/i18n/navigation'
@@ -34,7 +35,7 @@ export default async function ProjectsPage({ params }: { params: Promise<{ local
         /projects/[id], and a segment that streams answers 200 before it knows
         the project exists — which turned a cross-tenant 404 into a 200.
       */}
-      <Suspense fallback={<ProjectsSkeleton />}>
+      <Suspense fallback={<ProjectsSkeleton label={t('loading')} />}>
         <ProjectList locale={locale} />
       </Suspense>
     </div>
@@ -48,10 +49,21 @@ async function ProjectList({ locale }: { locale: string }) {
 
   if (specimens.length === 0) {
     return (
-      <div className="rounded-panel border border-dashed border-line py-16 text-center">
-        <Sparkles className="mx-auto size-6 text-fg-muted" />
-        <h2 className="mt-4 font-display text-lg font-semibold">{t('emptyTitle')}</h2>
-        <p className="mt-1 text-sm text-fg-secondary">{t('emptyBody')}</p>
+      <div className="rounded-panel border border-dashed border-line">
+        {/* An empty state with nothing to press is a dead end: this one stated
+            that there were no brands and left the visitor to find the way to
+            making one somewhere else on the page. */}
+        <EmptyState
+          icon={<Sparkles className="size-6" />}
+          title={t('emptyTitle')}
+          body={t('emptyBody')}
+          action={
+            <Link href="/onboarding" className={buttonVariants({ size: 'sm' })}>
+              {t('emptyCta')}
+              <ArrowRight className="rtl:rotate-180" />
+            </Link>
+          }
+        />
       </div>
     )
   }
@@ -80,9 +92,14 @@ async function ProjectList({ locale }: { locale: string }) {
 }
 
 /** Same shapes as the specimens it stands in for, so nothing jumps on arrival. */
-function ProjectsSkeleton() {
+function ProjectsSkeleton({ label }: { label: string }) {
   return (
-    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    /*
+      Named for assistive technology, which the shimmer alone never was — and
+      under `prefers-reduced-motion` the shimmer is gone entirely, so without
+      this the loading state is three silent grey boxes.
+    */
+    <div role="status" aria-label={label} className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: 3 }).map((_, index) => (
         <div
           key={index}

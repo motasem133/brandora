@@ -139,6 +139,7 @@ it looks in isolation.
 - The generated brand owns any region that displays it, with contrast guarded at runtime
 - Generous radii (14 / 20 / 24px) and a 150–300ms motion band that collapses entirely under reduced-motion
 - Fully bilingual: every surface works in Arabic with RTL, on its own font stack
+- The marketing pages are dark in both themes, by decision rather than by omission
 
 ## Colors
 
@@ -161,6 +162,15 @@ reserved for the customer's own palette.
 - **Paper White** (`#ffffff`): Primary text, and the ground a logo is drawn on when its brand has none.
 - **Reading Grey** (`#a3aec9`): Secondary prose — subtitles, descriptions, meta that is meant to be read.
 - **Quiet Grey** (`#7a86a1` dark / `#67708c` light): Labels, timestamps, hints. Present, not competing. Lifted from its original values after measurement: the old pair cleared 4.5:1 on the base ground and failed on every tinted surface above it, which is most of them.
+
+**The Committed Dark Rule.** The app follows the reader's theme; the marketing
+pages do not. Dark navy is a pinned brand commitment, so `/` and `/pricing`
+carry `.world-dark`, a scope that re-declares the dark palette and stays dark
+under `[data-theme='light']`. This is the one place in the product where a
+surface refuses the toggle, and it refuses it deliberately — the alternative
+was what shipped before: forty-four hex literals, no response to anything, and
+body text hand-tuned to `white/35` at 3.11:1. A dark scope is not a licence for
+literals; everything inside it still reads the tokens.
 
 Borders are never a grey line. They are white mixed into the ground at 9%
 (`--border`) or 16% (`--border-strong`), so an edge belongs to the surface it

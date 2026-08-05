@@ -51,7 +51,7 @@ export function OrganizationCard({
         {!isOwner && <p className="mt-1 text-xs text-fg-muted">{t('ownerOnly')}</p>}
       </div>
 
-      <div className="flex items-center justify-between gap-3 rounded-lg border border-line px-4 py-3">
+      <div className="flex items-center justify-between gap-3 rounded-control border border-line px-4 py-3">
         <div>
           <p className="text-sm">{t('credits')}</p>
           <p className="font-display text-lg font-semibold">{credits}</p>

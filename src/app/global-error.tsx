@@ -32,12 +32,22 @@ export default function GlobalError({
           minHeight: '100dvh',
           margin: 0,
           fontFamily: 'system-ui, sans-serif',
-          background: '#0b0b0f',
-          color: '#f4f4f5',
+          /*
+            The values are inline and literal because this component replaces
+            the root layout when the root layout is what failed — there is no
+            stylesheet to reach for and no token to resolve. They are still the
+            palette's own: Room Black and Paper White, not the framework greys
+            that were here, so the last screen a customer sees is recognisably
+            this product rather than a default error page.
+          */
+          background: '#05070f',
+          color: '#ffffff',
         }}
       >
         <main style={{ maxWidth: '32rem', padding: '2rem', textAlign: 'center' }}>
-          <h1 style={{ fontSize: '1.5rem', margin: '0 0 0.75rem' }}>Something went wrong</h1>
+          <h1 style={{ fontSize: '1.25rem', fontWeight: 600, margin: '0 0 0.75rem' }}>
+            Something went wrong
+          </h1>
           <p style={{ margin: '0 0 1.5rem', opacity: 0.7, lineHeight: 1.6 }}>
             The error has been reported. Try again, and if it keeps happening, let us know.
           </p>
@@ -53,9 +63,9 @@ export default function GlobalError({
             onClick={reset}
             style={{
               padding: '0.625rem 1.25rem',
-              borderRadius: '0.5rem',
-              border: '1px solid #3f3f46',
-              background: '#18181b',
+              borderRadius: '0.875rem',
+              border: '1px solid rgba(255, 255, 255, 0.16)',
+              background: '#121a2e',
               color: 'inherit',
               cursor: 'pointer',
               font: 'inherit',

@@ -22,7 +22,13 @@ if (!connectionString) {
 const client = postgres(connectionString, { max: 1 })
 const db = drizzle(client, { schema })
 
-/** Credit costs are documented in §7. 1 credit ≈ $0.05 of upstream AI cost. */
+/**
+ * Credit costs are documented in §7. 1 credit ≈ $0.05 of upstream AI cost.
+ *
+ * Yearly prices are zero because billing is monthly. The columns stay for the
+ * rows already written against them; nothing is sold on an annual period, so
+ * seeding a figure would put a price on the product that cannot be paid.
+ */
 const PLANS = [
   {
     slug: 'free',
@@ -43,16 +49,16 @@ const PLANS = [
     sortOrder: 0,
     features: {
       en: ['1 full brand generation', '4 logo concepts', 'Colour palette & fonts', 'Brand story'],
-      ar: ['توليد هوية كاملة مرة واحدة', '٤ مفاهيم شعار', 'لوحة ألوان وخطوط', 'قصة العلامة'],
+      ar: ['توليد هوية كاملة مرة واحدة', '4 مفاهيم شعار', 'لوحة ألوان وخطوط', 'قصة العلامة'],
     },
   },
   {
     slug: 'basic',
     name: 'Basic',
     priceMonthly: 2900,
-    priceYearly: 29000,
+    priceYearly: 0,
     priceMonthlyAed: 11000,
-    priceYearlyAed: 110000,
+    priceYearlyAed: 0,
     monthlyCredits: 120,
     seats: 2,
     maxProjects: -1,
@@ -64,17 +70,17 @@ const PLANS = [
     priorityQueue: false,
     sortOrder: 1,
     features: {
-      en: ['~15 generations / month', 'Website builder', 'SVG vector export', 'Brand kit ZIP', '2 seats'],
-      ar: ['١٥ توليد شهرياً تقريباً', 'منشئ المواقع', 'تصدير SVG', 'حزمة الهوية', 'مستخدمان'],
+      en: ['Website builder', 'SVG vector export', 'Brand kit ZIP', '2 seats'],
+      ar: ['منشئ المواقع', 'تصدير SVG', 'حزمة الهوية', 'مستخدمان'],
     },
   },
   {
     slug: 'pro',
     name: 'Pro',
     priceMonthly: 7900,
-    priceYearly: 79000,
+    priceYearly: 0,
     priceMonthlyAed: 28900,
-    priceYearlyAed: 289000,
+    priceYearlyAed: 0,
     monthlyCredits: 400,
     seats: 5,
     maxProjects: -1,
@@ -86,17 +92,17 @@ const PLANS = [
     priorityQueue: true,
     sortOrder: 2,
     features: {
-      en: ['~50 generations / month', 'Social media kit', 'Brand Assistant AI chat', 'Priority queue', '5 seats'],
-      ar: ['٥٠ توليد شهرياً تقريباً', 'حزمة السوشيال ميديا', 'مساعد العلامة الذكي', 'أولوية في المعالجة', '٥ مستخدمين'],
+      en: ['Social media kit', 'Brand Assistant AI chat', 'Priority queue', '5 seats'],
+      ar: ['حزمة السوشيال ميديا', 'مساعد العلامة الذكي', 'أولوية في المعالجة', '5 مستخدمين'],
     },
   },
   {
     slug: 'business',
     name: 'Business',
     priceMonthly: 19900,
-    priceYearly: 199000,
+    priceYearly: 0,
     priceMonthlyAed: 72900,
-    priceYearlyAed: 729000,
+    priceYearlyAed: 0,
     monthlyCredits: 1200,
     seats: -1,
     maxProjects: -1,
@@ -108,8 +114,8 @@ const PLANS = [
     priorityQueue: true,
     sortOrder: 3,
     features: {
-      en: ['~150 generations / month', 'Custom domains', 'Unlimited seats', 'API access', 'Dedicated support'],
-      ar: ['١٥٠ توليد شهرياً تقريباً', 'نطاقات مخصصة', 'مستخدمون بلا حد', 'وصول API', 'دعم مخصص'],
+      en: ['Custom domains', 'Unlimited seats', 'API access', 'Dedicated support'],
+      ar: ['نطاقات مخصصة', 'مستخدمون بلا حد', 'وصول API', 'دعم مخصص'],
     },
   },
 ] satisfies (typeof plans.$inferInsert)[]

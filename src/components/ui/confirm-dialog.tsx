@@ -1,7 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useId } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -47,6 +47,15 @@ export function ConfirmDialog({
   pending?: boolean
 }) {
   const ref = useRef<HTMLDialogElement>(null)
+  /*
+   * Unique per instance. These ids were constants, and the billing page renders
+   * three of these dialogs at once — so every one of them pointed
+   * `aria-labelledby` at the first title in the document. Opening "Change plan"
+   * announced "Cancel your subscription?".
+   */
+  const id = useId()
+  const titleId = `${id}-title`
+  const bodyId = `${id}-body`
 
   useEffect(() => {
     const dialog = ref.current
@@ -76,8 +85,8 @@ export function ConfirmDialog({
         // only the backdrop does. That is the whole click-outside test.
         if (event.target === ref.current && !pending) onClose()
       }}
-      aria-labelledby="confirm-title"
-      aria-describedby="confirm-body"
+      aria-labelledby={titleId}
+      aria-describedby={bodyId}
       className={cn(
         /*
          * `m-auto` restores centring. The user-agent stylesheet centres a modal
@@ -91,10 +100,18 @@ export function ConfirmDialog({
       )}
     >
       <div className="p-6">
-        <h2 id="confirm-title" className="font-display text-lg font-semibold tracking-[-0.02em]">
+        {/*
+          Deliberately not a heading. `aria-labelledby` already names the dialog
+          from this element, and as an `<h2>` it joined the page's heading
+          outline from wherever the trigger happened to sit — which is how the
+          project page came to answer "list the headings" with "Delete this
+          brand?" before the brand's own name, and the wizard with "Leave
+          without creating your brand?" before its first question.
+        */}
+        <p id={titleId} className="font-display text-lg font-semibold tracking-[-0.02em]">
           {title}
-        </h2>
-        <div id="confirm-body" className="mt-2 text-sm leading-relaxed text-fg-secondary">
+        </p>
+        <div id={bodyId} className="mt-2 text-sm leading-relaxed text-fg-secondary">
           {body}
         </div>
 
