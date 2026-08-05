@@ -10,10 +10,32 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Fast feedback: everything that needs no database or browser.
+  # Fast feedback: typecheck, lint, and a build that matches production's.
+  #
+  # The build needs a database. `/en` is statically prerendered and reads the
+  # `plans` table for its pricing, so with an unreachable database the export
+  # fails on that page rather than degrading — which is correct, because a
+  # marketing page silently built without its prices would be worse. Vercel
+  # builds against the real database for the same reason; this job now does
+  # what production does instead of proving something easier.
   verify:
     name: Typecheck, lint, build
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: brandora
+          POSTGRES_PASSWORD: brandora
+          POSTGRES_DB: brandora
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -32,9 +54,17 @@ jobs:
         env:
           SKIP_ENV_VALIDATION: 'true'
 
+      # Schema and plan rows, so the prerender of `/en` has prices to render.
+      - name: Prepare the build database
+        run: pnpm db:migrate && pnpm db:seed
+        env:
+          DATABASE_URL: postgresql://brandora:brandora@localhost:5432/brandora
+          DATABASE_URL_UNPOOLED: postgresql://brandora:brandora@localhost:5432/brandora
+
       - run: pnpm build
         env:
-          DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
+          DATABASE_URL: postgresql://brandora:brandora@localhost:5432/brandora
+          DATABASE_URL_UNPOOLED: postgresql://brandora:brandora@localhost:5432/brandora
           BETTER_AUTH_SECRET: build-time-placeholder-secret-at-least-32-chars
           BETTER_AUTH_URL: http://localhost:3100
           NEXT_PUBLIC_APP_URL: http://localhost:3100
@@ -50,7 +80,7 @@ jobs:
             exit 1
           fi
         env:
-          DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
+          DATABASE_URL: postgresql://brandora:brandora@localhost:5432/brandora
 
   test:
     name: System and browser tests
