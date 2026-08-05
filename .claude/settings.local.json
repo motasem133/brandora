@@ -59,7 +59,8 @@
       "Bash(node /private/tmp/claude-501/-Users-motasemmoner-Documents-Brandora/b6e8ce4c-4ff9-494a-b191-29adba7fb2d3/scratchpad/ab-history.mjs clear)",
       "Bash(git rm *)",
       "Bash(git mv *)",
-      "Bash(xargs sed -i '' \"s#@/components/features/landing/horizon#@/components/ui/horizon#g\")"
+      "Bash(xargs sed -i '' \"s#@/components/features/landing/horizon#@/components/ui/horizon#g\")",
+      "Bash(git push *)"
     ]
   }
 }
