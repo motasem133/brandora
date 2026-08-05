@@ -176,7 +176,19 @@ Recorded so future work does not mistake current behaviour for a settled answer.
 
 ## Brand commitments (client-pinned, recorded not expanded)
 
-Purple `#7C3AED` → indigo `#4F46E5` → blue `#3B82F6` on Dark Navy `#0B1020`;
+Violet `#7240FF` → indigo `#5B5CFB` → blue `#3B82F6` on Dark Navy `#0B1020`;
 Plus Jakarta Sans; Lucide icons; Framer Motion; 20–24px radii; premium, modern,
-elegant, minimal, AI-first. The logo is a gradient "B" monogram with two
-four-point sparkles.
+elegant, minimal, AI-first.
+
+The mark is a flat violet "B" with a four-point sparkle cut out of it and three
+motion lines entering from the left. It supersedes the gradient monogram with
+two sparkles that was pinned before, and the ramp is anchored to its violet
+rather than the other way round — the mark and the interface are the same colour
+by construction. Supplied as a neon PNG render; the app draws it as SVG traced
+from that artwork with the product's own vectoriser, and a vector source would
+still be better than a trace.
+
+The reference for the visual world is the RedSun template the client supplied
+(`Design-reference.mov`): near-black ground, a light source rising behind the
+fold, glowing pill controls, hairline cards on a dark ground. Its own accent is
+orange; ours is the mark's violet.
