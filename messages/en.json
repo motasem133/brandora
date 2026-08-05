@@ -201,11 +201,6 @@
   "Dashboard": {
     "welcome": "Welcome back, {name}",
     "subtitle": "Here's what's happening with your brands",
-    "statProjects": "Projects",
-    "statCompleted": "Completed",
-    "statCredits": "Credits left",
-    "statMembers": "Team members",
-    "recentProjects": "Recent projects",
     "viewAll": "View all",
     "emptyTitle": "No projects yet",
     "emptyBody": "Create your first project and let the AI build your brand identity.",
@@ -215,11 +210,7 @@
     "tileSpent": "Credits spent",
     "tileCredits": "Credits left",
     "tilePeriod": "against the six weeks before",
-    "tileTrend": "{label}, weekly over the last twelve weeks",
-    "viewSheet": "Contact sheet",
-    "viewTiles": "Stat tiles",
-    "viewLabel": "Overview layout",
-    "viewEven": "Even grid"
+    "tileTrend": "{label}, weekly over the last twelve weeks"
   },
   "Projects": {
     "title": "Projects",

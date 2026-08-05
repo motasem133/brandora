@@ -9,36 +9,32 @@ import { buttonVariants } from '@/components/ui/button'
 import { Cell } from '@/components/features/landing/horizon'
 import { Link } from '@/i18n/navigation'
 import { dashboardTrends } from '@/server/db/queries/dashboard'
-import {
-  countProjects,
-  countProjectsByStatus,
-  listBrandSpecimens,
-} from '@/server/db/queries/projects'
+import { countProjects, listBrandSpecimens } from '@/server/db/queries/projects'
 import { requireOrg } from '@/server/session'
 
 /**
- * The overview, built three ways so it can be chosen between.
+ * The overview: four measured figures, then the brands in an even grid.
  *
- * - default — the contact sheet this page already was: counts on one line of
- *   meta, the newest brand printed large as the lead frame.
- * - `?view=tiles` — the client's reference read literally: four measured
- *   figures across the top, then the work in an even grid.
- * - `?view=even` — the meta line with the even grid. It exists because
- *   measuring the first two said the choice was not the one being offered: the
- *   tiles started 50px lower and still put six brands in the fold against the
- *   sheet's two, which is the lead frame's cost rather than the tiles' benefit.
- *   This branch pays neither.
+ * This composition was banned by name in DESIGN.md and removed once, and it is
+ * back on purpose. Three versions were built and measured against a
+ * twelve-week, nine-brand account, and this one put six brands in the fold
+ * where the contact sheet it replaced put two — the lead frame that marked the
+ * newest brand cost more of the page than the figures above it do.
  *
- * A temporary fork, not a setting. Whichever two lose go, and the switch goes
- * with them.
+ * What the old ban was actually about survives and still applies: tiles that
+ * restate a number nobody asked for, whose largest type is the digit 1. These
+ * are not that. Every one is bucketed from a real timestamp, the two that
+ * measure credits decline to have an opinion about their own direction, and a
+ * figure with no honest series shows no series. See DESIGN.md's Measured Figure
+ * Rule, which replaced the ban.
+ *
+ * There is deliberately no lead frame. The reference puts uniform panels under
+ * its figures, and a page that both opens with tiles and marks a hero frame is
+ * arguing with itself about where to look first — and a specimen is not an
+ * identical cell anyway: each one wears its own brand's paper and ink, so the
+ * grid is six different objects at a glance.
  */
-export default async function OverviewPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ locale: string }>
-  searchParams: Promise<{ view?: string }>
-}) {
+export default async function OverviewPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
   setRequestLocale(locale)
 
@@ -47,31 +43,11 @@ export default async function OverviewPage({
   const ts = await getTranslations('Settings')
   const { user, org } = await requireOrg()
 
-  const view = (await searchParams).view
-  const tiles = view === 'tiles'
-  const even = view === 'even'
-
-  const [total, completed, specimens, trends] = await Promise.all([
+  const [total, specimens, trends] = await Promise.all([
     countProjects(org.id),
-    countProjectsByStatus(org.id, 'completed'),
     listBrandSpecimens(org.id, 7),
-    tiles ? dashboardTrends(org.id) : Promise.resolve(null),
+    dashboardTrends(org.id),
   ])
-
-  /*
-   * A lead frame needs a sheet to lead. With one or two brands the wide cell
-   * left a column of nothing beside it and put the dead space back, one screen
-   * further along than where it was removed from.
-   *
-   * Neither of the other two branches has one. The tiles branch because the
-   * reference puts uniform panels under its figures, and a page that both leads
-   * with tiles and marks a hero frame is arguing with itself about where to
-   * look first. The even branch because it is the measurement that produced it:
-   * at nine brands the lead frame left two in the fold against the tiles'
-   * six, and flattening only its column span recovered one — so the feature
-   * specimen's height is what costs the page, not the span.
-   */
-  const lead = !tiles && !even && specimens.length >= 3
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -117,51 +93,13 @@ export default async function OverviewPage({
       </header>
 
       {/*
-        The switch between the two, and it is scaffolding.
+        The figures, and only once there is something to have figures about.
 
-        Deliberately plain and deliberately ugly: it is here to be clicked a few
-        times and then deleted along with whichever branch loses, and dressing
-        it up would make it look like a feature someone should keep.
+        An account on its first visit was shown four tiles of zeros above the
+        words "No projects yet" — the same number said twice, once as a wall of
+        nothing. The empty state below is the whole message at that point.
       */}
-      <nav aria-label={t('viewLabel')} className="mt-6 flex gap-1 text-xs">
-        {(
-          [
-            ['/dashboard', t('viewSheet'), !tiles && !even],
-            ['/dashboard?view=tiles', t('viewTiles'), tiles],
-            ['/dashboard?view=even', t('viewEven'), even],
-          ] as const
-        ).map(([href, label, active]) => (
-          <Link
-            key={href}
-            href={href}
-            aria-current={active ? 'page' : undefined}
-            className={
-              active
-                ? 'rounded-control bg-elevated px-3 py-1.5 font-semibold text-fg'
-                : 'rounded-control px-3 py-1.5 text-fg-muted transition-colors hover:text-fg'
-            }
-          >
-            {label}
-          </Link>
-        ))}
-      </nav>
-
-      {/* --------------------------------------------------- the fork ---- */}
-
-      {tiles && trends ? (
-        /*
-         * B — the reference's opening: four measured figures across the top.
-         *
-         * Every one is bucketed from a real timestamp. That constraint chose
-         * the four: "brands finished" is missing because a project's completion
-         * is current state with no date beside it, so its weekly series would
-         * be creation dates filtered by today's status. "Runs finished" is the
-         * honest form of the same question, from `generation_jobs.finished_at`.
-         *
-         * Credits carry no goodness. Spending them is what they are for and the
-         * balance falling is the product working, so those two tiles state the
-         * direction and decline to have an opinion about it.
-         */
+      {total > 0 && (
         <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {(
             [
@@ -182,28 +120,6 @@ export default async function OverviewPage({
             />
           ))}
         </div>
-      ) : (
-        /*
-         * A — the counts, once, as a line of meta.
-         *
-         * These were three cards the width of the page, which made the largest
-         * type on the screen the digit 1. They are true and worth knowing, and
-         * that is the whole of what they earn.
-         */
-        total > 0 && (
-          <dl className="mt-7 flex flex-wrap items-center gap-x-7 gap-y-2 border-y border-line py-3.5 text-sm">
-            {[
-              [t('statProjects'), total],
-              [t('statCompleted'), completed],
-              [t('statCredits'), org.creditBalance],
-            ].map(([label, value]) => (
-              <div key={String(label)} className="flex items-baseline gap-2">
-                <dt className="text-fg-muted">{label}</dt>
-                <dd className="font-semibold tabular-nums text-fg">{value}</dd>
-              </div>
-            ))}
-          </dl>
-        )
       )}
 
       {specimens.length === 0 ? (
@@ -233,21 +149,21 @@ export default async function OverviewPage({
           </Link>
         </section>
       ) : (
+        /*
+          An even grid, and the lead frame that used to sit here is gone.
+
+          It was defended on the grounds that "a grid of identical cells is a
+          spreadsheet", which is true of cells that are chrome and false of
+          these: a specimen is not a container around a row, it is the brand's
+          own paper, ink and palette, so six of them are six different objects
+          without any help from the layout. Measured at nine brands, marking one
+          of them cost four of the others their place in the fold.
+        */
         <MomentumField className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {specimens.map((specimen, index) => (
-            <Cell
-              key={specimen.project.id}
-              index={index}
-              lift={false}
-              /*
-                The newest brand is the lead frame, printed across two columns.
-                A contact sheet marks the frame worth looking at; a grid of
-                identical cells is a spreadsheet.
-              */
-              className={index === 0 && lead ? 'sm:col-span-2' : undefined}
-            >
+            <Cell key={specimen.project.id} index={index} lift={false}>
               <MomentumItem className="h-full">
-                <BrandSpecimen specimen={specimen} locale={locale} feature={index === 0 && lead} />
+                <BrandSpecimen specimen={specimen} locale={locale} />
               </MomentumItem>
             </Cell>
           ))}

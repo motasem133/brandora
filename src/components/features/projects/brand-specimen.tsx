@@ -31,12 +31,9 @@ const STATE_DOT = {
 export async function BrandSpecimen({
   specimen,
   locale,
-  feature = false,
 }: {
   specimen: Specimen
   locale: string
-  /** The lead frame on a contact sheet, printed larger than its neighbours. */
-  feature?: boolean
 }) {
   const t = await getTranslations('Projects')
   const { project, palette, fonts, slogan, logo } = specimen
@@ -74,22 +71,14 @@ export async function BrandSpecimen({
           'ring-1 ring-[var(--guest-line)] group-focus-visible:ring-2 group-focus-visible:ring-brand',
         )}
       >
-        <div
-          className={cn(
-            'relative grid flex-1 place-items-center px-8',
-            feature ? 'min-h-56 py-14 sm:min-h-72' : 'min-h-40 py-10',
-          )}
-        >
+        <div className="relative grid min-h-40 flex-1 place-items-center px-8 py-10">
           {logo ? (
             /* eslint-disable-next-line @next/next/no-img-element */
             <img
               src={publicUrl(logo.r2Key) ?? `/api/files/${logo.id}`}
               alt=""
               loading="lazy"
-              className={cn(
-                'w-auto max-w-full object-contain',
-                feature ? 'max-h-40 sm:max-h-52' : 'max-h-24',
-              )}
+              className="max-h-24 w-auto max-w-full object-contain"
             />
           ) : (
             /*
@@ -99,10 +88,7 @@ export async function BrandSpecimen({
              */
             <p
               style={{ fontFamily: fontStack(fonts?.heading), color: 'var(--guest-ink)' }}
-              className={cn(
-                'text-balance text-center font-semibold tracking-[-0.03em]',
-                feature ? 'text-4xl sm:text-5xl' : 'text-2xl',
-              )}
+              className="text-balance text-center text-2xl font-semibold tracking-[-0.03em]"
             >
               {name}
             </p>
@@ -122,10 +108,7 @@ export async function BrandSpecimen({
 
           <h3
             style={{ fontFamily: fontStack(fonts?.heading), color: 'var(--guest-ink)' }}
-            className={cn(
-              'truncate font-semibold tracking-[-0.02em]',
-              feature ? 'text-2xl' : 'text-lg',
-            )}
+            className="truncate text-lg font-semibold tracking-[-0.02em]"
           >
             {name}
           </h3>

@@ -363,7 +363,7 @@
   ],
   "narrative": {
     "northStar": "The Darkroom",
-    "overview": "The interface is the dark room. Every brand this product generates is a print that comes out of it, and the print is the only thing carrying colour. That is why the chrome sits at near-black and holds a single accent ramp: it is not minimalism as a style preference, it is a room built so that whatever is pinned up in it can be judged. A product that sells brand coherence cannot show a customer's brand inside its own purple and expect to be believed.\n\nSo the register is a quiet instrument around loud work. Chrome is severe: hairline edges mixed from white rather than drawn in grey, three tonal grounds instead of borders, one accent that appears where something means something. Expression is delegated outward — a project page adopts the palette and the faces of the brand it is showing, and Brandora's own ramp withdraws to the shell. The one place the chrome is allowed to be expressive is motion, and even there it is bounded: nothing loops forever except a running job and a loading skeleton.\n\nThe visual anti-reference is the admin template — same-size cards of icon plus heading plus text, a row of stat tiles whose largest type is the digit 1, and a grey 1px border around everything. Those were all present and all removed deliberately; a change that reintroduces them is a regression regardless of how it looks in isolation.",
+    "overview": "The interface is the dark room. Every brand this product generates is a print that comes out of it, and the print is the only thing carrying colour. That is why the chrome sits at near-black and holds a single accent ramp: it is not minimalism as a style preference, it is a room built so that whatever is pinned up in it can be judged. A product that sells brand coherence cannot show a customer's brand inside its own purple and expect to be believed.\n\nSo the register is a quiet instrument around loud work. Chrome is severe: hairline edges mixed from white rather than drawn in grey, three tonal grounds instead of borders, one accent that appears where something means something. Expression is delegated outward — a project page adopts the palette and the faces of the brand it is showing, and Brandora's own ramp withdraws to the shell. The one place the chrome is allowed to be expressive is motion, and even there it is bounded: nothing loops forever except a running job and a loading skeleton.\n\nThe visual anti-reference is the admin template — same-size cards of icon plus heading plus text, figures that restate a count nobody asked for, and a grey 1px border around everything. Those were all present and all removed deliberately; a change that reintroduces them is a regression regardless of how it looks in isolation.",
     "keyCharacteristics": [
       "Near-black navy ground with three tonal steps, never a grey border",
       "One accent ramp, violet through blue, used sparingly and never as text at full strength",
@@ -422,6 +422,10 @@
         "name": "The Tinted Shadow Rule",
         "body": "No shadow in this system is pure black. Tint with the ground's navy for weight, with Indigo Core for lift.",
         "section": "elevation"
+      },
+      {
+        "name": "The Measured Figure Rule",
+        "body": "A figure earns its tile by being measurable. Every series is bucketed from a real timestamp; where the data cannot support a trend the tile shows none rather than a decorative line; a level takes no percentage, because the denominator is whatever the account happened to hold at an arbitrary earlier moment; and a metric with no good direction says so rather than colouring itself green or red. This replaced the outright ban on a row of stat tiles, which was lifted after three dashboards were built and measured — the tiles started 50px lower than the contact sheet and still put six brands in the fold against its two."
       }
     ],
     "dos": [
@@ -437,7 +441,8 @@
       "Don't clip the brand gradient to text. It was removed for legibility: part of every glyph sits on the lowest-contrast stop, and the words vanish entirely where the clip is unsupported.",
       "Don't introduce a second accent colour, or a solid grey 1px border, or a shadow made of pure black.",
       "Don't nest a card inside a card. Drop the inner one to a plain region with a hairline rule.",
-      "Don't build a page as a stack of same-size cards of icon plus heading plus text, or open a screen with a row of stat tiles. Both were removed deliberately.",
+      "Don't build a page as a stack of same-size cards of icon plus heading plus text. That one stands.",
+      "Don't show a figure this system cannot measure — no invented trend, no percentage on a level, no delta against a period nobody named. See the Measured Figure Rule.",
       "Don't leave a persistent side rail holding less than a screen of content — give it more or let it collapse.",
       "Don't animate headlines letter by letter; split on words, because Arabic letterforms join.",
       "Don't signal a state with colour alone; the word rides with the dot."
