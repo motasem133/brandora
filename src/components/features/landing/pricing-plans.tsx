@@ -2,7 +2,7 @@ import { Check } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 import { eq } from 'drizzle-orm'
 
-import { Cell } from '@/components/features/landing/horizon'
+import { Cell } from '@/components/ui/horizon'
 import { buttonVariants } from '@/components/ui/button'
 import { Link } from '@/i18n/navigation'
 import { cn, formatPrice, pickPrice, type Currency } from '@/lib/utils'
@@ -69,13 +69,27 @@ export async function PricingPlans({
                   : 'lit',
               )}
             >
-              <div className="lit-inner flex flex-col p-7">
-                {featured && (
-                  <span className="absolute -top-3 end-6 rounded-full bg-[image:var(--brand-gradient)] px-3 py-1 text-xs font-semibold text-brand-fg">
-                    {t('pricingChosen')}
-                  </span>
-                )}
+              {/*
+                Outside the panel, not inside it. The bloom below clips to its
+                own box — that is what keeps a radial from bleeding past a
+                rounded corner — and this label hangs three pixels above the
+                card's top edge, so declared inside it, it lost its top third.
+              */}
+              {featured && (
+                <span className="absolute -top-3 end-6 z-10 rounded-full bg-[image:var(--brand-gradient)] px-3 py-1 text-xs font-semibold text-brand-fg">
+                  {t('pricingChosen')}
+                </span>
+              )}
 
+              {/* Only the recommended plan has a source inside it. The others
+                  are the same room with the light off them, which is what makes
+                  one of four read as the answer without changing its size. */}
+              <div
+                className={cn(
+                  'lit-inner flex flex-col p-7',
+                  featured && 'bloom [--bloom-strength:20%]',
+                )}
+              >
                 <p className="text-sm text-fg-secondary">{plan.name}</p>
 
                 <p className="mt-4 flex items-baseline gap-1.5">

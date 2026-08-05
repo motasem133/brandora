@@ -3,6 +3,7 @@ import { setRequestLocale } from 'next-intl/server'
 import { redirect } from 'next/navigation'
 
 import { OnboardingWizard } from '@/components/features/onboarding/wizard'
+import { SectionArc } from '@/components/ui/horizon'
 import { CREDIT_COSTS } from '@/server/billing/credits'
 import { db } from '@/server/db'
 import { getEntitlements } from '@/server/db/queries/plans'
@@ -61,7 +62,18 @@ export default async function OnboardingPage({
     .limit(1)
 
   return (
-    <main id="content" tabIndex={-1} className="flex min-h-dvh items-center justify-center px-4 py-12">
+    <main
+      id="content"
+      tabIndex={-1}
+      /*
+       * The run's own room. This route has no navigation and no sidebar by
+       * design — eight questions, one at a time — so it is the one app surface
+       * that can carry the light the way the marketing pages do without it
+       * crossing anything. The arc rises behind the panel, from below.
+       */
+      className="relative flex min-h-dvh items-center justify-center overflow-hidden px-4 py-12"
+    >
+      <SectionArc className="bottom-0 top-auto translate-y-1/3" />
       <OnboardingWizard
         entitlements={entitlements}
         pricing={pricing}

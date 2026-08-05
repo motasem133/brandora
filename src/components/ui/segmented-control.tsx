@@ -31,16 +31,19 @@ export function SegmentedControl({
     <div
       role="group"
       aria-label={label}
-      className={cn('inline-flex rounded-control border border-line p-0.5', className)}
+      className={cn('inline-flex rounded-full border border-line p-0.5', className)}
     >
       {children}
     </div>
   )
 }
 
-const item =
-  'rounded-[calc(var(--radius-control)-0.25rem)] px-3 py-1.5 text-xs font-medium transition-colors'
-const selected = 'bg-elevated text-fg'
+/* Pills inside a pill — the control shape at both scales, and the only shape a
+   segment can take without its corners disagreeing with its track's. The
+   selected one carries the light, which is what says "pressed" here in exactly
+   the way it says it on a Button. */
+const item = 'rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors'
+const selected = 'control-lit bg-elevated text-fg'
 const unselected = 'text-fg-secondary hover:text-fg'
 
 /**

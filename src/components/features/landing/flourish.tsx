@@ -52,7 +52,7 @@ export function PaletteDeal({ colors, className }: { colors: string[]; className
           style={{ backgroundColor: hex }}
           initial={reduced ? false : { opacity: 0, y: 30, rotate: jitter(index, 9) }}
           whileInView={{ opacity: 1, y: 0, rotate: 0 }}
-          viewport={{ once: true, margin: '-12%' }}
+          viewport={{ once: true, margin: '-12% 0px' }}
           transition={{ ...ELASTIC, delay: reduced ? 0 : index * 0.07 }}
         />
       ))}
@@ -98,7 +98,7 @@ export function PillFan({ items, className }: { items: string[]; className?: str
           key={item}
           initial={reduced ? false : { opacity: 0, y: 14, rotate: jitter(index, 7) }}
           whileInView={{ opacity: 1, y: 0, rotate: 0 }}
-          viewport={{ once: true, margin: '-12%' }}
+          viewport={{ once: true, margin: '-12% 0px' }}
           transition={{ ...ELASTIC, delay: reduced ? 0 : index * 0.035 }}
           onMouseEnter={reduced ? undefined : () => setActive(index)}
         >
@@ -155,9 +155,24 @@ export function StepMark({
     <motion.span
       data-reveal
       className={className}
-      initial={reduced ? false : { scale: 0, rotate: -20, y: -16 }}
+      /*
+       * Starts small rather than at nothing, and the margin below is vertical.
+       *
+       * These five numbers silently stopped appearing when the section around
+       * them widened. `margin: '-18%'` is a `rootMargin`, so it insets the
+       * observation box on all four sides — at 1440px that is 259px off each
+       * edge — and moving this column to the left of that inset meant the marks
+       * could never intersect it, whatever the scroll position. The words and
+       * the rail beside them were unaffected, because they sit further in.
+       *
+       * Vertical-only keeps what the margin was for: fire once the mark is
+       * properly on screen, not the instant its first pixel is. The 0.35 floor
+       * is belt and braces — a zero-area box is a poor thing to hand an
+       * observer regardless.
+       */
+      initial={reduced ? false : { scale: 0.35, rotate: -20, y: -16 }}
       whileInView={{ scale: 1, rotate: 0, y: 0 }}
-      viewport={{ once: true, margin: '-18%' }}
+      viewport={{ once: true, margin: '-18% 0px' }}
       transition={{ ...ELASTIC, delay: reduced ? 0 : Math.min(index * 0.04, 0.2) }}
     >
       {children}

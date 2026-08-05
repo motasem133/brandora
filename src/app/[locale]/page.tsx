@@ -11,7 +11,7 @@ import {
   SectionArc,
   ProductFrame,
   SectionReveal,
-} from '@/components/features/landing/horizon'
+} from '@/components/ui/horizon'
 import { AfterHeadline, HeadlineWords } from '@/components/features/landing/motion-hero'
 import { PricingPlans } from '@/components/features/landing/pricing-plans'
 import { buttonVariants } from '@/components/ui/button'
@@ -59,6 +59,7 @@ export default async function HorizonDirection({
    * has to prove the product generates Arabic natively.
    */
   const t = await getTranslations('Landing')
+  const tn = await getTranslations('Nav')
   const rest = t.raw('restItems') as string[]
   const steps = t.raw('steps') as { name: string; body: string }[]
 
@@ -66,8 +67,8 @@ export default async function HorizonDirection({
     <div className="world-dark min-h-dvh overflow-x-hidden">
       <header className="relative z-20 mx-auto flex max-w-7xl items-center justify-between px-8 py-6">
         <span className="flex items-center gap-2.5">
-          <LogoMark className="size-6" id="horizon" />
-          <span className="font-semibold tracking-[-0.01em]">Brandora</span>
+          <LogoMark className="size-12" />
+          <span className="text-lg font-semibold tracking-[-0.01em]">Brandora</span>
         </span>
 
         <nav className="hidden items-center gap-8 text-sm text-fg-secondary md:flex">
@@ -194,7 +195,8 @@ export default async function HorizonDirection({
       </section>
 
       {/* -------------------------------------------------------------- kit */}
-      <section id="kit" className="relative overflow-hidden border-t border-line bg-surface/50">
+      <div aria-hidden className="rule-fade" />
+      <section id="kit" className="relative overflow-hidden bg-surface/50">
         <SectionArc className="top-0" />
         <LightSweep />
         <div className="relative z-10 mx-auto max-w-7xl px-8 py-28">
@@ -232,6 +234,13 @@ export default async function HorizonDirection({
                 drifted to three different accent strengths — 28%, 30% and 35% —
                 for no reason anyone recorded. They were also lit from the top,
                 which is the light this system no longer has.
+              */}
+              {/*
+                No bloom on this one, deliberately. `bloom` clips to its own box
+                so a radial cannot bleed past a rounded corner, and the four
+                concepts in here can be picked up and thrown — a card flicked to
+                the edge would be cut in half by the clip, on the one part of
+                the page where a visitor can put a hand on real output.
               */}
               <div className="lit relative h-full">
                 <div className="lit-inner flex min-h-0 flex-col p-7">
@@ -280,7 +289,16 @@ export default async function HorizonDirection({
 
             <Cell index={2}>
               <div className="lit h-full">
-                <div className="lit-inner flex flex-col justify-between p-7">
+                {/*
+                  The light inside the card, which the reference gives its bento
+                  and this grid did not have: a source rising from the card's
+                  own base rather than an even fill inside a lit ring.
+
+                  Two of the six carry it — this one and the last — because the
+                  reference lights two of its six, and a bento where every cell
+                  glows is a bento where nothing is lit.
+                */}
+                <div className="lit-inner bloom flex flex-col justify-between p-7 [--bloom-strength:18%]">
                   <p className="text-sm text-fg-secondary">{t('kitNames')}</p>
                   <div>
                     <p className="text-2xl font-semibold tracking-[-0.02em]">Makān</p>
@@ -325,7 +343,7 @@ export default async function HorizonDirection({
 
             <Cell index={5} className="col-span-2">
               <div className="lit h-full">
-                <div className="lit-inner flex flex-col justify-between p-7">
+                <div className="lit-inner bloom flex flex-col justify-between p-7 [--bloom-x:84%] [--bloom-strength:18%]">
                   <p className="text-sm text-fg-secondary">{t('kitRest')}</p>
                   <PillFan items={rest} className="flex flex-wrap gap-2" />
                 </div>
@@ -336,25 +354,33 @@ export default async function HorizonDirection({
       </section>
 
       {/* -------------------------------------------------------------- how */}
-      <section id="how" className="relative overflow-hidden border-t border-line">
+      <div aria-hidden className="rule-fade" />
+      <section id="how" className="relative overflow-hidden">
         <SectionArc className="top-0" />
-        <div className="relative z-10 mx-auto max-w-5xl px-8 py-28">
+        <div className="relative z-10 mx-auto max-w-7xl px-8 py-28">
           <SectionReveal>
             <h2 className="type-section">{t('howTitle')}</h2>
           </SectionReveal>
 
           {/*
-            A descent rather than five columns: the run happens in sequence, and
-            a row of equal boxes said nothing about order. The rail carries the
-            eye down it, and each stage states what it produces.
+            Two columns, because one was stranding this section.
+
+            The descent is unchanged and still right — the run happens in
+            sequence, and a row of equal boxes said nothing about order. But a
+            58ch column of text inside a 1024px section left the right-hand
+            third of the widest part of this page empty, and the fix for empty
+            space on a page selling generated output is not wider margins: it is
+            the output. So the space now holds the product doing the thing the
+            list is describing.
           */}
           {/*
-            The rail sits outside the list now. An `<ol>` may contain only
-            `<li>`, and this one held a decorative div plus a motion wrapper
-            around every item — enough for several screen readers to drop the
-            list semantics, so "How a run works" stopped announcing five steps.
+            The rail sits outside the list. An `<ol>` may contain only `<li>`,
+            and this one held a decorative div plus a motion wrapper around
+            every item — enough for several screen readers to drop the list
+            semantics, so "How a run works" stopped announcing five steps.
           */}
-          <div className="relative mt-16">
+          <div className="mt-16 grid gap-x-16 gap-y-16 lg:grid-cols-[minmax(0,24rem)_1fr] lg:items-start">
+          <div className="relative">
             {/* `rail` is the utility for exactly this and had no adopters,
                 while its hand-written equivalent lived here. */}
             <div aria-hidden className="rail absolute bottom-8 start-[1.55rem] top-4 w-px" />
@@ -386,11 +412,41 @@ export default async function HorizonDirection({
               ))}
             </ol>
           </div>
+
+          {/*
+            The run itself, cropped out of the product and floated in the
+            section's own light — which is what the reference does with every
+            fragment of its app it puts on that page.
+
+            Sticky, so it stays beside whichever step is being read rather than
+            scrolling past the first one. Only from `lg`, where there are two
+            columns for it to stay beside.
+          */}
+          <SectionReveal delay={0.15} className="lg:sticky lg:top-24">
+            <div className="lit [--lit-radius:var(--radius-panel)]">
+              <div className="lit-inner bloom p-4 [--bloom-strength:16%] sm:p-6">
+                <Image
+                  src="/marketing/run-brief.webp"
+                  alt={t('howShot')}
+                  /* The capture's own pixel dimensions. `w-full` with no height
+                     class takes its aspect from these, so a stale pair here
+                     stretches the screenshot rather than failing loudly. */
+                  width={1440}
+                  height={624}
+                  className="w-full rounded-card"
+                  sizes="(max-width: 1024px) 100vw, 640px"
+                />
+              </div>
+            </div>
+            <p className="mt-4 max-w-[46ch] text-sm text-fg-muted">{t('howShot')}</p>
+          </SectionReveal>
+          </div>
         </div>
       </section>
 
       {/* ---------------------------------------------------------- pricing */}
-      <section id="pricing" className="relative overflow-hidden border-t border-line bg-surface/50">
+      <div aria-hidden className="rule-fade" />
+      <section id="pricing" className="relative overflow-hidden bg-surface/50">
         <SectionArc className="top-0" />
 
         <div className="relative z-10 mx-auto max-w-7xl px-8 py-28">
@@ -427,7 +483,8 @@ export default async function HorizonDirection({
         </div>
       </section>
 
-      <section className="relative overflow-hidden border-t border-line">
+      <div aria-hidden className="rule-fade" />
+      <section className="relative overflow-hidden">
         <SectionArc className="top-[38%]" />
         <div className="relative z-10 mx-auto max-w-7xl px-8 py-28 text-center">
           <SectionReveal>
@@ -453,18 +510,41 @@ export default async function HorizonDirection({
 
       </main>
 
-      <footer className="border-t border-line">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-8 py-10">
-          <span className="flex items-center gap-2.5">
-            <LogoMark className="size-5" id="horizon-foot" />
-            <span className="text-sm font-semibold">Brandora</span>
-          </span>
-          <Link
-            href="/register"
-            className="text-sm text-fg-secondary transition-colors hover:text-white"
-          >
-            {t('ctaPrimary')}
-          </Link>
+      {/*
+        The foot of the page carries the page's own sections and the two
+        destinations that exist off it. It used to be the mark and a single
+        link, which is the one part of a long page a visitor reaches having
+        decided not to press anything yet — and it offered them the same press
+        they had already declined four times.
+      */}
+      <div aria-hidden className="rule-fade" />
+      <footer>
+        <div className="mx-auto flex max-w-7xl flex-wrap items-start justify-between gap-x-16 gap-y-8 px-8 py-12">
+          <div>
+            <span className="flex items-center gap-2.5">
+              <LogoMark className="size-11" />
+              <span className="text-sm font-semibold">Brandora</span>
+            </span>
+            <p className="mt-3 max-w-[34ch] text-sm text-fg-muted">{t('heroDeck')}</p>
+          </div>
+
+          <nav aria-label={t('navKit')} className="flex flex-wrap gap-x-8 gap-y-2 text-sm">
+            <a href="#kit" className="text-fg-secondary transition-colors hover:text-white">
+              {t('navKit')}
+            </a>
+            <a href="#how" className="text-fg-secondary transition-colors hover:text-white">
+              {t('navHow')}
+            </a>
+            <Link
+              href="/pricing"
+              className="text-fg-secondary transition-colors hover:text-white"
+            >
+              {t('navPricing')}
+            </Link>
+            <Link href="/login" className="text-fg-secondary transition-colors hover:text-white">
+              {tn('signIn')}
+            </Link>
+          </nav>
         </div>
       </footer>
     </div>

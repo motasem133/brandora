@@ -149,7 +149,8 @@
     "assuranceCancel": "Cancel any time — access runs to the end of the period",
     "closeTitle": "Bring a brief.",
     "closeTitleAccent": "Leave with a brand.",
-    "planOneBrand": "1 brand"
+    "planOneBrand": "1 brand",
+    "howShot": "The first of eight questions. Everything the run produces is decided from these answers."
   },
   "Auth": {
     "signIn": "Sign in",
@@ -184,7 +185,8 @@
     "setNewPassword": "Save new password",
     "resetLinkInvalid": "This link has expired or has already been used.",
     "requestNewLink": "Request a new link",
-    "passwordHint": "At least 8 characters."
+    "passwordHint": "At least 8 characters.",
+    "backHome": "Back to home"
   },
   "Nav": {
     "overview": "Overview",
@@ -194,9 +196,9 @@
     "admin": "Admin",
     "newProject": "New project",
     "signIn": "Sign in",
-    "collapseSidebar": "Collapse menu",
-    "expandSidebar": "Expand menu",
-    "sections": "Sections"
+    "sections": "Sections",
+    "credits": "Credits",
+    "account": "Account"
   },
   "Dashboard": {
     "welcome": "Welcome back, {name}",

@@ -488,14 +488,19 @@
   animation: pulse-ring 1.9s var(--ease-out-soft) infinite;
 }
 
+/*
+ * The mark's slow breath, about its own centre.
+ *
+ * The origin used to be `26px 50px` — a point inside the old 986×872 letterform,
+ * where the sparkle it animated actually sat. The mark is now a four-point star
+ * on a 100-unit box, so that origin was a spot outside the figure entirely and
+ * the "shimmer" was the whole logo swinging around a pivot off to one side.
+ *
+ * A star has one honest pivot and it is the middle of it.
+ */
 .logo-sparkle {
   animation: sparkle-drift 4.5s ease-in-out infinite;
-  transform-origin: 26px 50px;
-}
-
-.logo-sparkle-delayed {
-  animation-delay: 1.2s;
-  transform-origin: 21px 16px;
+  transform-origin: 50% 50%;
 }
 
 /*
@@ -582,6 +587,68 @@
     0 0 0 1px color-mix(in srgb, var(--brand-primary) 25%, transparent),
     0 0 24px -4px color-mix(in srgb, var(--brand-primary) 55%, transparent),
     0 0 64px -8px color-mix(in srgb, var(--brand-primary) 38%, transparent);
+}
+
+/*
+ * The light inside the card.
+ *
+ * The reference does not only light its controls from below — every dark card
+ * on that page has a source *inside* it, a wide radial that blooms out of one
+ * corner or up from the base and dies before it reaches the opposite edge. It
+ * is the single thing that separates its bento from a grid of dark rectangles,
+ * and this system had no name for it: cards were an even fill inside a lit
+ * ring, which is correct and inert.
+ *
+ * Positioned by three variables rather than by three near-identical utilities.
+ * `--bloom-x` and `--bloom-y` are percentages of the card, so the default —
+ * centred on the bottom edge — puts the source where the horizon is, and a
+ * panel that wants the reference's corner source sets `--bloom-x: 85%`.
+ *
+ * `isolation: isolate` is what makes `z-index: -1` safe: it keeps the layer
+ * above the card's own fill and below its content, so the bloom tints the
+ * surface without ever washing over text.
+ */
+@utility bloom {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    left: var(--bloom-x, 50%);
+    top: var(--bloom-y, 100%);
+    inline-size: var(--bloom-size, 24rem);
+    block-size: var(--bloom-size, 24rem);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    background-image: radial-gradient(
+      closest-side,
+      color-mix(in srgb, var(--brand-primary) var(--bloom-strength, 20%), transparent),
+      color-mix(in srgb, var(--brand-secondary) calc(var(--bloom-strength, 20%) / 2.5), transparent) 45%,
+      transparent 72%
+    );
+  }
+}
+
+/*
+ * The bloom, brought up on hover.
+ *
+ * For a card that is a link. The source strengthens rather than the card
+ * moving, which is the same sentence the primary control speaks: you are on
+ * it, so there is more light.
+ */
+@utility bloom-hover {
+  &::before {
+    transition: opacity 0.3s var(--ease-out-soft);
+    opacity: 0.55;
+  }
+
+  &:hover::before,
+  &:focus-within::before {
+    opacity: 1;
+  }
 }
 
 /* Frosted bar for anything that floats over scrolling content. */

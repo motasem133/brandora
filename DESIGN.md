@@ -72,18 +72,18 @@ components:
   button-primary:
     backgroundColor: "{colors.signal-violet}"
     textColor: "{colors.paper-white}"
-    rounded: "{rounded.control}"
+    rounded: "{rounded.pill}"
     padding: "0 1.25rem"
     height: "2.75rem"
   button-secondary:
     backgroundColor: "{colors.riser-navy}"
     textColor: "{colors.paper-white}"
-    rounded: "{rounded.control}"
+    rounded: "{rounded.pill}"
     padding: "0 1.25rem"
     height: "2.75rem"
   button-ghost:
     textColor: "{colors.reading-grey}"
-    rounded: "{rounded.control}"
+    rounded: "{rounded.pill}"
     padding: "0 1.25rem"
     height: "2.75rem"
   input:
@@ -105,8 +105,8 @@ components:
   nav-item-active:
     backgroundColor: "{colors.riser-navy}"
     textColor: "{colors.paper-white}"
-    rounded: "{rounded.control}"
-    padding: "0.625rem 0.875rem"
+    rounded: "{rounded.pill}"
+    padding: "0.625rem 1rem"
 ---
 
 # Design System: Brandora
@@ -313,6 +313,7 @@ never black.
 
 - **Soft** (`0 1px 2px rgba(5,8,20,.4), 0 12px 32px -16px rgba(5,8,20,.8)`): The resting state of any raised surface.
 - **Lifted** (`0 2px 4px rgba(5,8,20,.35), 0 26px 56px -24px rgba(91,92,251,.55)`): Hover and active elevation. The indigo tint is what makes it read as light rather than as darkness.
+- **Bloom** (`bloom`): the source *inside* a card, not around it — a wide radial rising from the card's own base, dying before it reaches the opposite edge. The reference gives every dark card one, and it is what separates its bento from a grid of dark rectangles. Positioned with `--bloom-x` / `--bloom-y` as percentages of the card, so the default sits on the bottom edge where the horizon is and a panel wanting the reference's corner source sets `--bloom-x: 85%`. `bloom-hover` holds it at 55% until the pointer arrives, for a card that is a link. One per card, and not on every card in a grid — a bento where everything glows is a bento where nothing is lit.
 - **Glow** (`0 0 0 1px violet/25%, 0 0 24px -4px violet/55%, 0 0 64px -8px violet/38%`): Reserved for the brand-carrying moment — a primary action, a running job. Both blur layers are centred rather than offset downward, and the wide one is deliberately enormous: measured off the reference, the ground 11px above its primary control still reads the accent at 15% and has not finished falling off by the edge of the frame. An offset shadow says "raised"; this says "lit", which is the difference between the reference's world and a dark template.
 
 ### Named Rules
@@ -349,16 +350,29 @@ its own radius and shadow.
 
 ### Buttons
 
-- **Shape:** Softly rounded (14px), 44px tall at default (`h-11`), 36px small, 52px large, 40px square for icon-only. `shape="pill"` is the marketing world's control shape and belongs only there — see the Reserved Pill Rule.
+- **Shape:** A full pill, 44px tall at default (`h-11`), 36px small, 52px large, 40px round for icon-only. `shape="control"` drops back to the 14px radius for the pressable surfaces a pill would misdescribe — see the Lit Control Rule.
 - **Primary:** The brand gradient, brightest along the bottom edge and sinking to a deep blue at the top, inside a wide accent halo that deepens on hover. This is the only gradient fill in the system and there is normally one per view. It no longer pans sideways on hover: that gesture belonged to a diagonal gradient, and moving a vertical one horizontally shows a reader nothing.
 - **Secondary:** Riser Navy with a hairline border. **Outline:** transparent with a stronger hairline. Both carry the lit bottom edge. **Ghost:** text only until hover, then Riser Navy. **Danger:** solid red. **Link:** Lit Violet with an offset underline on hover.
 - **Press:** every variant scales to 0.98 in 75ms. Transitions ease with `cubic-bezier(0.22, 1, 0.36, 1)`.
 
-**The Reserved Pill Rule.** A full pill means "this is a state, not something
-you operate" — it is what tells a Badge from a Button at a glance. The reference
-makes every control a pill because it has no pill badges to collide with; the
-app has both, so the pill shape stays on the marketing pages, which have badges
-nowhere, and app controls keep the 14px control radius.
+**The Lit Control Rule.** Every control in the product is a pill, in both
+worlds, and what tells a Badge from a Button is light rather than shape: a
+Button always carries a source — the gradient fill inside its halo, or the lit
+inner edges — and a Badge never carries one. A flat wash at 12px with no border,
+no shadow and no hover is a state; anything with light on it can be pressed.
+
+This replaces the **Reserved Pill Rule**, which reserved the pill for the
+marketing pages on the grounds that the app has badges and the reference does
+not, so only the reference could afford to make every control a pill. The client
+asked for the reference's world across the whole product, which made that a
+constraint to solve rather than a reason to stop. The distinction it protected
+is intact and is now carried by the one property this system already spends
+everywhere; the two supporting tells — 12px against a control's 14px, and a
+control's 36px pressable floor — do the rest.
+
+The exception is `shape="control"`, kept for the pressable surfaces a pill would
+misdescribe: a full-width panel, a colour swatch, a tile with content inside it.
+A pill is the shape of a control you press, not of every box you can click.
 
 ### Inputs / Fields
 
@@ -383,11 +397,20 @@ always present, and where a dot is used it sits beside a label.
 
 ### Navigation
 
-The left rail. Items are 14px-radius rows with an icon and a label; the active
-one takes a Riser Navy fill, an inset violet hairline, and a violet bar that
-grows from nothing on the item you moved to, so the eye follows the change
-rather than hunting for which row changed shade. Collapsed, labels become
-screen-reader-only text plus a `title`, never bare glyphs.
+The bar along the top: the mark at the start, the destinations centred on the
+page rather than on the space left over, and identity plus one lit call to
+action at the end. Items are pills with an icon and a label; the active one
+takes a Riser Navy fill, an inset violet hairline and the lit bottom edge every
+control carries, so it is marked by light and not only by shade. Below `lg` the
+same items become a horizontally scrolling row under the bar. Labels are labels
+at every width — never bare glyphs.
+
+This replaced a collapsing left rail. Four destinations and a toggle is less
+than a screen of content, which this system's own rules already refused; the
+reference shows its product with a horizontal bar; and the rail's answer to
+being in the way on a project page was to hide itself. The one thing the bar
+must not do is grow a second copy of the primary action further down a page —
+it is now on every screen, so a page-level "New project" says it twice.
 
 ### Brand Scope (signature)
 

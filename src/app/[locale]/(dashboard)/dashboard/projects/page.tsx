@@ -5,7 +5,7 @@ import { Suspense } from 'react'
 import { BrandSpecimen } from '@/components/features/projects/brand-specimen'
 import { buttonVariants } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
-import { Cell } from '@/components/features/landing/horizon'
+import { Cell } from '@/components/ui/horizon'
 import { MomentumField, MomentumItem } from '@/components/ui/momentum'
 import { Link } from '@/i18n/navigation'
 import { listBrandSpecimens } from '@/server/db/queries/projects'
@@ -19,14 +19,12 @@ export default async function ProjectsPage({ params }: { params: Promise<{ local
 
   return (
     <div className="mx-auto max-w-6xl space-y-8">
-      <div className="flex items-end justify-between gap-4">
-        <div>
-          <h1 className="font-display text-2xl font-semibold">{t('title')}</h1>
-          <p className="mt-1 text-sm text-fg-secondary">{t('subtitle')}</p>
-        </div>
-        <Link href="/onboarding" className={buttonVariants({ size: 'sm' })}>
-          {t('newProject')}
-        </Link>
+      {/* The same action is lit at the end of the app bar on every screen; a
+          second copy here said it twice. The empty state below still carries
+          its own, because a page with nothing on it needs one. */}
+      <div>
+        <h1 className="font-display text-2xl font-semibold">{t('title')}</h1>
+        <p className="mt-1 text-sm text-fg-secondary">{t('subtitle')}</p>
       </div>
 
       {/*

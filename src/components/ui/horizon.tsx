@@ -247,7 +247,7 @@ export function SectionArc({ className }: { className?: string }) {
       className={wrapper}
       initial={{ opacity: 0, y: 40 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-15%' }}
+      viewport={{ once: true, margin: '-15% 0px' }}
       transition={{ duration: 1.4, ease: EASE }}
     >
       {arc}
@@ -295,7 +295,7 @@ export function SectionReveal({
       className={className}
       initial={reduced ? false : { opacity: 0, y: 26, filter: 'blur(8px)' }}
       whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-      viewport={{ once: true, margin: '-12%' }}
+      viewport={{ once: true, margin: '-12% 0px' }}
       transition={{ duration: 0.75, ease: EASE, delay }}
     >
       {children}
@@ -329,7 +329,7 @@ export function Cell({
       data-reveal
       initial={reduced ? false : { opacity: 0, y: 22, filter: 'blur(6px)' }}
       whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-      viewport={{ once: true, margin: '-10%' }}
+      viewport={{ once: true, margin: '-10% 0px' }}
       transition={{ duration: 0.6, ease: EASE, delay: reduced ? 0 : Math.min(index * 0.05, 0.4) }}
       whileHover={reduced || !lift ? undefined : { y: -4, transition: { duration: 0.2, ease: EASE } }}
       className={`h-full ${className ?? ''}`}

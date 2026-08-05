@@ -294,7 +294,7 @@ export function OnboardingWizard({
     <div className="mx-auto w-full max-w-2xl">
       <div className="mb-10 flex items-center justify-between gap-4">
         <Link href="/dashboard" aria-label={tc('back')}>
-          <Logo className="text-lg" markClassName="size-6" />
+          <Logo className="text-xl" markClassName="size-11" />
         </Link>
 
         <button
@@ -313,7 +313,16 @@ export function OnboardingWizard({
 
       <ChapterRail step={step} label={(key) => t(key)} />
 
-      <div className="surface-card p-6 sm:p-8">
+      {/*
+        The panel, lit from its own base.
+
+        This was `surface-card` — a fill inside a uniform hairline, which is the
+        one shape DESIGN.md names as what made the app read as a template beside
+        its own marketing. It is the panel step rather than the card step
+        because it holds a set of choices rather than being one.
+      */}
+      <div className="lit shadow-[var(--shadow-lifted)] [--lit-radius:var(--radius-panel)]">
+        <div className="lit-inner bloom p-6 sm:p-8 [--bloom-strength:13%]">
         {/*
           The card is sized by the question it is asking.
 
@@ -444,24 +453,34 @@ export function OnboardingWizard({
 
                 {step === 5 && (
                   <Stagger className="grid gap-3 sm:grid-cols-2" reduced={reduced}>
-                    {BRAND_STYLES.map((style) => (
-                      <button
-                        key={style}
-                        type="button"
-                        onClick={() => set('brandStyle', style)}
-                        className={cn(
-                          'rounded-control border p-4 text-start transition-colors',
-                          form.brandStyle === style
-                            ? 'border-brand bg-brand/10'
-                            : 'border-line hover:border-line-strong',
-                        )}
-                      >
-                        <span className="block font-medium">{t(`styles.${style}`)}</span>
-                        <span className="mt-0.5 block text-sm text-fg-secondary">
-                          {t(`styles.${style}Desc`)}
-                        </span>
-                      </button>
-                    ))}
+                    {BRAND_STYLES.map((style) => {
+                      const selected = form.brandStyle === style
+
+                      return (
+                        <button
+                          key={style}
+                          type="button"
+                          aria-pressed={selected}
+                          onClick={() => set('brandStyle', style)}
+                          className={cn(
+                            /* A tile with two lines of content in it, so the
+                               control radius rather than a pill. */
+                            'rounded-control border p-4 text-start transition-colors',
+                            selected
+                              ? 'control-lit border-brand bg-brand/15'
+                              : 'border-line hover:border-line-strong',
+                          )}
+                        >
+                          <span className="flex items-center gap-1.5 font-medium">
+                            {selected && <Check className="size-3.5 shrink-0 accent-text" />}
+                            {t(`styles.${style}`)}
+                          </span>
+                          <span className="mt-0.5 block text-sm text-fg-secondary">
+                            {t(`styles.${style}Desc`)}
+                          </span>
+                        </button>
+                      )
+                    })}
                   </Stagger>
                 )}
 
@@ -605,6 +624,7 @@ export function OnboardingWizard({
               : tc('next')}
             {step < TOTAL_STEPS && <ArrowRight className="rtl:rotate-180" />}
           </Button>
+          </div>
         </div>
       </div>
 
@@ -819,6 +839,20 @@ function LockedFeature({ message, cta }: { message: string; cta: string }) {
   )
 }
 
+/**
+ * One of the offered answers.
+ *
+ * A pill, because it is a control and every control in this product is one now.
+ * Two things changed with it, and both were findings rather than taste:
+ *
+ * `aria-pressed` — the selected state was conveyed to a screen reader by
+ * nothing at all. These are toggles in a group, not links, and the colour
+ * swatches three steps later have always said so correctly.
+ *
+ * The tick — selection was carried by a tinted border and a 10% wash, which is
+ * colour alone, and the wash measures a couple of percent of luminance against
+ * the panel it sits on. The mark is the state; the colour agrees with it.
+ */
 function OptionButton({
   selected,
   onClick,
@@ -831,12 +865,16 @@ function OptionButton({
   return (
     <button
       type="button"
+      aria-pressed={selected}
       onClick={onClick}
       className={cn(
-        'w-full rounded-control border px-3 py-2.5 text-sm transition-colors',
-        selected ? 'border-brand bg-brand/10 font-medium' : 'border-line hover:border-line-strong',
+        'flex min-h-11 w-full items-center justify-center gap-1.5 rounded-full border px-3.5 py-2.5 text-sm transition-colors',
+        selected
+          ? 'control-lit border-brand bg-brand/15 font-medium text-fg'
+          : 'border-line text-fg-secondary hover:border-line-strong hover:text-fg',
       )}
     >
+      {selected && <Check className="size-3.5 shrink-0 accent-text" />}
       {children}
     </button>
   )
@@ -858,21 +896,32 @@ function YesNo({
       {[
         { label: yes, val: true },
         { label: no, val: false },
-      ].map((option) => (
-        <button
-          key={option.label}
-          type="button"
-          onClick={() => onChange(option.val)}
-          className={cn(
-            'rounded-control border p-5 text-center font-medium transition-colors',
-            value === option.val
-              ? 'border-brand bg-brand/10'
-              : 'border-line hover:border-line-strong',
-          )}
-        >
-          {option.label}
-        </button>
-      ))}
+      ].map((option) => {
+        const selected = value === option.val
+
+        return (
+          <button
+            key={option.label}
+            type="button"
+            /* Same finding as `OptionButton`: chosen and not chosen sounded
+               identical, and looked different only in colour. */
+            aria-pressed={selected}
+            onClick={() => onChange(option.val)}
+            className={cn(
+              /* `shape="control"` territory: this is a surface you press rather
+                 than a control-sized pill, and at 96px tall a full pill would
+                 read as a capsule of empty space. */
+              'flex min-h-11 items-center justify-center gap-2 rounded-control border p-5 text-center font-medium transition-colors',
+              selected
+                ? 'control-lit border-brand bg-brand/15 text-fg'
+                : 'border-line text-fg-secondary hover:border-line-strong hover:text-fg',
+            )}
+          >
+            {selected && <Check className="size-4 shrink-0 accent-text" />}
+            {option.label}
+          </button>
+        )
+      })}
     </div>
   )
 }
