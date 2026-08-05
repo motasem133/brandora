@@ -3,10 +3,12 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { BrandSpecimen } from '@/components/features/projects/brand-specimen'
 import { ResendVerification } from '@/components/features/settings/resend-verification'
+import { StatTile } from '@/components/features/dashboard/stat-tile'
 import { MomentumField, MomentumItem } from '@/components/ui/momentum'
 import { buttonVariants } from '@/components/ui/button'
 import { Cell } from '@/components/features/landing/horizon'
 import { Link } from '@/i18n/navigation'
+import { dashboardTrends } from '@/server/db/queries/dashboard'
 import {
   countProjects,
   countProjectsByStatus,
@@ -15,15 +17,26 @@ import {
 import { requireOrg } from '@/server/session'
 
 /**
- * The overview, as a contact sheet of the brands this account has made.
+ * The overview, built both ways so it can be chosen between.
  *
- * What it replaces was three tiles reading "1", "1" and "500" above a thin row
- * of cards — the arrangement every admin template ships, and one that told a
- * customer nothing about the only thing they came here for. Counts are facts
- * about the account, not about the work, so they sit on one line of meta; the
- * page itself is given over to the brands, each printed as itself.
+ * `?view=tiles` is the client's reference read literally: four measured figures
+ * across the top, then the work. The default is the contact sheet this page
+ * already was — counts on one line of meta, the page given over to the brands,
+ * each printed as itself.
+ *
+ * This is a temporary fork, not a setting. Once one of them is chosen the other
+ * goes, along with the switch. It exists because the composition in question is
+ * the one DESIGN.md names as its anti-reference and removed once already, while
+ * the reference the client supplied opens with exactly it — and that is an
+ * argument better had in front of two screenshots than in prose.
  */
-export default async function OverviewPage({ params }: { params: Promise<{ locale: string }> }) {
+export default async function OverviewPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>
+  searchParams: Promise<{ view?: string }>
+}) {
   const { locale } = await params
   setRequestLocale(locale)
 
@@ -32,18 +45,25 @@ export default async function OverviewPage({ params }: { params: Promise<{ local
   const ts = await getTranslations('Settings')
   const { user, org } = await requireOrg()
 
-  const [total, completed, specimens] = await Promise.all([
+  const tiles = (await searchParams).view === 'tiles'
+
+  const [total, completed, specimens, trends] = await Promise.all([
     countProjects(org.id),
     countProjectsByStatus(org.id, 'completed'),
     listBrandSpecimens(org.id, 7),
+    tiles ? dashboardTrends(org.id) : Promise.resolve(null),
   ])
 
   /*
    * A lead frame needs a sheet to lead. With one or two brands the wide cell
    * left a column of nothing beside it and put the dead space back, one screen
    * further along than where it was removed from.
+   *
+   * The tiles branch has no lead frame at all: the reference puts uniform
+   * panels under its figures, and a sheet that both leads with tiles and marks
+   * a hero frame is arguing with itself about where to look first.
    */
-  const lead = specimens.length >= 3
+  const lead = !tiles && specimens.length >= 3
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -89,25 +109,92 @@ export default async function OverviewPage({ params }: { params: Promise<{ local
       </header>
 
       {/*
-        The counts, once, as a line of meta.
+        The switch between the two, and it is scaffolding.
 
-        These were three cards the width of the page, which made the largest
-        type on the screen the digit 1. They are true and worth knowing, and
-        that is the whole of what they earn.
+        Deliberately plain and deliberately ugly: it is here to be clicked a few
+        times and then deleted along with whichever branch loses, and dressing
+        it up would make it look like a feature someone should keep.
       */}
-      {total > 0 && (
-        <dl className="mt-7 flex flex-wrap items-center gap-x-7 gap-y-2 border-y border-line py-3.5 text-sm">
-          {[
-            [t('statProjects'), total],
-            [t('statCompleted'), completed],
-            [t('statCredits'), org.creditBalance],
-          ].map(([label, value]) => (
-            <div key={String(label)} className="flex items-baseline gap-2">
-              <dt className="text-fg-muted">{label}</dt>
-              <dd className="font-semibold tabular-nums text-fg">{value}</dd>
-            </div>
+      <nav aria-label={t('viewLabel')} className="mt-6 flex gap-1 text-xs">
+        {(
+          [
+            ['/dashboard', t('viewSheet'), !tiles],
+            ['/dashboard?view=tiles', t('viewTiles'), tiles],
+          ] as const
+        ).map(([href, label, active]) => (
+          <Link
+            key={href}
+            href={href}
+            aria-current={active ? 'page' : undefined}
+            className={
+              active
+                ? 'rounded-control bg-elevated px-3 py-1.5 font-semibold text-fg'
+                : 'rounded-control px-3 py-1.5 text-fg-muted transition-colors hover:text-fg'
+            }
+          >
+            {label}
+          </Link>
+        ))}
+      </nav>
+
+      {/* --------------------------------------------------- the fork ---- */}
+
+      {tiles && trends ? (
+        /*
+         * B — the reference's opening: four measured figures across the top.
+         *
+         * Every one is bucketed from a real timestamp. That constraint chose
+         * the four: "brands finished" is missing because a project's completion
+         * is current state with no date beside it, so its weekly series would
+         * be creation dates filtered by today's status. "Runs finished" is the
+         * honest form of the same question, from `generation_jobs.finished_at`.
+         *
+         * Credits carry no goodness. Spending them is what they are for and the
+         * balance falling is the product working, so those two tiles state the
+         * direction and decline to have an opinion about it.
+         */
+        <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {(
+            [
+              ['tileBrands', trends.started, 'up-is-good'],
+              ['tileRuns', trends.finished, 'up-is-good'],
+              ['tileSpent', trends.spent, 'neutral'],
+              ['tileCredits', trends.balance, 'neutral'],
+            ] as const
+          ).map(([key, series, direction]) => (
+            <StatTile
+              key={key}
+              label={t(key)}
+              series={series}
+              direction={direction}
+              periodLabel={t('tilePeriod')}
+              trendLabel={t('tileTrend', { label: t(key) })}
+              locale={locale}
+            />
           ))}
-        </dl>
+        </div>
+      ) : (
+        /*
+         * A — the counts, once, as a line of meta.
+         *
+         * These were three cards the width of the page, which made the largest
+         * type on the screen the digit 1. They are true and worth knowing, and
+         * that is the whole of what they earn.
+         */
+        total > 0 && (
+          <dl className="mt-7 flex flex-wrap items-center gap-x-7 gap-y-2 border-y border-line py-3.5 text-sm">
+            {[
+              [t('statProjects'), total],
+              [t('statCompleted'), completed],
+              [t('statCredits'), org.creditBalance],
+            ].map(([label, value]) => (
+              <div key={String(label)} className="flex items-baseline gap-2">
+                <dt className="text-fg-muted">{label}</dt>
+                <dd className="font-semibold tabular-nums text-fg">{value}</dd>
+              </div>
+            ))}
+          </dl>
+        )
       )}
 
       {specimens.length === 0 ? (
