@@ -17,18 +17,20 @@ import {
 import { requireOrg } from '@/server/session'
 
 /**
- * The overview, built both ways so it can be chosen between.
+ * The overview, built three ways so it can be chosen between.
  *
- * `?view=tiles` is the client's reference read literally: four measured figures
- * across the top, then the work. The default is the contact sheet this page
- * already was — counts on one line of meta, the page given over to the brands,
- * each printed as itself.
+ * - default — the contact sheet this page already was: counts on one line of
+ *   meta, the newest brand printed large as the lead frame.
+ * - `?view=tiles` — the client's reference read literally: four measured
+ *   figures across the top, then the work in an even grid.
+ * - `?view=even` — the meta line with the even grid. It exists because
+ *   measuring the first two said the choice was not the one being offered: the
+ *   tiles started 50px lower and still put six brands in the fold against the
+ *   sheet's two, which is the lead frame's cost rather than the tiles' benefit.
+ *   This branch pays neither.
  *
- * This is a temporary fork, not a setting. Once one of them is chosen the other
- * goes, along with the switch. It exists because the composition in question is
- * the one DESIGN.md names as its anti-reference and removed once already, while
- * the reference the client supplied opens with exactly it — and that is an
- * argument better had in front of two screenshots than in prose.
+ * A temporary fork, not a setting. Whichever two lose go, and the switch goes
+ * with them.
  */
 export default async function OverviewPage({
   params,
@@ -45,7 +47,9 @@ export default async function OverviewPage({
   const ts = await getTranslations('Settings')
   const { user, org } = await requireOrg()
 
-  const tiles = (await searchParams).view === 'tiles'
+  const view = (await searchParams).view
+  const tiles = view === 'tiles'
+  const even = view === 'even'
 
   const [total, completed, specimens, trends] = await Promise.all([
     countProjects(org.id),
@@ -59,11 +63,15 @@ export default async function OverviewPage({
    * left a column of nothing beside it and put the dead space back, one screen
    * further along than where it was removed from.
    *
-   * The tiles branch has no lead frame at all: the reference puts uniform
-   * panels under its figures, and a sheet that both leads with tiles and marks
-   * a hero frame is arguing with itself about where to look first.
+   * Neither of the other two branches has one. The tiles branch because the
+   * reference puts uniform panels under its figures, and a page that both leads
+   * with tiles and marks a hero frame is arguing with itself about where to
+   * look first. The even branch because it is the measurement that produced it:
+   * at nine brands the lead frame left two in the fold against the tiles'
+   * six, and flattening only its column span recovered one — so the feature
+   * specimen's height is what costs the page, not the span.
    */
-  const lead = !tiles && specimens.length >= 3
+  const lead = !tiles && !even && specimens.length >= 3
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -118,8 +126,9 @@ export default async function OverviewPage({
       <nav aria-label={t('viewLabel')} className="mt-6 flex gap-1 text-xs">
         {(
           [
-            ['/dashboard', t('viewSheet'), !tiles],
+            ['/dashboard', t('viewSheet'), !tiles && !even],
             ['/dashboard?view=tiles', t('viewTiles'), tiles],
+            ['/dashboard?view=even', t('viewEven'), even],
           ] as const
         ).map(([href, label, active]) => (
           <Link

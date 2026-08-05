@@ -218,7 +218,8 @@
     "tileTrend": "{label}, weekly over the last twelve weeks",
     "viewSheet": "Contact sheet",
     "viewTiles": "Stat tiles",
-    "viewLabel": "Overview layout"
+    "viewLabel": "Overview layout",
+    "viewEven": "Even grid"
   },
   "Projects": {
     "title": "Projects",
