@@ -124,11 +124,25 @@ export async function measure(input: Buffer): Promise<{ width?: number; height?:
   }
 }
 
-/** Jimp takes a single 0xRRGGBBAA integer where sharp took an object. */
+/**
+ * Jimp takes a single 0xRRGGBBAA integer where sharp took an object.
+ *
+ * `>>> 0` is load-bearing. JavaScript's bitwise operators work on *signed*
+ * 32-bit integers, so `n << 8` overflows into a negative number for any colour
+ * lighter than #7FFFFF — and Jimp rejects it outright:
+ *
+ *   RangeError: value must be >= 0 and <= 4294967295. Received -34216193
+ *
+ * That is not an edge case here. Generated brands are frequently light: the
+ * first real palette this met had a #FAF6F0 paper, and the card it should have
+ * drawn threw instead, taking the favicon, the avatars and the brand kit with
+ * it. The unsigned shift is what makes the value a colour rather than a
+ * negative number. Tested against a dark ground only, this bug is invisible.
+ */
 function hexToInt(hex: string): number {
   const value = hex.replace('#', '')
   const full = value.length === 3 ? value.split('').map((c) => c + c).join('') : value
   const n = Number.parseInt(full.slice(0, 6), 16)
-  return Number.isNaN(n) ? 0xffffffff : (n << 8) | 0xff
+  return Number.isNaN(n) ? 0xffffffff : (((n << 8) | 0xff) >>> 0)
 }
 
