@@ -32,47 +32,6 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ['@neplex/vectorizer', 'sharp'],
 
   /*
-   * Ship the native binaries these two packages resolve at runtime.
-   *
-   * `serverExternalPackages` keeps them out of the bundle and requires them
-   * from `node_modules` instead, which is right for native code — but the file
-   * tracer then has to work out which files to carry into the function, and it
-   * cannot follow the platform switch these loaders perform. Production loaded
-   * the JavaScript and failed on the library behind it:
-   *
-   *   Failed to load external module sharp-5843a61b03cbf433
-   *   ERR_DLOPEN_FAILED: libvips-cpp.so.8.18.3: cannot open shared object file
-   *
-   * pnpm compounds it: `node_modules/sharp` is a symlink into `.pnpm`, and the
-   * `@img/*` packages holding the real `.so` and `.node` files are never named
-   * by any import. So they are included explicitly, by the path they actually
-   * live at, for the one route whose module graph reaches them.
-   */
-  outputFileTracingIncludes: {
-    /*
-     * Only the binaries this platform runs — `linux-x64`.
-     *
-     * The first attempt globbed `@img+*` and `@neplex+vectorizer*`, which
-     * matches every platform these packages publish: darwin, musl, arm64 and
-     * win32, at two versions each. libvips alone is ~80MB a copy, so the build
-     * compiled, then failed while deploying the outputs, because the function
-     * was far past the size a serverless bundle may be.
-     *
-     * The versions are pinned to the majors `sharp@0.35` resolves — 0.35.x
-     * pairs with libvips 1.3.x — so a sharp upgrade that changes them fails
-     * loudly here rather than silently shipping a function with no binary in
-     * it. The second copy in the tree, 0.34.5, is some other package's
-     * dependency and is not what `import('sharp')` resolves to.
-     */
-    '/api/inngest': [
-      './node_modules/.pnpm/sharp@0.35*/**/*',
-      './node_modules/.pnpm/@img+sharp-linux-x64@0.35*/**/*',
-      './node_modules/.pnpm/@img+sharp-libvips-linux-x64@1.3*/**/*',
-      './node_modules/.pnpm/@neplex+vectorizer-linux-x64-gnu*/**/*',
-    ],
-  },
-
-  /*
    * PostHog's own domain is on every ad-block list, so requests to it are
    * dropped for a large share of visitors — and disproportionately for the
    * technical ones. Rewriting through this origin is the supported way to
