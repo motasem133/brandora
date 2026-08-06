@@ -1,3 +1,21 @@
+# Binaries for the platform that runs this, as well as the one that builds it.
+#
+# sharp and @neplex/vectorizer ship per-platform native binaries as optional
+# dependencies. A lockfile resolved on a Mac installs only darwin-arm64, so
+# production loaded nothing and every logo run died with
+# "ERR_DLOPEN_FAILED: libvips-cpp.so.8.18.3: cannot open shared object file"
+# after the images had already been generated and paid for.
+#
+# `current` keeps development working on whatever machine is in front of you;
+# `linux` + `x64` is what Vercel runs.
+supportedArchitectures:
+  os:
+    - current
+    - linux
+  cpu:
+    - current
+    - x64
+
 allowBuilds:
   '@parcel/watcher': true
   # Downloads the sentry-cli binary, which the build needs to upload source
