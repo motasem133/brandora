@@ -216,27 +216,46 @@ export async function generateLogos(params: {
       )[0]
     : undefined
 
-  if (chosen) {
-    // Rebuilds the derived assets and the kit from the existing choice, which
-    // costs nothing — no model is called.
-    await rederivePrimaryAssets(params.projectId, chosen.r2Key)
-    return { generated: results.length, requested: LOGO_COUNT }
+  /*
+   * Everything below is derived from work that is already saved and already
+   * paid for, and none of it may be allowed to fail this step.
+   *
+   * The favicon, the avatars, the OG card and the brand-kit ZIP are all
+   * resized through a native binary. When that binary failed on Vercel, this
+   * threw *after* four images had been generated and stored — and because
+   * Inngest retries a failed step, the retry re-ran the whole thing from the
+   * top and paid fal for four more images, again, on a loop. The job never
+   * reached a terminal state, so the customer watched a spinner over logos that
+   * were sitting in storage the whole time.
+   *
+   * Derived assets are extras built from the deliverable. The deliverable is
+   * the concepts, and they are done by this point.
+   */
+  try {
+    if (chosen) {
+      // Rebuilds the derived assets and the kit from the existing choice, which
+      // costs nothing — no model is called.
+      await rederivePrimaryAssets(params.projectId, chosen.r2Key)
+      return { generated: results.length, requested: LOGO_COUNT }
+    }
+
+    // Nothing chosen yet: the newest round's first concept is the wordmark,
+    // which is the one that works as an avatar and a favicon.
+    const primary = kitFiles.get(`${results[0].style.replace(/\s+/g, '-')}.png`)
+
+    if (primary) {
+      await derivePrimaryAssets({
+        projectId: params.projectId,
+        primary,
+        background: params.branding.colorPalette.background,
+        kitFiles,
+      })
+    }
+
+    await buildBrandKit(params.projectId, kitFiles)
+  } catch (error) {
+    console.warn('[logos] derived assets failed; the concepts are saved', error)
   }
-
-  // Nothing chosen yet: the newest round's first concept is the wordmark, which
-  // is the one that works as an avatar and a favicon.
-  const primary = kitFiles.get(`${results[0].style.replace(/\s+/g, '-')}.png`)
-
-  if (primary) {
-    await derivePrimaryAssets({
-      projectId: params.projectId,
-      primary,
-      background: params.branding.colorPalette.background,
-      kitFiles,
-    })
-  }
-
-  await buildBrandKit(params.projectId, kitFiles)
 
   return { generated: results.length, requested: LOGO_COUNT }
 }
