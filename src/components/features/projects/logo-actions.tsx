@@ -5,7 +5,6 @@ import { useTranslations } from 'next-intl'
 import { useAction } from 'next-safe-action/hooks'
 
 import { Button } from '@/components/ui/button'
-import { useRouter } from '@/i18n/navigation'
 import { selectPrimaryLogo } from '@/server/actions/branding'
 
 /**
@@ -31,11 +30,30 @@ export function SelectLogoButton({
   isPrimary: boolean
 }) {
   const t = useTranslations('Branding')
-  const router = useRouter()
 
-  const { execute, isPending } = useAction(selectPrimaryLogo, {
-    onSuccess: () => router.refresh(),
-  })
+  /*
+   * `executeAsync` and a full reload, rather than a callback and a refresh.
+   *
+   * The callback route does not work here, and it was measured rather than
+   * assumed: a probe inside `onSuccess` never ran while the same component's
+   * render probe did, on an action that completed and wrote to the database.
+   * `result.data` never arrived either. So `router.refresh()` was never called,
+   * the page went on showing "Use this logo" after the choice was saved, and
+   * only a manual reload revealed it — which is exactly what people were doing.
+   *
+   * `executeAsync` returns a promise, so the outcome is known without relying
+   * on either. The reload is deliberate and not a shortcut: choosing a logo
+   * rewrites the favicon, the avatars, the OG card and the brand-kit ZIP, and
+   * those are rendered the length of the page. A soft refresh that re-rendered
+   * the component but did not commit is what produced this bug; a reload cannot
+   * half-succeed.
+   */
+  const { executeAsync, isPending } = useAction(selectPrimaryLogo)
+
+  async function choose() {
+    const outcome = await executeAsync({ projectId, fileId })
+    if (outcome?.data) window.location.reload()
+  }
 
   if (isPrimary) {
     /*
@@ -59,7 +77,7 @@ export function SelectLogoButton({
   }
 
   return (
-    <Button disabled={isPending} onClick={() => execute({ projectId, fileId })}>
+    <Button disabled={isPending} onClick={choose}>
       {isPending && <Loader2 className="animate-spin" />}
       {t('useThisLogo')}
     </Button>
