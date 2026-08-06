@@ -3,57 +3,38 @@ import 'server-only'
 import { optimize } from 'svgo'
 
 /**
- * The two native modules, loaded when they are used rather than when this file
- * is imported.
+ * The tracer, loaded when it is used.
  *
- * `sharp` and `@neplex/vectorizer` are platform-specific `.node` binaries. A
- * static import runs their loader the moment anything in this module graph is
- * imported — including `/api/inngest`, whose only job is to tell Inngest which
- * functions exist. On Vercel that endpoint died on startup in 68ms with
- * FUNCTION_INVOCATION_FAILED, so the app could not be synced at all, and no
- * generation could ever be enqueued. Nothing on that path needs to trace an
- * image.
+ * `@neplex/vectorizer` is a platform-specific `.node` binary and is the last
+ * native dependency in this file. It is loaded on use rather than on import, so
+ * a deployment that cannot load it still serves every route — including
+ * `/api/inngest`, which once died on startup because this module was imported
+ * anywhere in its graph.
  *
- * Deferring the import means the serve endpoint loads plain JavaScript, and the
- * binaries are resolved inside the job that actually vectorises — where a
- * failure is about that image, is reported against that job, and cannot take
- * the whole route down with it.
- *
- * Cached in a promise so the cost is paid once per warm instance rather than
- * per call.
+ * Everything else here is now pure JavaScript. See `resizePng` for why.
  */
-let nativesPromise: Promise<{
-  sharp: typeof import('sharp').default
-  vectorizer: typeof import('@neplex/vectorizer')
-}> | null = null
+let tracerPromise: Promise<typeof import('@neplex/vectorizer')> | null = null
 
-function natives() {
-  nativesPromise ??= Promise.all([import('sharp'), import('@neplex/vectorizer')]).then(
-    ([sharpModule, vectorizer]) => ({ sharp: sharpModule.default, vectorizer }),
-  )
-  return nativesPromise
+function tracer() {
+  tracerPromise ??= import('@neplex/vectorizer')
+  return tracerPromise
 }
 
-/**
- * Raster logo to editable SVG.
- *
- * VTracer runs in-process, so tracing costs nothing per image and adds no
- * network hop. Quality is strong on flat vector artwork, which is exactly what
- * the logo prompt constrains Seedream to produce.
- */
 export async function rasterToSvg(input: Buffer): Promise<string> {
-  const { sharp, vectorizer } = await natives()
-  const { ColorMode, Hierarchical, PathSimplifyMode, vectorize } = vectorizer
+  const { ColorMode, Hierarchical, PathSimplifyMode, vectorize } = await tracer()
+  const { Jimp } = await import('jimp')
 
   // Trimming the plain background first means the trace does not spend paths on
   // empty margins, and posterising collapses JPEG-ish noise into flat regions
   // that VTracer can express as few, clean shapes.
-  const prepared = await sharp(input)
-    .trim({ threshold: 12 })
-    .resize(1024, 1024, { fit: 'inside', withoutEnlargement: true })
-    .median(3)
-    .png({ palette: true, colours: 16 })
-    .toBuffer()
+  const image = await Jimp.read(input)
+  image.autocrop()
+  if (image.width > 1024 || image.height > 1024) image.scaleToFit({ w: 1024, h: 1024 })
+  // Posterising is what let the tracer express flat artwork as few clean
+  // shapes; without a median filter to hand, quantising the palette does the
+  // same job of collapsing near-identical pixels into one region.
+  image.posterize(16)
+  const prepared = Buffer.from(await image.getBuffer('image/png'))
 
   const svg = await vectorize(prepared, {
     colorMode: ColorMode.Color,
@@ -80,56 +61,74 @@ export async function rasterToSvg(input: Buffer): Promise<string> {
   return optimised.data
 }
 
-/** Square PNG at a given size, transparent-padded rather than cropped. */
+/**
+ * Square PNG at a given size, transparent-padded rather than cropped.
+ *
+ * Jimp rather than sharp. These are 32px favicons and avatars up to 1080px,
+ * produced once per brand — there is no throughput here that justifies a native
+ * dependency, and the native one could not be made to load on the platform this
+ * runs on. Four attempts at that are recorded in the git history; this is the
+ * fifth answer and it has no binary to lose.
+ */
 export async function resizePng(input: Buffer, size: number): Promise<Buffer> {
-  const { sharp } = await natives()
-  return sharp(input)
-    .trim({ threshold: 12 })
-    .resize(size, size, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
-    .png()
-    .toBuffer()
+  const { Jimp } = await import('jimp')
+  const logo = await Jimp.read(input)
+
+  // Trim the flat margin first, so the mark fills the square it is given.
+  logo.autocrop()
+  // `contain` fits the whole mark inside the box and leaves the rest
+  // transparent, which is what a favicon and an avatar both need — `cover`
+  // would crop a wordmark's ends off.
+  logo.contain({ w: size, h: size })
+
+  return Buffer.from(await logo.getBuffer('image/png'))
 }
 
 /** Open Graph card: logo centred on the brand background colour. */
 export async function makeOgImage(input: Buffer, background: string): Promise<Buffer> {
-  const { sharp } = await natives()
-  const logo = await sharp(input)
-    .trim({ threshold: 12 })
-    .resize(500, 500, { fit: 'inside', background: { r: 0, g: 0, b: 0, alpha: 0 } })
-    .png()
-    .toBuffer()
+  const { Jimp } = await import('jimp')
 
-  return sharp({
-    create: {
-      width: 1200,
-      height: 630,
-      channels: 4,
-      background: hexToRgb(background),
-    },
-  })
-    .composite([{ input: logo, gravity: 'centre' }])
-    .png()
-    .toBuffer()
+  const logo = await Jimp.read(input)
+  logo.autocrop()
+  logo.contain({ w: 500, h: 500 })
+
+  const card = new Jimp({ width: 1200, height: 630, color: hexToInt(background) })
+  card.composite(logo, (1200 - logo.width) / 2, (630 - logo.height) / 2)
+
+  return Buffer.from(await card.getBuffer('image/png'))
 }
 
 /** Single-colour version for stamps, watermarks and one-colour printing. */
 export async function makeMonochrome(input: Buffer): Promise<Buffer> {
-  const { sharp } = await natives()
-  return sharp(input)
-    .trim({ threshold: 12 })
-    .greyscale()
-    .normalise()
-    .threshold(160)
-    .png()
-    .toBuffer()
+  const { Jimp } = await import('jimp')
+  const logo = await Jimp.read(input)
+
+  logo.autocrop()
+  logo.greyscale()
+  // Everything lighter than mid-grey becomes paper, everything darker becomes
+  // ink. `normalize` first, so a logo drawn in soft greys still separates.
+  logo.normalize()
+  logo.threshold({ max: 160 })
+
+  return Buffer.from(await logo.getBuffer('image/png'))
 }
 
-function hexToRgb(hex: string) {
-  const normalised = hex.replace('#', '')
-  return {
-    r: parseInt(normalised.slice(0, 2), 16) || 255,
-    g: parseInt(normalised.slice(2, 4), 16) || 255,
-    b: parseInt(normalised.slice(4, 6), 16) || 255,
-    alpha: 1,
+/** Reads an image's dimensions without a native decoder. */
+export async function measure(input: Buffer): Promise<{ width?: number; height?: number }> {
+  try {
+    const { Jimp } = await import('jimp')
+    const image = await Jimp.read(input)
+    return { width: image.width, height: image.height }
+  } catch {
+    return {}
   }
 }
+
+/** Jimp takes a single 0xRRGGBBAA integer where sharp took an object. */
+function hexToInt(hex: string): number {
+  const value = hex.replace('#', '')
+  const full = value.length === 3 ? value.split('').map((c) => c + c).join('') : value
+  const n = Number.parseInt(full.slice(0, 6), 16)
+  return Number.isNaN(n) ? 0xffffffff : (n << 8) | 0xff
+}
+

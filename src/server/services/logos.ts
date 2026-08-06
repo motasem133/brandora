@@ -9,7 +9,7 @@ import { db } from '@/server/db'
 import { brandingAssets, generatedFiles } from '@/server/db/schema'
 import { objectKey, signedDownloadUrl, uploadObject } from '@/server/storage/r2'
 import { buildBrandKit } from './brand-kit'
-import { makeMonochrome, makeOgImage, rasterToSvg, resizePng } from './vectorize'
+import { makeMonochrome, makeOgImage, measure, rasterToSvg, resizePng } from './vectorize'
 
 export const LOGO_COUNT = 4
 
@@ -107,13 +107,7 @@ export async function generateLogos(params: {
        * anything in this module graph is imported, which is what killed
        * `/api/inngest` on startup.
        */
-      let meta: { width?: number; height?: number } = {}
-      try {
-        const { default: sharp } = await import('sharp')
-        meta = await sharp(raster).metadata()
-      } catch (error) {
-        console.warn('[logos] could not measure the raster; storing it unmeasured', error)
-      }
+      const meta = await measure(raster)
 
       // Round in the key, or the new images would overwrite the old ones in R2
       // and every round would render as the newest one.
