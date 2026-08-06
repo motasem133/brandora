@@ -1,3 +1,25 @@
+# A flat node_modules, because file tracing cannot follow pnpm's symlinks.
+#
+# pnpm's default layout puts one symlink per direct dependency in node_modules
+# and the real packages under .pnpm. Next's output file tracer walks real paths:
+# it finds node_modules/sharp, and then cannot find @img/sharp-linux-x64 — which
+# sharp resolves at runtime and no import statement ever names — because that
+# package exists only inside .pnpm. The function shipped sharp's JavaScript and
+# none of its binary:
+#
+#   Failed to load external module sharp-5843a61b03cbf433
+#   ERR_DLOPEN_FAILED: libvips-cpp.so.8.18.3: cannot open shared object file
+#
+# Pointing outputFileTracingIncludes at .pnpm paths instead produced outputs
+# Vercel would not deploy at all, three times. Hoisting is the supported way
+# out: the layout becomes npm-shaped, every package sits at a real path, and
+# tracing needs no special cases.
+#
+# It lives here rather than in .npmrc because pnpm 11 reads its settings from
+# this file — the same trap that made `supportedArchitectures` below a no-op
+# when it was first written into package.json.
+nodeLinker: hoisted
+
 # Binaries for the platform that runs this, as well as the one that builds it.
 #
 # sharp and @neplex/vectorizer ship per-platform native binaries as optional
