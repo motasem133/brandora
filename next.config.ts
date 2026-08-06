@@ -32,6 +32,31 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ['@neplex/vectorizer', 'sharp'],
 
   /*
+   * Ship the native binaries these two packages resolve at runtime.
+   *
+   * `serverExternalPackages` keeps them out of the bundle and requires them
+   * from `node_modules` instead, which is right for native code — but the file
+   * tracer then has to work out which files to carry into the function, and it
+   * cannot follow the platform switch these loaders perform. Production loaded
+   * the JavaScript and failed on the library behind it:
+   *
+   *   Failed to load external module sharp-5843a61b03cbf433
+   *   ERR_DLOPEN_FAILED: libvips-cpp.so.8.18.3: cannot open shared object file
+   *
+   * pnpm compounds it: `node_modules/sharp` is a symlink into `.pnpm`, and the
+   * `@img/*` packages holding the real `.so` and `.node` files are never named
+   * by any import. So they are included explicitly, by the path they actually
+   * live at, for the one route whose module graph reaches them.
+   */
+  outputFileTracingIncludes: {
+    '/api/inngest': [
+      './node_modules/.pnpm/@img+*/**/*',
+      './node_modules/.pnpm/sharp@*/**/*',
+      './node_modules/.pnpm/@neplex+vectorizer*/**/*',
+    ],
+  },
+
+  /*
    * PostHog's own domain is on every ad-block list, so requests to it are
    * dropped for a large share of visitors — and disproportionately for the
    * technical ones. Rewriting through this origin is the supported way to
