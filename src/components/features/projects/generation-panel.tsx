@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardTitle } from '@/components/ui/card'
 import { FieldError } from '@/components/ui/field-error'
 import { ResendVerification } from '@/components/features/settings/resend-verification'
-import { useRouter } from '@/i18n/navigation'
 import { cn } from '@/lib/utils'
 import { EVENTS, capture } from '@/lib/analytics'
 import { generateProject } from '@/server/actions/generation'
@@ -49,7 +48,6 @@ export function GenerationPanel({
 }) {
   const t = useTranslations('Generation')
   const ts = useTranslations('Settings')
-  const router = useRouter()
   /*
    * The tab lives in the URL and this panel does not remount when it changes —
    * it sits above the tabs, so React keeps it in place. Reading the tab makes
@@ -152,27 +150,60 @@ export function GenerationPanel({
        * social-only run must not yank someone off a round they deliberately
        * opened.
        */
-      if (producesLogos) {
-        router.replace(`/dashboard/projects/${projectId}`, { scroll: false })
-      }
+      /*
+       * A full load, not `router.refresh()`.
+       *
+       * The refresh does not commit here — the same fault the logo control had:
+       * the action completes, the component re-renders with fresh server props,
+       * and the DOM keeps the old output. A finished run therefore left the
+       * page exactly as it was, and the logos it had just drawn only appeared
+       * when the page was reloaded by hand. That is the wrong moment in the
+       * product to look like nothing happened.
+       *
+       * Navigating to the bare pathname does both jobs at once: it drops the
+       * pinned `round` and `concept` from the URL, which a run that drew new
+       * logos has invalidated, and it loads the page fresh. `pathname` already
+       * carries the locale, so nothing has to reconstruct it.
+       */
+      /*
+       * Only for a run this page actually watched.
+       *
+       * `done` also arrives the moment the stream opens on a project whose job
+       * finished long ago — that is how the panel learns the final state on a
+       * cold load. Reloading on that is a loop: the fresh page opens the stream,
+       * is told the job is done, and reloads again. It ran 143 times before
+       * this guard existed. `witnessedRun` is only set while a run is actually
+       * in flight, which is exactly the case where the page is now out of date.
+       */
+      if (!witnessedRun.current) return
 
-      // Pull the freshly generated assets into the server-rendered page.
-      router.refresh()
+      if (producesLogos) window.location.assign(window.location.pathname)
+      else window.location.reload()
     })
 
     source.addEventListener('error', () => {
       source.close()
       sourceRef.current = null
     })
-  }, [projectId, router, producesLogos])
+  }, [projectId, producesLogos])
 
-  const { execute, isPending, result } = useAction(generateProject, {
-    onSuccess: () => {
-      capture(EVENTS.generationStarted)
-      setStatus('queued')
-      subscribe()
-    },
-  })
+  /*
+   * `executeAsync`, because `onSuccess` is where the tail was started.
+   *
+   * That callback does not fire in this codebase — measured with probes on a
+   * production build — so `subscribe()` was never called and the panel sat
+   * showing nothing while a real run proceeded behind it. Awaiting the result
+   * is the same information without depending on a callback that never comes.
+   */
+  const { executeAsync, isPending, result } = useAction(generateProject)
+
+  async function start() {
+    const outcome = await executeAsync({ projectId })
+    if (!outcome?.data) return
+    capture(EVENTS.generationStarted)
+    setStatus('queued')
+    subscribe()
+  }
 
   /*
    * Always check live state on mount rather than trusting what the page was
@@ -274,7 +305,7 @@ export function GenerationPanel({
 
         {!isRunning && (
           <Button
-            onClick={() => execute({ projectId })}
+            onClick={start}
             disabled={isPending || !canAfford || !emailVerified}
           >
             {isPending ? <Loader2 className="animate-spin" /> : <Sparkles />}
