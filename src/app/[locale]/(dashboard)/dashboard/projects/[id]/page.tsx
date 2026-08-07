@@ -253,6 +253,7 @@ export default async function ProjectDetailPage({
           isGenerating={isJobActive}
           emailVerified={user.emailVerified}
           userEmail={user.email}
+          unlocked={Boolean(plan?.socialMediaKit)}
         />
       )}
 

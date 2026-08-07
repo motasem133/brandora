@@ -1,6 +1,6 @@
 'use client'
 
-import { Download, Images, Loader2, MailWarning, Sparkles } from 'lucide-react'
+import { Download, Images, Loader2, Lock, MailWarning, Sparkles } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useAction } from 'next-safe-action/hooks'
 
@@ -30,6 +30,7 @@ export function SocialKit({
   isGenerating,
   emailVerified,
   userEmail,
+  unlocked,
 }: {
   projectId: string
   posts: GeneratedFile[]
@@ -40,6 +41,8 @@ export function SocialKit({
   isGenerating: boolean
   emailVerified: boolean
   userEmail: string
+  /** Pro and above. Checked again in the action — this only decides the UI. */
+  unlocked: boolean
 }) {
   const t = useTranslations('Branding')
   const ts = useTranslations('Settings')
@@ -56,7 +59,7 @@ export function SocialKit({
   }
 
   const action = (
-    <Button onClick={start} disabled={busy || !affordable || !hasLogo || !emailVerified}>
+    <Button onClick={start} disabled={busy || !affordable || !hasLogo || !emailVerified || !unlocked}>
       {busy ? <Loader2 className="animate-spin" /> : <Sparkles />}
       {posts.length ? t('kitRegenerate') : t('kitGenerate')}
     </Button>
@@ -122,7 +125,20 @@ export function SocialKit({
         already shipped twice.
       */}
       <div className="mt-3">
-        {!emailVerified ? (
+        {!unlocked ? (
+          /*
+           * Named rather than hidden. A section that simply vanishes on the
+           * wrong plan teaches nobody that it exists — and this is the most
+           * persuasive thing the product makes.
+           */
+          <p className="flex flex-wrap items-center gap-1.5 text-xs text-fg-muted">
+            <Lock className="size-3.5" />
+            {t('kitLocked')}{' '}
+            <Link href="/dashboard/billing" className="accent-text underline underline-offset-2">
+              {t('topUp')}
+            </Link>
+          </p>
+        ) : !emailVerified ? (
           <div className="rounded-control border border-warning/30 bg-warning/[0.07] p-4">
             <div className="flex items-start gap-3">
               <MailWarning className="mt-0.5 size-4 shrink-0 text-warning" />

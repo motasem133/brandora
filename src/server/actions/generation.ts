@@ -8,6 +8,7 @@ import { orgAction } from '@/server/actions/safe-action'
 import { AppError } from '@/lib/errors'
 import { db } from '@/server/db'
 import { brandingAssets, projects } from '@/server/db/schema'
+import { getOrgPlan } from '@/server/db/queries/plans'
 import { startGeneration } from '@/server/services/generation'
 
 /*
@@ -102,6 +103,16 @@ export const generateSocialKit = orgAction
 
     if (!branding?.primaryLogoFileId) {
       throw new AppError('VALIDATION', 'Choose a logo first — the kit is built around it.')
+    }
+
+    /*
+     * Enforced here as well as hidden in the UI, because a client can always
+     * send the request anyway. Every other entitlement in this codebase is
+     * checked server-side for the same reason.
+     */
+    const plan = await getOrgPlan(ctx.orgId)
+    if (!plan?.socialMediaKit) {
+      throw new AppError('FEATURE_LOCKED', 'The social kit is available on Pro and above.')
     }
 
     const result = await startGeneration({

@@ -48,7 +48,7 @@ const PLANS = [
     priorityQueue: false,
     sortOrder: 0,
     features: {
-      en: ['1 full brand generation', '4 logo concepts', 'Colour palette & fonts', 'Brand story'],
+      en: ['1 full brand generation', '2 logo concepts', 'Colour palette & fonts', 'Brand story'],
       ar: ['توليد هوية كاملة مرة واحدة', '4 مفاهيم شعار', 'لوحة ألوان وخطوط', 'قصة العلامة'],
     },
   },
