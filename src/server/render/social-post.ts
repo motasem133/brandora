@@ -8,7 +8,8 @@ import { AppError } from '@/lib/errors'
 import { signedDownloadUrl } from '@/server/storage/r2'
 import { liftBackground, splitLockup, trim } from '@/server/services/logo-parts'
 import { renderToPng } from './browser'
-import { fontFace, squarePost, type PostBrand } from './post-template'
+import { fontFace, type PostBrand } from './post-template'
+import { LAYOUTS, renderLayout, type LayoutKind } from './layouts'
 
 /**
  * A brand's real typeface, as bytes.
@@ -49,8 +50,22 @@ async function readFile(key: string): Promise<Buffer> {
   return Buffer.from(await response.arrayBuffer())
 }
 
-/** Renders one square post for a project, as PNG bytes. */
-export async function renderSocialPost(projectId: string, size = 1080) {
+/**
+ * Renders one post for a project, as PNG bytes.
+ *
+ * `photos` is supplied by the caller rather than looked up, because the scenes
+ * a kit is built on do not have a home in `generated_files` yet — there is no
+ * `social_post` value in the file-kind enum, and inventing one by reusing
+ * `upload` would mislabel the row for whoever reads it next. Passing them in
+ * keeps this honest until that migration exists.
+ */
+export async function renderSocialPost(
+  projectId: string,
+  options: { layout?: LayoutKind; size?: number; photos?: Partial<Record<'hero' | 'people' | 'detail', string>> } = {},
+) {
+  const layout = options.layout ?? 'statement'
+  const canvas = LAYOUTS[layout].size
+  const size = options.size ?? canvas.width
   const [row] = await db
     .select({
       title: projects.title,
@@ -112,13 +127,18 @@ export async function renderSocialPost(projectId: string, size = 1080) {
     .map(([family, file]) => fontFace(family, file))
     .join('\n')
 
-  const html = squarePost({
+  const height = Math.round((canvas.height / canvas.width) * size)
+  const needs = LAYOUTS[layout].needs
+
+  const html = renderLayout(layout, {
     brand,
     faces,
-    size,
+    width: size,
+    height,
     wordmark: uri(parts ? parts.text.buffer : trimmed!),
     mark: uri(parts ? parts.icon.buffer : trimmed!),
+    photo: needs ? (options.photos?.[needs] ?? null) : null,
   })
 
-  return renderToPng(html, { width: size, height: size })
+  return renderToPng(html, { width: size, height })
 }

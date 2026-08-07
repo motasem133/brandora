@@ -1,3 +1,4 @@
+import type { LayoutKind } from '@/server/render/layouts'
 import { renderSocialPost } from '@/server/render/social-post'
 
 /**
@@ -27,7 +28,11 @@ export async function GET(request: Request) {
     if (!projectId) return Response.json({ error: 'projectId is required' }, { status: 400 })
 
     const startedAt = Date.now()
-    const png = await renderSocialPost(projectId, Number(url.searchParams.get('size') ?? 1080))
+    const layout = (url.searchParams.get('layout') ?? 'statement') as LayoutKind
+    const png = await renderSocialPost(projectId, {
+      layout,
+      size: Number(url.searchParams.get('size') ?? 1080),
+    })
 
     return new Response(new Uint8Array(png), {
       headers: {
