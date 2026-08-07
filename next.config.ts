@@ -36,6 +36,24 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ['@sparticuz/chromium', 'playwright-core'],
 
   /*
+   * One data file the tracer cannot see.
+   *
+   * playwright-core reads `browsers.json` at load to build its browser
+   * registry. No import statement names it, so output tracing left it behind
+   * and the function died with
+   *
+   *   Cannot find module '/var/task/node_modules/playwright-core/browsers.json'
+   *
+   * This is the same shape of failure as the sharp binaries, and the same
+   * mechanism once produced outputs Vercel would not deploy at all — but that
+   * was a glob matching 207MB of platform binaries. This is a single 30KB
+   * file, named exactly.
+   */
+  outputFileTracingIncludes: {
+    '/api/render/probe': ['./node_modules/playwright-core/browsers.json'],
+  },
+
+  /*
    * The note this replaced is worth keeping: `serverExternalPackages` was
    * emptied once and that was the point.
    *
