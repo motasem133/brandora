@@ -22,23 +22,32 @@ import type { Browser } from 'playwright-core'
  * an executable this code spawns, and if it fails to launch it fails loudly at
  * the point of use rather than by returning a broken picture.
  */
-let browser: Browser | null = null
-
-/** True on Vercel and any other AWS-shaped runtime, where a binary must be supplied. */
+/**
+ * A browser per render, launched and closed.
+ *
+ * The instance used to be cached in this module, on the reasoning that Fluid
+ * Compute reuses an instance so a launch could be amortised. Measured in
+ * production, that reasoning was wrong in a way that looked like a layout bug:
+ * requests alternated 200, timeout, 200, timeout. The pattern is the giveaway —
+ * the first request on an instance launches a browser and works, the second
+ * reuses it and hangs, and the third lands on a fresh instance because the
+ * second one is stuck. It is the same failure inside a single invocation, which
+ * is why a kit rendered exactly one post and then stopped.
+ *
+ * The serverless Chromium runs with `--single-process` and `--no-zygote`; a
+ * reused browser after a closed context does not reliably survive that. So each
+ * render gets its own, and pays about ten seconds for it. Eight posts and a PDF
+ * still fit inside the step's ceiling, and a correct kit that takes two minutes
+ * beats a fast one that renders a single image.
+ */
 const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME)
 
-export async function getBrowser(): Promise<Browser> {
-  // Fluid Compute reuses an instance across requests, so a browser launched on
-  // one request is still alive for the next. Launching per render would add a
-  // second to every image for nothing.
-  if (browser?.isConnected()) return browser
-
+async function launch(): Promise<Browser> {
   const { chromium } = await import('playwright-core')
 
   if (!isServerless) {
     // Locally, whatever `playwright install` put on the machine.
-    browser = await chromium.launch({ headless: true })
-    return browser
+    return chromium.launch({ headless: true })
   }
 
   const serverless = (await import('@sparticuz/chromium')).default
@@ -47,7 +56,7 @@ export async function getBrowser(): Promise<Browser> {
   /*
    * The browser is fetched at cold start, not shipped in the bundle.
    *
-   * `@sparticuz/chromium` keeps a 66MB pack in its own `bin` directory, and
+   * `@sparticuz/chromium` keeps a 66MB pack in its own `bin` directory and
    * output tracing does not carry it — the function failed with "The input
    * directory /var/task/node_modules/@sparticuz/chromium/bin does not exist".
    * The obvious fix is an `outputFileTracingIncludes` entry, and that is the
@@ -55,10 +64,9 @@ export async function getBrowser(): Promise<Browser> {
    * include produced outputs Vercel would not deploy at all. 66MB is not the
    * side of that line to test.
    *
-   * So the pack lives in R2, which is already how every other large asset here
-   * is served, and a fresh signed URL is minted per cold start. The download
-   * happens once per instance and Fluid Compute reuses the instance, so the
-   * cost lands on the first render after a deploy rather than on every image.
+   * It unpacks into /tmp, which survives between invocations on the same
+   * instance — so the download is paid once per instance even though the
+   * browser itself is not reused.
    */
   const pack = await signedDownloadUrl('runtime/chromium-v149-pack.tar', { expiresInSeconds: 900 })
 
@@ -68,31 +76,37 @@ export async function getBrowser(): Promise<Browser> {
    * as a box — including the Latin ones. Brand faces still arrive per-render
    * as base64 `@font-face` rules, because they differ for every project.
    */
-  browser = await chromium.launch({
+  return chromium.launch({
     args: serverless.args,
     executablePath: await serverless.executablePath(pack),
     headless: true,
   })
-
-  return browser
 }
 
 /** Renders one element to a PNG at an exact size. */
 export async function renderToPng(html: string, size: { width: number; height: number }) {
-  const instance = await getBrowser()
-  const context = await instance.newContext({ viewport: size, deviceScaleFactor: 1 })
-  const page = await context.newPage()
+  const browser = await launch()
 
   try {
+    const page = await browser.newPage({ viewport: size, deviceScaleFactor: 1 })
     await page.setContent(html, { waitUntil: 'networkidle' })
     // Fonts arrive as data URIs, so this resolves without a network wait — but
     // without it the first paint can beat the face being ready and the image
     // ships in a fallback face.
     await page.evaluate(() => document.fonts.ready)
 
-    const target = page.locator('body > div').first()
-    return await target.screenshot({ type: 'png' })
+    return await page.locator('body > div').first().screenshot({ type: 'png' })
   } finally {
-    await context.close()
+    await browser.close()
+  }
+}
+
+/** Runs a job that needs its own browser — printing a PDF, for instance. */
+export async function withBrowser<T>(fn: (browser: Browser) => Promise<T>): Promise<T> {
+  const browser = await launch()
+  try {
+    return await fn(browser)
+  } finally {
+    await browser.close()
   }
 }

@@ -3,7 +3,7 @@ import 'server-only'
 import type { PostBrand } from './post-template'
 import { deviceFor, SHAPE_DEVICES } from './post-template'
 import { bilingual } from './copy'
-import { getBrowser } from './browser'
+import { withBrowser } from './browser'
 
 /**
  * The whole identity as one file.
@@ -254,15 +254,13 @@ export function kitDocument(c: KitContent, a: KitAssets) {
 
 /** Prints the whole kit to a single PDF. */
 export async function renderKitPdf(content: KitContent, assets: KitAssets) {
-  const browser = await getBrowser()
-  const context = await browser.newContext({ viewport: PAGE })
-  const page = await context.newPage()
+  return withBrowser(async (browser) => {
+    const page = await browser.newPage({ viewport: PAGE })
 
-  try {
     await page.setContent(kitDocument(content, assets), { waitUntil: 'networkidle' })
     await page.evaluate(() => document.fonts.ready)
 
-    return await page.pdf({
+    return page.pdf({
       width: `${PAGE.width}px`,
       height: `${PAGE.height}px`,
       printBackground: true,
@@ -270,7 +268,5 @@ export async function renderKitPdf(content: KitContent, assets: KitAssets) {
       // inside its own bleed.
       margin: { top: '0', right: '0', bottom: '0', left: '0' },
     })
-  } finally {
-    await context.close()
-  }
+  })
 }
