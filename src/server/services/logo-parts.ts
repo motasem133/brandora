@@ -186,6 +186,26 @@ function contentBox(data: Buffer, width: number, area: Box): Box | null {
 }
 
 /**
+ * Crops away the empty margin around a mark.
+ *
+ * A generated logo sits in the middle of a square with air on every side, so
+ * anything that places it in a small box — a chip in the corner of a post, a
+ * cell in a grid — is really scaling the air, and the mark lands as a dot.
+ * `splitLockup` already trims each half it returns; this is the same trim for
+ * artwork that has no split to make.
+ */
+export async function trim(transparent: Buffer): Promise<Buffer> {
+  const { Jimp } = await import('jimp')
+  const image = await Jimp.read(transparent)
+  const { data, width, height } = image.bitmap
+
+  const box = contentBox(data, width, { x: 0, y: 0, w: width, h: height })
+  if (!box) return transparent
+
+  return Buffer.from(await image.crop(box).getBuffer('image/png'))
+}
+
+/**
  * Splits a lockup into its name and its symbol.
  *
  * A lockup is two things with air between them, and after the backdrop is gone

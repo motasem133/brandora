@@ -24,7 +24,20 @@ function posthogUpstreams() {
 
 const nextConfig: NextConfig = {
   /*
-   * There is no `serverExternalPackages` here any more, and that is the point.
+   * Chromium is spawned, not bundled.
+   *
+   * `@sparticuz/chromium` unpacks a browser binary at runtime and
+   * `playwright-core` shells out to it; neither survives being rewritten into
+   * an ESM chunk. This list came back for them after being emptied — but it is
+   * a narrower claim than before. The packages it once held loaded native
+   * addons *into this process* and failed by returning broken output; these
+   * two launch a separate executable and fail loudly at the point of use.
+   */
+  serverExternalPackages: ['@sparticuz/chromium', 'playwright-core'],
+
+  /*
+   * The note this replaced is worth keeping: `serverExternalPackages` was
+   * emptied once and that was the point.
    *
    * It listed `@neplex/vectorizer` and `sharp`, because a bundler cannot place
    * a `.node` binary in an ESM chunk and both loaded platform-specific ones at
