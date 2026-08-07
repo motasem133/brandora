@@ -42,16 +42,35 @@ export async function getBrowser(): Promise<Browser> {
   }
 
   const serverless = (await import('@sparticuz/chromium')).default
+  const { signedDownloadUrl } = await import('@/server/storage/r2')
 
   /*
-   * The font pack matters more than it looks. A Lambda-shaped filesystem ships
-   * with no fonts at all, so without this every glyph renders as a box —
-   * including the Latin ones. Brand fonts still arrive per-render as base64
-   * `@font-face` rules, because they differ for every project.
+   * The browser is fetched at cold start, not shipped in the bundle.
+   *
+   * `@sparticuz/chromium` keeps a 66MB pack in its own `bin` directory, and
+   * output tracing does not carry it — the function failed with "The input
+   * directory /var/task/node_modules/@sparticuz/chromium/bin does not exist".
+   * The obvious fix is an `outputFileTracingIncludes` entry, and that is the
+   * mechanism this project already has three failed deployments to: a 31MB
+   * include produced outputs Vercel would not deploy at all. 66MB is not the
+   * side of that line to test.
+   *
+   * So the pack lives in R2, which is already how every other large asset here
+   * is served, and a fresh signed URL is minted per cold start. The download
+   * happens once per instance and Fluid Compute reuses the instance, so the
+   * cost lands on the first render after a deploy rather than on every image.
+   */
+  const pack = await signedDownloadUrl('runtime/chromium-v149-pack.tar', { expiresInSeconds: 900 })
+
+  /*
+   * The font pack inside it matters more than it looks. A Lambda-shaped
+   * filesystem ships with no fonts at all, so without it every glyph renders
+   * as a box — including the Latin ones. Brand faces still arrive per-render
+   * as base64 `@font-face` rules, because they differ for every project.
    */
   browser = await chromium.launch({
     args: serverless.args,
-    executablePath: await serverless.executablePath(),
+    executablePath: await serverless.executablePath(pack),
     headless: true,
   })
 
