@@ -15,7 +15,9 @@ import { deviceFor, SHAPE_DEVICES, splitHeadline, type PostBrand } from './post-
  * brand.
  */
 
-export type LayoutKind = 'hero' | 'feature' | 'statement' | 'detail' | 'story'
+export type LayoutKind =
+  | 'hero' | 'feature' | 'statement' | 'detail' | 'story'
+  | 'about' | 'palette' | 'identity'
 
 export const LAYOUTS: Record<LayoutKind, { label: string; needs: 'hero' | 'people' | 'detail' | null; size: { width: number; height: number } }> = {
   hero: { label: 'Opening post', needs: 'hero', size: { width: 1080, height: 1080 } },
@@ -23,6 +25,9 @@ export const LAYOUTS: Record<LayoutKind, { label: string; needs: 'hero' | 'peopl
   statement: { label: 'Statement', needs: null, size: { width: 1080, height: 1080 } },
   detail: { label: 'Close up', needs: 'detail', size: { width: 1080, height: 1080 } },
   story: { label: 'Story', needs: 'hero', size: { width: 1080, height: 1920 } },
+  about: { label: 'Our story', needs: 'detail', size: { width: 1080, height: 1080 } },
+  palette: { label: 'Colours & type', needs: null, size: { width: 1080, height: 1080 } },
+  identity: { label: 'The mark', needs: null, size: { width: 1080, height: 1080 } },
 }
 
 const hasArabic = (value: string) => /[؀-ۿ]/.test(value)
@@ -43,6 +48,8 @@ type Parts = {
   faces: string
   width: number
   height: number
+  /** What this particular post says. Falls back to the slogan when absent. */
+  copy?: { lead: string; tail: string | null; body?: string }
 }
 
 /** Scales the 1080-wide design to whatever canvas is asked for. */
@@ -114,7 +121,15 @@ function headline(p: Parts, u: (n: number) => number, opts: {
 export function renderLayout(kind: LayoutKind, p: Parts) {
   const u = scaler(p.width)
   const c = p.brand.palette
-  const { lead, tail } = splitHeadline(p.brand.slogan?.trim() || p.brand.name)
+  const fallback = splitHeadline(p.brand.slogan?.trim() || p.brand.name)
+  const lead = p.copy?.lead ?? fallback.lead
+  /*
+   * An explicit null tail means "this post has no subtitle" and must not fall
+   * back to the slogan's second half — otherwise every post in the kit carries
+   * "The Kitchen of the Matriarch" under its own line, which is the repetition
+   * the per-post copy exists to remove.
+   */
+  const tail = p.copy ? p.copy.tail : fallback.tail
   const rtl = hasArabic(lead)
   const pad = u(88)
 
@@ -219,6 +234,111 @@ export function renderLayout(kind: LayoutKind, p: Parts) {
       <div style="display:flex;flex-direction:column;position:absolute;left:${pad}px;right:${pad}px;top:${u(820)}px">
         ${headline(p, u, { size: 64, lead, tail, colour: c.text, tailColour: c.primary, align: 'center', rtl })}
       </div>`
+  }
+
+  if (kind === 'about') {
+    /*
+     * The one post meant to be read rather than seen.
+     *
+     * The brand story is prose the branding step already wrote, and it is the
+     * only content here long enough to need a measure — so it gets one, at a
+     * body size, on the light plate the rule requires. The photograph sits
+     * behind it as a ground rather than beside it, because a column of text
+     * and a picture competing at the same size is a magazine spread, not a
+     * post.
+     */
+    body = `
+      <div style="display:flex;position:absolute;inset:0;background:${c.primary}"></div>
+      ${p.photo ? `<div style="display:flex;position:absolute;inset:0;overflow:hidden;opacity:0.22">
+        <img src="${p.photo}" width="${p.width}" height="${u(1080)}" style="object-fit:cover"/></div>` : ''}
+      ${chip(p, u, rtl)}
+      <div style="display:flex;flex-direction:column;position:absolute;left:${u(90)}px;right:${u(90)}px;
+        top:${u(250)}px;bottom:${u(210)}px;background:${c.background};border-radius:${u(28)}px;
+        padding:${u(64)}px ${u(58)}px;align-items:center;justify-content:center">
+        <div style="display:flex;font-family:'${p.brand.fonts.heading}';font-size:${u(54)}px;
+          line-height:1.2;color:${c.text};text-align:center;${rtl ? 'direction:rtl' : ''}"
+          >${escape(lead)}</div>
+        <div style="display:flex;width:${u(90)}px;height:${u(4)}px;background:${c.secondary};
+          margin:${u(28)}px 0"></div>
+        <div style="display:flex;font-size:${u(30)}px;line-height:1.62;color:${c.primary};
+          opacity:0.86;text-align:center">${escape(p.copy?.body ?? '')}</div>
+      </div>
+      ${signature(p, u, 74, c.background)}`
+  }
+
+  if (kind === 'palette') {
+    /*
+     * The specimen page the reference deck opens with: the colours, named, and
+     * the faces they are set in.
+     *
+     * Hex codes are on the swatches deliberately. This is the post a customer
+     * screenshots and sends to whoever is printing their menu, and a swatch
+     * without its value is decoration.
+     */
+    const swatches = [
+      ['primary', c.primary], ['secondary', c.secondary],
+      ['accent', c.accent], ['background', c.background],
+    ] as const
+
+    const chips = swatches.map(([label, hex]) => `
+      <div style="display:flex;flex-direction:column;flex:1;align-items:center">
+        <div style="display:flex;width:100%;height:${u(230)}px;background:${hex};
+          border-radius:${u(18)}px;border:1px solid rgba(0,0,0,.08)"></div>
+        <div style="display:flex;font-family:'${p.brand.fonts.body}';font-size:${u(22)}px;
+          margin-top:${u(18)}px;color:${c.primary};letter-spacing:${u(1)}px">${hex.toUpperCase()}</div>
+        <div style="display:flex;font-size:${u(19)}px;color:${c.primary};opacity:.55">${label}</div>
+      </div>`).join('')
+
+    body = `
+      <div style="display:flex;position:absolute;inset:0;background:${c.background}"></div>
+      ${chip(p, u, rtl, true)}
+      <div style="display:flex;flex-direction:column;position:absolute;left:${u(88)}px;right:${u(88)}px;
+        top:${u(250)}px">
+        <div style="display:flex;gap:${u(24)}px;width:100%">${chips}</div>
+        <div style="display:flex;width:100%;height:${u(1)}px;background:${c.primary};
+          opacity:.15;margin:${u(64)}px 0 ${u(46)}px"></div>
+        <div style="display:flex;justify-content:space-between;width:100%">
+          <div style="display:flex;flex-direction:column">
+            <div style="display:flex;font-size:${u(18)}px;letter-spacing:${u(3)}px;color:${c.primary};
+              opacity:.5">HEADING</div>
+            <div style="display:flex;font-family:'${p.brand.fonts.heading}';font-size:${u(52)}px;
+              color:${c.text};margin-top:${u(10)}px">${escape(p.brand.fonts.heading)}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end">
+            <div style="display:flex;font-size:${u(18)}px;letter-spacing:${u(3)}px;color:${c.primary};
+              opacity:.5">BODY</div>
+            <div style="display:flex;font-family:'${p.brand.fonts.body}';font-size:${u(52)}px;
+              color:${c.text};margin-top:${u(10)}px">${escape(p.brand.fonts.body)}</div>
+          </div>
+        </div>
+      </div>
+      ${signature(p, u, 74, c.primary)}`
+  }
+
+  if (kind === 'identity') {
+    /*
+     * The logo, presented rather than applied.
+     *
+     * Every other post uses the mark at chip size in a corner. This is the one
+     * that shows it — full lockup on the brand's own ground, with the symbol
+     * alone beside it, which is exactly the pair the kit now produces as
+     * transparent files.
+     */
+    body = `
+      <div style="display:flex;position:absolute;inset:0;background:${c.primary}"></div>
+      ${device(p, u, 620, 460, c.background)}
+      <div style="display:flex;position:absolute;left:0;top:${u(180)}px;width:${p.width}px;
+        height:${u(360)}px;align-items:center;justify-content:center;padding:0 ${u(140)}px">
+        <img src="${p.wordmark}" width="${u(800)}" height="${u(300)}"
+          style="object-fit:contain;filter:brightness(0) invert(1)"/>
+      </div>
+      <div style="display:flex;position:absolute;left:0;top:${u(700)}px;width:${p.width}px;
+        height:${u(230)}px;align-items:center;justify-content:center">
+        <img src="${p.mark}" width="${u(230)}" height="${u(230)}" style="object-fit:contain"/>
+      </div>
+      <div style="display:flex;position:absolute;left:0;bottom:${u(74)}px;width:${p.width}px;
+        justify-content:center;font-size:${u(24)}px;letter-spacing:${u(5)}px;color:${c.primary};
+        opacity:.6">${escape(p.brand.name.toUpperCase())}</div>`
   }
 
   return `<!doctype html><html><head><meta charset="utf-8"><style>

@@ -3,13 +3,14 @@ import 'server-only'
 import { eq } from 'drizzle-orm'
 
 import { db } from '@/server/db'
-import { brandingAssets, generatedFiles, projects } from '@/server/db/schema'
+import { brandingAssets, generatedFiles, projects, socialMediaAssets } from '@/server/db/schema'
 import { AppError } from '@/lib/errors'
 import { signedDownloadUrl } from '@/server/storage/r2'
 import { liftBackground, splitLockup, trim } from '@/server/services/logo-parts'
 import { renderToPng } from './browser'
 import { fontFace, type PostBrand } from './post-template'
 import { LAYOUTS, renderLayout, type LayoutKind } from './layouts'
+import { buildCopy } from './copy'
 
 /**
  * A brand's real typeface, as bytes.
@@ -75,6 +76,9 @@ export async function renderSocialPost(
       palette: brandingAssets.colorPalette,
       fonts: brandingAssets.fontRecommendations,
       slogan: brandingAssets.slogan,
+      story: brandingAssets.brandStory,
+      values: brandingAssets.brandValues,
+      voice: brandingAssets.brandVoice,
       primaryLogoFileId: brandingAssets.primaryLogoFileId,
     })
     .from(projects)
@@ -127,6 +131,31 @@ export async function renderSocialPost(
     .map(([family, file]) => fontFace(family, file))
     .join('\n')
 
+  /*
+   * The line this post carries, chosen from what the project already wrote.
+   *
+   * The social step's captions are used when it has run, and the brand story
+   * when it has not — so a kit reads as a sequence either way instead of
+   * printing the slogan on every post.
+   */
+  const [social] = await db
+    .select({ posts: socialMediaAssets.instagramPosts })
+    .from(socialMediaAssets)
+    .where(eq(socialMediaAssets.projectId, projectId))
+    .limit(1)
+
+  const copy = buildCopy(
+    {
+      posts: social?.posts ?? [],
+      story: row.story,
+      values: row.values ?? [],
+      voice: row.voice,
+      slogan: row.slogan,
+      name: brand.name,
+    },
+    Object.keys(LAYOUTS),
+  )[layout]
+
   const height = Math.round((canvas.height / canvas.width) * size)
   const needs = LAYOUTS[layout].needs
 
@@ -135,6 +164,7 @@ export async function renderSocialPost(
     faces,
     width: size,
     height,
+    copy,
     wordmark: uri(parts ? parts.text.buffer : trimmed!),
     mark: uri(parts ? parts.icon.buffer : trimmed!),
     photo: needs ? (options.photos?.[needs] ?? null) : null,
