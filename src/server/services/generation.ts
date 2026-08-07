@@ -25,6 +25,11 @@ export function sectionsForProject(project: {
   if (isLogoGenerationAvailable()) sections.push('logos')
   if (project.needsWebsite) sections.push('website')
   if (project.needsSocialMedia) sections.push('social')
+  /*
+   * The kit is built from the chosen logo, so it cannot run in the same pass
+   * that generates the concepts — nothing has been chosen yet. It is requested
+   * explicitly, from the project page, once there is a logo to build on.
+   */
   return sections
 }
 

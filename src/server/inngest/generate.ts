@@ -14,6 +14,7 @@ import { runModel } from '@/server/ai/run'
 import { brandingSchema, socialSchema, websiteSchema, type BrandingOutput } from '@/server/ai/schemas'
 import { CREDIT_COSTS, settleCredits, type GenerationSection } from '@/server/billing/credits'
 import { generateLogos } from '@/server/services/logos'
+import { generateKitScenes, printKitPdf, renderKitPosts } from '@/server/services/social-kit'
 import { isStorageConfigured } from '@/server/storage/r2'
 import { db } from '@/server/db'
 import {
@@ -390,6 +391,38 @@ export const generateBrand = inngest.createFunction(
           failed.push('social')
         }
       }
+    /*
+     * The kit runs last, in three steps, and on its own terms.
+     *
+     * It is the only step that depends on a decision the customer made rather
+     * than on model output — there has to be a chosen logo to build on — so it
+     * is requested explicitly rather than being part of the first pass.
+     *
+     * Three steps because a step is what Inngest memoises. The photographs are
+     * the only paid part and take about two and a half minutes each; printing
+     * the PDF is seconds and free. Fused into one step, a failure while
+     * printing would buy the photographs again on every retry, which is
+     * exactly the loop the logo step once ran for four paid images.
+     */
+    if (requested.includes('kit')) {
+      try {
+        await markStep(jobId, 'kit', 'running')
+
+        const scenes = await step.run('kit-scenes', () =>
+          generateKitScenes({ projectId, organizationId, generationJobId: jobId }),
+        )
+
+        await step.run('kit-posts', () => renderKitPosts({ projectId, scenes }))
+        await step.run('kit-pdf', () => printKitPdf({ projectId, scenes }))
+
+        await markStep(jobId, 'kit', 'done')
+        completed.push('kit')
+      } catch (error) {
+        await markStep(jobId, 'kit', 'failed', errorMessage(error))
+        failed.push('kit')
+      }
+    }
+
     } else if (requested.includes('branding')) {
       // Branding failed, so anything depending on it is skipped rather than
       // attempted against a brand that does not exist.

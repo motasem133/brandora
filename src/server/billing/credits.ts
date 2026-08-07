@@ -17,6 +17,13 @@ export const CREDIT_COSTS = {
   logos: 6,
   website: 1,
   social: 1,
+  /*
+   * Three generated photographs at $0.0675 each, plus eight renders and a
+   * printed document that cost only time. Priced beside `logos`, which is six
+   * credits for two images — a kit is more machine work and less model work,
+   * so it sits below it.
+   */
+  kit: 4,
 } as const
 
 export type GenerationSection = keyof typeof CREDIT_COSTS

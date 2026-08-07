@@ -72,6 +72,12 @@ export const fileKindEnum = pgEnum('file_kind', [
   'letterhead',
   'brand_kit_zip',
   'upload',
+  /** A finished, ready-to-post image. `metadata.layout` says which one. */
+  'social_post',
+  /** Generated photography a post is built on. `metadata.scene` says which. */
+  'social_scene',
+  /** The whole identity as one document. */
+  'brand_kit_pdf',
 ])
 
 export const jobTriggerEnum = pgEnum('job_trigger', ['initial', 'retry_section', 'regenerate'])

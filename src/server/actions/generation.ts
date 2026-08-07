@@ -5,8 +5,9 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
 import { orgAction } from '@/server/actions/safe-action'
+import { AppError } from '@/lib/errors'
 import { db } from '@/server/db'
-import { projects } from '@/server/db/schema'
+import { brandingAssets, projects } from '@/server/db/schema'
 import { startGeneration } from '@/server/services/generation'
 
 /*
@@ -74,3 +75,44 @@ export const regenerateLogos = orgAction
     revalidatePath('/[locale]/dashboard', 'layout')
     return result
   })
+
+/**
+ * Builds the social kit for a project.
+ *
+ * Separate from the first pass because a kit is drawn around the logo the
+ * customer chose, and at the moment the first pass runs nobody has chosen
+ * anything yet. Requiring a choice first is also what makes the kit worth its
+ * credits — it is built from a decision, not from a guess.
+ */
+export const generateSocialKit = orgAction
+  .metadata({ name: 'generate-social-kit' })
+  .inputSchema(z.object({ projectId: z.uuid() }))
+  .action(async ({ parsedInput, ctx }) => {
+    const [branding] = await db
+      .select({ primaryLogoFileId: brandingAssets.primaryLogoFileId })
+      .from(brandingAssets)
+      .innerJoin(projects, eq(projects.id, brandingAssets.projectId))
+      .where(
+        and(
+          eq(brandingAssets.projectId, parsedInput.projectId),
+          eq(projects.organizationId, ctx.orgId),
+        ),
+      )
+      .limit(1)
+
+    if (!branding?.primaryLogoFileId) {
+      throw new AppError('VALIDATION', 'Choose a logo first — the kit is built around it.')
+    }
+
+    const result = await startGeneration({
+      organizationId: ctx.orgId,
+      userId: ctx.user.id,
+      projectId: parsedInput.projectId,
+      emailVerified: ctx.user.emailVerified,
+      only: ['kit'],
+    })
+
+    revalidatePath('/[locale]/dashboard', 'layout')
+    return result
+  })
+

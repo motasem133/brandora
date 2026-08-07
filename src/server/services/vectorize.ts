@@ -99,3 +99,20 @@ function hexToInt(hex: string): number {
   return Number.isNaN(n) ? 0xffffffff : (((n << 8) | 0xff) >>> 0)
 }
 
+/**
+ * Re-encodes an image as JPEG for embedding in a document.
+ *
+ * The brand-kit PDF came out at 13MB because every photograph went in as PNG,
+ * and PNG is a lossless format being asked to store a photograph — the worst
+ * pairing there is. Nobody emails a 13MB attachment happily, and the deck is
+ * meant to be sent.
+ *
+ * Only for artwork that has no transparency to lose. Logos stay PNG: JPEG has
+ * no alpha channel, so a transparent mark would come back on a black square.
+ */
+export async function toJpeg(input: Buffer, quality = 82): Promise<Buffer> {
+  const { Jimp } = await import('jimp')
+  const image = await Jimp.read(input)
+  return Buffer.from(await image.getBuffer('image/jpeg', { quality }))
+}
+

@@ -180,12 +180,40 @@ type FalResponse = {
   error?: string
 }
 
-/** Generates one image and returns its bytes. */
+/** Generates one logo image and returns its bytes. */
 export async function generateLogoImage(params: {
   prompt: string
   organizationId: string
   projectId: string
   generationJobId: string
+}): Promise<Buffer> {
+  return generateImage({ ...params, feature: 'logo' })
+}
+
+/**
+ * One photograph for a kit.
+ *
+ * The same model and the same price tier as a logo — what differs is the
+ * prompt and how the result is used, so it is worth its own entry in
+ * `ai_usage` rather than being counted as a logo. A kit that cost three
+ * "logos" would make the margin figures lie.
+ */
+export async function generateSceneImage(params: {
+  prompt: string
+  organizationId: string
+  projectId: string
+  generationJobId: string
+}): Promise<Buffer> {
+  return generateImage({ ...params, feature: 'social' })
+}
+
+/** Generates one image and returns its bytes. */
+async function generateImage(params: {
+  prompt: string
+  organizationId: string
+  projectId: string
+  generationJobId: string
+  feature: 'logo' | 'social'
 }): Promise<Buffer> {
   if (!env.FAL_KEY) {
     throw new AppError('AI_PROVIDER_ERROR', 'FAL_KEY is not configured.')
@@ -193,14 +221,12 @@ export async function generateLogoImage(params: {
 
   const model = env.FAL_IMAGE_MODEL || DEFAULT_MODEL
   const startedAt = Date.now()
+  const usage = { ...params, model, cost: COST_PER_IMAGE }
 
   try {
     const response = await fetch(`https://fal.run/${model}`, {
       method: 'POST',
-      headers: {
-        Authorization: `Key ${env.FAL_KEY}`,
-        'Content-Type': 'application/json',
-      },
+      headers: { Authorization: `Key ${env.FAL_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         prompt: params.prompt,
         image_size: IMAGE_SIZE,
@@ -230,11 +256,10 @@ export async function generateLogoImage(params: {
     if (!image.ok) throw new Error(`Could not download generated image (${image.status})`)
 
     const bytes = Buffer.from(await image.arrayBuffer())
-
-    await recordImageUsage({ ...params, model, latencyMs: Date.now() - startedAt, status: 'success' })
+    await recordImageUsage({ ...usage, latencyMs: Date.now() - startedAt, status: 'success' })
     return bytes
   } catch (error) {
-    await recordImageUsage({ ...params, model, latencyMs: Date.now() - startedAt, status: 'error' })
+    await recordImageUsage({ ...usage, latencyMs: Date.now() - startedAt, status: 'error' })
     throw error
   }
 }
@@ -307,7 +332,7 @@ async function recordImageUsage(params: {
   model: string
   latencyMs: number
   status: 'success' | 'error'
-  feature?: 'logo' | 'vectorize'
+  feature?: 'logo' | 'vectorize' | 'social'
   cost?: number
 }) {
   const price = params.cost ?? COST_PER_IMAGE
