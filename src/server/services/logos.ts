@@ -9,6 +9,14 @@ import { db } from '@/server/db'
 import { brandingAssets, generatedFiles } from '@/server/db/schema'
 import { objectKey, signedDownloadUrl, uploadObject } from '@/server/storage/r2'
 import { buildBrandKit } from './brand-kit'
+import {
+  backdropFill,
+  cropSvg,
+  liftBackground,
+  openCounters,
+  splitLockup,
+  stripSvgBackground,
+} from './logo-parts'
 import { makeMonochrome, makeOgImage, measure, resizePng } from './vectorize'
 
 /**
@@ -254,12 +262,14 @@ export async function generateLogos(params: {
 
     // Nothing chosen yet: the newest round's first concept is the wordmark,
     // which is the one that works as an avatar and a favicon.
-    const primary = kitFiles.get(`${results[0].style.replace(/\s+/g, '-')}.png`)
+    const slug = results[0].style.replace(/\s+/g, '-')
+    const primary = kitFiles.get(`${slug}.png`)
 
     if (primary) {
       await derivePrimaryAssets({
         projectId: params.projectId,
         primary,
+        primarySvg: kitFiles.get(`${slug}.svg`)?.toString('utf8'),
         background: params.branding.colorPalette.background,
         kitFiles,
       })
@@ -283,11 +293,14 @@ export async function generateLogos(params: {
 async function derivePrimaryAssets(params: {
   projectId: string
   primary: Buffer
+  primarySvg?: string
   icon?: Buffer
   background: string
   kitFiles: Map<string, Buffer>
 }) {
   const icon = params.icon ?? params.primary
+
+  await addPlaceableVariants(params)
 
   const derived: {
     name: string
@@ -365,6 +378,63 @@ async function derivePrimaryAssets(params: {
 }
 
 
+/**
+ * The versions of the logo that can actually be placed on something.
+ *
+ * Everything else in the kit carries the backdrop the model painted behind it,
+ * which means the logo can only ever sit on that one colour — put it on a dark
+ * header, a photograph or a printed page and it arrives in a cream box. These
+ * are the same artwork with the backdrop lifted, plus the name and the symbol
+ * separated when the concept is a lockup of the two.
+ *
+ * Best-effort by construction. It runs inside the block that already treats
+ * derived assets as extras built from work that is finished and paid for, and
+ * every file here is an addition — the originals stay exactly where they were,
+ * so a customer who wants the backdrop still has it.
+ */
+async function addPlaceableVariants(params: {
+  primary: Buffer
+  primarySvg?: string
+  kitFiles: Map<string, Buffer>
+}) {
+  try {
+    const transparent = await liftBackground(params.primary)
+    params.kitFiles.set('logo-transparent.png', transparent)
+
+    if (params.primarySvg) {
+      params.kitFiles.set('logo-transparent.svg', Buffer.from(stripSvgBackground(params.primarySvg)))
+    }
+
+    /*
+     * Only when there is something to separate. A monogram or an integrated
+     * mark is one shape, and cutting it in half would produce two files that
+     * are each half a logo — so it returns nothing and the kit simply does not
+     * carry these two, which is what "if there is an icon with the text" means.
+     */
+    const parts = await splitLockup(transparent)
+    if (!parts) return
+
+    params.kitFiles.set('text-only.png', parts.text.buffer)
+    params.kitFiles.set('icon-only.png', parts.icon.buffer)
+
+    if (params.primarySvg) {
+      const bare = stripSvgBackground(params.primarySvg)
+      const backdrop = backdropFill(params.primarySvg)
+
+      // Counters are opened in the name only. See `openCounters` for why the
+      // same rule would hollow out the symbol.
+      const name = backdrop ? openCounters(bare, backdrop) : bare
+
+      params.kitFiles.set('text-only.svg', Buffer.from(cropSvg(name, parts.text.region)))
+      params.kitFiles.set('icon-only.svg', Buffer.from(cropSvg(bare, parts.icon.region)))
+    }
+  } catch (error) {
+    // One unusable variant must not cost the customer the favicon, the avatars
+    // and the kit that are built after it.
+    console.warn('[logos] placeable variants failed; the rest of the kit is unaffected', error)
+  }
+}
+
 async function readObject(key: string): Promise<Buffer> {
   const url = await signedDownloadUrl(key)
   const response = await fetch(url)
@@ -411,13 +481,24 @@ export async function rederivePrimaryAssets(projectId: string, primaryKey?: stri
     .from(generatedFiles)
     .where(eq(generatedFiles.projectId, projectId))
 
+  // The vector of the chosen concept specifically, matched on the raster it
+  // was made from — a later round's wordmark must not resolve to an earlier
+  // round's trace, which is the same rule the variations panel follows.
+  let primarySvg: string | undefined
+
   for (const file of concepts) {
     if (file.kind !== 'logo_raster' && file.kind !== 'logo_svg') continue
     const assetUrl = await signedDownloadUrl(file.r2Key)
     const assetResponse = await fetch(assetUrl)
     if (!assetResponse.ok) continue
     const name = file.r2Key.split('/').pop() ?? file.id
-    kitFiles.set(name.replace(/^logo-/, ''), Buffer.from(await assetResponse.arrayBuffer()))
+    const bytes = Buffer.from(await assetResponse.arrayBuffer())
+
+    if (file.kind === 'logo_svg' && file.metadata?.tracedFrom === logoKey) {
+      primarySvg = bytes.toString('utf8')
+    }
+
+    kitFiles.set(name.replace(/^logo-/, ''), bytes)
   }
 
   // Replace rather than duplicate: the derived rows are regenerated each time.
@@ -430,7 +511,7 @@ export async function rederivePrimaryAssets(projectId: string, primaryKey?: stri
       ),
     )
 
-  await derivePrimaryAssets({ projectId, primary, icon, background, kitFiles })
+  await derivePrimaryAssets({ projectId, primary, primarySvg, icon, background, kitFiles })
   await buildBrandKit(projectId, kitFiles)
 }
 
