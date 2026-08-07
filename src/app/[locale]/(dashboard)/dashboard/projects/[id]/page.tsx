@@ -8,6 +8,7 @@ import { BrandingView } from '@/components/features/projects/branding-view'
 import { DeleteProjectButton } from '@/components/features/projects/delete-project-button'
 import { GenerationPanel } from '@/components/features/projects/generation-panel'
 import { IdentityPlate } from '@/components/features/projects/identity-plate'
+import { SocialKit } from '@/components/features/projects/social-kit'
 import { SocialView } from '@/components/features/projects/social-view'
 import { WebsiteView } from '@/components/features/projects/website-view'
 import { ArrowLeft, Download, MessageSquare, Palette } from 'lucide-react'
@@ -104,6 +105,11 @@ export default async function ProjectDetailPage({
 
   const primaryLogo = logoFiles.find((file) => file.id === primaryId)
   const kitFile = files.find((file) => file.kind === 'brand_kit_zip')
+
+  // The social kit: finished posts in the order the layouts define, and the
+  // one document that carries all of it.
+  const kitPosts = files.filter((file) => file.kind === 'social_post')
+  const kitPdf = files.find((file) => file.kind === 'brand_kit_pdf') ?? null
 
   const job = await getLatestJobForProject(project.id)
   const sections = sectionsForProject(project)
@@ -231,6 +237,20 @@ export default async function ProjectDetailPage({
           primaryId={primaryId}
           chosenId={chosenId}
           language={project.language}
+          emailVerified={user.emailVerified}
+          userEmail={user.email}
+        />
+      )}
+
+      {brandingAsset && (
+        <SocialKit
+          projectId={project.id}
+          posts={kitPosts}
+          pdf={kitPdf}
+          hasLogo={Boolean(chosenId)}
+          cost={CREDIT_COSTS.kit}
+          creditBalance={org.creditBalance}
+          isGenerating={isJobActive}
           emailVerified={user.emailVerified}
           userEmail={user.email}
         />
