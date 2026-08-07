@@ -182,7 +182,7 @@ export async function LogoStudio({
               )}
 
               <a
-                href={`/api/files/${concept.id}`}
+                href={`/api/files/${concept.id}?download`}
                 className="ms-auto inline-flex items-center gap-1.5 rounded-control px-2.5 py-1.5 text-xs text-fg-secondary transition-colors hover:bg-elevated hover:text-fg"
               >
                 <Download className="size-3.5" />

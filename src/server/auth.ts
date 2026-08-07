@@ -3,7 +3,7 @@ import 'server-only'
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { nextCookies } from 'better-auth/next-js'
-import { organization } from 'better-auth/plugins'
+import { emailOTP, organization } from 'better-auth/plugins'
 import { asc, eq } from 'drizzle-orm'
 
 import { env } from '@/lib/env'
@@ -20,6 +20,15 @@ import { createPersonalOrganization } from './services/organizations'
  * is not registered is a control that fails when it is pressed.
  */
 export const hasGoogle = Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET)
+
+/**
+ * How long a verification code stays good for.
+ *
+ * Long enough to switch to a mail app, wait for delivery and come back;
+ * short enough that a code left visible on a shared screen stops working. The
+ * same number is written into the email, so the two cannot disagree.
+ */
+export const OTP_MINUTES = 10
 
 export const auth = betterAuth({
   appName: 'Brandora',
@@ -56,7 +65,15 @@ export const auth = betterAuth({
     : {},
 
   emailVerification: {
-    sendOnSignUp: true,
+    /*
+     * Off, because the emailOTP plugin below sends the sign-up email now. Both
+     * on means two emails land for one sign-up, saying different things.
+     *
+     * The link flow underneath is left configured on purpose: links already in
+     * someone's inbox must keep working, and `/verify-email` is still the
+     * endpoint that honours them.
+     */
+    sendOnSignUp: false,
     autoSignInAfterVerification: true,
     sendVerificationEmail: async ({ user, url }) => {
       await sendEmail({
@@ -81,6 +98,14 @@ export const auth = betterAuth({
       '/sign-up/email': { window: 3600, max: 5 },
       '/forget-password': { window: 3600, max: 3 },
       '/verify-email': { window: 3600, max: 10 },
+      /*
+       * Sending is limited per hour because each one is an email someone did
+       * not necessarily ask for; verifying is limited per minute because that
+       * is the guessing surface. Three attempts per code plus twenty tries an
+       * hour leaves a six-digit space effectively unsearchable.
+       */
+      '/email-otp/send-verification-otp': { window: 3600, max: 6 },
+      '/email-otp/verify-email': { window: 60, max: 20 },
     },
   },
 
@@ -132,6 +157,60 @@ export const auth = betterAuth({
   },
 
   plugins: [
+    /*
+     * A six-digit code, so verification happens without leaving the page.
+     *
+     * The link flow is still configured above and still works — an old email
+     * in someone's inbox must not stop working because this shipped — but the
+     * code is what sign-up sends now. The difference is where verification
+     * happens: a link opens a second tab, verifies there, and leaves the tab
+     * the customer was actually working in showing "unverified" until it is
+     * reloaded. Every surface that gates on verification had to poll to notice.
+     * A code is typed into the page that is blocked, so that page learns the
+     * answer directly.
+     */
+    emailOTP({
+      otpLength: 6,
+      expiresIn: OTP_MINUTES * 60,
+      /*
+       * The plugin owns the sign-up email, and `emailVerification.sendOnSignUp`
+       * above is off so there is exactly one sender for that moment.
+       *
+       * `overrideDefaultEmailVerification` looked like the tidier switch and is
+       * not used, because it does not work here: it supplies a replacement
+       * `sendVerificationEmail` through the plugin's `init`, and an explicit
+       * one in this file outranks it. Set that way, sign-up went on sending the
+       * link — which a local run showed immediately, logging `verify-email`
+       * where `verify-code` was expected.
+       */
+      sendVerificationOnSignUp: true,
+      // Codes are compared, never displayed back, so there is no reason for a
+      // readable one to sit in the database. A leaked backup does not become a
+      // set of working verification codes.
+      storeOTP: 'hashed',
+      // Three guesses per code. A six-digit code brute-forced at the rate
+      // limit below would still take years, but there is no reason to leave
+      // a code alive after it has clearly been mistyped.
+      allowedAttempts: 3,
+      sendVerificationOTP: async ({ email, otp }) => {
+        const [user] = await db
+          .select({ name: schema.users.name, locale: schema.users.locale })
+          .from(schema.users)
+          .where(eq(schema.users.email, email))
+          .limit(1)
+
+        await sendEmail({
+          to: email,
+          locale: user?.locale ?? 'en',
+          template: {
+            kind: 'verify-code',
+            code: otp,
+            name: user?.name || email,
+            minutes: OTP_MINUTES,
+          },
+        })
+      },
+    }),
     organization({
       allowUserToCreateOrganization: true,
       organizationLimit: 5,

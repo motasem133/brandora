@@ -66,13 +66,35 @@ export function publicUrl(key: string): string | null {
   return `${env.R2_PUBLIC_URL.replace(/\/$/, '')}/${key}`
 }
 
-/** Time-limited URL for private objects such as the brand kit ZIP. */
-export async function signedDownloadUrl(key: string, expiresInSeconds = 300) {
+/**
+ * Time-limited URL for private objects such as the brand kit ZIP.
+ *
+ * `filename` turns the response into a download rather than a page.
+ *
+ * Without it R2 answers with no Content-Disposition, the browser recognises
+ * image/png and renders it, and "Download" navigates away to a picture instead
+ * of saving a file. The `download` attribute on the anchor cannot fix this:
+ * it is ignored once a navigation crosses to another origin, which this one
+ * always does — the link redirects to the bucket. The header is the only thing
+ * that survives the redirect, so the instruction has to be signed into the URL.
+ */
+export async function signedDownloadUrl(
+  key: string,
+  { expiresInSeconds = 300, filename }: { expiresInSeconds?: number; filename?: string } = {},
+) {
   const client = getClient()
 
   return getSignedUrl(
     client,
-    new GetObjectCommand({ Bucket: env.R2_BUCKET_NAME, Key: key }),
+    new GetObjectCommand({
+      Bucket: env.R2_BUCKET_NAME,
+      Key: key,
+      // Quotes and backslashes would end the header value early, and a newline
+      // would let a crafted filename inject one of its own.
+      ResponseContentDisposition: filename
+        ? `attachment; filename="${filename.replace(/["\\\r\n]/g, '')}"`
+        : undefined,
+    }),
     { expiresIn: expiresInSeconds },
   )
 }

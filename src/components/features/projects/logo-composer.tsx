@@ -6,7 +6,7 @@ import { useAction } from 'next-safe-action/hooks'
 import { useLayoutEffect, useRef, useState } from 'react'
 
 import { FieldError } from '@/components/ui/field-error'
-import { ResendVerification } from '@/components/features/settings/resend-verification'
+import { EmailVerification } from '@/components/features/settings/email-verification'
 import { Link, useRouter } from '@/i18n/navigation'
 import { cn } from '@/lib/utils'
 import { EVENTS, capture } from '@/lib/analytics'
@@ -225,7 +225,7 @@ export function LogoComposer({
                 {ts('unverifiedBody', { email: userEmail })}
               </p>
               <div className="mt-3.5">
-                <ResendVerification email={userEmail} />
+                <EmailVerification email={userEmail} />
               </div>
             </div>
           </div>

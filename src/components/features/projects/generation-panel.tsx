@@ -9,7 +9,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardTitle } from '@/components/ui/card'
 import { FieldError } from '@/components/ui/field-error'
-import { ResendVerification } from '@/components/features/settings/resend-verification'
+import { EmailVerification } from '@/components/features/settings/email-verification'
 import { cn } from '@/lib/utils'
 import { EVENTS, capture } from '@/lib/analytics'
 import { generateProject } from '@/server/actions/generation'
@@ -332,7 +332,7 @@ export function GenerationPanel({
                 {ts('unverifiedBody', { email: userEmail })}
               </p>
               <div className="mt-3.5">
-                <ResendVerification email={userEmail} />
+                <EmailVerification email={userEmail} />
               </div>
             </div>
           </div>

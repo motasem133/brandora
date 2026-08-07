@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm'
+import { and, eq, inArray, lt } from 'drizzle-orm'
 
 import { brandingTask } from '@/server/ai/models'
 import {
@@ -49,6 +49,103 @@ async function markStep(
   await db.update(generationJobs).set({ progress }).where(eq(generationJobs.id, jobId))
 }
 
+/**
+ * Releases the hold when the run itself dies.
+ *
+ * Credits are taken up front by `startGeneration` and given back by the
+ * `settle` step at the end. That covers a section failing — the usual case,
+ * and the reason most runs end with a refund. It does not cover the run never
+ * reaching `settle` at all: an unhandled throw outside the per-section
+ * try/catch, a timeout, all retries exhausted, or the function never being
+ * delivered because the Inngest app is pointed somewhere else.
+ *
+ * That last one is not hypothetical. A preview deployment registered itself as
+ * this app and answered production's events against a different database; the
+ * run never started, the job sat at `queued`, and seven credits stayed taken
+ * with no refund row to show for them. Nothing in the product could give them
+ * back, because nothing knew they were owed.
+ *
+ * `settleCredits` is keyed on the job id, so this and the `settle` step cannot
+ * both refund — whichever runs first wins and the other is a no-op. That makes
+ * this safe to run on a failure that happened *after* a successful settle.
+ */
+async function releaseHold(jobId: string, organizationId: string, projectId: string, reason: string) {
+  const [job] = await db.select().from(generationJobs).where(eq(generationJobs.id, jobId)).limit(1)
+  if (!job) return
+
+  await settleCredits({
+    organizationId,
+    reserved: job.creditsReserved,
+    // Nothing finished, so nothing is charged. A run that got far enough to
+    // complete a section will have settled honestly in `settle` already, and
+    // the idempotency key makes this call fall through.
+    used: 0,
+    projectId,
+    generationJobId: jobId,
+  })
+
+  await db
+    .update(generationJobs)
+    .set({ status: 'failed', creditsCharged: 0, error: reason, finishedAt: new Date() })
+    .where(eq(generationJobs.id, jobId))
+
+  await db.update(projects).set({ status: 'failed' }).where(eq(projects.id, projectId))
+}
+
+/**
+ * Gives back holds on runs that never reported anything at all.
+ *
+ * `onFailure` covers a run that started and died. It cannot cover a run that
+ * was never delivered: with no execution there is no failure to hook, so the
+ * job sits at `queued` and the credits sit with it. The only thing that
+ * notices is a clock.
+ *
+ * Ninety minutes because the longest honest run observed is about four, and a
+ * job stuck an order of magnitude past that is stuck. Erring long is
+ * deliberate — refunding a run that is merely slow would hand back credits
+ * while the work is still being paid for downstream.
+ */
+export const releaseStuckHolds = inngest.createFunction(
+  // Same shape as the function below: Inngest 4 takes triggers in the config
+  // rather than as a second positional argument.
+  { id: 'release-stuck-holds', triggers: [{ cron: '*/30 * * * *' }] },
+  async ({ step }) => {
+    const stuck = await step.run('find', async () => {
+      const cutoff = new Date(Date.now() - 90 * 60 * 1000)
+
+      return db
+        .select({
+          id: generationJobs.id,
+          projectId: generationJobs.projectId,
+          organizationId: projects.organizationId,
+          createdAt: generationJobs.createdAt,
+        })
+        .from(generationJobs)
+        .innerJoin(projects, eq(projects.id, generationJobs.projectId))
+        .where(
+          and(
+            inArray(generationJobs.status, ['queued', 'running']),
+            lt(generationJobs.createdAt, cutoff),
+          ),
+        )
+    })
+
+    for (const job of stuck) {
+      await step.run(`release-${job.id}`, async () => {
+        await releaseHold(
+          job.id,
+          job.organizationId,
+          job.projectId,
+          'The run never reported back. Credits were returned automatically.',
+        )
+        console.warn(`[credits] released a stuck hold on job ${job.id}`)
+      })
+    }
+
+    return { released: stuck.length }
+  },
+)
+
 export const generateBrand = inngest.createFunction(
   {
     id: 'generate-brand',
@@ -56,6 +153,20 @@ export const generateBrand = inngest.createFunction(
     // One organization cannot starve the queue for everyone else.
     concurrency: [{ key: 'event.data.organizationId', limit: 2 }],
     retries: 2,
+    /*
+     * Runs once, after the final retry has failed. The customer gets their
+     * credits back without having to ask, and the job stops claiming to be
+     * running forever.
+     */
+    onFailure: async ({ event, error }) => {
+      const { jobId, organizationId, projectId } = event.data.event.data
+      await releaseHold(
+        jobId,
+        organizationId,
+        projectId,
+        error?.message?.slice(0, 500) ?? 'The generation run failed.',
+      )
+    },
   },
   async ({ event, step }) => {
     const { projectId, jobId, organizationId, sections } = event.data

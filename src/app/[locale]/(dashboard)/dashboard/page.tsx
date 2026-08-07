@@ -2,7 +2,7 @@ import { ArrowRight, MailWarning, Sparkles } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { BrandSpecimen } from '@/components/features/projects/brand-specimen'
-import { ResendVerification } from '@/components/features/settings/resend-verification'
+import { EmailVerification } from '@/components/features/settings/email-verification'
 import { StatTile } from '@/components/features/dashboard/stat-tile'
 import { MomentumField, MomentumItem } from '@/components/ui/momentum'
 import { buttonVariants } from '@/components/ui/button'
@@ -71,7 +71,7 @@ export default async function OverviewPage({ params }: { params: Promise<{ local
                 {ts('unverifiedBody', { email: user.email })}
               </p>
               <div className="mt-4">
-                <ResendVerification email={user.email} />
+                <EmailVerification email={user.email} />
               </div>
             </div>
           </div>

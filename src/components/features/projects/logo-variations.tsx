@@ -119,25 +119,66 @@ export async function LogoVariations({
           const { file, label, detail, wide } = variation
           const src = publicUrl(file.r2Key) ?? `/api/files/${file.id}`
 
+          /*
+           * Drawn at the size it actually is.
+           *
+           * Every tile used to be `aspect-square w-full`, which scaled a 32x32
+           * favicon up to the same 200-odd pixels as the 1024 logo. They looked
+           * identical, so the only way to tell which file was which was to
+           * download one and look — and downloading the wrong one is exactly
+           * how a 32x32 favicon gets mistaken for a logo that "downloaded at
+           * quality 0". At its own size the favicon reads as a favicon.
+           *
+           * The cap is the tile width: past that there is no room to be honest
+           * about scale, and 1080 next to 32 would make the small ones
+           * invisible anyway. `PLATE` is tall enough to hold a 256 avatar, so
+           * everything below that sits at true size with room around it.
+           */
+          const PLATE = 176
+          // The plate's inner height, less its `p-2` padding on both sides.
+          const FIT = PLATE - 16
+          const natural = file.width ?? null
+          const atNaturalSize = natural !== null && natural <= FIT
+
           return (
             <figure
               key={keyOf(variation)}
               className={wide ? 'space-y-2 sm:col-span-2' : 'space-y-2'}
             >
-              {/* Generated assets are arbitrary user content, so next/image
-                  optimisation is skipped in favour of a plain img. */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={src}
-                alt={label}
-                className="aspect-square w-full rounded-control border border-line bg-white object-contain p-2"
-                loading="lazy"
-              />
+              <div
+                className="grid place-items-center overflow-hidden rounded-control border border-line bg-white p-2"
+                style={{ height: PLATE }}
+              >
+                {/* Generated assets are arbitrary user content, so next/image
+                    optimisation is skipped in favour of a plain img. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={src}
+                  alt={label}
+                  width={file.width ?? undefined}
+                  height={file.height ?? undefined}
+                  /*
+                   * Two cases, and only two: pinned to its own pixel width when
+                   * it fits, capped to the plate when it does not.
+                   *
+                   * Both are pixel values, deliberately. `max-h-full` and
+                   * `h-full` were each tried first and each measured wrong in a
+                   * browser — a 1024 mark laid out 244px tall inside a 176px
+                   * plate both times, and because the plate clips its overflow
+                   * that cropped the logo instead of fitting it. The percentage
+                   * never resolved against the plate; a number in pixels cannot
+                   * fail to.
+                   */
+                  className="max-w-full object-contain"
+                  style={atNaturalSize ? { width: natural } : { maxHeight: FIT }}
+                  loading="lazy"
+                />
+              </div>
               <figcaption>
                 <div className="flex items-center justify-between gap-2">
                   <span className="truncate text-xs font-medium">{label}</span>
                   <a
-                    href={`/api/files/${file.id}`}
+                    href={`/api/files/${file.id}?download`}
                     /* A row action, not a link inside a sentence, so WCAG
                        2.5.8's inline exception does not cover it. Measured
                        59x16; the floor is 24. */
@@ -146,7 +187,12 @@ export async function LogoVariations({
                     {t('download')}
                   </a>
                 </div>
-                <p className="text-xs text-fg-muted">{detail}</p>
+                <p className="text-xs text-fg-muted">
+                  {detail}
+                  {/* Says so when the tile is not showing true scale, rather
+                      than quietly implying it is. */}
+                  {!atNaturalSize && natural !== null ? ` · ${t('shownSmaller')}` : ''}
+                </p>
               </figcaption>
             </figure>
           )

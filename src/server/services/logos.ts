@@ -11,7 +11,15 @@ import { objectKey, signedDownloadUrl, uploadObject } from '@/server/storage/r2'
 import { buildBrandKit } from './brand-kit'
 import { makeMonochrome, makeOgImage, measure, rasterToSvg, resizePng } from './vectorize'
 
-export const LOGO_COUNT = 4
+/**
+ * Concepts per round — every style in the list, not a slice of it.
+ *
+ * This was 4 against a list of 4, so the two numbers agreeing was a
+ * coincidence rather than a fact. Deriving it means the count cannot drift
+ * from the styles actually generated, which is what `requested` is reported
+ * against when credits are settled.
+ */
+export const LOGO_COUNT = LOGO_STYLES.length
 
 type LogoResult = {
   style: LogoStyle
@@ -81,7 +89,7 @@ export async function generateLogos(params: {
     .limit(1)
 
   const settled = await Promise.allSettled(
-    LOGO_STYLES.slice(0, LOGO_COUNT).map(async (style) => {
+    LOGO_STYLES.map(async (style) => {
       const prompt = logoPrompt({ style, name, project: params.project, branding: params.branding })
 
       const raster = await generateLogoImage({
@@ -347,7 +355,7 @@ async function derivePrimaryAssets(params: {
 
 
 async function readObject(key: string): Promise<Buffer> {
-  const url = await signedDownloadUrl(key, 300)
+  const url = await signedDownloadUrl(key)
   const response = await fetch(url)
   if (!response.ok) throw new Error(`Could not read the chosen logo (${response.status})`)
   return Buffer.from(await response.arrayBuffer())
@@ -394,7 +402,7 @@ export async function rederivePrimaryAssets(projectId: string, primaryKey?: stri
 
   for (const file of concepts) {
     if (file.kind !== 'logo_raster' && file.kind !== 'logo_svg') continue
-    const assetUrl = await signedDownloadUrl(file.r2Key, 300)
+    const assetUrl = await signedDownloadUrl(file.r2Key)
     const assetResponse = await fetch(assetUrl)
     if (!assetResponse.ok) continue
     const name = file.r2Key.split('/').pop() ?? file.id

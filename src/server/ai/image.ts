@@ -28,21 +28,38 @@ const DEFAULT_MODEL = 'bytedance/seedream/v5/pro/text-to-image'
 /**
  * Output dimensions, requested explicitly.
  *
- * The named `square_hd` preset resolves to 2048x2048 on Seedream v5, which
- * crosses fal's 1536x1536 threshold and doubles the price to $0.135. 1024 is
- * ample for a logo that gets vectorised immediately afterwards.
+ * 2048 crosses fal's 1536x1536 threshold and doubles the price per image to
+ * $0.135 — which is the entire point of the trade made here. Two concepts at
+ * 2048 cost $0.27, exactly what four at 1024 cost, and the run is charged the
+ * same number of credits either way.
+ *
+ * 1024 was chosen on the reasoning that the raster gets vectorised immediately
+ * afterwards, so its resolution hardly mattered. That was wrong in the one
+ * place customers actually meet the file: the PNG is what they download and
+ * put on a sign, a shopfront or a print, and 1024 is not enough for any of
+ * them. The trace also improves — edges land on a finer grid, so the curves
+ * VTracer fits are closer to the artwork.
  */
-const IMAGE_SIZE = { width: 1024, height: 1024 } as const
+const IMAGE_SIZE = { width: 2048, height: 2048 } as const
 
-/** USD per generated image at or below 1536x1536. */
-const COST_PER_IMAGE = 0.0675
+/** USD per generated image above fal's 1536x1536 threshold. */
+const COST_PER_IMAGE = 0.135
 
-export const LOGO_STYLES = [
-  'wordmark',
-  'lettermark monogram',
-  'abstract geometric icon',
-  'emblem badge',
-] as const
+/**
+ * Two concepts, chosen to cover the two jobs a brand's artwork has to do.
+ *
+ * Four styles at once looked generous and mostly produced four variations of
+ * the same idea at a resolution too low to use. The wordmark is what goes on a
+ * header, a sign, a letterhead; the icon is what survives being shrunk to a
+ * favicon, an avatar or an app tile. Every other style is a blend of those two,
+ * and the derived assets — favicon, avatars, monochrome — need a text-free
+ * mark to cut from, which only the icon reliably gives.
+ *
+ * The monogram and the emblem badge are not gone from the product: a customer
+ * who wants one asks for it in the logo brief, which is appended to the prompt
+ * verbatim and outranks everything above it.
+ */
+export const LOGO_STYLES = ['wordmark', 'abstract geometric icon'] as const
 
 export type LogoStyle = (typeof LOGO_STYLES)[number]
 

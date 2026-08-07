@@ -35,13 +35,21 @@ export async function sendEmail(params: {
   const resend = getClient()
 
   /*
-   * Without a key the link is logged instead. Development and CI then behave
-   * exactly as before rather than failing, and the link is still usable — which
-   * is the only part a developer actually needs.
+   * Without a key the actionable part is logged instead. Development and CI
+   * then behave exactly as before rather than failing, and what is printed is
+   * still usable — which is the only part a developer actually needs. For a
+   * code that means the code itself: it is the one thing that cannot be
+   * recovered from anywhere else, because it is stored hashed.
    */
   if (!resend) {
-    const url = 'url' in params.template ? params.template.url : ''
-    console.info(`[email] ${params.template.kind} → ${params.to}\n  ${subject}\n  ${url}`)
+    const secret =
+      'url' in params.template
+        ? params.template.url
+        : 'code' in params.template
+          ? params.template.code
+          : ''
+
+    console.info(`[email] ${params.template.kind} → ${params.to}\n  ${subject}\n  ${secret}`)
     return { delivered: false, reason: 'not_configured' as const }
   }
 

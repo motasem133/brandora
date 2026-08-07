@@ -6,7 +6,7 @@ import { useAction } from 'next-safe-action/hooks'
 import { useRef, useState } from 'react'
 
 import { Badge } from '@/components/ui/badge'
-import { ResendVerification } from './resend-verification'
+import { EmailVerification } from './email-verification'
 import { Button } from '@/components/ui/button'
 import { Card, CardTitle } from '@/components/ui/card'
 import { Field } from '@/components/ui/field'
@@ -68,7 +68,7 @@ export function ProfileCard({
         {/* The badge stated a problem and offered nothing to do about it. */}
         {!emailVerified && (
           <div className="mt-3">
-            <ResendVerification email={email} />
+            <EmailVerification email={email} />
           </div>
         )}
       </Field>
