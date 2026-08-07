@@ -1,4 +1,3 @@
-import { toErrorResponse } from '@/server/api-error'
 import { renderSocialPost } from '@/server/render/social-post'
 
 /**
@@ -17,13 +16,13 @@ import { renderSocialPost } from '@/server/render/social-post'
 export const maxDuration = 60
 
 export async function GET(request: Request) {
+  const secret = process.env.RENDER_PROBE_SECRET
+  if (!secret) return new Response(null, { status: 404 })
+
+  const url = new URL(request.url)
+  if (url.searchParams.get('secret') !== secret) return new Response(null, { status: 404 })
+
   try {
-    const secret = process.env.RENDER_PROBE_SECRET
-    if (!secret) return new Response(null, { status: 404 })
-
-    const url = new URL(request.url)
-    if (url.searchParams.get('secret') !== secret) return new Response(null, { status: 404 })
-
     const projectId = url.searchParams.get('projectId')
     if (!projectId) return Response.json({ error: 'projectId is required' }, { status: 400 })
 
@@ -41,6 +40,26 @@ export async function GET(request: Request) {
       },
     })
   } catch (error) {
-    return toErrorResponse(error)
+    /*
+     * The reason, not a category.
+     *
+     * `toErrorResponse` answers INTERNAL, which is right for a customer and
+     * useless here — the whole purpose of this route is to find out why a
+     * browser will not start on the platform, and "INTERNAL" says nothing
+     * about a missing shared library or a read-only path. The caller already
+     * proved they hold the secret.
+     */
+    return Response.json(
+      {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack?.split('\n').slice(0, 12) : undefined,
+        runtime: {
+          vercel: Boolean(process.env.VERCEL),
+          region: process.env.VERCEL_REGION ?? null,
+          node: process.version,
+        },
+      },
+      { status: 500 },
+    )
   }
 }
