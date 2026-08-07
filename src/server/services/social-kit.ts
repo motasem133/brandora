@@ -65,8 +65,8 @@ const pngUri = (buffer: Buffer) => `data:image/png;base64,${buffer.toString('bas
  * someone. Logos stay PNG: JPEG has no alpha, so a transparent mark would
  * arrive on a black square.
  */
-const jpegUri = async (buffer: Buffer, quality = 82) =>
-  `data:image/jpeg;base64,${(await toJpeg(buffer, quality)).toString('base64')}`
+const jpegUri = async (buffer: Buffer, quality = 82, fit = 1080) =>
+  `data:image/jpeg;base64,${(await toJpeg(buffer, quality, fit)).toString('base64')}`
 
 /** Everything the renderer needs about a brand, loaded once per step. */
 async function loadBrand(projectId: string) {

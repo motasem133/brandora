@@ -110,9 +110,21 @@ function hexToInt(hex: string): number {
  * Only for artwork that has no transparency to lose. Logos stay PNG: JPEG has
  * no alpha channel, so a transparent mark would come back on a black square.
  */
-export async function toJpeg(input: Buffer, quality = 82): Promise<Buffer> {
+export async function toJpeg(input: Buffer, quality = 82, fit?: number): Promise<Buffer> {
   const { Jimp } = await import('jimp')
   const image = await Jimp.read(input)
+
+  /*
+   * `fit` also caps the memory the decoder will need downstream.
+   *
+   * A 1536-square photograph embedded in a 1080x1920 page was enough for
+   * Chromium to answer "Protocol error (Page.captureScreenshot): Unable to
+   * capture screenshot" — the surface plus the decoded bitmap would not fit.
+   * Nothing here is ever displayed above 1080, so carrying more pixels than
+   * that only costs memory in the one place there is none to spare.
+   */
+  if (fit && (image.width > fit || image.height > fit)) image.scaleToFit({ w: fit, h: fit })
+
   return Buffer.from(await image.getBuffer('image/jpeg', { quality }))
 }
 
