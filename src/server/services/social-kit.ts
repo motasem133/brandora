@@ -384,10 +384,19 @@ export async function printKitPdf(params: { projectId: string; scenes: SceneKeys
       and(eq(generatedFiles.projectId, params.projectId), eq(generatedFiles.kind, 'social_post')),
     )
 
+  /*
+   * Everything in the deck is embedded at the size the deck shows it.
+   *
+   * The PDF page holds every image at once — three scenes, six posts and the
+   * marks — and it was the one page heavy enough to kill the browser while
+   * seven individual posts drew without trouble. A post thumbnail sits about
+   * 430px wide in a row of three; going in at 1080 was six times the pixels
+   * for the same picture, paid for in the one place there was no memory left.
+   */
   const scenes: { hero?: string; detail?: string } = {}
   for (const kind of ['hero', 'detail'] as const) {
     const key = params.scenes[kind]
-    if (key) scenes[kind] = await jpegUri(await readObject(key))
+    if (key) scenes[kind] = await jpegUri(await readObject(key), 82, 900)
   }
 
   const pdf = await renderKitPdf(
@@ -403,7 +412,7 @@ export async function printKitPdf(params: { projectId: string; scenes: SceneKeys
           .filter((post) => post.metadata?.layout !== 'story')
           .map(async (post) => ({
             label: String(post.metadata?.label ?? 'Post'),
-            src: await jpegUri(await readObject(post.r2Key), 88),
+            src: await jpegUri(await readObject(post.r2Key), 86, 560),
           })),
       ),
     },
