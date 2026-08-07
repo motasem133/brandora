@@ -412,7 +412,30 @@ export const generateBrand = inngest.createFunction(
           generateKitScenes({ projectId, organizationId, generationJobId: jobId }),
         )
 
-        await step.run('kit-posts', () => renderKitPosts({ projectId, scenes }))
+        /*
+         * Rendering is split in two because a browser is launched per image
+         * and eight of them ran to 296s against a 300s ceiling. Two steps of
+         * four each also means a timeout costs one half, not the whole set —
+         * and neither half costs money to repeat.
+         */
+        await step.run('kit-posts-1', () =>
+          renderKitPosts({
+            projectId,
+            scenes,
+            only: ['hero', 'feature', 'statement', 'detail'],
+            replace: true,
+          }),
+        )
+
+        await step.run('kit-posts-2', () =>
+          renderKitPosts({
+            projectId,
+            scenes,
+            only: ['story', 'about', 'palette', 'identity'],
+            replace: false,
+          }),
+        )
+
         await step.run('kit-pdf', () => printKitPdf({ projectId, scenes }))
 
         await markStep(jobId, 'kit', 'done')

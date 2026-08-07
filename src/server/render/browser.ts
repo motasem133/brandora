@@ -95,7 +95,18 @@ export async function renderToPng(html: string, size: { width: number; height: n
     // ships in a fallback face.
     await page.evaluate(() => document.fonts.ready)
 
-    return await page.locator('body > div').first().screenshot({ type: 'png' })
+    /*
+     * The viewport, not the element.
+     *
+     * `locator.screenshot()` captures an element surface, and on the 1080x1920
+     * story it failed in production with "Protocol error
+     * (Page.captureScreenshot): Unable to capture screenshot" — a
+     * single-process Chromium cannot always allocate one that tall. The
+     * viewport is already exactly the size asked for and the page holds a
+     * single div of the same size, so this is the same picture taken the way
+     * the browser is happiest taking it.
+     */
+    return await page.screenshot({ type: 'png' })
   } finally {
     await browser.close()
   }

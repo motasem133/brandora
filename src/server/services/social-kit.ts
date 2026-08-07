@@ -231,7 +231,14 @@ export async function generateKitScenes(params: {
 /*                            Step two — the posts                            */
 /* -------------------------------------------------------------------------- */
 
-export async function renderKitPosts(params: { projectId: string; scenes: SceneKeys }) {
+export async function renderKitPosts(params: {
+  projectId: string
+  scenes: SceneKeys
+  /** A slice of the layouts, so one step cannot outrun the function's ceiling. */
+  only?: LayoutKind[]
+  /** Only the first slice clears what a previous run left behind. */
+  replace?: boolean
+}) {
   const { row, brand } = await loadBrand(params.projectId)
   const marks = await loadMarks(row.primaryLogoFileId)
   const faces = await loadFaces(brand)
@@ -243,6 +250,7 @@ export async function renderKitPosts(params: { projectId: string; scenes: SceneK
     .limit(1)
 
   const kinds = Object.keys(LAYOUTS) as LayoutKind[]
+  const wanted = params.only ?? kinds
   const copy = buildCopy(
     {
       posts: social?.posts ?? [],
@@ -255,12 +263,15 @@ export async function renderKitPosts(params: { projectId: string; scenes: SceneK
     kinds,
   )
 
-  // Replaced, not appended: a rerun means "these instead".
-  await db
-    .delete(generatedFiles)
-    .where(
-      and(eq(generatedFiles.projectId, params.projectId), eq(generatedFiles.kind, 'social_post')),
-    )
+  // Replaced, not appended: a rerun means "these instead". Only the first
+  // slice clears, or the second would delete what the first just made.
+  if (params.replace !== false) {
+    await db
+      .delete(generatedFiles)
+      .where(
+        and(eq(generatedFiles.projectId, params.projectId), eq(generatedFiles.kind, 'social_post')),
+      )
+  }
 
   const sceneUris: Partial<Record<SceneKind, string>> = {}
   for (const kind of SCENE_KINDS) {
@@ -270,7 +281,7 @@ export async function renderKitPosts(params: { projectId: string; scenes: SceneK
 
   const made: LayoutKind[] = []
 
-  for (const layout of kinds) {
+  for (const layout of wanted) {
     const meta = LAYOUTS[layout]
     // A layout whose photograph never arrived is skipped rather than drawn
     // over an empty frame.
