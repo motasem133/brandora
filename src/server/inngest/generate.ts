@@ -14,6 +14,7 @@ import { runModel } from '@/server/ai/run'
 import { brandingSchema, socialSchema, websiteSchema, type BrandingOutput } from '@/server/ai/schemas'
 import { CREDIT_COSTS, settleCredits, type GenerationSection } from '@/server/billing/credits'
 import { generateLogos } from '@/server/services/logos'
+import type { LayoutKind } from '@/server/render/layouts'
 import { generateKitScenes, printKitPdf, renderKitPosts } from '@/server/services/social-kit'
 import { isStorageConfigured } from '@/server/storage/r2'
 import { db } from '@/server/db'
@@ -413,28 +414,28 @@ export const generateBrand = inngest.createFunction(
         )
 
         /*
-         * Rendering is split in two because a browser is launched per image
-         * and eight of them ran to 296s against a 300s ceiling. Two steps of
-         * four each also means a timeout costs one half, not the whole set —
-         * and neither half costs money to repeat.
+         * One post per step, because that is the only shape measured to work.
+         *
+         * Rendering several inside one invocation failed three different ways
+         * — one post then a hang, four then a screenshot the browser could not
+         * allocate, three then "target page, context or browser has been
+         * closed" — while single renders through the probe route went six for
+         * six. A browser is launched per image and the memory does not survive
+         * being asked for several in a row.
+         *
+         * A step is also the retry unit, so one bad image is retried alone
+         * rather than taking its neighbours with it, and none of this costs
+         * money to repeat.
          */
-        await step.run('kit-posts-1', () =>
-          renderKitPosts({
-            projectId,
-            scenes,
-            only: ['hero', 'feature', 'statement', 'detail'],
-            replace: true,
-          }),
-        )
+        const layouts: LayoutKind[] = [
+          'hero', 'feature', 'statement', 'detail', 'story', 'about', 'palette', 'identity',
+        ]
 
-        await step.run('kit-posts-2', () =>
-          renderKitPosts({
-            projectId,
-            scenes,
-            only: ['story', 'about', 'palette', 'identity'],
-            replace: false,
-          }),
-        )
+        for (const [index, layout] of layouts.entries()) {
+          await step.run(`kit-post-${layout}`, () =>
+            renderKitPosts({ projectId, scenes, only: [layout], replace: index === 0 }),
+          )
+        }
 
         await step.run('kit-pdf', () => printKitPdf({ projectId, scenes }))
 

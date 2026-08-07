@@ -152,8 +152,35 @@ export async function generateKitScenes(params: {
   projectId: string
   organizationId: string
   generationJobId: string
+  /** Buy new photography even though this project already has some. */
+  fresh?: boolean
 }): Promise<SceneKeys> {
   const { row } = await loadBrand(params.projectId)
+
+  /*
+   * Photography a project already owns is reused.
+   *
+   * It is the only part of a kit that costs money, and most reasons to build
+   * a kit again are not reasons to reshoot: a different logo was chosen, the
+   * copy changed, a layout was fixed. Charging for three fresh photographs
+   * every time would make "build it again" an expensive way to re-render.
+   */
+  if (!params.fresh) {
+    const existing = await db
+      .select({ r2Key: generatedFiles.r2Key, metadata: generatedFiles.metadata })
+      .from(generatedFiles)
+      .where(
+        and(eq(generatedFiles.projectId, params.projectId), eq(generatedFiles.kind, 'social_scene')),
+      )
+
+    const reused: SceneKeys = {}
+    for (const file of existing) {
+      const scene = file.metadata?.scene as SceneKind | undefined
+      if (scene && SCENE_KINDS.includes(scene)) reused[scene] = file.r2Key
+    }
+
+    if (Object.keys(reused).length === SCENE_KINDS.length) return reused
+  }
 
   // A rerun replaces its scenes rather than accumulating them.
   await db
@@ -317,7 +344,15 @@ export async function renderKitPosts(params: {
     made.push(layout)
   }
 
-  if (made.length === 0) throw new Error('No posts could be rendered for this kit.')
+  /*
+   * Only an error when something was actually asked for and none of it could
+   * be drawn. A single-layout step whose photograph never arrived returns
+   * empty on purpose — the kit is short one post, not broken.
+   */
+  if (made.length === 0 && wanted.some((layout) => !LAYOUTS[layout].needs)) {
+    throw new Error('No posts could be rendered for this kit.')
+  }
+
   return { layouts: made }
 }
 
