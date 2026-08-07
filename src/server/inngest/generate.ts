@@ -431,9 +431,34 @@ export const generateBrand = inngest.createFunction(
           'hero', 'feature', 'statement', 'detail', 'story', 'about', 'palette', 'identity',
         ]
 
+        /*
+         * One failing post does not lose the others.
+         *
+         * A run that drew six posts and then lost the browser on the seventh
+         * threw all six away and refunded the customer, which is the worst of
+         * both: no kit, and a wasted wait. The logo step learned this already —
+         * each concept stands alone. Chromium is living inside a 2GB function
+         * and will occasionally be killed; the kit should survive that rather
+         * than be defined by it.
+         */
+        const drawn: string[] = []
+
         for (const [index, layout] of layouts.entries()) {
-          await step.run(`kit-post-${layout}`, () =>
-            renderKitPosts({ projectId, scenes, only: [layout], replace: index === 0 }),
+          try {
+            await step.run(`kit-post-${layout}`, () =>
+              renderKitPosts({ projectId, scenes, only: [layout], replace: index === 0 }),
+            )
+            drawn.push(layout)
+          } catch (error) {
+            console.warn(`[kit] ${layout} could not be drawn`, error)
+          }
+        }
+
+        // Half a kit is not a kit. Below that it is worth failing and giving
+        // the credits back rather than handing over something unusable.
+        if (drawn.length < layouts.length / 2) {
+          throw new Error(
+            `Only ${drawn.length} of ${layouts.length} posts could be drawn.`,
           )
         }
 
