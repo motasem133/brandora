@@ -192,12 +192,38 @@ export async function generateKitScenes(params: {
   )
 
   const keys: SceneKeys = {}
+  const failures: string[] = []
+
   for (const outcome of settled) {
-    if (outcome.status === 'fulfilled') keys[outcome.value[0]] = outcome.value[1]
-    else console.warn('[kit] a scene failed; the kit continues without it', outcome.reason)
+    if (outcome.status === 'fulfilled') {
+      keys[outcome.value[0]] = outcome.value[1]
+    } else {
+      failures.push(
+        outcome.reason instanceof Error ? outcome.reason.message : String(outcome.reason),
+      )
+      console.warn('[kit] a scene failed; the kit continues without it', outcome.reason)
+    }
   }
 
-  if (Object.keys(keys).length === 0) throw new Error('No photography could be generated.')
+  /*
+   * The reason travels with the failure.
+   *
+   * "No photography could be generated." was the whole of what the first
+   * production run recorded, while the actual cause — fal answering 403 "User
+   * is locked. Reason: Exhausted balance." in 120ms — went to a console nobody
+   * reads. Diagnosing it meant going and asking fal directly, which is not
+   * something a customer or a support reply can do. Distinct reasons only:
+   * three copies of one message is not three facts.
+   */
+  if (Object.keys(keys).length === 0) {
+    const distinct = [...new Set(failures)]
+    throw new Error(
+      distinct.length
+        ? `No photography could be generated. ${distinct.join(' | ').slice(0, 400)}`
+        : 'No photography could be generated.',
+    )
+  }
+
   return keys
 }
 
