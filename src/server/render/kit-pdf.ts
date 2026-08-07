@@ -181,8 +181,6 @@ function socialPages(c: KitContent, a: KitAssets) {
 }
 
 export function kitDocument(c: KitContent, a: KitAssets) {
-  const p = c.brand.palette
-
   return `<!doctype html><html><head><meta charset="utf-8"><style>
     @page { size: ${PAGE.width}px ${PAGE.height}px; margin: 0; }
     * { margin:0; padding:0; box-sizing:border-box; }
