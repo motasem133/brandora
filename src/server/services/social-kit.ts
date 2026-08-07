@@ -12,7 +12,7 @@ import { LAYOUTS, renderLayout, type LayoutKind } from '@/server/render/layouts'
 import { fontFace, type PostBrand } from '@/server/render/post-template'
 import { scenePrompt, SCENES, type SceneKind } from '@/server/render/scenery'
 import { liftBackground, splitLockup, trim } from '@/server/services/logo-parts'
-import { toJpeg } from '@/server/services/vectorize'
+import { shrinkPng, toJpeg } from '@/server/services/vectorize'
 import { objectKey, signedDownloadUrl, uploadObject } from '@/server/storage/r2'
 
 /**
@@ -105,8 +105,15 @@ async function loadBrand(projectId: string) {
   return { row, brand }
 }
 
-/** The chosen logo, split into the name and the symbol the layouts want. */
-async function loadMarks(primaryLogoFileId: string | null) {
+/**
+ * The chosen logo, split into the name and the symbol the layouts want.
+ *
+ * `fit` caps how many pixels of transparency travel with them. A post shows
+ * the wordmark at 190px and the PDF at most at 190; carrying a 735-wide one is
+ * data nobody sees, and in a PDF it is a soft mask the reader recomposites on
+ * every repaint.
+ */
+async function loadMarks(primaryLogoFileId: string | null, fit?: number) {
   if (!primaryLogoFileId) throw new Error('No logo has been chosen for this project.')
 
   const [logo] = await db
@@ -121,10 +128,14 @@ async function loadMarks(primaryLogoFileId: string | null) {
   const parts = await splitLockup(transparent)
   const trimmed = parts ? null : await trim(transparent)
 
+  const wordmark = parts ? parts.text.buffer : trimmed!
+  const mark = parts ? parts.icon.buffer : trimmed!
+  const cap = async (buffer: Buffer) => (fit ? shrinkPng(buffer, fit) : buffer)
+
   return {
-    logo: pngUri(transparent),
-    wordmark: pngUri(parts ? parts.text.buffer : trimmed!),
-    mark: pngUri(parts ? parts.icon.buffer : trimmed!),
+    logo: pngUri(await cap(transparent)),
+    wordmark: pngUri(await cap(wordmark)),
+    mark: pngUri(await cap(mark)),
   }
 }
 
@@ -362,7 +373,8 @@ export async function renderKitPosts(params: {
 
 export async function printKitPdf(params: { projectId: string; scenes: SceneKeys }) {
   const { row, brand } = await loadBrand(params.projectId)
-  const marks = await loadMarks(row.primaryLogoFileId)
+  // 380 is comfortably above the largest size any page shows a mark at.
+  const marks = await loadMarks(row.primaryLogoFileId, 380)
   const faces = await loadFaces(brand)
 
   const posts = await db

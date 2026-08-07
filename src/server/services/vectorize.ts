@@ -128,3 +128,22 @@ export async function toJpeg(input: Buffer, quality = 82, fit?: number): Promise
   return Buffer.from(await image.getBuffer('image/jpeg', { quality }))
 }
 
+/**
+ * Shrinks a PNG while keeping its transparency.
+ *
+ * For artwork that has to stay transparent but is displayed small. The brand
+ * kit PDF embedded the marks at full size — a 349x433 symbol went in at 269KB
+ * with a soft mask, to be shown at about 190px — and every soft mask is alpha
+ * the reader has to composite on each repaint, which is what made the document
+ * stutter when scrolled. Fewer pixels is less to composite.
+ */
+export async function shrinkPng(input: Buffer, fit: number): Promise<Buffer> {
+  const { Jimp } = await import('jimp')
+  const image = await Jimp.read(input)
+
+  if (image.width <= fit && image.height <= fit) return input
+
+  image.scaleToFit({ w: fit, h: fit })
+  return Buffer.from(await image.getBuffer('image/png'))
+}
+
