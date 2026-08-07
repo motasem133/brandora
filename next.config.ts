@@ -50,7 +50,17 @@ const nextConfig: NextConfig = {
    * file, named exactly.
    */
   outputFileTracingIncludes: {
+    /*
+     * Every route that launches a browser needs it, and tracing is per-route.
+     *
+     * Scoped to the probe alone at first, which made the probe work and left
+     * the real path broken: the kit runs inside the Inngest handler, so a
+     * production run generated three photographs, paid for them, and then died
+     * on a missing 30KB JSON file. The probe proving the browser works says
+     * nothing about the route that actually uses it.
+     */
     '/api/render/probe': ['./node_modules/playwright-core/browsers.json'],
+    '/api/inngest': ['./node_modules/playwright-core/browsers.json'],
   },
 
   /*
