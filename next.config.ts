@@ -24,12 +24,18 @@ function posthogUpstreams() {
 
 const nextConfig: NextConfig = {
   /*
-   * Native addons must not be bundled — the bundler cannot place a .node
-   * binary in an ESM chunk, and both of these load platform-specific binaries
-   * at runtime. Listing them here makes Next require() them from node_modules
-   * instead, which is also how they resolve correctly on Vercel.
+   * There is no `serverExternalPackages` here any more, and that is the point.
+   *
+   * It listed `@neplex/vectorizer` and `sharp`, because a bundler cannot place
+   * a `.node` binary in an ESM chunk and both loaded platform-specific ones at
+   * runtime. Between them they caused every deployment failure this project
+   * has had: ERR_DLOPEN_FAILED on libvips, a 207MB tracing include that would
+   * not deploy, and an `/api/inngest` that died on startup because the loader
+   * ran whenever anything imported its module graph.
+   *
+   * sharp was replaced by jimp; vectorising is now a model call. Nothing in
+   * the server runtime is native, so nothing needs excusing from the bundler.
    */
-  serverExternalPackages: ['@neplex/vectorizer', 'sharp'],
 
   /*
    * PostHog's own domain is on every ad-block list, so requests to it are

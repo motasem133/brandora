@@ -2,14 +2,14 @@ import 'server-only'
 
 import { and, eq, inArray } from 'drizzle-orm'
 
-import { generateLogoImage, LOGO_STYLES, logoPrompt, type LogoStyle } from '@/server/ai/image'
+import { generateLogoImage, LOGO_STYLES, logoPrompt, vectorizeToSvg, type LogoStyle } from '@/server/ai/image'
 import type { ProjectBrief } from '@/server/ai/prompts'
 import type { BrandingOutput } from '@/server/ai/schemas'
 import { db } from '@/server/db'
 import { brandingAssets, generatedFiles } from '@/server/db/schema'
 import { objectKey, signedDownloadUrl, uploadObject } from '@/server/storage/r2'
 import { buildBrandKit } from './brand-kit'
-import { makeMonochrome, makeOgImage, measure, rasterToSvg, resizePng } from './vectorize'
+import { makeMonochrome, makeOgImage, measure, resizePng } from './vectorize'
 
 /**
  * Concepts per round — every style in the list, not a slice of it.
@@ -138,10 +138,21 @@ export async function generateLogos(params: {
 
       kitFiles.set(`${slug}.png`, raster)
 
-      // Vectorisation is best-effort: a logo that will not trace cleanly is
+      // Vectorisation is best-effort: a logo that will not vectorise cleanly is
       // still a usable raster logo, so it must not fail the whole concept.
       try {
-        const svg = await rasterToSvg(raster)
+        /*
+         * A signed link rather than the bytes. The PNG went to R2 a few lines
+         * above, so the object already exists; posting a two-megabyte data URI
+         * to describe a file the vectoriser can simply fetch would be the
+         * slower way round. The URL is short-lived by default.
+         */
+        const svg = await vectorizeToSvg({
+          imageUrl: await signedDownloadUrl(pngKey),
+          organizationId: params.organizationId,
+          projectId: params.projectId,
+          generationJobId: params.generationJobId,
+        })
         const svgKey = objectKey(params.projectId, `logo-r${round}-${slug}.svg`)
         await uploadObject({ key: svgKey, body: svg, contentType: 'image/svg+xml' })
 
