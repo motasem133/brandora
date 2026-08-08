@@ -9,6 +9,7 @@ import { BrandStage } from '@/components/features/landing/brand-stage'
 import { SPECIMENS } from '@/components/features/landing/specimens'
 import type { Specimen } from '@/components/features/landing/specimens'
 import { Cell, SectionArc, ProductFrame, SectionReveal } from '@/components/ui/horizon'
+import { contrast } from '@/lib/brand-theme'
 import { AfterHeadline, HeadlineWords } from '@/components/features/landing/motion-hero'
 import { PricingFaq } from '@/components/features/landing/pricing-faq'
 import { PricingPlans } from '@/components/features/landing/pricing-plans'
@@ -67,6 +68,55 @@ export default async function HorizonDirection({
     ...source,
     line: LINES[source.id],
   }))
+
+  /*
+   * The ground the step rail is drawn on: `--bg-base` inside `.world-dark`.
+   *
+   * Written as a literal because a server component cannot read a CSS variable,
+   * and named rather than inlined so the pairing is findable from either end if
+   * that token ever moves.
+   */
+  const GROUND = '#08080a'
+
+  /*
+   * The colours the run in "How a run works" ends in.
+   *
+   * That rail used to be Brandora's violet fading to blue — our colour drawn
+   * down the one section whose entire claim is that a run turns nothing into a
+   * customer's brand. It now begins as a neutral hairline at Brief, where no
+   * brand exists yet, and arrives at the palette the run actually produced by
+   * Publish, where it does.
+   *
+   * Two filters, and both are about honesty rather than taste. The background is
+   * dropped because it is the brand's paper, not one of its colours, and a rail
+   * terminating in near-white says nothing. The contrast floor is dropped
+   * because a generated palette's darkest member is invisible here — Sultana's
+   * #1B3A3A measures 1.63:1 on this ground — and lightening it until it reads
+   * returns #768989, which no visitor would recognise as that brand's teal.
+   * Showing fewer real colours beats showing a grey standing in for one.
+   */
+  const run = SPECIMENS[0]
+  const railColors = run.swatches.filter(
+    (hex) => hex !== run.palette.background && contrast(hex, GROUND) >= 3,
+  )
+  const railFaint = 'color-mix(in srgb, #ffffff 14%, transparent)'
+  /*
+   * Never one stop: a single-stop `linear-gradient` is invalid and would drop
+   * the rail entirely for a brand with no colour legible on this ground.
+   *
+   * The tail fades rather than stopping. The rail is positioned against a column
+   * whose height is set by the last step's paragraph, not by the last step's
+   * mark, so it runs some distance past that mark — 42px at this width in
+   * English, and a different number in Arabic, or at any width where a body
+   * wraps to another line. While the gradient ended in Brandora's violet fading
+   * to nothing that overrun was invisible; ending in a solid colour turned it
+   * into a loose thread hanging below the sequence. Dissolving after the last
+   * mark is correct at every length instead of at one.
+   */
+  const railStops =
+    railColors.length > 0
+      ? [railFaint, ...railColors.slice(0, -1), `${railColors[railColors.length - 1]} 92%`, 'transparent']
+      : [railFaint, 'transparent']
 
   const stageLabels = {
     swap: t('stageSwap'),
@@ -303,8 +353,17 @@ export default async function HorizonDirection({
 
       {/* -------------------------------------------------------------- how */}
       <div aria-hidden className="rule-fade" />
+      {/*
+        No `<SectionArc>`, for the reason the kit section has none.
+
+        The arc is a 90rem violet crest, and there were three of them below this
+        fold plus five step marks each throwing a 28px violet glow — which is
+        Brandora's colour spent eight times in the space between the cabinet and
+        the close, on a page whose argument is that the colour on screen belongs
+        to the customer. This section keeps the light it earns: the rail, in the
+        run's own palette.
+      */}
       <section id="how" className="relative overflow-hidden">
-        <SectionArc className="top-0" />
         <div className="relative z-10 mx-auto max-w-7xl px-8 py-28">
           <SectionReveal>
             <h2 className="type-section">{t('howTitle')}</h2>
@@ -329,22 +388,49 @@ export default async function HorizonDirection({
           */}
           <div className="mt-16 grid gap-x-16 gap-y-16 lg:grid-cols-[minmax(0,24rem)_1fr] lg:items-start">
           <div className="relative">
-            {/* `rail` is the utility for exactly this and had no adopters,
-                while its hand-written equivalent lived here. */}
-            <div aria-hidden className="rail absolute bottom-8 start-[1.55rem] top-4 w-px" />
+            {/* The `rail` utility this used to carry was Brandora's ramp, and it
+                is gone from the stylesheet along with `rail-node`: this was the
+                only caller of either, and neither survives contact with the rule
+                that a run's own colours are the ones drawn here. */}
+            <div
+              aria-hidden
+              className="absolute bottom-8 start-[1.55rem] top-4 w-px"
+              style={{ backgroundImage: `linear-gradient(180deg, ${railStops.join(', ')})` }}
+            />
 
             <ol>
               {steps.map((step, index) => (
                 <li key={step.name} className="pb-14 last:pb-0">
                   {/* The reveal wraps a real box: under `display: contents` it
-                      would generate none, and animate nothing. */}
+                      would generate none, and animate nothing.
+
+                      `lift` is off. The cell is a number and two lines of text,
+                      and a paragraph that rises when the pointer crosses it is
+                      the reflex this page is being taken apart for: motion
+                      spent where nothing is being operated. */}
                   <Cell
                     index={index}
+                    lift={false}
                     className="relative grid grid-cols-[3.5rem_1fr] items-start gap-x-6"
                   >
+                  {/*
+                    The marks are quiet except the last one.
+
+                    Every one of them used to be a lit violet disc, which made
+                    five equal beacons out of a sequence and said the same thing
+                    five times. They are plain now, and the mark at Publish takes
+                    the colour the rail lands on — the one step where the brand
+                    exists, wearing the brand.
+                  */}
                   <StepMark
                     index={index}
-                    className="rail-node relative z-10 flex size-14 items-center justify-center rounded-card text-lg font-semibold"
+                    className="relative z-10 flex size-14 items-center justify-center rounded-card border bg-base text-lg font-semibold"
+                    style={{
+                      borderColor:
+                        index === steps.length - 1 && railColors.length > 0
+                          ? railColors[railColors.length - 1]
+                          : railFaint,
+                    }}
                   >
                     {index + 1}
                   </StepMark>
@@ -371,8 +457,17 @@ export default async function HorizonDirection({
             columns for it to stay beside.
           */}
           <SectionReveal delay={0.15} className="lg:sticky lg:top-24">
-            <div className="lit [--lit-radius:var(--radius-panel)]">
-              <div className="lit-inner bloom p-4 [--bloom-strength:16%] sm:p-6">
+            {/*
+              A plain frame, where this was `lit` over `bloom`.
+
+              Both read `--brand-primary`, so the one screenshot of our own
+              product on this page sat inside a violet edge with a violet wash
+              rising through it — the treatment the fold dropped, surviving in
+              the section directly below it. The utilities stay; they are right
+              on a card you operate, and a dozen surfaces behind the login use
+              them. This is a picture in a frame, so it gets a hairline.
+            */}
+            <div className="rounded-panel border border-line bg-surface p-4 sm:p-6">
                 <Image
                   src="/marketing/run-brief.webp"
                   alt={t('howShot')}
@@ -384,7 +479,6 @@ export default async function HorizonDirection({
                   className="w-full rounded-card"
                   sizes="(max-width: 1024px) 100vw, 640px"
                 />
-              </div>
             </div>
             <p className="mt-4 max-w-[46ch] text-sm text-fg-muted">{t('howShot')}</p>
           </SectionReveal>

@@ -800,19 +800,15 @@
   height: 100%;
 }
 
-/* A rail of light, for anything sequential: steps, timelines, nav. */
-@utility rail {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--brand-primary) 70%, transparent),
-    color-mix(in srgb, var(--brand-secondary) 50%, transparent),
-    transparent
-  );
-}
-
-/* The marker that sits on a rail, lit from within. */
-@utility rail-node {
-  background-color: var(--bg-base);
-  border: 1px solid color-mix(in srgb, #ffffff 12%, transparent);
-  box-shadow: 0 0 28px -6px color-mix(in srgb, var(--brand-primary) 90%, transparent);
-}
+/*
+ * `rail` and `rail-node` used to live here: a violet-to-blue gradient for
+ * anything sequential, and a disc lit from within to sit on it. The landing
+ * page's five steps were the only caller either ever had, and they now draw
+ * that rail in the palette of the run they describe rather than in ours — the
+ * one section arguing that a run turns nothing into a customer's brand is the
+ * last place Brandora's own colour should be the thing descending the page.
+ *
+ * Nothing generic replaces them. A second sequence, if one ever appears, will
+ * want its own answer to whose colour it is carrying, and a utility named after
+ * the shape rather than the source is what let this one go unexamined.
+ */

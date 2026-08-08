@@ -123,10 +123,13 @@ export function StepMark({
   children,
   className,
   index,
+  style,
 }: {
   children: React.ReactNode
   className?: string
   index: number
+  /** The caller's, for a colour it computes per step. */
+  style?: React.CSSProperties
 }) {
   const reduced = useReducedMotion()
 
@@ -134,6 +137,7 @@ export function StepMark({
     <motion.span
       data-reveal
       className={className}
+      style={style}
       /*
        * Starts small rather than at nothing, and the margin below is vertical.
        *
