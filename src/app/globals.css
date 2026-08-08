@@ -124,6 +124,35 @@
   --danger: #ef4444;
 }
 
+/*
+ * The marketing ground, taken off navy and onto true neutral.
+ *
+ * The pages in this scope exist to show a generated brand, and navy is a hue.
+ * A customer's teal or their clay brown arriving onto a blue-black ground has
+ * to fight it for the eye, so the ground stops competing: the only colour in
+ * the frame is the one the run produced. The violet stays, but as the
+ * product's signature spent twice per view — the mark and the primary control
+ * — rather than as the light the whole room is lit by.
+ *
+ * The three steps keep their luminance ladder, so nothing measured against
+ * them moves: white lands at 20.01:1, 19.00:1 and 16.97:1 here against 20.12,
+ * 19.13 and 17.31 on navy. The two body tones are re-cut neutral for the same
+ * reason the ground is, and they were checked rather than eyeballed —
+ * secondary 9.00 / 8.54 / 7.63, muted 5.61 / 5.33 / 4.76, each within 0.2 of
+ * the navy value it replaces.
+ *
+ * Scoped to `.world-dark` on purpose. The app behind the login is a different
+ * argument and is not part of this change; `:root` above still owns it.
+ */
+.world-dark {
+  --bg-base: #08080a;
+  --bg-surface: #101013;
+  --bg-elevated: #1c1c21;
+
+  --text-secondary: #adadb8;
+  --text-muted: #87878f;
+}
+
 /* Attribute, not class: React owns <html>'s className and wipes a class added
    imperatively whenever the locale changes. See lib/theme.ts. */
 [data-theme='light'] {

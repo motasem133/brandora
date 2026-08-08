@@ -4,9 +4,10 @@ import Image from 'next/image'
 
 import { HeroBadge } from '@/components/features/landing/float'
 import { PaletteDeal, PillFan, StepMark } from '@/components/features/landing/flourish'
+import { BrandStage } from '@/components/features/landing/brand-stage'
+import type { Specimen } from '@/components/features/landing/brand-stage'
 import {
   Cell,
-  Horizon,
   LightSweep,
   SectionArc,
   ProductFrame,
@@ -71,6 +72,58 @@ const POSTS = [
 /** Sultana's own palette, as the run wrote it. */
 const PALETTE = ['#1B3A3A', '#D4A853', '#F43F5E', '#FEFAF5']
 
+/** Makān's, from `PRODUCT.md` — a coffee brand generated end to end. */
+const MAKAN_PALETTE = ['#6F4E37', '#D4A574', '#C08552', '#FAF6F0']
+
+/*
+ * Neither of these carries a `text` colour, because neither run recorded one
+ * we can point at. The darkest member of each palette is handed to
+ * `brandTheme` as the ink and checked against the paper there like everything
+ * else — 11.8:1 for Sultana's teal on its cream, 6.91:1 for Makān's brown on
+ * its. If a future specimen's ink failed, the plate would fall back to plain
+ * black or white rather than rendering an unreadable one.
+ */
+const SULTANA: Omit<Specimen, 'line'> = {
+  id: 'sultana',
+  name: 'Sultana',
+  palette: {
+    primary: '#1B3A3A',
+    secondary: '#D4A853',
+    accent: '#F43F5E',
+    background: '#FEFAF5',
+    text: '#1B3A3A',
+  },
+  swatches: PALETTE,
+  fonts: { heading: 'Reem Kufi Ink', body: 'El Messiri' },
+  /* The wordmark, not `sultana-icon.webp`: the icon export is trimmed too
+     close and clips its own lettering at the frame edge. */
+  mark: { src: '/marketing/sultana-wordmark.webp', width: 1200, height: 464 },
+}
+
+/*
+ * Makān has no mark here on purpose. Its four logo concepts are real and sit in
+ * R2 with the rest of that run, but nothing has exported them to `public/`, and
+ * drawing a stand-in would break the one rule this page cannot break: every
+ * file it shows is output a customer would download.
+ *
+ * The plate handles the absence by setting the name in the brand's own heading
+ * face, which is honest about what it is showing and still repaints the whole
+ * fold — the ground, the ink, the hairlines and the palette are all Makān's.
+ */
+const MAKAN: Omit<Specimen, 'line'> = {
+  id: 'makan',
+  name: 'Makān',
+  palette: {
+    primary: '#6F4E37',
+    secondary: '#D4A574',
+    accent: '#C08552',
+    background: '#FAF6F0',
+    text: '#6F4E37',
+  },
+  swatches: MAKAN_PALETTE,
+  fonts: { heading: 'Sora', body: 'Inter' },
+}
+
 export default async function HorizonDirection({
   params,
 }: {
@@ -91,6 +144,29 @@ export default async function HorizonDirection({
   const tn = await getTranslations('Nav')
   const rest = t.raw('restItems') as string[]
   const steps = t.raw('steps') as { name: string; body: string }[]
+
+  /*
+   * The two lines are treated differently because they are different things.
+   *
+   * Sultana's is ours — an editorial gloss on why the run picked that name — so
+   * it goes through the catalogue and is written natively in Arabic. Makān's is
+   * the slogan the run generated, so it is reproduced verbatim in both locales,
+   * exactly as the brand's name and its font families are. Translating a piece
+   * of generated output to display it would misrepresent the output.
+   */
+  const specimens: Specimen[] = [
+    { ...SULTANA, line: t('kitNameReason') },
+    { ...MAKAN, line: 'Brewed for focus.' },
+  ]
+
+  const stageLabels = {
+    swap: t('stageSwap'),
+    wall: t('stageWall'),
+    palette: t('kitPalette'),
+    headingFont: t('headingFont'),
+    bodyFont: t('bodyFont'),
+    markAlt: t('kitLogoAlt'),
+  }
 
   return (
     <div className="world-dark min-h-dvh overflow-x-hidden">
@@ -147,15 +223,37 @@ export default async function HorizonDirection({
 
       <main id="content" tabIndex={-1}>
       {/* ------------------------------------------------------------- hero */}
-      <section className="relative overflow-hidden pb-0 pt-14 text-center sm:pt-20">
-        <Horizon />
+      {/*
+        The fold's light used to be the `<Horizon>` arc: a violet crest behind
+        the copy, throwing a 46rem bloom up into it. It is a good drawing and it
+        was the problem. Every colour in the first viewport came from Brandora,
+        which is the composition of every AI product's landing page, and it left
+        the customer's brand as five chips a scroll further down. The arc is
+        gone from this section and stays in the four below it, where there is no
+        generated brand to compete with.
+      */}
+      {/*
+        Two columns from `lg`, and the narrow one is ours.
 
-        <div className="relative z-10 mx-auto max-w-4xl px-8">
+        Stacked and centred, the copy alone filled a laptop viewport — badge,
+        three lines of display type, a deck and two controls came to about 500px
+        — and the plate below it crested the fold by a hundred pixels. That is
+        the old composition with a new picture in it. Side by side, the brand
+        holds roughly two thirds of the frame and is whole above the fold, which
+        is the only arrangement that makes the argument the section is for.
+      */}
+      <section className="relative overflow-hidden pb-0 pt-14 sm:pt-20">
+        <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-x-14 gap-y-12 px-8 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
+        <div className="text-center lg:text-start">
           <HeroBadge>
-            <span className="inline-flex items-center gap-2.5 rounded-full border border-line bg-elevated/40 py-1 pe-4 ps-1 text-sm backdrop-blur">
-              <span className="rounded-full bg-[image:var(--brand-gradient)] px-3 py-1 text-xs font-semibold">
-                {t('badgePill')}
-              </span>
+            {/*
+              The pill's gradient fill went with the arc. There are two spends
+              of the brand ramp in this viewport now — the mark in the header and
+              the primary control — and a badge is not worth one of them.
+            */}
+            <span className="inline-flex items-center gap-2.5 rounded-full border border-line bg-elevated/40 px-4 py-1.5 text-sm backdrop-blur">
+              <span className="font-semibold">{t('badgePill')}</span>
+              <span aria-hidden className="h-3.5 w-px bg-line-strong" />
               <span className="text-fg-secondary">{t('badgeText')}</span>
             </span>
           </HeroBadge>
@@ -174,8 +272,13 @@ export default async function HorizonDirection({
               `type-display`. They were spelled out here and in four other
               headings on this page, which is how one of them ended up a step
               off from the rest.
+
+              The section step rather than the display one, which is the whole
+              point: the largest thing in this viewport is the customer's mark,
+              not our sentence about it. The page's own voice takes the display
+              size once, at the close, where there is no brand to speak over.
             */}
-            <h1 className="type-display">
+            <h1 className="type-section">
               <HeadlineWords text={t('heroHeadline')} />{' '}
               <AfterHeadline delay={0.3}>
                 <span className="type-trail block">{t('heroHeadlineAfter')}</span>
@@ -184,13 +287,13 @@ export default async function HorizonDirection({
           </div>
 
           <AfterHeadline delay={0.5}>
-            <p className="mx-auto mt-7 max-w-[52ch] text-lg leading-relaxed text-fg-secondary">
+            <p className="mt-6 max-w-[44ch] leading-relaxed text-fg-secondary max-lg:mx-auto">
               {t('heroDeck')}
             </p>
           </AfterHeadline>
 
           <AfterHeadline delay={0.62}>
-            <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+            <div className="mt-9 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
               <Link
                 href="/pricing"
                 className={buttonVariants({ variant: 'outline', shape: 'pill' })}
@@ -205,21 +308,19 @@ export default async function HorizonDirection({
           </AfterHeadline>
         </div>
 
-        {/* The product, framed in front of the light and cropped by the fold. */}
-        <div className="relative z-10 mx-auto mt-28 max-w-6xl px-8 sm:mt-36">
-          <ProductFrame>
-            <div className="rounded-t-panel border border-line bg-elevated/30 p-2 shadow-[0_-10px_80px_-20px_color-mix(in_srgb,var(--brand-indigo)_60%,transparent)] backdrop-blur">
-              <Image
-                src="/marketing/app-dashboard.webp"
-                alt={t('productAlt')}
-                width={1600}
-                height={900}
-                className="w-full rounded-t-card"
-                sizes="(max-width: 1024px) 100vw, 1100px"
-                priority
-              />
-            </div>
-          </ProductFrame>
+        {/*
+          The output, not a picture of the tool that made it.
+
+          What stood here was a screenshot of the dashboard in a lit frame,
+          which is the same sentence as the headline said in a second medium:
+          "this is a product that generates brands". The plate says something
+          the copy cannot, because it is a brand, wearing itself, in the
+          majority of the frame — and pressing the other chip repaints it
+          through the same code path the app uses behind the login.
+        */}
+        <ProductFrame>
+          <BrandStage specimens={specimens} labels={stageLabels} />
+        </ProductFrame>
         </div>
       </section>
 
