@@ -6,7 +6,14 @@ import { env } from '@/lib/env'
 import { AppError } from '@/lib/errors'
 import { creditsForSections, reserveCredits, type GenerationSection } from '@/server/billing/credits'
 import { db } from '@/server/db'
-import { generationJobs, projects } from '@/server/db/schema'
+import {
+  brandingAssets,
+  generatedFiles,
+  generationJobs,
+  projects,
+  socialMediaAssets,
+  websiteAssets,
+} from '@/server/db/schema'
 import { inngest } from '@/server/inngest/client'
 import { isStorageConfigured } from '@/server/storage/r2'
 
@@ -31,6 +38,52 @@ export function sectionsForProject(project: {
    * explicitly, from the project page, once there is a logo to build on.
    */
   return sections
+}
+
+/**
+ * What pressing the button should actually run.
+ *
+ * "Retry" on a part-finished run used to mean the whole plan again. A brand
+ * whose website alone failed cost nine credits to recover a one-credit
+ * section — and it did not only overcharge, it overwrote: the branding, logos
+ * and social copy that had all succeeded were regenerated on top of
+ * themselves, so pressing the button lost work as well as money.
+ *
+ * Missing sections are decided from the stored output, not from the last job's
+ * progress. Job bookkeeping does not survive its own edge case: a section retry
+ * writes `completed` to the project even though it only ran one section, so a
+ * brand still missing its website reads as finished a moment later. What is on
+ * disk cannot drift like that.
+ *
+ * When nothing is missing the whole plan runs, which is what a press means on a
+ * brand that is already complete.
+ */
+export async function sectionsToRun(
+  projectId: string,
+  plan: GenerationSection[],
+): Promise<GenerationSection[]> {
+  const [branding, website, social, logo] = await Promise.all([
+    db.select({ id: brandingAssets.id }).from(brandingAssets).where(eq(brandingAssets.projectId, projectId)).limit(1),
+    db.select({ id: websiteAssets.id }).from(websiteAssets).where(eq(websiteAssets.projectId, projectId)).limit(1),
+    db.select({ id: socialMediaAssets.id }).from(socialMediaAssets).where(eq(socialMediaAssets.projectId, projectId)).limit(1),
+    db
+      .select({ id: generatedFiles.id })
+      .from(generatedFiles)
+      .where(and(eq(generatedFiles.projectId, projectId), eq(generatedFiles.kind, 'logo_raster')))
+      .limit(1),
+  ])
+
+  const present: Record<GenerationSection, boolean> = {
+    branding: branding.length > 0,
+    logos: logo.length > 0,
+    website: website.length > 0,
+    social: social.length > 0,
+    // The kit is never in a default plan; it is asked for explicitly.
+    kit: true,
+  }
+
+  const missing = plan.filter((section) => !present[section])
+  return missing.length > 0 ? missing : plan
 }
 
 export function isLogoGenerationAvailable() {
@@ -80,14 +133,19 @@ export async function startGeneration(params: {
     throw new AppError('EMAIL_NOT_VERIFIED', 'Please verify your email address to generate.')
   }
 
-  const sections = params.only?.length ? params.only : sectionsForProject(project)
+  const sections = params.only?.length
+    ? params.only
+    : await sectionsToRun(project.id, sectionsForProject(project))
   const cost = creditsForSections(sections)
 
   const [job] = await db
     .insert(generationJobs)
     .values({
       projectId: project.id,
-      trigger: params.only?.length ? 'retry_section' : 'initial',
+      trigger:
+        params.only?.length || sections.length < sectionsForProject(project).length
+          ? 'retry_section'
+          : 'initial',
       sections,
       progress: Object.fromEntries(sections.map((s) => [s, { status: 'pending' }])),
       status: 'queued',

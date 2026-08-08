@@ -23,7 +23,11 @@ import { getThreadMessages } from '@/server/db/queries/assistant'
 import { getOrgPlan } from '@/server/db/queries/plans'
 import { getProject } from '@/server/db/queries/projects'
 import { brandingAssets, generatedFiles, socialMediaAssets, websiteAssets } from '@/server/db/schema'
-import { getLatestJobForProject, sectionsForProject } from '@/server/services/generation'
+import {
+  getLatestJobForProject,
+  sectionsForProject,
+  sectionsToRun,
+} from '@/server/services/generation'
 import { requireOrg } from '@/server/session'
 
 /**
@@ -112,7 +116,10 @@ export default async function ProjectDetailPage({
   const kitPdf = files.find((file) => file.kind === 'brand_kit_pdf') ?? null
 
   const job = await getLatestJobForProject(project.id)
-  const sections = sectionsForProject(project)
+  /* What pressing the button will actually run, so the price beside it is the
+     price that will be charged. After a partial run that is the unfinished
+     sections, not the whole plan. */
+  const sections = await sectionsToRun(project.id, sectionsForProject(project))
 
   /*
    * While a job is running, show the steps that job is actually doing.

@@ -53,6 +53,42 @@ export async function runModel<T extends z.ZodType>(options: RunOptions<T>): Pro
   const chain = modelChain(options.task)
   let lastError: unknown
 
+  /*
+   * The chain answers "this model is having a bad day" by trying another one.
+   * It has no answer for "there is no network", because in that case every
+   * model in it fails for the same reason, in about a second, and the section
+   * is marked failed over an outage that lasted less than a minute.
+   *
+   * That is not hypothetical: a brand run lost its website section to a DNS
+   * blip while the social section, retried moments later, went through.
+   *
+   * So a connection-level failure re-runs the whole chain after a wait rather
+   * than falling to the next model. Waits are short and few — this covers the
+   * blip, and a real outage is still Inngest's problem to retry the step.
+   */
+  const BACKOFF_MS = [4_000, 15_000, 45_000]
+
+  for (let pass = 0; pass <= BACKOFF_MS.length; pass += 1) {
+    if (pass > 0) {
+      const wait = BACKOFF_MS[pass - 1]
+      console.warn(`[ai] ${options.task}: the network is unreachable, retrying in ${wait / 1000}s`)
+      await new Promise((resolve) => setTimeout(resolve, wait))
+    }
+
+    const outcome = await runChain()
+    if (outcome.ok) return outcome.value
+
+    // Anything the models themselves rejected — a schema they could not
+    // satisfy, a refusal, a bad key — is not going to be fixed by waiting.
+    if (!isNetworkError(outcome.error)) break
+  }
+
+  throw new AppError(
+    'AI_PROVIDER_ERROR',
+    `All models failed for ${options.task}: ${lastError instanceof Error ? lastError.message : 'unknown error'}`,
+  )
+
+  async function runChain(): Promise<{ ok: true; value: z.infer<T> } | { ok: false; error: unknown }> {
   for (const [attempt, model] of chain.entries()) {
     const startedAt = Date.now()
 
@@ -85,7 +121,7 @@ export async function runModel<T extends z.ZodType>(options: RunOptions<T>): Pro
 
       // generateObject's return type widens through the generic; the schema
       // already guarantees the shape.
-      return result.object as z.infer<T>
+      return { ok: true, value: result.object as z.infer<T> }
     } catch (error) {
       lastError = error
 
@@ -107,10 +143,42 @@ export async function runModel<T extends z.ZodType>(options: RunOptions<T>): Pro
     }
   }
 
-  throw new AppError(
-    'AI_PROVIDER_ERROR',
-    `All models failed for ${options.task}: ${lastError instanceof Error ? lastError.message : 'unknown error'}`,
-  )
+    return { ok: false, error: lastError }
+  }
+}
+
+/**
+ * Could not reach the provider at all, as opposed to being answered badly.
+ *
+ * Matched on the codes the runtime actually raises — DNS, refused, reset,
+ * timed out — rather than on message text, which changes between Node
+ * versions and SDK releases. `AI_APICallError` wraps the cause, so the chain
+ * is walked.
+ */
+export function isNetworkError(error: unknown): boolean {
+  const CODES = new Set([
+    'ENOTFOUND',
+    'ECONNREFUSED',
+    'ECONNRESET',
+    'EAI_AGAIN',
+    'ETIMEDOUT',
+    'EHOSTUNREACH',
+    'ENETUNREACH',
+    'UND_ERR_CONNECT_TIMEOUT',
+    'UND_ERR_SOCKET',
+  ])
+
+  for (let current = error, depth = 0; current && depth < 5; depth += 1) {
+    const node = current as { code?: unknown; errors?: unknown[]; cause?: unknown }
+
+    if (typeof node.code === 'string' && CODES.has(node.code)) return true
+    // fetch wraps its attempts in an AggregateError.
+    if (Array.isArray(node.errors) && node.errors.some((inner) => isNetworkError(inner))) return true
+
+    current = node.cause
+  }
+
+  return false
 }
 
 /** OpenRouter reports real cost in provider metadata; shape is loosely typed. */
