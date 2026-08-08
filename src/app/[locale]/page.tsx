@@ -1,13 +1,19 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import Image from 'next/image'
 
+import {
+  BOOK_PAGE,
+  PlateHead,
+  RevealFallback,
+  RunningFoot,
+  RunningHead,
+} from '@/components/features/landing/book'
 import { BrandDrawer } from '@/components/features/landing/brand-drawer'
 import { BrandStage } from '@/components/features/landing/brand-stage'
 import { SPECIMENS } from '@/components/features/landing/specimens'
 import type { Specimen } from '@/components/features/landing/specimens'
 import { TermsTable } from '@/components/features/landing/terms-table'
 import { SectionReveal } from '@/components/ui/horizon'
-import { LogoMark } from '@/components/ui/logo'
 import { Link } from '@/i18n/navigation'
 
 /**
@@ -53,7 +59,6 @@ export default async function BrandBook({
    * has to prove the product generates Arabic natively.
    */
   const t = await getTranslations('Landing')
-  const tn = await getTranslations('Nav')
   const tp = await getTranslations('Pricing')
   const rest = t.raw('restItems') as string[]
   const steps = t.raw('steps') as { name: string; body: string }[]
@@ -99,63 +104,14 @@ export default async function BrandBook({
     pdf: t('kitPdf'),
   }
 
-  /* A book's margins are wide and its measure is short. A landing page's are
-     neither, which is most of why one reads as printed and the other does not. */
-  const page = 'mx-auto w-full max-w-[78rem] px-6 sm:px-10 lg:px-16'
+  /* The measure and margins are the book's, so the appendix at `/pricing` sets
+     to the same ones. See `components/features/landing/book.tsx`. */
+  const page = BOOK_PAGE
 
   return (
     <div className="world-paper min-h-dvh overflow-x-hidden">
-      {/*
-        The running head, which is what a book has instead of a navigation bar.
-
-        It is the same links, set as apparatus: the title of the book on one
-        side, where you are in it on the other. The rule under it runs the full
-        measure rather than fading, because on a printed page a rule is a rule,
-        the fade existed to stop a full-bleed line reading as a template frame on
-        a dark page, and a page with margins does not have that problem.
-      */}
-      {/* `bg-base` is deliberately not a registered colour utility, it would
-          compile `.text-base` to a colour instead of a font size, so the ground
-          is mixed from the token directly. */}
-      <header className="sticky top-0 z-30 border-b border-line bg-[color-mix(in_srgb,var(--bg-base)_88%,transparent)] backdrop-blur">
-        <div className={`${page} flex items-center justify-between gap-6 py-3.5`}>
-          <Link href="/" className="flex items-center gap-2.5">
-            <LogoMark className="size-7" />
-            <span className="type-runhead !text-fg">Brandora</span>
-          </Link>
-
-          <nav className="hidden items-center gap-9 md:flex">
-            <a href="#specimens" className="type-runhead transition-colors hover:!text-fg">
-              {t('navKit')}
-            </a>
-            <a href="#process" className="type-runhead transition-colors hover:!text-fg">
-              {t('navHow')}
-            </a>
-            <a href="#terms" className="type-runhead transition-colors hover:!text-fg">
-              {t('navPricing')}
-            </a>
-          </nav>
-
-          <Link href="/register" className="stamp !px-5 !py-2.5">
-            {t('ctaPrimary')}
-          </Link>
-        </div>
-      </header>
-
-      {/*
-        Without JavaScript, the elements below the fold stayed at `opacity: 0`
-        for good, thousands of pixels of blank ground on a phone, because the
-        reveal never fired. The reveal is an enhancement; the content is not
-        conditional on it.
-      */}
-      <noscript>
-        <style
-          dangerouslySetInnerHTML={{
-            __html:
-              '[data-reveal]{opacity:1!important;transform:none!important;filter:none!important}',
-          }}
-        />
-      </noscript>
+      <RunningHead where="cover" locale={locale} page={page} />
+      <RevealFallback />
 
       <main id="content" tabIndex={-1}>
         {/* ---------------------------------------------------------- cover */}
@@ -364,7 +320,9 @@ export default async function BrandBook({
           closed accordion occupied, and the browser's own page search finds
           them.
         */}
-        <section className={`${page} pb-24 sm:pb-32`}>
+        {/* Named, because the appendix cross-references it rather than
+            reprinting the same nine answers behind nine bars. */}
+        <section id="notes" className={`${page} scroll-mt-24 pb-24 sm:pb-32`}>
           <PlateHead label={t("plateLabel")} number="05" title={tp('faqTitle')} note={t('notesNote')} />
 
           <SectionReveal>
@@ -435,63 +393,7 @@ export default async function BrandBook({
         </section>
       </main>
 
-      <footer className="border-t border-line">
-        <div className={`${page} flex flex-wrap items-center justify-between gap-x-10 gap-y-4 py-6`}>
-          <span className="flex items-center gap-2.5">
-            <LogoMark className="size-6" />
-            <span className="type-runhead !text-fg">Brandora</span>
-          </span>
-
-          <nav aria-label={t('navKit')} className="flex flex-wrap gap-x-8 gap-y-2">
-            <a href="#specimens" className="type-runhead transition-colors hover:!text-fg">
-              {t('navKit')}
-            </a>
-            <a href="#terms" className="type-runhead transition-colors hover:!text-fg">
-              {t('navPricing')}
-            </a>
-            <Link href="/pricing" className="type-runhead transition-colors hover:!text-fg">
-              {t('pricingCompare')}
-            </Link>
-            <Link href="/login" className="type-runhead transition-colors hover:!text-fg">
-              {tn('signIn')}
-            </Link>
-          </nav>
-        </div>
-      </footer>
+      <RunningFoot where="cover" locale={locale} page={page} />
     </div>
-  )
-}
-
-/**
- * The head of a plate: its number, its title, and one line of caption.
- *
- * Declared here rather than in `components/` because it is this document's
- * furniture and has exactly one document. A shared component for a thing with
- * one caller is how the utility this page just deleted came to exist.
- */
-function PlateHead({
-  number,
-  title,
-  note,
-  label,
-}: {
-  number: string
-  title: string
-  note: string
-  label: string
-}) {
-  return (
-    <SectionReveal>
-      <div className="flex items-baseline justify-between gap-6 border-b border-line-strong pb-3">
-        <span className="type-runhead tabular-nums">
-          {label} {number}
-        </span>
-        <span className="type-runhead">Brandora</span>
-      </div>
-      <div className="mt-6 flex flex-wrap items-end justify-between gap-x-12 gap-y-3">
-        <h2 className="type-plate-sm max-w-[18ch]">{title}</h2>
-        <p className="type-caption max-w-[42ch]">{note}</p>
-      </div>
-    </SectionReveal>
   )
 }
