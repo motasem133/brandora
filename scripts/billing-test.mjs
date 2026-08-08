@@ -379,12 +379,49 @@ async function main() {
     const landing = await request('/en')
     check('application is answering', landing.status === 200, `got ${landing.status}`)
 
+    /*
+     * The paid ladder, by slug.
+     *
+     * These were `basic` / `pro` / `business` and the product now sells
+     * `creator` / `pro` / `agency`. The suite had been unwired from CI, so a
+     * rename that moved every plan slug went a whole release without anything
+     * noticing the billing tests no longer addressed a plan that exists.
+     */
+    const PAID = ['creator', 'pro', 'agency']
+
+    /*
+     * A plan is only reachable through a Polar product id, and `db:seed` does
+     * not write one — it cannot, because the id belongs to whatever Polar
+     * account the deployment is connected to. On a connected environment these
+     * are already set and this does nothing. On a fresh CI database they are
+     * null, and every subscription event would be dropped by
+     * `findPlanByProduct` with the suite reporting "0 rows" and no reason.
+     *
+     * Only ever fills a null, so a real product id is never overwritten.
+     */
+    for (const slug of PAID) {
+      await sql`
+        UPDATE plans
+        SET polar_product_id_monthly = ${'prod_test_' + slug}
+        WHERE slug = ${slug} AND polar_product_id_monthly IS NULL
+      `
+    }
+
+    // Credit packs are reached the same way and seeded the same way, so they
+    // need the same backfill. Without it every order assertion below fails as
+    // "0 rows" while the real reason is that nothing could resolve the product.
+    await sql`
+      UPDATE credit_packs
+      SET polar_product_id = 'prod_test_' || slug
+      WHERE polar_product_id IS NULL
+    `
+
     const planRows = await sql`SELECT * FROM plans ORDER BY sort_order`
     const plan = Object.fromEntries(planRows.map((row) => [row.slug, row]))
     const packRows = await sql`SELECT * FROM credit_packs ORDER BY sort_order`
     const pack = Object.fromEntries(packRows.map((row) => [row.slug, row]))
 
-    for (const slug of ['basic', 'pro', 'business']) {
+    for (const slug of PAID) {
       check(
         `${slug} plan has a monthly Polar product`,
         Boolean(plan[slug]?.polar_product_id_monthly),
@@ -550,7 +587,7 @@ async function main() {
     await deliver(
       'subscription.updated',
       sub({
-        productId: plan.business.polar_product_id_monthly,
+        productId: plan.agency.polar_product_id_monthly,
         periodStart: period2,
         periodEnd: period2 + MONTH,
         amount: 19900,
@@ -558,17 +595,17 @@ async function main() {
     )
 
     rows = await subs(a.orgId)
-    check('upgrade moves the plan in place', rows.length === 1 && rows[0].plan_slug === 'business',
+    check('upgrade moves the plan in place', rows.length === 1 && rows[0].plan_slug === 'agency',
       `${rows.length} rows, ${rows[0]?.plan_slug}`)
 
     const upgradePage = await currentPlanOnPage(a.cookies)
-    check('billing page shows the new plan', upgradePage.name === 'Business', `showed ${upgradePage.name}`)
+    check('billing page shows the new plan', upgradePage.name === 'Agency', `showed ${upgradePage.name}`)
 
     /* Polar re-sends `active` after a product switch on the same period. */
     await deliver(
       'subscription.active',
       sub({
-        productId: plan.business.polar_product_id_monthly,
+        productId: plan.agency.polar_product_id_monthly,
         periodStart: period2,
         periodEnd: period2 + MONTH,
       }),
@@ -577,15 +614,15 @@ async function main() {
     const afterUpgrade = await balance(a.orgId)
     check(
       'a mid-cycle upgrade grants the difference straight away',
-      afterUpgrade === balanceBeforeUpgrade + (plan.business.monthly_credits - plan.pro.monthly_credits),
-      `balance ${afterUpgrade}, expected ${balanceBeforeUpgrade + (plan.business.monthly_credits - plan.pro.monthly_credits)}`,
+      afterUpgrade === balanceBeforeUpgrade + (plan.agency.monthly_credits - plan.pro.monthly_credits),
+      `balance ${afterUpgrade}, expected ${balanceBeforeUpgrade + (plan.agency.monthly_credits - plan.pro.monthly_credits)}`,
     )
 
     /* Re-delivering the change, and hopping back and forth, must not pay out. */
     await deliver(
       'subscription.updated',
       sub({
-        productId: plan.business.polar_product_id_monthly,
+        productId: plan.agency.polar_product_id_monthly,
         periodStart: period2,
         periodEnd: period2 + MONTH,
       }),
@@ -600,7 +637,7 @@ async function main() {
     await deliver(
       'subscription.updated',
       sub({
-        productId: plan.basic.polar_product_id_monthly,
+        productId: plan.creator.polar_product_id_monthly,
         periodStart: period2,
         periodEnd: period2 + MONTH,
         amount: 2900,
@@ -608,7 +645,7 @@ async function main() {
     )
 
     rows = await subs(a.orgId)
-    check('downgrade moves the plan in place', rows[0]?.plan_slug === 'basic', rows[0]?.plan_slug)
+    check('downgrade moves the plan in place', rows[0]?.plan_slug === 'creator', rows[0]?.plan_slug)
     check(
       'a downgrade does not claw back credits already granted',
       (await balance(a.orgId)) === afterUpgrade,
@@ -619,7 +656,7 @@ async function main() {
     await deliver(
       'subscription.updated',
       sub({
-        productId: plan.business.polar_product_id_monthly,
+        productId: plan.agency.polar_product_id_monthly,
         periodStart: period2,
         periodEnd: period2 + MONTH,
       }),
@@ -633,7 +670,7 @@ async function main() {
     await deliver(
       'subscription.updated',
       sub({
-        productId: plan.basic.polar_product_id_monthly,
+        productId: plan.creator.polar_product_id_monthly,
         periodStart: period2,
         periodEnd: period2 + MONTH,
       }),
@@ -762,7 +799,7 @@ async function main() {
       'subscription.active',
       subscriptionData({
         id: subId2,
-        productId: plan.business.polar_product_id_monthly,
+        productId: plan.agency.polar_product_id_monthly,
         customerId,
         organizationId: a.orgId,
         periodStart: Date.now(),
@@ -782,11 +819,11 @@ async function main() {
     const again = await currentPlanOnPage(a.cookies)
     check(
       'the live subscription decides the plan, not the database',
-      resubscribed.name === 'Business' && again.name === 'Business',
+      resubscribed.name === 'Agency' && again.name === 'Agency',
       `showed ${resubscribed.name} then ${again.name}`,
     )
     check('re-subscription grants the new plan credits',
-      (await balance(a.orgId)) === balanceBeforeRevoke + plan.business.monthly_credits,
+      (await balance(a.orgId)) === balanceBeforeRevoke + plan.agency.monthly_credits,
       `balance ${await balance(a.orgId)}`)
 
     /* ------------------------------------------------------ orders and packs */
