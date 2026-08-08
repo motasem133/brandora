@@ -166,10 +166,30 @@ function story(c: KitContent, a: KitAssets) {
   </section>`
 }
 
+/**
+ * Split into pages of at most three, as evenly as the count allows.
+ *
+ * Chunking by threes left seven posts as 3/3/1, and a page whose whole job was
+ * one orphan. Seven is what a kit produces once the vertical story is dropped,
+ * so that was the common case rather than an edge one.
+ */
+function inPagesOfThree<T>(items: T[]) {
+  const pages = Math.ceil(items.length / 3)
+  const groups: T[][] = []
+  let start = 0
+
+  for (let page = 0; page < pages; page += 1) {
+    const size = Math.ceil((items.length - start) / (pages - page))
+    groups.push(items.slice(start, start + size))
+    start += size
+  }
+
+  return groups
+}
+
 function socialPages(c: KitContent, a: KitAssets) {
   const p = c.brand.palette
-  const groups: typeof a.posts[] = []
-  for (let i = 0; i < a.posts.length; i += 3) groups.push(a.posts.slice(i, i + 3))
+  const groups = inPagesOfThree(a.posts)
 
   return groups.map((group, index) => `<section class="page pale" style="background:${p.background}">
     <h2 style="color:${p.text}">Social${groups.length > 1 ? ` <em style="opacity:.4">${index + 1}/${groups.length}</em>` : ''}</h2>
@@ -239,8 +259,13 @@ export function kitDocument(c: KitContent, a: KitAssets) {
     .values span { font-size:16px; letter-spacing:.16em; text-transform:uppercase; padding:10px 20px;
                    border:1px solid; border-radius:999px; opacity:.85; }
 
-    .grid { display:flex; gap:34px; flex:1; align-items:center; }
-    .grid figure { flex:1; display:flex; flex-direction:column; }
+    /* A column is always a third of the row, never a share of it. With
+       'flex:1' a page holding fewer than three posts stretched them to fill,
+       so the last page blew one 560px thumbnail up to full width — embedded
+       for a 430px column and printing at 38dpi, visibly pixelated. Short rows
+       centre instead. */
+    .grid { display:flex; gap:34px; flex:1; align-items:center; justify-content:center; }
+    .grid figure { flex:0 0 calc((100% - 68px) / 3); display:flex; flex-direction:column; }
     .grid img { width:100%; border-radius:14px; display:block; }
     .grid figcaption { font-size:16px; margin-top:16px; opacity:.7; }
   </style></head><body>
