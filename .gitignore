@@ -52,3 +52,13 @@ next-env.d.ts
 /e2e/.auth/
 /test-results/
 /playwright-report/
+
+# Working material that is not the product: the supplied design reference,
+# agent/skill caches, and screenshots dropped in the project root. A stray
+# `git add -A` once swept an 78MB video into a commit; this is the guard.
+Design-reference.mov
+Screenshot*.png
+.agents/
+.claude/skills/
+.github/copilot-instructions/
+skills-lock.json

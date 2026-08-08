@@ -1,4 +1,4 @@
-import { ArrowRight, Check } from 'lucide-react'
+import { ArrowRight, Check, FileText } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import Image from 'next/image'
 
@@ -32,15 +32,32 @@ import { cn } from '@/lib/utils'
  * customers yet, and inventing a "trusted by" row is the one thing on that
  * page we cannot honestly copy.
  */
-/** Real files from a completed run, used as the deliverable specimens. */
+/**
+ * Real files from a completed run, used as the deliverable specimens.
+ *
+ * Sultana — a Syrian kitchen — rather than the earlier coffee brand, because
+ * it is the project that exercises everything the product now does: two
+ * concepts at 1536, a true vector trace, transparent variants, an Arabic
+ * wordmark that has to shape correctly, and a social kit. Nothing here is a
+ * mockup; every file is what a customer downloads.
+ */
 const LOGOS = [
-  '/marketing/makan-wordmark.webp',
-  '/marketing/makan-lettermark-monogram.webp',
-  '/marketing/makan-mark.webp',
-  '/marketing/makan-emblem-badge.webp',
+  '/marketing/sultana-wordmark.webp',
+  '/marketing/sultana-icon.webp',
+  '/marketing/sultana-symbol.webp',
+  '/marketing/sultana-name.webp',
 ]
 
-const PALETTE = ['#6F4E37', '#D4A574', '#C08552', '#FAF6F0', '#2D1B0E']
+/** The posts the kit produced for that same run. */
+const POSTS = [
+  '/marketing/sultana-post-hero.webp',
+  '/marketing/sultana-post-feature.webp',
+  '/marketing/sultana-post-detail.webp',
+  '/marketing/sultana-post-palette.webp',
+]
+
+/** Sultana's own palette, as the run wrote it. */
+const PALETTE = ['#1B3A3A', '#D4A853', '#F43F5E', '#FEFAF5']
 
 export default async function HorizonDirection({
   params,
@@ -301,7 +318,7 @@ export default async function HorizonDirection({
                 <div className="lit-inner bloom flex flex-col justify-between p-7 [--bloom-strength:18%]">
                   <p className="text-sm text-fg-secondary">{t('kitNames')}</p>
                   <div>
-                    <p className="text-2xl font-semibold tracking-[-0.02em]">Makān</p>
+                    <p className="text-2xl font-semibold tracking-[-0.02em]">Sultana</p>
                     <p className="mt-1.5 text-xs leading-relaxed text-fg-muted">
                       {t('kitNameReason')}
                     </p>
@@ -315,28 +332,48 @@ export default async function HorizonDirection({
                 <div className="lit-inner flex flex-col justify-between p-7">
                   <p className="text-sm text-fg-secondary">{t('kitType')}</p>
                   <div>
-                    <p className="text-3xl font-semibold tracking-[-0.02em]">Sora</p>
-                    <p className="text-sm text-fg-secondary">Inter · DM Serif Display</p>
+                    <p className="text-3xl font-semibold tracking-[-0.02em]">Reem Kufi Ink</p>
+                    <p className="text-sm text-fg-secondary">El Messiri</p>
                   </div>
                 </div>
               </div>
             </Cell>
 
             <Cell index={4} className="col-span-2">
-              <div className="lit group h-full overflow-hidden">
-                <div className="lit-inner relative overflow-hidden">
-                  <Image
-                    src="/marketing/makan-website.webp"
-                    alt={t('kitWebsiteAlt')}
-                    width={1200}
-                    height={806}
-                    className="size-full object-cover object-top opacity-80 transition-transform duration-500 group-hover:scale-[1.03]"
-                    sizes="(max-width: 1024px) 100vw, 560px"
-                  />
-                  <div className="absolute inset-x-0 bottom-0 bg-[image:linear-gradient(0deg,var(--bg-surface),transparent)] p-6 pt-16">
-                    <p className="text-sm font-semibold">{t('kitWebsite')}</p>
-                    <p className="text-xs text-fg-secondary">{t('kitWebsiteNote')}</p>
+              <div className="lit h-full">
+                <div className="lit-inner flex h-full flex-col p-7">
+                  <p className="text-sm text-fg-secondary">{t('kitSocial')}</p>
+
+                  {/* Four of the eight, at the size a grid of posts is read. */}
+                  <div className="mt-5 grid flex-1 grid-cols-4 gap-2.5">
+                    {POSTS.map((post) => (
+                      <div key={post} className="overflow-hidden rounded-control bg-white/95">
+                        <Image
+                          src={post}
+                          alt={t('kitSocialAlt')}
+                          width={900}
+                          height={900}
+                          className="size-full object-cover"
+                          sizes="130px"
+                        />
+                      </div>
+                    ))}
                   </div>
+
+                  {/*
+                    The document itself, not a picture of it. It is the real
+                    file the run produced, so the claim can be checked rather
+                    than believed.
+                  */}
+                  <a
+                    href="/marketing/sultana-brand-kit.pdf"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-4 inline-flex w-fit items-center gap-2 rounded-control border border-line px-3 py-2 text-xs text-fg-secondary transition-colors hover:bg-elevated hover:text-white"
+                  >
+                    <FileText className="size-3.5" />
+                    {t('kitPdf')}
+                  </a>
                 </div>
               </div>
             </Cell>
@@ -526,6 +563,18 @@ export default async function HorizonDirection({
               <span className="text-sm font-semibold">Brandora</span>
             </span>
             <p className="mt-3 max-w-[34ch] text-sm text-fg-muted">{t('heroDeck')}</p>
+            {/* The studio behind it, said once, quietly, at the bottom. */}
+            <p className="mt-4 text-xs text-fg-muted">
+              {t('poweredBy')}{' '}
+              <a
+                href="https://enigmitic.com"
+                target="_blank"
+                rel="noreferrer"
+                className="text-fg-secondary transition-colors hover:text-white"
+              >
+                Enigmitic
+              </a>
+            </p>
           </div>
 
           <nav aria-label={t('navKit')} className="flex flex-wrap gap-x-8 gap-y-2 text-sm">
