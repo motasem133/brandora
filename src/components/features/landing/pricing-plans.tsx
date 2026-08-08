@@ -6,7 +6,7 @@ import { Cell } from '@/components/ui/horizon'
 import { buttonVariants } from '@/components/ui/button'
 import { Link } from '@/i18n/navigation'
 import { cn, formatPrice, pickPrice, type Currency } from '@/lib/utils'
-import { BRAND_COST, BRAND_COST_STARTER } from '@/server/billing/credits'
+import { brandsFrom } from '@/server/billing/credits'
 import { db } from '@/server/db'
 import { plans } from '@/server/db/schema'
 
@@ -22,20 +22,6 @@ import { plans } from '@/server/db/schema'
  * full kit costs, so "about 15 runs a month" is arithmetic on the plan's own
  * monthly credits, and cannot drift from the number the customer is granted.
  */
-/**
- * How many brands a plan's credits buy.
- *
- * Customers are sold brands. "20 brands a month" is a number someone can hold
- * in their head and act on; "260 credits" is an internal unit that answers no
- * question they are asking. The credits still run the machine and are still
- * shown — underneath, in smaller type, for anyone who wants to check the
- * arithmetic.
- */
-function brandsFor(plan: { monthlyCredits: number; websiteBuilder: boolean; socialMediaKit: boolean }) {
-  const full = plan.websiteBuilder && plan.socialMediaKit
-  return Math.floor(plan.monthlyCredits / (full ? BRAND_COST : BRAND_COST_STARTER))
-}
-
 /** Copy keyed by the plans this product ships. Anything else falls back. */
 const POSITIONING: Record<string, 'planFor_free'> = {
   free: 'planFor_free',
@@ -73,7 +59,7 @@ export async function PricingPlans({
          * rather than "~1 runs a month" — which reads as a rate for something
          * that happens once.
          */
-        const brands = brandsFor(plan)
+        const brands = brandsFrom(plan.monthlyCredits, plan)
         const recurring = plan.priceMonthly > 0
 
         /*

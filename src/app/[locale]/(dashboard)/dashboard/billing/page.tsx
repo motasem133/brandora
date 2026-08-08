@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { CurrencySwitch } from '@/components/features/billing/currency-switch'
 import { cn, formatDate, formatPrice, isCurrency, pickPrice, type Currency } from '@/lib/utils'
 import { db } from '@/server/db'
+import { brandsFrom } from '@/server/billing/credits'
 import { getOrgPlan } from '@/server/db/queries/plans'
 import {
   entitles,
@@ -181,9 +182,24 @@ export default async function BillingPage({
               The balance, read against the same base line as the plan name.
               These were two cards saying one thing about one account.
             */}
+            {/*
+              What the balance is worth, then the balance.
+              Credits are how the machine is metered; brands are what someone
+              came here to count. Both are shown, in that order — a customer
+              deciding whether to top up is asking "how many more brands", not
+              "how many credits".
+            */}
             <div className="sm:text-end">
-              <p className="text-sm text-fg-secondary">{t('creditsLeft')}</p>
-              <p className="stat-figure mt-1 text-4xl">{org.creditBalance}</p>
+              <p className="text-sm text-fg-secondary">{t('brandsLeft')}</p>
+              <p className="stat-figure mt-1 text-4xl">
+                {brandsFrom(org.creditBalance, {
+                  websiteBuilder: currentPlan?.websiteBuilder ?? false,
+                  socialMediaKit: currentPlan?.socialMediaKit ?? false,
+                })}
+              </p>
+              <p className="mt-1 text-xs text-fg-muted">
+                {t('creditsBalance', { credits: org.creditBalance })}
+              </p>
             </div>
           </div>
 
@@ -244,7 +260,18 @@ export default async function BillingPage({
                     <h3 className="font-display text-xl font-semibold">{plan.name}</h3>
                     {isCurrent && <Badge tone="brand">{t('current')}</Badge>}
                     <p className="text-sm text-fg-secondary">
-                      {t('creditsPerMonth', { credits: plan.monthlyCredits })}
+                      {/*
+                        The free plan's credits are granted once, not renewed,
+                        so "a month" would be a rate for something that
+                        happens exactly once.
+                      */}
+                      {t(plan.priceMonthly === 0 ? 'brandsOnce' : 'brandsPerMonth', {
+                        brands: brandsFrom(plan.monthlyCredits, plan),
+                      })}
+                      <span className="text-fg-muted">
+                        {' · '}
+                        {t('creditsBalance', { credits: plan.monthlyCredits })}
+                      </span>
                     </p>
                   </div>
 

@@ -55,6 +55,25 @@ export const BRAND_COST =
 export const BRAND_COST_STARTER =
   CREDIT_COSTS.branding + CREDIT_COSTS.logos + CREDIT_COSTS.social
 
+/**
+ * How many brands a balance is worth on a given plan.
+ *
+ * One function for every surface that shows the number — the pricing cards,
+ * the comparison table and the billing page — because the moment it is
+ * written twice the three of them start disagreeing about what a plan buys.
+ *
+ * The rate depends on what the plan can produce: a plan without the website
+ * and the designed kit makes a smaller brand, and counting it at the full rate
+ * reports zero for a plan whose entire promise is one.
+ */
+export function brandsFrom(
+  credits: number,
+  plan: { websiteBuilder: boolean; socialMediaKit: boolean },
+) {
+  const full = plan.websiteBuilder && plan.socialMediaKit
+  return Math.floor(credits / (full ? BRAND_COST : BRAND_COST_STARTER))
+}
+
 export type GenerationSection = keyof typeof CREDIT_COSTS
 
 export function creditsForSections(sections: GenerationSection[]): number {

@@ -558,7 +558,7 @@
   },
   "Billing": {
     "title": "Billing",
-    "subtitle": "Your plan, credits and payment history",
+    "subtitle": "Your plan, what it is worth, and payment history",
     "currentPlan": "Current plan",
     "creditsLeft": "Credits left",
     "manage": "Manage",
@@ -572,7 +572,7 @@
     "creditsPerMonth": "{credits} credits per month",
     "upgrade": "Upgrade",
     "creditPacks": "Credit packs",
-    "creditPacksBody": "One-off top-ups. They never expire and are used after your monthly credits.",
+    "creditPacksBody": "One-off top-ups. They never expire and are used after your monthly credits run out.",
     "credits": "credits",
     "buy": "Buy",
     "recentActivity": "Credit activity",
@@ -607,7 +607,11 @@
     "useAnotherCard": "Pay with a different card",
     "planUnavailable": "Not sold yet.",
     "paymentFailed": "Payment failed",
-    "paymentFailedBody": "Your plan is paused until a payment goes through. Update your payment method to restore it — your brands and credits are untouched."
+    "paymentFailedBody": "Your plan is paused until a payment goes through. Update your payment method to restore it — your brands and credits are untouched.",
+    "brandsLeft": "Brands left",
+    "brandsPerMonth": "{brands, plural, one {# brand} other {# brands}} a month",
+    "creditsBalance": "{credits} credits",
+    "brandsOnce": "{brands, plural, one {# brand} other {# brands}}, once"
   },
   "Assistant": {
     "emptyTitle": "Refine your brand",

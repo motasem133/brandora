@@ -558,7 +558,7 @@
   },
   "Billing": {
     "title": "الفوترة",
-    "subtitle": "باقتك ورصيدك وسجل المدفوعات",
+    "subtitle": "باقتك وما تساويه وسجلّ المدفوعات",
     "currentPlan": "الباقة الحالية",
     "creditsLeft": "الرصيد المتبقي",
     "manage": "الإدارة",
@@ -572,7 +572,7 @@
     "creditsPerMonth": "{credits} رصيد شهرياً",
     "upgrade": "ترقية",
     "creditPacks": "حزم الرصيد",
-    "creditPacksBody": "شحن لمرة واحدة. لا تنتهي صلاحيته ويُستخدم بعد رصيدك الشهري.",
+    "creditPacksBody": "شحنات لمرة واحدة. لا تنتهي صلاحيتها وتُستخدم بعد انتهاء رصيدك الشهري.",
     "credits": "رصيد",
     "buy": "شراء",
     "recentActivity": "حركة الرصيد",
@@ -607,7 +607,11 @@
     "useAnotherCard": "الدفع ببطاقة أخرى",
     "planUnavailable": "غير متاح للشراء بعد.",
     "paymentFailed": "تعذّر الدفع",
-    "paymentFailedBody": "خطتك متوقفة حتى تتم عملية دفع ناجحة. حدّث وسيلة الدفع لاستعادتها — علاماتك ورصيدك كما هي."
+    "paymentFailedBody": "خطتك متوقفة حتى تتم عملية دفع ناجحة. حدّث وسيلة الدفع لاستعادتها — علاماتك ورصيدك كما هي.",
+    "brandsLeft": "العلامات المتبقية",
+    "brandsPerMonth": "{brands, plural, zero {لا علامات} one {علامة واحدة} two {علامتان} few {# علامات} many {# علامة} other {# علامة}} شهرياً",
+    "creditsBalance": "{credits} رصيد",
+    "brandsOnce": "{brands, plural, zero {لا علامات} one {علامة واحدة} two {علامتان} few {# علامات} many {# علامة} other {# علامة}}، مرة واحدة"
   },
   "Assistant": {
     "emptyTitle": "حسّن علامتك التجارية",

@@ -1,7 +1,7 @@
 import { Check, Minus } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 
-import { BRAND_COST, BRAND_COST_STARTER } from '@/server/billing/credits'
+import { brandsFrom } from '@/server/billing/credits'
 import type { plans } from '@/server/db/schema'
 
 /**
@@ -30,10 +30,7 @@ type Group = {
   }[]
 }
 
-const brands = (plan: Plan) => {
-  const full = plan.websiteBuilder && plan.socialMediaKit
-  return Math.floor(plan.monthlyCredits / (full ? BRAND_COST : BRAND_COST_STARTER))
-}
+const brands = (plan: Plan) => brandsFrom(plan.monthlyCredits, plan)
 
 export async function PlanComparison({ plans: rows }: { plans: Plan[] }) {
   const t = await getTranslations('Pricing')
