@@ -47,32 +47,35 @@ const PLANS = [
      */
     monthlyCredits: 10, // one-time grant, not renewed — enforced in billing logic
     seats: 1,
-    maxProjects: 3,
+    /* One brand, because ten credits buy exactly one and a second would be a
+       workspace the customer cannot fill. */
+    maxProjects: 1,
     websiteBuilder: false,
     socialMediaKit: false,
     vectorExport: false,
     brandAssistant: false,
     customDomain: false,
+    maxCustomDomains: 0,
     priorityQueue: false,
     sortOrder: 0,
     features: {
       en: [
         '10 AI credits — one complete brand',
-        '5 name ideas, each with its reasoning',
+        'Names, tagline, story, values and voice',
         'Two logo concepts',
         'Colour palette and typography',
-        'Brand story, voice and values',
         'Instagram bio and captions',
         'Content Studio, while your credits last',
+        '1 seat',
       ],
       ar: [
         '10 أرصدة ذكاء اصطناعي — علامة كاملة واحدة',
-        'خمسة أسماء مقترحة مع سبب كل اسم',
+        'أسماء وشعار نصي وقصة وقيم ونبرة',
         'مفهومان للشعار',
         'لوحة ألوان وخطوط',
-        'قصة العلامة وصوتها وقيمها',
         'نبذة إنستغرام ونصوص المنشورات',
         'استوديو المحتوى، ما دام رصيدك متاحاً',
+        'مقعد واحد',
       ],
     },
   },
@@ -85,108 +88,96 @@ const PLANS = [
     priceYearlyAed: 0,
     /*
      * Credits are the unit sold, so this is the input rather than a brand count
-     * derived from it. 150 a month is enough to build a brand and keep posting
+     * derived from it. 200 a month is enough to build a brand and keep posting
      * for it — which is the behaviour the plan exists to fund. What that comes
      * to in brands or in posts is arithmetic on BRAND_COST and
      * CONTENT_CREDIT_COSTS, done at the surface that shows it.
      */
-    monthlyCredits: 150,
-    seats: 1,
-    maxProjects: -1,
-    websiteBuilder: true,
-    socialMediaKit: true,
-    vectorExport: true,
-    brandAssistant: true,
-    customDomain: false,
-    priorityQueue: false,
-    sortOrder: 1,
-    features: {
-      en: [
-        '150 AI credits every month',
-        'Everything in Free',
-        'Unlimited brand workspaces',
-        'Content Studio for social posts',
-        'Website builder and publishing',
-        'SVG vector logo export',
-        'Social kit — eight designed posts',
-        'Brand book PDF and kit ZIP',
-        'Brand Assistant',
-      ],
-      ar: [
-        '150 رصيد ذكاء اصطناعي كل شهر',
-        'كل ما في المجاني',
-        'مساحات علامات بلا حدود',
-        'استوديو المحتوى لمنشورات السوشيال',
-        'منشئ الموقع والنشر',
-        'تصدير الشعار SVG',
-        'حزمة سوشيال — ثمانية تصاميم',
-        'ملف الهوية PDF وحزمة ZIP',
-        'مساعد العلامة',
-      ],
-    },
-  },
-  {
-    slug: 'pro',
-    name: 'Pro',
-    priceMonthly: 4900,
-    priceYearly: 0,
-    priceMonthlyAed: 17900,
-    priceYearlyAed: 0,
-    /* Credits are the difference. Pro carries the same capabilities as Creator
-       and about three times the monthly output. */
-    monthlyCredits: 500,
-    seats: 5,
-    maxProjects: -1,
-    websiteBuilder: true,
-    socialMediaKit: true,
-    vectorExport: true,
-    brandAssistant: true,
-    customDomain: false,
-    priorityQueue: false,
-    sortOrder: 2,
-    features: {
-      /*
-       * Seats are not listed. `plans.seats` is carried on the table but nothing
-       * reads it, and Settings already tells the customer that inviting
-       * teammates is not available yet — so selling it here would contradict
-       * the product one screen away.
-       */
-      en: ['500 AI credits every month', 'Everything in Creator'],
-      ar: ['500 رصيد ذكاء اصطناعي كل شهر', 'كل ما في Creator'],
-    },
-  },
-  {
-    slug: 'agency',
-    name: 'Agency',
-    priceMonthly: 9900,
-    priceYearly: 0,
-    priceMonthlyAed: 36400,
-    priceYearlyAed: 0,
-    /* Enough monthly output to run several brands at once, which is what an
-       agency does with the same tools. */
-    monthlyCredits: 1500,
-    seats: -1,
+    monthlyCredits: 200,
+    seats: 3,
     maxProjects: -1,
     websiteBuilder: true,
     socialMediaKit: true,
     vectorExport: true,
     brandAssistant: true,
     customDomain: true,
+    maxCustomDomains: 1,
     priorityQueue: false,
-    sortOrder: 3,
+    sortOrder: 1,
+    features: {
+      /* Six bullets, not nine. The comparison table below the cards carries the
+         detail; a card that lists everything stops being a decision. */
+      en: [
+        '200 AI credits every month',
+        'Everything in Free',
+        'Unlimited brand workspaces',
+        'Content Studio, website builder and Brand Assistant',
+        'Brand book PDF, SVG export and kit ZIP',
+        '1 custom domain · 3 seats',
+      ],
+      ar: [
+        '200 رصيد ذكاء اصطناعي كل شهر',
+        'كل ما في المجاني',
+        'مساحات علامات بلا حدود',
+        'استوديو المحتوى ومنشئ الموقع ومساعد العلامة',
+        'ملف الهوية PDF وتصدير SVG وحزمة ZIP',
+        'نطاق مخصّص واحد · ثلاثة مقاعد',
+      ],
+    },
+  },
+  {
+    /*
+     * Studio is the row Pro used to be, renamed in `drizzle/0011_studio_rename.sql`
+     * rather than replaced. The price is unchanged, so it is the same Polar
+     * product — and a fresh row would arrive with a null product id and refuse
+     * to sell until someone pasted one in. It also keeps `plans.id`, which
+     * `subscriptions.plan_id` points at.
+     *
+     * The Polar product itself must be renamed by hand. Its name is what the
+     * hosted checkout and the receipt say.
+     */
+    slug: 'studio',
+    name: 'Studio',
+    priceMonthly: 4900,
+    priceYearly: 0,
+    priceMonthlyAed: 17900,
+    priceYearlyAed: 0,
+    /* Credits and people are the difference. Studio carries the same
+       capabilities as Creator, three and a half times the monthly output, and
+       the seats to share them. */
+    monthlyCredits: 700,
+    seats: 10,
+    maxProjects: -1,
+    websiteBuilder: true,
+    socialMediaKit: true,
+    vectorExport: true,
+    brandAssistant: true,
+    customDomain: true,
+    maxCustomDomains: -1,
+    priorityQueue: false,
+    sortOrder: 2,
     features: {
       /*
-       * Four bullets the brief asked for are absent: unlimited seats, client
-       * workspaces, white-label, an API, an agency dashboard, analytics and
-       * priority support. None of them exist in the product. A pricing page is
-       * the worst place to describe something that has not been built.
+       * Absent on purpose: client workspaces, white-label, an API, an agency
+       * dashboard, analytics, priority generation and priority support. None of
+       * them exist in the product. A pricing page is the worst place to
+       * describe something that has not been built.
+       *
+       * Seats *are* listed, which they were not before — the invite flow makes
+       * them real.
        */
       en: [
-        '1,500 AI credits every month',
-        'Everything in Pro',
-        'Custom domains on published sites',
+        '700 AI credits every month',
+        'Everything in Creator',
+        'Unlimited custom domains',
+        '10 seats',
       ],
-      ar: ['1500 رصيد ذكاء اصطناعي كل شهر', 'كل ما في Pro', 'نطاقات مخصّصة للمواقع المنشورة'],
+      ar: [
+        '700 رصيد ذكاء اصطناعي كل شهر',
+        'كل ما في Creator',
+        'نطاقات مخصّصة بلا حدود',
+        'عشرة مقاعد',
+      ],
     },
   },
 ] satisfies (typeof plans.$inferInsert)[]

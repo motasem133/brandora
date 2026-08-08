@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { and, eq } from 'drizzle-orm'
+import { and, count, eq, isNotNull, ne } from 'drizzle-orm'
 import { cache } from 'react'
 
 import { db } from '@/server/db'
@@ -31,3 +31,33 @@ export const getPublishedSite = cache(async (host: string) => {
 
   return row ?? null
 })
+
+/**
+ * How many of an organization's sites already carry a custom domain.
+ *
+ * Counted across the whole organization, not the project, because that is the
+ * unit the plan sells: `maxCustomDomains` is one number for the account, and a
+ * per-project count would let a Creator attach one domain per brand.
+ *
+ * `exceptProjectId` leaves out the project being edited. Replacing the domain
+ * on a site that already has one is not a second domain, and without the
+ * exclusion a Creator on their limit could never change the one they have.
+ */
+export async function countCustomDomains(
+  organizationId: string,
+  exceptProjectId?: string,
+): Promise<number> {
+  const [row] = await db
+    .select({ total: count() })
+    .from(websiteAssets)
+    .innerJoin(projects, eq(projects.id, websiteAssets.projectId))
+    .where(
+      and(
+        eq(projects.organizationId, organizationId),
+        isNotNull(websiteAssets.customDomain),
+        exceptProjectId ? ne(websiteAssets.projectId, exceptProjectId) : undefined,
+      ),
+    )
+
+  return row?.total ?? 0
+}

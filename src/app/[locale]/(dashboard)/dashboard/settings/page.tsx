@@ -4,6 +4,9 @@ import { AppearanceCard } from '@/components/features/settings/appearance-card'
 import { OrganizationCard } from '@/components/features/settings/organization-card'
 import { PasswordCard } from '@/components/features/settings/password-card'
 import { ProfileCard } from '@/components/features/settings/profile-card'
+import { TeamCard } from '@/components/features/settings/team-card'
+import { listMembers, listPendingInvitations } from '@/server/db/queries/members'
+import { getEntitlements } from '@/server/db/queries/plans'
 import { requireOrg } from '@/server/session'
 
 export default async function SettingsPage({ params }: { params: Promise<{ locale: string }> }) {
@@ -12,6 +15,12 @@ export default async function SettingsPage({ params }: { params: Promise<{ local
 
   const t = await getTranslations('Settings')
   const { user, org, orgRole } = await requireOrg()
+
+  const [members, pending, entitlements] = await Promise.all([
+    listMembers(org.id),
+    listPendingInvitations(org.id),
+    getEntitlements(org.id),
+  ])
 
   /*
    * Two columns of settings, grouped by what they belong to.
@@ -55,6 +64,21 @@ export default async function SettingsPage({ params }: { params: Promise<{ local
 
           <AppearanceCard />
         </div>
+      </div>
+
+      {/*
+        Full width under the two columns rather than a route of its own. A new
+        page would need a nav entry to be findable, and `e2e/links.spec.ts`
+        crawls every link on this page — a card carries neither risk.
+      */}
+      <div className="mt-6">
+        <TeamCard
+          members={members}
+          pending={pending}
+          seats={entitlements.seats}
+          canManage={orgRole === 'owner' || orgRole === 'admin'}
+          currentUserId={user.id}
+        />
       </div>
     </div>
   )

@@ -6,6 +6,7 @@ import { Builder } from '@/components/features/builder/builder'
 import { PAGE_KEYS, type Pages, type Theme } from '@/lib/blocks'
 import { db } from '@/server/db'
 import { getOrgPlan } from '@/server/db/queries/plans'
+import { countCustomDomains } from '@/server/db/queries/sites'
 import { getProject } from '@/server/db/queries/projects'
 import { websiteAssets } from '@/server/db/schema'
 import { isDomainsConfigured } from '@/server/services/domains'
@@ -61,6 +62,12 @@ export default async function BuilderPage({
       /* Both must hold: the plan sells the feature, and this deployment has
          Vercel credentials to attach a domain with. */
       canUseCustomDomain={(plan?.customDomain ?? false) && isDomainsConfigured()}
+      /* Counted excluding this project, so replacing the domain on a site that
+         already has one is never mistaken for adding a second. */
+      atDomainLimit={
+        (plan?.maxCustomDomains ?? 0) >= 0 &&
+        (await countCustomDomains(org.id, id)) >= (plan?.maxCustomDomains ?? 0)
+      }
     />
   )
 }

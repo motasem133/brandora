@@ -26,16 +26,27 @@ import { plans } from '@/server/db/schema'
 const POSITIONING: Record<string, 'planFor_free'> = {
   free: 'planFor_free',
   creator: 'planFor_creator' as 'planFor_free',
-  pro: 'planFor_pro' as 'planFor_free',
-  agency: 'planFor_agency' as 'planFor_free',
+  studio: 'planFor_studio' as 'planFor_free',
 }
 
 const CTA: Record<string, 'planCta_free'> = {
   free: 'planCta_free',
   creator: 'planCta_creator' as 'planCta_free',
-  pro: 'planCta_pro' as 'planCta_free',
-  agency: 'planCta_agency' as 'planCta_free',
+  studio: 'planCta_studio' as 'planCta_free',
 }
+
+/**
+ * A line under the button, for the thing a plan cannot answer on its own.
+ *
+ * Only Studio has one: ten seats is a ceiling, and a team of twelve looking at
+ * the top plan needs somewhere to go other than away.
+ */
+const FOOTNOTE: Record<string, 'planFootnote_studio'> = {
+  studio: 'planFootnote_studio',
+}
+
+/** Where "contact us" goes. The same address the product already sends from. */
+const CONTACT_EMAIL = 'hello@enigmitic.com'
 
 export async function PricingPlans({
   locale,
@@ -48,7 +59,8 @@ export async function PricingPlans({
   const rows = await db.select().from(plans).where(eq(plans.isActive, true)).orderBy(plans.sortOrder)
 
   return (
-    <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+    /* Three across from `md` up. Two columns would strand the third. */
+    <div className="grid gap-5 md:grid-cols-3">
       {rows.map((plan, index) => {
         /* The plan the product recommends, marked once. */
         const featured = plan.slug === 'creator'
@@ -77,6 +89,7 @@ export async function PricingPlans({
           : recurring
             ? t('pricingCtaPaid', { plan: plan.name })
             : t('pricingCta')
+        const footnote = FOOTNOTE[plan.slug] ? t(FOOTNOTE[plan.slug]) : null
 
         return (
           <Cell key={plan.id} index={index}>
@@ -179,6 +192,23 @@ export async function PricingPlans({
                 >
                   {cta}
                 </Link>
+
+                {/*
+                  A mailto rather than a route: there is no contact page, and
+                  inventing one to satisfy the sentence would be a dead link on
+                  the page that asks for money. "Contact us" has to contact
+                  someone.
+                */}
+                {footnote && (
+                  <p className="mt-3 text-center text-xs text-fg-muted">
+                    <a
+                      href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Brandora Studio — more than 10 seats')}`}
+                      className="accent-text underline-offset-4 hover:underline"
+                    >
+                      {footnote}
+                    </a>
+                  </p>
+                )}
 
                 {/* Said only where it is true: the free plan takes no card. */}
                 {plan.priceMonthly === 0 && (

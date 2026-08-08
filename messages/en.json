@@ -144,9 +144,9 @@
         "body": "The site goes live on its own address, or your domain."
       }
     ],
-    "pricingHeading": "Pricing",
+    "pricingHeading": "Create your brand. Then keep building it.",
     "pricingDeck": "Every plan generates the full identity. Credits are what you spend across Brandora — on brands, and on the content you keep making with them.",
-    "pricingChosen": "Recommended",
+    "pricingChosen": "Most Popular",
     "planCredits": "{credits} credits a month",
     "planRuns": "~{runs} runs a month",
     "assuranceCard": "No card for the free plan",
@@ -160,17 +160,16 @@
     "planCreditsOnceLead": "{credits, number} AI credits",
     "planWorth": "≈ {brands} brands, or {pieces, number} pieces of content",
     "planWorthOnce": "One brand, or {pieces, number} pieces of content",
-    "planFor_free": "Try Brandora on a real brand of your own.",
-    "planFor_creator": "For entrepreneurs building their own brand.",
-    "planFor_pro": "For professionals and growing businesses.",
-    "planFor_agency": "For agencies making brands for clients.",
-    "planCta_free": "Create your brand",
-    "planCta_creator": "Start creating",
-    "planCta_pro": "Choose Pro",
-    "planCta_agency": "Choose Agency",
+    "planFor_free": "Start your brand for free.",
+    "planFor_creator": "Everything you need to build your brand.",
+    "planFor_studio": "Create together and scale your content.",
+    "planCta_free": "Create Your Brand",
+    "planCta_creator": "Start Creating",
+    "planCta_studio": "Choose Studio",
     "planNoCard": "No credit card required",
     "planCancel": "Cancel anytime",
-    "howShot": "The first of eight questions. Everything the run produces is decided from these answers."
+    "howShot": "The first of eight questions. Everything the run produces is decided from these answers.",
+    "planFootnote_studio": "Need more than 10 seats? Contact us."
   },
   "Auth": {
     "signIn": "Sign in",
@@ -301,6 +300,38 @@
     "statusGenerating": "Writing…",
     "hashtags": "Hashtags",
     "all": "All brands"
+  },
+  "Team": {
+    "title": "Team",
+    "seatsUsed": "{used} of {seats} seats used",
+    "seatsUnlimited": "{used} members · unlimited seats",
+    "overLimit": "This workspace has more members than your plan’s {seats} seats. Remove someone, or upgrade — nobody has been locked out.",
+    "pending": "Invited",
+    "role_owner": "Owner",
+    "role_admin": "Admin",
+    "role_member": "Member",
+    "remove": "Remove {name}",
+    "cancelInvite": "Cancel the invitation to {email}",
+    "inviteLabel": "Invite a teammate",
+    "inviteHint": "They get an email with a link to join this workspace.",
+    "sendInvite": "Send invitation",
+    "seatsFull": "Every seat on your plan is taken.",
+    "seatsUpgrade": "Upgrade for more.",
+    "inviteTitle": "Join {workspace} on Brandora",
+    "inviteBody": "{inviter} invited you to work on {workspace}.",
+    "inviteAddressedTo": "This invitation was sent to {email}.",
+    "inviteCreateAccount": "Create an account",
+    "inviteSignIn": "Sign in",
+    "inviteAccept": "Join {workspace}",
+    "inviteDecline": "Decline",
+    "inviteInvalidTitle": "This invitation is no longer valid",
+    "inviteInvalidBody": "It may have expired, been cancelled, or already been used. Ask whoever invited you to send another.",
+    "inviteWrongAccountTitle": "Signed in as someone else",
+    "inviteWrongAccountBody": "This invitation was sent to {invited}, and you are signed in as {current}. Sign in with the invited address to accept it.",
+    "inviteSwitchAccount": "Sign in with another account",
+    "inviteFullTitle": "That workspace is full",
+    "inviteFullBody": "Every seat on {workspace}’s plan is taken. Ask them to free one up or upgrade, then open this link again.",
+    "inviteFallbackWorkspace": "this workspace"
   },
   "Onboarding": {
     "title": "Let's build your brand",
@@ -563,6 +594,7 @@
     "viewSite": "View live site",
     "publishLocked": "Publishing needs Basic or above",
     "customDomain": "Custom domain",
+    "domainLimitReached": "Every custom domain your plan includes is already in use. Remove one from another site, or upgrade to Studio.",
     "connectDomain": "Connect domain",
     "checkDomain": "Check status",
     "removeDomain": "Remove",
@@ -786,8 +818,8 @@
     }
   },
   "Pricing": {
-    "title": "Simple pricing",
-    "subtitle": "Every plan includes the full brand identity. Bigger plans carry more credits, to keep creating with it.",
+    "title": "Create your brand. Then keep building it.",
+    "subtitle": "Brandora gives you everything you need to create your brand — and the AI tools to keep producing content, campaigns and marketing assets as your business grows.",
     "signIn": "Sign in",
     "start": "Start free",
     "popular": "Most popular",
@@ -805,12 +837,12 @@
         "a": "One project taken through a full generation: names, story, voice, two logo concepts, palette and typography — plus, on a paid plan, a website, the written social copy and the designed social kit."
       },
       {
-        "q": "What happens when I use my monthly brands?",
-        "a": "Generation stops until the next month, and everything you have already made stays yours to download. You can also buy a credit pack at any time, which never expires."
+        "q": "What happens when I run out of credits?",
+        "a": "Generation stops until your next monthly grant, and everything you have already made stays yours to download. You can also upgrade at any time."
       },
       {
-        "q": "Do unused brands roll over?",
-        "a": "No. A paid plan grants its credits again each month and the previous month’s balance is replaced. Credit packs are separate and do not expire."
+        "q": "Do unused credits roll over?",
+        "a": "No. A paid plan grants its credits again each month and the previous month’s balance is replaced. Credits bought as a one-off pack never expire."
       },
       {
         "q": "Can I cancel anytime?",
@@ -833,19 +865,19 @@
         "a": "On Creator and above. Every plan gets high-resolution PNG; the vector file is a paid export."
       },
       {
-        "q": "What is the difference between Creator, Pro and Agency?",
-        "a": "Creator is one person building their own brand. Pro is the same tools with a little over three times the monthly credits, for anyone producing content regularly. Agency adds custom domains on the sites you publish, and enough credits to run several brands at once."
+        "q": "What is the difference between Creator and Studio?",
+        "a": "Creator is one person building their own brand — 200 credits a month, the full toolkit, one custom domain and three seats. Studio is the same tools for a team: 700 credits, ten seats, and as many custom domains as you publish sites."
       }
     ],
     "compareTitle": "What each plan includes",
     "compareBody": "Only what the product actually enforces. Nothing here is aspirational.",
-    "groupVolume": "Volume",
-    "groupIdentity": "Brand identity",
+    "groupUsage": "Usage",
+    "groupBranding": "Branding",
     "groupWebsite": "Website",
-    "groupSocial": "Social",
+    "groupContent": "Content",
     "groupExports": "Exports",
-    "groupTools": "AI tools",
-    "groupTeam": "Team",
+    "groupAdvanced": "Advanced",
+    "groupCollaboration": "Collaboration",
     "rowBrands": "Brands",
     "rowBrandsMonth": "{brands} / month",
     "rowBrandsOnce": "{brands}, once",
@@ -861,6 +893,7 @@
     "rowPublish": "Publish to a Brandora address",
     "rowDomain": "Custom domain",
     "rowCaptions": "Instagram bio and captions",
+    "rowStudio": "Content Studio",
     "rowKit": "Social kit — eight designed posts",
     "rowBookPdf": "Brand book PDF",
     "rowPng": "High-resolution PNG",
@@ -868,6 +901,7 @@
     "rowZip": "Brand kit ZIP",
     "rowAssistant": "Brand Assistant",
     "rowSeats": "Seats",
+    "rowInvite": "Invite teammates by email",
     "included": "Included",
     "notIncluded": "Not included"
   },
@@ -894,7 +928,6 @@
     "ownerOnly": "Only the workspace owner can rename it.",
     "credits": "Credits remaining",
     "manageBilling": "Manage billing",
-    "teamComingSoon": "Inviting teammates is not available yet — seats on paid plans are reserved for it.",
     "appearance": "Appearance",
     "appearanceHint": "Applies to this browser.",
     "toggleTheme": "Switch theme",

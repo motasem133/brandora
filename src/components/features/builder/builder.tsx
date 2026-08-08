@@ -93,6 +93,7 @@ export function Builder({
   isPublished,
   canPublish,
   canUseCustomDomain,
+  atDomainLimit,
 }: {
   projectId: string
   projectName: string
@@ -103,6 +104,7 @@ export function Builder({
   isPublished: boolean
   canPublish: boolean
   canUseCustomDomain: boolean
+  atDomainLimit: boolean
 }) {
   const t = useTranslations('Builder')
 
@@ -320,6 +322,7 @@ export function Builder({
               isPublished={isPublished}
               canPublish={canPublish}
               canUseCustomDomain={canUseCustomDomain}
+              atDomainLimit={atDomainLimit}
             />
           </div>
         </div>

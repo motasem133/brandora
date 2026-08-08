@@ -381,7 +381,18 @@ export default async function BillingPage({
                       </p>
                     )}
                   </div>
-                  {isOwner && <CheckoutButton kind="pack" slug={pack.slug} label={t('buy')} />}
+                  {/*
+                    The same rule the plan ladder above already follows: a pack
+                    with no Polar product behind it cannot be bought, so it says
+                    so instead of offering a button whose only outcome is
+                    "not available for purchase yet" after the press.
+                  */}
+                  {isOwner &&
+                    (pack.polarProductId ? (
+                      <CheckoutButton kind="pack" slug={pack.slug} label={t('buy')} />
+                    ) : (
+                      <span className="shrink-0 text-xs text-fg-muted">{t('planUnavailable')}</span>
+                    ))}
                 </li>
               )
             })}

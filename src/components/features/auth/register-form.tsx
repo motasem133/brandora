@@ -2,6 +2,7 @@
 
 import { Loader2 } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
+import { useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 
 import { GoogleButton } from '@/components/features/auth/google-button'
@@ -18,6 +19,7 @@ export function RegisterForm({ google }: { google: boolean }) {
   const tc = useTranslations('Common')
   const router = useRouter()
   const locale = useLocale()
+  const searchParams = useSearchParams()
 
   const [pending, setPending] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -61,7 +63,20 @@ export function RegisterForm({ google }: { google: boolean }) {
       return
     }
 
-    router.push('/onboarding')
+    /*
+     * Onboarding unless they were sent here from somewhere. Someone who
+     * followed an invitation is signing up *to join a workspace*, and dropping
+     * them into the brand wizard loses the invitation they came for.
+     *
+     * Same relative-path-only guard the sign-in form uses.
+     */
+    const redirectTo = searchParams.get('redirectTo')
+    const safeTarget =
+      redirectTo && redirectTo.startsWith('/') && !redirectTo.startsWith('//')
+        ? redirectTo.replace(new RegExp(`^/${locale}`), '') || '/onboarding'
+        : '/onboarding'
+
+    router.push(safeTarget)
     router.refresh()
   }
 

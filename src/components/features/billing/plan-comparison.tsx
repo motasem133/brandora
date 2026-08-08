@@ -37,7 +37,7 @@ export async function PlanComparison({ plans: rows }: { plans: Plan[] }) {
 
   const groups: Group[] = [
     {
-      title: t('groupVolume'),
+      title: t('groupUsage'),
       rows: [
         // Credits first: they are what the plan grants. The two rows under it
         // are the same number spent two different ways.
@@ -57,7 +57,7 @@ export async function PlanComparison({ plans: rows }: { plans: Plan[] }) {
       ],
     },
     {
-      title: t('groupIdentity'),
+      title: t('groupBranding'),
       rows: [
         // Every plan generates these; the table says so rather than leaving a
         // visitor to assume the free one is crippled.
@@ -68,19 +68,34 @@ export async function PlanComparison({ plans: rows }: { plans: Plan[] }) {
       ],
     },
     {
+      title: t('groupContent'),
+      rows: [
+        { label: t('rowCaptions'), value: () => true },
+        { label: t('rowStudio'), value: () => true },
+        { label: t('rowKit'), value: (p) => p.socialMediaKit },
+        { label: t('rowBookPdf'), value: (p) => p.socialMediaKit },
+      ],
+    },
+    {
       title: t('groupWebsite'),
       rows: [
         { label: t('rowBuilder'), value: (p) => p.websiteBuilder },
         { label: t('rowPublish'), value: (p) => p.websiteBuilder },
-        { label: t('rowDomain'), value: (p) => p.customDomain },
-      ],
-    },
-    {
-      title: t('groupSocial'),
-      rows: [
-        { label: t('rowCaptions'), value: () => true },
-        { label: t('rowKit'), value: (p) => p.socialMediaKit },
-        { label: t('rowBookPdf'), value: (p) => p.socialMediaKit },
+        {
+          /*
+           * A number, not a tick — the plans differ by how many, and "yes" on
+           * both Creator and Studio would hide the difference the customer is
+           * choosing between. `false` for none, so the row draws the same dash
+           * every other absent capability draws rather than the string "0".
+           */
+          label: t('rowDomain'),
+          value: (p) =>
+            p.maxCustomDomains === 0
+              ? false
+              : p.maxCustomDomains < 0
+                ? t('unlimited')
+                : String(p.maxCustomDomains),
+        },
       ],
     },
     {
@@ -92,14 +107,21 @@ export async function PlanComparison({ plans: rows }: { plans: Plan[] }) {
       ],
     },
     {
-      title: t('groupTools'),
-      rows: [{ label: t('rowAssistant'), value: (p) => p.brandAssistant }],
-    },
-    {
-      title: t('groupTeam'),
+      title: t('groupCollaboration'),
       rows: [
         { label: t('rowSeats'), value: (p) => (p.seats < 0 ? t('unlimited') : String(p.seats)) },
+        { label: t('rowInvite'), value: (p) => p.seats > 1 },
       ],
+    },
+    {
+      /*
+       * One row, and that is the honest size of it. Everything a group called
+       * "Advanced" would normally carry — priority generation, white-label, an
+       * API, analytics — is unbuilt, and `priorityQueue` is a column nothing
+       * reads. A short group beats a padded one.
+       */
+      title: t('groupAdvanced'),
+      rows: [{ label: t('rowAssistant'), value: (p) => p.brandAssistant }],
     },
   ]
 

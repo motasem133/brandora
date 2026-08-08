@@ -1,9 +1,9 @@
 import 'server-only'
 
-import { eq } from 'drizzle-orm'
+import { and, count, eq, gt } from 'drizzle-orm'
 
 import { db } from '@/server/db'
-import { plans, type Plan } from '@/server/db/schema'
+import { invitations, members, plans, type Plan } from '@/server/db/schema'
 import { entitles, getCurrentSubscription } from './subscriptions'
 
 /**
@@ -41,11 +41,15 @@ export type Entitlements = {
   brandAssistant: boolean
   customDomain: boolean
   maxProjects: number
+  /** -1 = unlimited, matching `maxProjects`. */
+  maxCustomDomains: number
+  seats: number
 }
 
 export async function getEntitlements(organizationId: string): Promise<Entitlements> {
   const plan = await getOrgPlan(organizationId)
 
+  /* Fallbacks are the free plan's, for an organization with no subscription. */
   return {
     planName: plan?.name ?? 'Free',
     websiteBuilder: plan?.websiteBuilder ?? false,
@@ -53,6 +57,52 @@ export async function getEntitlements(organizationId: string): Promise<Entitleme
     vectorExport: plan?.vectorExport ?? false,
     brandAssistant: plan?.brandAssistant ?? false,
     customDomain: plan?.customDomain ?? false,
-    maxProjects: plan?.maxProjects ?? 3,
+    maxProjects: plan?.maxProjects ?? 1,
+    maxCustomDomains: plan?.maxCustomDomains ?? 0,
+    seats: plan?.seats ?? 1,
   }
+}
+
+/**
+ * How many seats a plan grants, as a number a comparison can use.
+ *
+ * `-1` on the table means unlimited; callers want to compare, not to special-
+ * case, so it comes back as a ceiling nobody reaches.
+ */
+export async function seatsForOrg(organizationId: string): Promise<number> {
+  const plan = await getOrgPlan(organizationId)
+  const seats = plan?.seats ?? 1
+  return seats < 0 ? Number.MAX_SAFE_INTEGER : seats
+}
+
+/**
+ * Seats granted, and seats already spoken for.
+ *
+ * Pending invitations count. A seat that someone has been invited into is not
+ * free — treating it as free is how an owner sends more invitations than the
+ * plan can honour and the last person to accept is the one refused.
+ */
+export async function seatUsage(organizationId: string) {
+  const [seats, [memberCount], [pendingCount]] = await Promise.all([
+    seatsForOrg(organizationId),
+    db
+      .select({ total: count() })
+      .from(members)
+      .where(eq(members.organizationId, organizationId)),
+    db
+      .select({ total: count() })
+      .from(invitations)
+      .where(
+        and(
+          eq(invitations.organizationId, organizationId),
+          eq(invitations.status, 'pending'),
+          gt(invitations.expiresAt, new Date()),
+        ),
+      ),
+  ])
+
+  const used = memberCount?.total ?? 0
+  const pending = pendingCount?.total ?? 0
+
+  return { seats, used, pending, taken: used + pending }
 }

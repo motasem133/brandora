@@ -10,6 +10,7 @@ import { AppError } from '@/lib/errors'
 import { orgAction, orgAdminAction } from '@/server/actions/safe-action'
 import { db } from '@/server/db'
 import { getOrgPlan } from '@/server/db/queries/plans'
+import { countCustomDomains } from '@/server/db/queries/sites'
 import { projects, websiteAssets } from '@/server/db/schema'
 import { attachDomain, detachDomain, domainStatus } from '@/server/services/domains'
 
@@ -163,7 +164,27 @@ export const attachCustomDomain = orgAdminAction
 
     const plan = await getOrgPlan(ctx.orgId)
     if (!plan?.customDomain) {
-      throw new AppError('FEATURE_LOCKED', 'Custom domains are available on Business.')
+      throw new AppError('FEATURE_LOCKED', 'Custom domains are available on Creator and above.')
+    }
+
+    /*
+     * How many, not whether. Creator includes one domain and Studio any number,
+     * so the boolean above answers the wrong question on its own.
+     *
+     * Checked before `attachDomain` talks to Vercel: refusing after the domain
+     * is registered there would leave it attached to the deployment with
+     * nothing in our database pointing at it.
+     */
+    if (plan.maxCustomDomains >= 0) {
+      const used = await countCustomDomains(ctx.orgId, parsedInput.projectId)
+      if (used >= plan.maxCustomDomains) {
+        throw new AppError(
+          'FEATURE_LOCKED',
+          plan.maxCustomDomains === 1
+            ? 'Your plan includes one custom domain, and it is in use. Remove it, or upgrade to Studio for as many as you like.'
+            : `Your plan includes ${plan.maxCustomDomains} custom domains, and they are all in use. Remove one, or upgrade to Studio.`,
+        )
+      }
     }
 
     const appHost = appHostname()

@@ -67,12 +67,27 @@ async function main() {
 
   if (!org) throw new Error('the fixture user has no organization')
 
-  // Pro, so the assistant and website features are unlocked for the UI tests.
-  const [pro] = await sql`SELECT id FROM plans WHERE slug = 'pro'`
+  /*
+   * The top paid plan, so the assistant and website features are unlocked for
+   * the UI tests.
+   *
+   * Resolved by rank rather than by name. This said `slug = 'pro'`, and the
+   * ladder has been renamed twice — every rename would have dereferenced
+   * undefined here, failed the fixture, and taken every Playwright suite with
+   * it, for a reason nothing in the failure would have pointed at.
+   */
+  const [topPlan] = await sql`
+    SELECT id FROM plans
+    WHERE price_monthly > 0 AND is_active
+    ORDER BY sort_order DESC
+    LIMIT 1`
+
+  if (!topPlan) throw new Error('no active paid plan is seeded — run pnpm db:seed first')
+
   await sql`
     INSERT INTO subscriptions (organization_id, plan_id, polar_subscription_id, status,
                                current_period_start, current_period_end)
-    VALUES (${org.id}, ${pro.id}, ${'fixture-' + org.id}, 'active', now(), now() + interval '30 days')
+    VALUES (${org.id}, ${topPlan.id}, ${'fixture-' + org.id}, 'active', now(), now() + interval '30 days')
     ON CONFLICT (polar_subscription_id) DO UPDATE SET status = 'active'`
 
   /*

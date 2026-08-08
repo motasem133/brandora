@@ -1,16 +1,32 @@
-import 'server-only'
+import "server-only";
 
-import { betterAuth } from 'better-auth'
-import { drizzleAdapter } from 'better-auth/adapters/drizzle'
-import { nextCookies } from 'better-auth/next-js'
-import { emailOTP, organization } from 'better-auth/plugins'
-import { asc, eq } from 'drizzle-orm'
+import { betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { nextCookies } from "better-auth/next-js";
+import { emailOTP, organization } from "better-auth/plugins";
+import { asc, eq } from "drizzle-orm";
 
-import { env } from '@/lib/env'
-import { db, schema } from './db'
-import { sendEmail } from './email/send'
-import { members } from './db/schema'
-import { createPersonalOrganization } from './services/organizations'
+import { APIError } from "better-auth/api";
+
+import { env } from "@/lib/env";
+import { db, schema } from "./db";
+import { seatsForOrg, seatUsage } from "./db/queries/plans";
+import { sendEmail } from "./email/send";
+import { members, organizations } from "./db/schema";
+import { createPersonalOrganization } from "./services/organizations";
+
+/** The language an invitation email and its landing page should be in. */
+async function organizationLocale(
+  organizationId: string,
+): Promise<"en" | "ar"> {
+  const [org] = await db
+    .select({ locale: organizations.locale })
+    .from(organizations)
+    .where(eq(organizations.id, organizationId))
+    .limit(1);
+
+  return org?.locale ?? "en";
+}
 
 /**
  * Whether Google sign-in exists on this deployment.
@@ -19,7 +35,9 @@ import { createPersonalOrganization } from './services/organizations'
  * keys `socialProviders` below is empty, and a button offering a provider that
  * is not registered is a control that fails when it is pressed.
  */
-export const hasGoogle = Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET)
+export const hasGoogle = Boolean(
+  env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET,
+);
 
 /**
  * How long a verification code stays good for.
@@ -28,15 +46,15 @@ export const hasGoogle = Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRE
  * short enough that a code left visible on a shared screen stops working. The
  * same number is written into the email, so the two cannot disagree.
  */
-export const OTP_MINUTES = 10
+export const OTP_MINUTES = 10;
 
 export const auth = betterAuth({
-  appName: 'Brandora',
+  appName: "Brandora",
   baseURL: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
 
   database: drizzleAdapter(db, {
-    provider: 'pg',
+    provider: "pg",
     schema,
     usePlural: true,
   }),
@@ -49,9 +67,13 @@ export const auth = betterAuth({
     sendResetPassword: async ({ user, url }) => {
       await sendEmail({
         to: user.email,
-        locale: (user as { locale?: 'en' | 'ar' }).locale ?? 'en',
-        template: { kind: 'reset-password', url, name: user.name || user.email },
-      })
+        locale: (user as { locale?: "en" | "ar" }).locale ?? "en",
+        template: {
+          kind: "reset-password",
+          url,
+          name: user.name || user.email,
+        },
+      });
     },
   },
 
@@ -78,34 +100,34 @@ export const auth = betterAuth({
     sendVerificationEmail: async ({ user, url }) => {
       await sendEmail({
         to: user.email,
-        locale: (user as { locale?: 'en' | 'ar' }).locale ?? 'en',
-        template: { kind: 'verify-email', url, name: user.name || user.email },
-      })
+        locale: (user as { locale?: "en" | "ar" }).locale ?? "en",
+        template: { kind: "verify-email", url, name: user.name || user.email },
+      });
     },
   },
 
   // Postgres-backed. No Redis, no extra service.
   rateLimit: {
     enabled: true,
-    storage: 'database',
+    storage: "database",
     // No modelName here on purpose: the default is `rateLimit`, and the
     // adapter's usePlural option turns it into the `rateLimits` table. Setting
     // it explicitly would be pluralised a second time into `rateLimitss`.
     window: 60,
     max: 20,
     customRules: {
-      '/sign-in/email': { window: 60, max: 5 },
-      '/sign-up/email': { window: 3600, max: 5 },
-      '/forget-password': { window: 3600, max: 3 },
-      '/verify-email': { window: 3600, max: 10 },
+      "/sign-in/email": { window: 60, max: 5 },
+      "/sign-up/email": { window: 3600, max: 5 },
+      "/forget-password": { window: 3600, max: 3 },
+      "/verify-email": { window: 3600, max: 10 },
       /*
        * Sending is limited per hour because each one is an email someone did
        * not necessarily ask for; verifying is limited per minute because that
        * is the guessing surface. Three attempts per code plus twenty tries an
        * hour leaves a six-digit space effectively unsearchable.
        */
-      '/email-otp/send-verification-otp': { window: 3600, max: 6 },
-      '/email-otp/verify-email': { window: 60, max: 20 },
+      "/email-otp/send-verification-otp": { window: 3600, max: 6 },
+      "/email-otp/verify-email": { window: 60, max: 20 },
     },
   },
 
@@ -119,7 +141,7 @@ export const auth = betterAuth({
     user: {
       create: {
         after: async (user) => {
-          await createPersonalOrganization(user)
+          await createPersonalOrganization(user);
         },
       },
     },
@@ -136,11 +158,14 @@ export const auth = betterAuth({
             .from(members)
             .where(eq(members.userId, session.userId))
             .orderBy(asc(members.createdAt))
-            .limit(1)
+            .limit(1);
 
           return {
-            data: { ...session, activeOrganizationId: membership?.organizationId ?? null },
-          }
+            data: {
+              ...session,
+              activeOrganizationId: membership?.organizationId ?? null,
+            },
+          };
         },
       },
     },
@@ -148,11 +173,11 @@ export const auth = betterAuth({
 
   user: {
     additionalFields: {
-      locale: { type: 'string', defaultValue: 'en' },
+      locale: { type: "string", defaultValue: "en" },
       // input:false is load-bearing — without it a crafted sign-up payload
       // could set role:"admin" on itself.
-      role: { type: 'string', defaultValue: 'user', input: false },
-      status: { type: 'string', defaultValue: 'active', input: false },
+      role: { type: "string", defaultValue: "user", input: false },
+      status: { type: "string", defaultValue: "active", input: false },
     },
   },
 
@@ -187,7 +212,7 @@ export const auth = betterAuth({
       // Codes are compared, never displayed back, so there is no reason for a
       // readable one to sit in the database. A leaked backup does not become a
       // set of working verification codes.
-      storeOTP: 'hashed',
+      storeOTP: "hashed",
       // Three guesses per code. A six-digit code brute-forced at the rate
       // limit below would still take years, but there is no reason to leave
       // a code alive after it has clearly been mistyped.
@@ -197,40 +222,81 @@ export const auth = betterAuth({
           .select({ name: schema.users.name, locale: schema.users.locale })
           .from(schema.users)
           .where(eq(schema.users.email, email))
-          .limit(1)
+          .limit(1);
 
         await sendEmail({
           to: email,
-          locale: user?.locale ?? 'en',
+          locale: user?.locale ?? "en",
           template: {
-            kind: 'verify-code',
+            kind: "verify-code",
             code: otp,
             name: user?.name || email,
             minutes: OTP_MINUTES,
           },
-        })
+        });
       },
     }),
     organization({
       allowUserToCreateOrganization: true,
       organizationLimit: 5,
-      creatorRole: 'owner',
-      sendInvitationEmail: async ({ email, inviter, organization: org, id }) => {
+      creatorRole: "owner",
+      /*
+       * Seats come from the plan, so this is the gate that makes them real. It
+       * fires wherever a membership row is created — accepting an invitation,
+       * or being added directly.
+       */
+      membershipLimit: async (_user, org) => seatsForOrg(org.id),
+      invitationExpiresIn: 60 * 60 * 24 * 7,
+      /* Re-inviting the same address replaces the pending invitation rather
+         than stacking a second one against the same seat. */
+      cancelPendingInvitationsOnReInvite: true,
+      organizationHooks: {
+        /*
+         * The plugin checks `membershipLimit` when an invitation is *accepted*,
+         * not when it is created — so without this an owner on three seats can
+         * send ten invitations and the fourth person to accept is the one who
+         * gets refused. Pending invitations are counted as spoken for.
+         */
+        beforeCreateInvitation: async ({ invitation }) => {
+          const { seats, taken } = await seatUsage(invitation.organizationId);
+          if (taken >= seats) {
+            throw new APIError("FORBIDDEN", {
+              message:
+                seats === 1
+                  ? "Your plan includes one seat, and it is taken. Remove a member, cancel a pending invitation, or upgrade."
+                  : `Your plan includes ${seats} seats, and they are all taken. Remove a member, cancel a pending invitation, or upgrade.`,
+            });
+          }
+        },
+      },
+      sendInvitationEmail: async ({
+        email,
+        inviter,
+        organization: org,
+        id,
+      }) => {
+        /*
+         * The link used to hardcode /en/, so an Arabic workspace invited people
+         * into an English page. Organizations carry their own locale.
+         */
+        const locale = await organizationLocale(org.id);
+
         await sendEmail({
           to: email,
+          locale,
           template: {
-            kind: 'org-invite',
-            url: `${env.NEXT_PUBLIC_APP_URL}/en/accept-invitation/${id}`,
+            kind: "org-invite",
+            url: `${env.NEXT_PUBLIC_APP_URL}/${locale}/accept-invitation/${id}`,
             inviter: inviter.user.name || inviter.user.email,
             organization: org.name,
           },
-        })
+        });
       },
     }),
     // Must stay last — it flushes Set-Cookie headers in Next.js server actions.
     nextCookies(),
   ],
-})
+});
 
-export type Auth = typeof auth
-export type Session = Auth['$Infer']['Session']
+export type Auth = typeof auth;
+export type Session = Auth["$Infer"]["Session"];

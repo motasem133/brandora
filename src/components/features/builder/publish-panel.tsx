@@ -38,6 +38,7 @@ export function PublishPanel({
   isPublished,
   canPublish,
   canUseCustomDomain,
+  atDomainLimit,
 }: {
   projectId: string
   initialSubdomain: string | null
@@ -45,6 +46,8 @@ export function PublishPanel({
   isPublished: boolean
   canPublish: boolean
   canUseCustomDomain: boolean
+  /** Plan allows domains, but every one it includes is already attached. */
+  atDomainLimit: boolean
 }) {
   const t = useTranslations('Builder')
 
@@ -211,7 +214,18 @@ export function PublishPanel({
 
           {canUseCustomDomain && published && (
             <div className="mt-4 border-t border-line pt-4">
-              {!domain ? (
+              {!domain && atDomainLimit ? (
+                /*
+                 * The plan's domains are all attached to other sites. Say that
+                 * here rather than offering a field whose only outcome is the
+                 * server refusing it — the same rule the publish control
+                 * follows for a plan that cannot publish.
+                 */
+                <>
+                  <span className="mb-1.5 block text-sm font-medium">{t('customDomain')}</span>
+                  <p className="text-sm text-fg-secondary">{t('domainLimitReached')}</p>
+                </>
+              ) : !domain ? (
                 <>
                   <Field label={t('customDomain')} error={attach.result?.serverError}>
                     <Input

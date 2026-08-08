@@ -6,7 +6,7 @@ import { useAction } from 'next-safe-action/hooks'
 import { useRef, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
-import { Card, CardDescription, CardTitle } from '@/components/ui/card'
+import { Card, CardTitle } from '@/components/ui/card'
 import { FieldError } from '@/components/ui/field-error'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -61,9 +61,8 @@ export function OrganizationCard({
         </Link>
       </div>
 
-      {/* Seats are sold on paid plans but there is no invite flow yet, so this
-          says so rather than offering a control that does nothing. */}
-      <CardDescription>{t('teamComingSoon')}</CardDescription>
+      {/* Teammates used to be announced here as "not available yet". They have
+          their own card now, below this one. */}
 
       {isOwner && (
         <div className="flex items-center gap-3">

@@ -8,7 +8,7 @@ import { AppError } from '@/lib/errors'
 import { adminAction } from '@/server/actions/safe-action'
 import { writeLedgerEntry } from '@/server/billing/credits'
 import { db } from '@/server/db'
-import { plans, users } from '@/server/db/schema'
+import { creditPacks, plans, users } from '@/server/db/schema'
 
 /**
  * Platform administration.
@@ -95,6 +95,39 @@ export const updatePlan = adminAction
     revalidatePath('/[locale]/admin', 'layout')
     revalidatePath('/[locale]/dashboard/billing', 'page')
     return { planId }
+  })
+
+/**
+ * Connects a credit pack to its Polar product.
+ *
+ * The only way to set this was hand-written SQL, so the packs shipped
+ * unsellable and the buy button failed on press. Credits and price stay out of
+ * this form deliberately: those are money decisions that belong with the seed,
+ * next to the plan prices, not editable at runtime.
+ */
+export const updateCreditPack = adminAction
+  .metadata({ name: 'admin-update-credit-pack' })
+  .inputSchema(
+    z.object({
+      packId: z.uuid(),
+      isActive: z.boolean(),
+      polarProductId: z.string().trim().max(120).nullable(),
+    }),
+  )
+  .action(async ({ parsedInput }) => {
+    const { packId, ...fields } = parsedInput
+
+    const [updated] = await db
+      .update(creditPacks)
+      .set(fields)
+      .where(eq(creditPacks.id, packId))
+      .returning({ id: creditPacks.id })
+
+    if (!updated) throw new AppError('NOT_FOUND', 'Credit pack not found.')
+
+    revalidatePath('/[locale]/admin', 'layout')
+    revalidatePath('/[locale]/dashboard/billing', 'page')
+    return { packId }
   })
 
 /**

@@ -279,6 +279,13 @@ export const invitations = pgTable(
     inviterId: text('inviter_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
+    /*
+     * Better Auth declares this required on its invitation model, and its
+     * Drizzle adapter throws on insert when the column is absent. It was
+     * missing, so creating an invitation failed before an email could be sent —
+     * which is why the flow had never worked rather than merely being unbuilt.
+     */
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index('invitations_org_idx').on(t.organizationId)],
 )
@@ -312,6 +319,15 @@ export const plans = pgTable('plans', {
   /** -1 = unlimited */
   seats: integer('seats').notNull().default(1),
   maxProjects: integer('max_projects').notNull().default(-1),
+  /**
+   * How many published sites may carry a custom domain, across the whole
+   * organization. -1 = unlimited, matching `maxProjects`.
+   *
+   * A count rather than a second boolean because the plans differ by number:
+   * one domain on Creator, as many as you like on Studio. `customDomain` stays
+   * as the coarse on/off that the builder already reads.
+   */
+  maxCustomDomains: integer('max_custom_domains').notNull().default(0),
 
   websiteBuilder: boolean('website_builder').notNull().default(false),
   socialMediaKit: boolean('social_media_kit').notNull().default(false),

@@ -1,6 +1,6 @@
 'use server'
 
-import { eq } from 'drizzle-orm'
+import { count, eq } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
@@ -11,7 +11,7 @@ import { getPolar } from '@/server/billing/polar'
 import { syncBillingFromPolar } from '@/server/billing/sync'
 import { db } from '@/server/db'
 import { getCurrentSubscription, hasLiveSubscription } from '@/server/db/queries/subscriptions'
-import { creditPacks, plans, subscriptions } from '@/server/db/schema'
+import { creditPacks, members, plans, subscriptions } from '@/server/db/schema'
 
 /**
  * Creates a Polar checkout session.
@@ -142,6 +142,40 @@ export const changePlan = orgOwnerAction
 
     if (!productId) {
       throw new AppError('VALIDATION', 'This plan is not available for purchase yet.')
+    }
+
+    /*
+     * A workspace cannot move to a plan with fewer seats than it has people.
+     *
+     * Refused here rather than absorbed, because this is the only moment where
+     * the customer is present and the money has not moved yet. The alternative
+     * — take the payment, then decide which teammate to remove — is a choice
+     * that belongs to them, not to us.
+     *
+     * Downgrades that arrive by webhook are a different matter and are left
+     * alone: nobody is there to answer, and locking people out of work they
+     * made is worse than an over-limit workspace. The Team card says so, and
+     * further invitations are blocked until they are back under the limit.
+     */
+    const [target] = await db
+      .select({ seats: plans.seats, name: plans.name })
+      .from(plans)
+      .where(eq(plans.slug, parsedInput.slug))
+      .limit(1)
+
+    if (target && target.seats >= 0) {
+      const [memberCount] = await db
+        .select({ total: count() })
+        .from(members)
+        .where(eq(members.organizationId, ctx.orgId))
+
+      const people = memberCount?.total ?? 0
+      if (people > target.seats) {
+        throw new AppError(
+          'VALIDATION',
+          `${target.name} includes ${target.seats} seat${target.seats === 1 ? '' : 's'}, and this workspace has ${people} members. Remove ${people - target.seats} before moving to it.`,
+        )
+      }
     }
 
     const polar = getPolar()

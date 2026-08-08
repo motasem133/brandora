@@ -152,7 +152,21 @@ export default function proxy(request: NextRequest) {
   }
 
   if (isGuestOnly && hasSessionCookie) {
-    return NextResponse.redirect(new URL(`/${locale}/dashboard`, request.url))
+    /*
+     * Honour where they were going. This sent everyone to the dashboard and
+     * dropped `redirectTo`, which quietly broke the one case that needs it: an
+     * invited person who is already signed in clicks the invitation, is bounced
+     * off /register, and never sees it again.
+     *
+     * Same rule as the sign-in form — relative paths within this app only, so
+     * the parameter cannot become an open redirect.
+     */
+    const requested = request.nextUrl.searchParams.get('redirectTo')
+    const safe = requested && requested.startsWith('/') && !requested.startsWith('//')
+
+    return NextResponse.redirect(
+      new URL(safe ? requested : `/${locale}/dashboard`, request.url),
+    )
   }
 
   return intlMiddleware(request)
