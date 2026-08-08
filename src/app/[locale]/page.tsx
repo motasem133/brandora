@@ -56,7 +56,11 @@ const LOGOS = [
   { src: '/marketing/sultana-name.webp', width: 1200, height: 260 },
 ]
 
-/** The posts the kit produced for that same run. */
+/**
+ * The posts the kit produced for that same run, at the size the renderer wrote
+ * them. They were 900px re-encodes of these 1080px files, which cost a
+ * downscale and a second lossy pass to show the same picture.
+ */
 const POSTS = [
   '/marketing/sultana-post-hero.webp',
   '/marketing/sultana-post-feature.webp',
@@ -359,8 +363,8 @@ export default async function HorizonDirection({
                         <Image
                           src={post}
                           alt={t('kitSocialAlt')}
-                          width={900}
-                          height={900}
+                          width={1080}
+                          height={1080}
                           className="size-full object-cover"
                           sizes="130px"
                         />
