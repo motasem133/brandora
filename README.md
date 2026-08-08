@@ -91,14 +91,26 @@ src/
 
 ### Two rules worth internalizing
 
-1. **`src/server/` is the only DB boundary.** Route handlers and Server Actions call
-   services; services call queries.
+1. **`src/server/` is the only DB boundary.** Pages and components call queries;
+   route handlers and Server Actions call services. This is enforced by ESLint,
+   not by convention: `@/server/db` and `drizzle-orm` cannot be imported from
+   `src/app/`, `src/components/` or `src/lib/`.
 2. **Server Actions are public HTTP endpoints.** Never build one from the bare
-   `actionClient` — start from `orgAction`, `orgAdminAction`, or `adminAction` so the
+   `actionClient`. Start from `orgAction`, `orgAdminAction`, or `adminAction` so the
    session and membership checks cannot be skipped.
 
-## Build status
+See [`CLAUDE.md`](./CLAUDE.md) for the working conventions, where things live,
+and the rules that hold but are not lintable.
 
-Phase 1 complete: scaffold, schema (22 tables), Better Auth with organizations,
-action-client authorization layer, and seed data. See Appendix C of the system
-documentation for the remaining phases.
+## Testing
+
+| Command | Needs | Covers |
+|---|---|---|
+| `pnpm test:unit` | nothing | Contrast arithmetic, credit costs, currency fallback, logo rounds |
+| `pnpm test:contrast` | nothing | The contrast guard against palettes built to break it |
+| `pnpm test:system` | app running | HTTP surface across every route |
+| `pnpm test:billing` | app + database | Subscriptions, renewals, upgrades, failed payments, refunds |
+| `pnpm test:e2e` | app running | Browser flows: onboarding, builder, assistant, settings |
+
+All of them run in CI, which also builds against a real Postgres and fails if
+the schema moved without a generated migration.
