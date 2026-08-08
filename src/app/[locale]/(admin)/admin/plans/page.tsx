@@ -2,15 +2,14 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { PlanEditor } from '@/components/features/admin/plan-editor'
 import { formatPrice } from '@/lib/utils'
-import { db } from '@/server/db'
-import { plans } from '@/server/db/schema'
+import { getAllPlans } from '@/server/db/queries/plans'
 
 export default async function AdminPlansPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
   setRequestLocale(locale)
 
   const t = await getTranslations('Admin')
-  const all = await db.select().from(plans).orderBy(plans.sortOrder)
+  const all = await getAllPlans()
 
   return (
     <div className="space-y-6">

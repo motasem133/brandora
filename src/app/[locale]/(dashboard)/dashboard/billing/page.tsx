@@ -1,4 +1,3 @@
-import { desc, eq, inArray } from 'drizzle-orm'
 import { Check } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
@@ -9,15 +8,15 @@ import { CancelSubscriptionButton } from '@/components/features/billing/cancel-b
 import { Badge } from '@/components/ui/badge'
 import { CurrencySwitch } from '@/components/features/billing/currency-switch'
 import { cn, formatDate, formatPrice, isCurrency, pickPrice, type Currency } from '@/lib/utils'
-import { db } from '@/server/db'
 import { brandsFrom } from '@/server/billing/credits'
-import { getOrgPlan } from '@/server/db/queries/plans'
+import { getRecentCreditTransactions, getRecentOrders } from '@/server/db/queries/billing'
+import { getActiveCreditPacks, getActivePlans, getOrgPlan } from '@/server/db/queries/plans'
+import { getProjectNames } from '@/server/db/queries/projects'
 import {
   entitles,
   getCurrentSubscription,
   hasLiveSubscription,
 } from '@/server/db/queries/subscriptions'
-import { creditPacks, creditTransactions, orders, plans, projects } from '@/server/db/schema'
 import { requireOrg } from '@/server/session'
 
 /**
@@ -64,47 +63,21 @@ export default async function BillingPage({
   const [currentPlan, allPlans, packs, subscription, recentOrders, recentCredits] =
     await Promise.all([
       getOrgPlan(org.id),
-      db.select().from(plans).where(eq(plans.isActive, true)).orderBy(plans.sortOrder),
-      db
-        .select()
-        .from(creditPacks)
-        .where(eq(creditPacks.isActive, true))
-        .orderBy(creditPacks.sortOrder),
+      getActivePlans(),
+      getActiveCreditPacks(),
       // Deliberately the same resolution the entitlement lookup uses: an
       // organization can hold more than one subscription row, and the page must
       // describe the one that actually governs rather than whichever row came
       // back first.
       getCurrentSubscription(org.id),
-      db
-        .select()
-        .from(orders)
-        .where(eq(orders.organizationId, org.id))
-        .orderBy(desc(orders.createdAt))
-        .limit(10),
-      db
-        .select()
-        .from(creditTransactions)
-        .where(eq(creditTransactions.organizationId, org.id))
-        .orderBy(desc(creditTransactions.createdAt))
-        .limit(10),
+      getRecentOrders(org.id),
+      getRecentCreditTransactions(org.id),
     ])
 
-  /*
-   * The brands those charges were spent on, resolved in one query rather than
-   * one per row. A ledger entry carries a project id and never showed it, which
-   * left "Generation −8" as the entire account of where eight credits went.
-   */
-  const projectIds = [...new Set(recentCredits.map((c) => c.projectId).filter(Boolean))] as string[]
-  const spentOn = projectIds.length
-    ? new Map(
-        (
-          await db
-            .select({ id: projects.id, name: projects.businessName, title: projects.title })
-            .from(projects)
-            .where(inArray(projects.id, projectIds))
-        ).map((p) => [p.id, p.name || p.title]),
-      )
-    : new Map<string, string>()
+  /* The brands those charges were spent on, resolved in one query, not one per row. */
+  const spentOn = await getProjectNames([
+    ...new Set(recentCredits.map((c) => c.projectId).filter(Boolean) as string[]),
+  ])
 
   const isOwner = orgRole === 'owner'
 

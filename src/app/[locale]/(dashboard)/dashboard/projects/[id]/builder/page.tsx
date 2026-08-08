@@ -1,13 +1,10 @@
-import { eq } from 'drizzle-orm'
 import { setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 
 import { Builder } from '@/components/features/builder/builder'
 import { PAGE_KEYS, type Pages, type Theme } from '@/lib/blocks'
-import { db } from '@/server/db'
 import { getOrgPlan } from '@/server/db/queries/plans'
-import { getProject } from '@/server/db/queries/projects'
-import { websiteAssets } from '@/server/db/schema'
+import { getProject, getWebsiteAsset } from '@/server/db/queries/projects'
 import { isDomainsConfigured } from '@/server/services/domains'
 import { requireOrg } from '@/server/session'
 
@@ -36,12 +33,7 @@ export default async function BuilderPage({
   const project = await getProject(org.id, id)
   if (!project) notFound()
 
-  const [website] = await db
-    .select()
-    .from(websiteAssets)
-    .where(eq(websiteAssets.projectId, project.id))
-    .limit(1)
-
+  const website = await getWebsiteAsset(project.id)
   if (!website) notFound()
 
   const plan = await getOrgPlan(org.id)

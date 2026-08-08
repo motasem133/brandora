@@ -1,4 +1,3 @@
-import { eq } from 'drizzle-orm'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 
@@ -18,11 +17,9 @@ import { Disclosure } from '@/components/ui/disclosure'
 import { Link } from '@/i18n/navigation'
 import { groupLogoRounds, resolveConcept, resolveRound } from '@/lib/logo-rounds'
 import { CREDIT_COSTS, creditsForSections } from '@/server/billing/credits'
-import { db } from '@/server/db'
 import { getThreadMessages } from '@/server/db/queries/assistant'
 import { getOrgPlan } from '@/server/db/queries/plans'
-import { getProject } from '@/server/db/queries/projects'
-import { brandingAssets, generatedFiles, socialMediaAssets, websiteAssets } from '@/server/db/schema'
+import { getProject, getProjectAssets } from '@/server/db/queries/projects'
 import { getLatestJobForProject, sectionsForProject } from '@/server/services/generation'
 import { requireOrg } from '@/server/session'
 
@@ -59,22 +56,14 @@ export default async function ProjectDetailPage({
   const project = await getProject(org.id, id)
   if (!project) notFound()
 
-  const [branding, website, social] = await Promise.all([
-    db.select().from(brandingAssets).where(eq(brandingAssets.projectId, project.id)).limit(1),
-    db.select().from(websiteAssets).where(eq(websiteAssets.projectId, project.id)).limit(1),
-    db.select().from(socialMediaAssets).where(eq(socialMediaAssets.projectId, project.id)).limit(1),
-  ])
-
-  const files = await db
-    .select()
-    .from(generatedFiles)
-    .where(eq(generatedFiles.projectId, project.id))
+  const {
+    branding: brandingAsset,
+    website: websiteAsset,
+    social: socialAsset,
+    files,
+  } = await getProjectAssets(project.id)
 
   const logoFiles = files.filter((file) => file.kind === 'logo_raster')
-
-  const brandingAsset = branding[0]
-  const websiteAsset = website[0]
-  const socialAsset = social[0]
 
   /*
    * The history, resolved once here so the strip and the canvas cannot disagree

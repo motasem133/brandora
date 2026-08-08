@@ -1,21 +1,18 @@
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import { convertToModelMessages, stepCountIs, streamText, type UIMessage } from 'ai'
-import { desc, eq } from 'drizzle-orm'
 import { z } from 'zod'
 
 import { env } from '@/lib/env'
 import { assistantSystemPrompt, buildAssistantTools } from '@/server/ai/assistant'
 import { MODELS } from '@/server/ai/models'
-import { db } from '@/server/db'
-import { getOrgPlan } from '@/server/db/queries/plans'
-import { getProject } from '@/server/db/queries/projects'
 import {
-  aiUsage,
-  assistantMessages,
-  assistantThreads,
-  brandingAssets,
-  socialMediaAssets,
-} from '@/server/db/schema'
+  ensureThread,
+  recordAssistantMessage,
+  recordAssistantUsage,
+  recordUserMessage,
+} from '@/server/db/queries/assistant'
+import { getOrgPlan } from '@/server/db/queries/plans'
+import { getBrandContext, getProject } from '@/server/db/queries/projects'
 import { toErrorResponse } from '@/server/api-error'
 import { requireOrg } from '@/server/session'
 
@@ -72,23 +69,14 @@ async function handle(request: Request) {
     return Response.json({ error: { code: 'AI_PROVIDER_ERROR' } }, { status: 503 })
   }
 
-  const [branding, social] = await Promise.all([
-    db.select().from(brandingAssets).where(eq(brandingAssets.projectId, projectId)).limit(1),
-    db.select().from(socialMediaAssets).where(eq(socialMediaAssets.projectId, projectId)).limit(1),
-  ])
+  const { branding, social } = await getBrandContext(projectId)
 
   const thread = await ensureThread(projectId)
   const uiMessages = messages as UIMessage[]
 
-  // Persist the user's turn before the model runs, so a failed generation still
-  // leaves the conversation intact rather than losing what they typed.
   const latest = uiMessages.at(-1)
   if (latest?.role === 'user') {
-    await db.insert(assistantMessages).values({
-      threadId: thread.id,
-      role: 'user',
-      content: textOf(latest),
-    })
+    await recordUserMessage(thread.id, textOf(latest))
   }
 
   const startedAt = Date.now()
@@ -99,9 +87,9 @@ async function handle(request: Request) {
     system: assistantSystemPrompt({
       projectName: project.businessName || project.title,
       language: project.language,
-      branding: branding[0] ?? null,
-      social: social[0] ?? null,
-      hasSocial: Boolean(social[0]),
+      branding,
+      social,
+      hasSocial: Boolean(social),
       chosenName: project.businessName,
     }),
     // Twenty turns keeps cost predictable while staying long enough that the
@@ -114,53 +102,25 @@ async function handle(request: Request) {
     temperature: 0.7,
 
     onFinish: async ({ text, usage, toolCalls }) => {
-      await db.insert(assistantMessages).values({
+      await recordAssistantMessage({
         threadId: thread.id,
-        role: 'assistant',
         content: text,
-        toolCalls: toolCalls?.length ? toolCalls : null,
+        toolCalls,
         model,
       })
 
-      try {
-        await db.insert(aiUsage).values({
-          organizationId: org.id,
-          projectId,
-          feature: 'assistant',
-          provider: 'openrouter',
-          model,
-          inputTokens: usage?.inputTokens ?? 0,
-          outputTokens: usage?.outputTokens ?? 0,
-          costUsd: '0',
-          latencyMs: Date.now() - startedAt,
-          status: 'success',
-        })
-      } catch (error) {
-        // Telemetry must never break a reply the user already received.
-        console.error('[assistant] failed to record usage', error)
-      }
+      await recordAssistantUsage({
+        organizationId: org.id,
+        projectId,
+        model,
+        inputTokens: usage?.inputTokens ?? 0,
+        outputTokens: usage?.outputTokens ?? 0,
+        latencyMs: Date.now() - startedAt,
+      })
     },
   })
 
   return result.toUIMessageStreamResponse()
-}
-
-async function ensureThread(projectId: string) {
-  const [existing] = await db
-    .select()
-    .from(assistantThreads)
-    .where(eq(assistantThreads.projectId, projectId))
-    .orderBy(desc(assistantThreads.createdAt))
-    .limit(1)
-
-  if (existing) return existing
-
-  const [created] = await db
-    .insert(assistantThreads)
-    .values({ projectId, title: 'Brand refinement' })
-    .returning()
-
-  return created
 }
 
 /** UI messages carry parts rather than a plain string. */

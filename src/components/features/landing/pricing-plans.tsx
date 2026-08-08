@@ -1,14 +1,12 @@
 import { Check } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
-import { eq } from 'drizzle-orm'
 
 import { Cell } from '@/components/ui/horizon'
 import { buttonVariants } from '@/components/ui/button'
 import { Link } from '@/i18n/navigation'
 import { cn, formatPrice, pickPrice, type Currency } from '@/lib/utils'
 import { brandsFrom } from '@/server/billing/credits'
-import { db } from '@/server/db'
-import { plans } from '@/server/db/schema'
+import type { Plan } from '@/server/db/schema'
 
 /**
  * The plan ladder, from the table that bills for it.
@@ -38,14 +36,24 @@ const CTA: Record<string, 'planCta_free'> = {
 }
 
 export async function PricingPlans({
+  plans: rows,
   locale,
   currency = 'usd',
 }: {
+  /**
+   * The ladder, resolved by the page.
+   *
+   * This component used to query the database itself, which made a component
+   * the only thing in the tree that knew the `isActive` filter and put a round
+   * trip somewhere no caller could see, cache or share it. Both pages that
+   * render it already read plans for their own purposes, so passing them in
+   * removes a query rather than moving one.
+   */
+  plans: Plan[]
   locale: string
   currency?: Currency
 }) {
   const t = await getTranslations('Landing')
-  const rows = await db.select().from(plans).where(eq(plans.isActive, true)).orderBy(plans.sortOrder)
 
   return (
     <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">

@@ -1,4 +1,3 @@
-import { eq } from 'drizzle-orm'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { CurrencySwitch } from '@/components/features/billing/currency-switch'
@@ -8,8 +7,7 @@ import { buttonVariants } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Link } from '@/i18n/navigation'
 import { formatPrice, isCurrency, pickPrice, type Currency } from '@/lib/utils'
-import { db } from '@/server/db'
-import { creditPacks, plans } from '@/server/db/schema'
+import { getActiveCreditPacks, getActivePlans } from '@/server/db/queries/plans'
 import { PlanComparison } from '@/components/features/billing/plan-comparison'
 
 export default async function PricingPage({
@@ -26,10 +24,7 @@ export default async function PricingPage({
   const t = await getTranslations('Pricing')
   const currency: Currency = isCurrency(requested) ? requested : locale === 'ar' ? 'aed' : 'usd'
 
-  const [packs, ladder] = await Promise.all([
-    db.select().from(creditPacks).where(eq(creditPacks.isActive, true)).orderBy(creditPacks.sortOrder),
-    db.select().from(plans).where(eq(plans.isActive, true)).orderBy(plans.sortOrder),
-  ])
+  const [packs, ladder] = await Promise.all([getActiveCreditPacks(), getActivePlans()])
 
 
   return (
@@ -67,7 +62,7 @@ export default async function PricingPage({
           arrived at what read as a second product.
         */}
         <div className="mt-10">
-          <PricingPlans locale={locale} currency={currency} />
+          <PricingPlans plans={ladder} locale={locale} currency={currency} />
         </div>
 
         {/*

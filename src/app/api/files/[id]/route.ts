@@ -1,9 +1,6 @@
-import { and, eq } from 'drizzle-orm'
-
-import { db } from '@/server/db'
-import { generatedFiles, projects } from '@/server/db/schema'
 import { toErrorResponse } from '@/server/api-error'
 import { getOrgPlan } from '@/server/db/queries/plans'
+import { getOrgFile } from '@/server/db/queries/projects'
 import { requireOrg } from '@/server/session'
 import { signedDownloadUrl } from '@/server/storage/r2'
 
@@ -69,20 +66,8 @@ async function handle(request: Request, params: Promise<{ id: string }>) {
   const { id } = await params
   const { org } = await requireOrg()
 
-  const [file] = await db
-    .select({
-      r2Key: generatedFiles.r2Key,
-      kind: generatedFiles.kind,
-      mimeType: generatedFiles.mimeType,
-      width: generatedFiles.width,
-      height: generatedFiles.height,
-      metadata: generatedFiles.metadata,
-      projectTitle: projects.title,
-    })
-    .from(generatedFiles)
-    .innerJoin(projects, eq(projects.id, generatedFiles.projectId))
-    .where(and(eq(generatedFiles.id, id), eq(projects.organizationId, org.id)))
-    .limit(1)
+  // Org-scoped by the query itself: a file from another tenant reads as 404.
+  const file = await getOrgFile(org.id, id)
 
   if (!file) {
     return Response.json({ error: { code: 'NOT_FOUND' } }, { status: 404 })

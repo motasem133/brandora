@@ -3,8 +3,34 @@ import 'server-only'
 import { eq } from 'drizzle-orm'
 
 import { db } from '@/server/db'
-import { plans, type Plan } from '@/server/db/schema'
+import { creditPacks, plans, type CreditPack, type Plan } from '@/server/db/schema'
 import { entitles, getCurrentSubscription } from './subscriptions'
+
+/**
+ * The plan ladder as a customer sees it.
+ *
+ * Four surfaces render this list — the landing page, the pricing page, the
+ * billing page and the plan comparison — and all four used to spell the same
+ * `select … where isActive … orderBy sortOrder` out for themselves, two of them
+ * from inside a component. One of them forgetting the `isActive` filter is a
+ * retired plan back on sale, so the filter lives here once.
+ */
+export async function getActivePlans(): Promise<Plan[]> {
+  return db.select().from(plans).where(eq(plans.isActive, true)).orderBy(plans.sortOrder)
+}
+
+/** Every plan including retired ones. Admin only: this is the editing surface. */
+export async function getAllPlans(): Promise<Plan[]> {
+  return db.select().from(plans).orderBy(plans.sortOrder)
+}
+
+export async function getActiveCreditPacks(): Promise<CreditPack[]> {
+  return db
+    .select()
+    .from(creditPacks)
+    .where(eq(creditPacks.isActive, true))
+    .orderBy(creditPacks.sortOrder)
+}
 
 /**
  * The plan an organization is currently entitled to.

@@ -20,6 +20,7 @@ import { LogoMark } from '@/components/ui/logo'
 import { MomentumField, MomentumItem } from '@/components/ui/momentum'
 import { Link } from '@/i18n/navigation'
 import { cn } from '@/lib/utils'
+import { getActivePlans } from '@/server/db/queries/plans'
 
 /**
  * Direction D — Horizon.
@@ -91,6 +92,7 @@ export default async function HorizonDirection({
   const tn = await getTranslations('Nav')
   const rest = t.raw('restItems') as string[]
   const steps = t.raw('steps') as { name: string; body: string }[]
+  const plans = await getActivePlans()
 
   return (
     <div className="world-dark min-h-dvh overflow-x-hidden">
@@ -512,7 +514,7 @@ export default async function HorizonDirection({
             and did — disagree about what a plan includes.
           */}
           <div className="mt-16">
-            <PricingPlans locale={locale} />
+            <PricingPlans plans={plans} locale={locale} />
           </div>
 
           {/*
