@@ -101,16 +101,27 @@ export async function PlanComparison({ plans: rows }: { plans: Plan[] }) {
   ]
 
   return (
-    // Wide content scrolls inside its own box, so the page body never does.
-    <div className="overflow-x-auto rounded-panel border border-line">
+    /*
+     * Wide content scrolls inside its own box, so the page body never does.
+     *
+     * The box used to be a rounded panel with a border all the way round, which
+     * is a card, and a card is the one shape this publication does not use. A
+     * printed table is held by its rules: one under the head, one under each
+     * row, and nothing down the sides.
+     */
+    <div className="overflow-x-auto">
       <table className="w-full min-w-[640px] border-collapse text-sm">
+        <caption className="sr-only">{t('compareTitle')}</caption>
         <thead>
-          <tr>
-            <th className="w-2/5 px-5 py-4 text-start text-xs font-medium uppercase tracking-[0.12em] text-fg-muted">
-              {t('compareTitle')}
+          <tr className="border-b border-line-strong">
+            {/* Blank in print. The column of row labels is named by the plate
+                it sits under, and repeating that title inside the table was the
+                same words twice within an inch of each other. */}
+            <th scope="col" className="w-2/5 pb-3 pe-5 text-start">
+              <span className="sr-only">{t('compareTitle')}</span>
             </th>
             {rows.map((plan) => (
-              <th key={plan.id} className="px-4 py-4 text-center font-display font-semibold">
+              <th key={plan.id} scope="col" className="type-runhead pb-3 text-center">
                 {plan.name}
               </th>
             ))}
@@ -120,30 +131,37 @@ export async function PlanComparison({ plans: rows }: { plans: Plan[] }) {
         {groups.map((group) => (
           <tbody key={group.title}>
             <tr>
+              {/* The group name sits on the rule rather than in a tinted band.
+                  A band is a shaded div; a rule with a word on it is how a
+                  printed table separates its sections. */}
               <th
                 colSpan={rows.length + 1}
-                className="border-t border-line bg-elevated/40 px-5 py-2.5 text-start text-xs font-medium uppercase tracking-[0.12em] text-fg-secondary"
+                className="type-runhead border-t border-line-strong pb-2 pt-7 text-start"
               >
                 {group.title}
               </th>
             </tr>
             {group.rows.map((row) => (
               <tr key={row.label} className="border-t border-line">
-                <td className="px-5 py-3 text-fg-secondary">{row.label}</td>
+                <td className="py-3 pe-5 text-fg-secondary">{row.label}</td>
                 {rows.map((plan) => {
                   const value = row.value(plan)
                   return (
-                    <td key={plan.id} className="px-4 py-3 text-center tabular-nums">
+                    <td key={plan.id} className="py-3 text-center tabular-nums">
                       {typeof value === 'string' ? (
                         <span>{value}</span>
                       ) : value ? (
                         <>
-                          <Check className="mx-auto size-4 accent-text" aria-hidden />
+                          {/* A printed table marks inclusion with a mark, not
+                              with a coloured icon. The dash for its absence is
+                              an en rule, which is what a table cell with nothing
+                              in it carries on paper. */}
+                          <Check className="mx-auto size-4" aria-hidden />
                           <span className="sr-only">{t('included')}</span>
                         </>
                       ) : (
                         <>
-                          <Minus className="mx-auto size-4 text-fg-muted/50" aria-hidden />
+                          <Minus className="mx-auto size-4 text-fg-muted" aria-hidden />
                           <span className="sr-only">{t('notIncluded')}</span>
                         </>
                       )}

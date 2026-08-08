@@ -10,9 +10,10 @@ import { plans } from '@/server/db/schema'
 /**
  * The plan ladder, set as printed terms rather than as four cards.
  *
- * `PricingPlans` is still the ladder the `/pricing` page renders, and both read
- * the same table, so neither can claim something the other does not. What
- * differs here is only the setting.
+ * One table for both documents. `/pricing` renders this same component with the
+ * currency it was asked for, so the book and its appendix cannot disagree about
+ * a price. The four-card ladder that used to stand there is deleted rather than
+ * restyled: two compositions of one set of figures is how they drift apart.
  *
  * Four cards in a row, the second one scaled up, ringed in the product's accent
  * and badged "Recommended", is the single most reproduced block on the web. It

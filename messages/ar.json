@@ -842,7 +842,10 @@
     "rowAssistant": "مساعد العلامة",
     "rowSeats": "المقاعد",
     "included": "مشمول",
-    "notIncluded": "غير مشمول"
+    "notIncluded": "غير مشمول",
+    "shownIn": "معروضة بـ",
+    "packsPrice": "السعر",
+    "notesElsewhere": "الأسئلة مطبوعة مفتوحة في اللوحة 05 من الكتاب."
   },
   "Settings": {
     "title": "الإعدادات",

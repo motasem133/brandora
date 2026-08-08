@@ -842,7 +842,10 @@
     "rowAssistant": "Brand Assistant",
     "rowSeats": "Seats",
     "included": "Included",
-    "notIncluded": "Not included"
+    "notIncluded": "Not included",
+    "shownIn": "Shown in",
+    "packsPrice": "Price",
+    "notesElsewhere": "The questions are set open as plate 05 of the book."
   },
   "Settings": {
     "title": "Settings",
