@@ -207,7 +207,7 @@ export default async function ProjectDetailPage({
         only make by putting the pieces next to each other.
       */}
       {onAssistant ? (
-        <AssistantPanel projectId={project.id} initialMessages={history as never} />
+        <AssistantPanel projectId={project.id} initialMessages={history} />
       ) : (
         <>
       {brandingAsset && (

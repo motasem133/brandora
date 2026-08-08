@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm'
 import { db } from '@/server/db'
 import { organizations } from '@/server/db/schema'
 import { getPolar } from './polar'
+import { polarOrderSchema, polarSubscriptionSchema } from './schemas'
 import { activateSubscription, recordOrderAndGrantCredits } from './subscriptions'
 
 /**
@@ -34,25 +35,51 @@ export async function syncBillingFromPolar(organizationId: string) {
     (metadata as Record<string, unknown>).organizationId === organizationId
 
   let synced = 0
+  let skipped = 0
 
-  for (const subscription of subscriptions.result?.items ?? []) {
-    if (!belongsToOrg(subscription.metadata)) continue
-    await activateSubscription(subscription as never)
+  /*
+   * Parsed per item, and a failure skips that item rather than aborting.
+   *
+   * This is where the pull path differs from the webhook: one delivery is one
+   * event, so rejecting it rejects the request. Here a hundred rows are being
+   * reconciled at once, and one unparseable subscription must not cost a
+   * customer the ninety-nine that were fine — least of all when the reason they
+   * pressed sync is that their payment has not been reflected yet.
+   */
+  for (const raw of subscriptions.result?.items ?? []) {
+    if (!belongsToOrg(raw.metadata)) continue
+
+    const subscription = polarSubscriptionSchema.safeParse(raw)
+    if (!subscription.success) {
+      console.warn('[billing] sync skipped a subscription it could not parse', subscription.error.issues)
+      skipped++
+      continue
+    }
+
+    await activateSubscription(subscription.data)
     synced++
 
-    if (subscription.customerId) {
+    if (subscription.data.customerId) {
       await db
         .update(organizations)
-        .set({ polarCustomerId: subscription.customerId })
+        .set({ polarCustomerId: subscription.data.customerId })
         .where(eq(organizations.id, organizationId))
     }
   }
 
-  for (const order of orders.result?.items ?? []) {
-    if (!belongsToOrg(order.metadata)) continue
-    await recordOrderAndGrantCredits(order as never)
+  for (const raw of orders.result?.items ?? []) {
+    if (!belongsToOrg(raw.metadata)) continue
+
+    const order = polarOrderSchema.safeParse(raw)
+    if (!order.success) {
+      console.warn('[billing] sync skipped an order it could not parse', order.error.issues)
+      skipped++
+      continue
+    }
+
+    await recordOrderAndGrantCredits(order.data)
     synced++
   }
 
-  return { synced }
+  return { synced, skipped }
 }

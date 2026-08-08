@@ -6,6 +6,7 @@ import { db } from '@/server/db'
 import { entitles } from '@/server/db/queries/subscriptions'
 import { creditPacks, orders, organizations, plans, subscriptions } from '@/server/db/schema'
 import { writeLedgerEntry } from './credits'
+import type { PolarOrder, PolarSubscription } from './schemas'
 
 /**
  * Webhook-driven billing state.
@@ -14,30 +15,6 @@ import { writeLedgerEntry } from './credits'
  * event must not grant credits twice — so credit movements carry an
  * idempotency key derived from the Polar object that caused them.
  */
-
-type PolarSubscription = {
-  id: string
-  status: string
-  productId?: string
-  currentPeriodStart?: string | Date | null
-  currentPeriodEnd?: string | Date | null
-  cancelAtPeriodEnd?: boolean
-  customerId?: string
-  metadata?: Record<string, unknown> | null
-}
-
-type PolarOrder = {
-  id: string
-  amount?: number
-  netAmount?: number
-  totalAmount?: number
-  taxAmount?: number
-  refundedAmount?: number
-  currency?: string
-  productId?: string
-  customerId?: string
-  metadata?: Record<string, unknown> | null
-}
 
 function toDate(value: string | Date | null | undefined) {
   if (!value) return null

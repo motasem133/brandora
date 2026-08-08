@@ -1,15 +1,20 @@
 import 'server-only'
 
+import type { UIMessage } from 'ai'
 import { asc, desc, eq } from 'drizzle-orm'
 
 import { db } from '@/server/db'
 import { aiUsage, assistantMessages, assistantThreads } from '@/server/db/schema'
 
-export type StoredMessage = {
-  id: string
-  role: 'user' | 'assistant'
-  parts: { type: 'text'; text: string }[]
-}
+/**
+ * Typed as the SDK's own message rather than a local look-alike.
+ *
+ * It was a hand-written twin, and the project page bridged the gap with
+ * `history as never` — so the one thing the cast proved was that the two
+ * shapes had never been checked against each other. `UIMessage` is a type-only
+ * import; nothing from the `ai` runtime reaches the query layer.
+ */
+export type StoredMessage = UIMessage
 
 /**
  * Loads the conversation so the panel can resume where it left off.
