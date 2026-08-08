@@ -42,11 +42,18 @@ import { cn } from '@/lib/utils'
  * wordmark that has to shape correctly, and a social kit. Nothing here is a
  * mockup; every file is what a customer downloads.
  */
+/*
+ * Rendered from the run's vector traces, not its raster previews. The previews
+ * were downsampled generations — soft edges, mush in the lattice, and a paper
+ * background baked in, which put a cream rectangle inside every white tile.
+ * Traced, stripped of that paper and trimmed, each mark is transparent and
+ * fills its tile, so every one of these carries its own ratio.
+ */
 const LOGOS = [
-  '/marketing/sultana-wordmark.webp',
-  '/marketing/sultana-icon.webp',
-  '/marketing/sultana-symbol.webp',
-  '/marketing/sultana-name.webp',
+  { src: '/marketing/sultana-wordmark.webp', width: 1200, height: 464 },
+  { src: '/marketing/sultana-icon.webp', width: 1200, height: 980 },
+  { src: '/marketing/sultana-symbol.webp', width: 1200, height: 792 },
+  { src: '/marketing/sultana-name.webp', width: 1200, height: 260 },
 ]
 
 /** The posts the kit produced for that same run. */
@@ -272,13 +279,13 @@ export default async function HorizonDirection({
                   */}
                   <MomentumField className="mt-5 grid min-h-0 flex-1 grid-cols-2 grid-rows-2 gap-3">
                     {LOGOS.map((logo) => (
-                      <MomentumItem key={logo} throwGain={0.4} spinGain={0.09}>
+                      <MomentumItem key={logo.src} throwGain={0.4} spinGain={0.09}>
                         <div className="h-full min-h-0 overflow-hidden rounded-control bg-white/95">
                           <Image
-                            src={logo}
+                            src={logo.src}
                             alt={t('kitLogoAlt')}
-                            width={720}
-                            height={720}
+                            width={logo.width}
+                            height={logo.height}
                             className="size-full object-contain p-2"
                             sizes="160px"
                           />
