@@ -166,7 +166,21 @@
     "planCta_agency": "Choose Agency",
     "planNoCard": "No credit card required",
     "planCancel": "Cancel anytime",
-    "howShot": "The first of eight questions. Everything the run produces is decided from these answers."
+    "howShot": "The first of eight questions. Everything the run produces is decided from these answers.",
+    "plateLabel": "Plate",
+    "coverImprint": "Brandora, brand book",
+    "coverEdition": "Edition 01",
+    "plateSpecimen": "A run, wearing itself",
+    "processNote": "Eight questions in, a whole identity out. The sequence is fixed; what it produces is not.",
+    "notesNote": "Answered once, and answered against what the application actually does.",
+    "termsColPlan": "Plan",
+    "termsColVolume": "Volume",
+    "termsColPrice": "Monthly",
+    "termsFull": "Feature by feature, plan against plan, on the pricing page.",
+    "pricingCompare": "Compare plans",
+    "colophonSet": "Set in",
+    "colophonPlates": "Plates",
+    "plateSpecimenNote": "One run's output, wearing itself. Press the other name and the paper, ink, type and palette all change together."
   },
   "Auth": {
     "signIn": "Sign in",

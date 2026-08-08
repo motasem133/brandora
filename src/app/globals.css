@@ -5,13 +5,23 @@
  *
  * The logo is the source: its purple→indigo→blue ramp is the only accent the
  * product uses, and Dark Navy is the ground it sits on. There is deliberately
- * no second accent colour — status colours aside, anything that needs emphasis
+ * no second accent colour, status colours aside, anything that needs emphasis
  * borrows from the same three brand stops.
  */
 @theme {
   --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
   --font-arabic: var(--font-arabic), ui-sans-serif, system-ui, sans-serif;
+  /*
+   * `--font-display` stays Jakarta, aliased to itself as it always was. Around
+   * forty headings behind the login read it, and the app is not what changed.
+   *
+   * The book faces are their own tokens because they belong to one world. A
+   * serif that leaked into the dashboard would be a redesign of a product
+   * nobody asked to redesign, arriving as a side effect of a landing page.
+   */
   --font-display: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-book: var(--font-display-latin), ui-serif, Georgia, serif;
+  --font-book-ar: var(--font-display-arabic), ui-serif, serif;
 
   /* Generous and consistent: cards 20px, panels 24px, controls 14px. */
   --radius-control: 0.875rem;
@@ -28,7 +38,7 @@
  * on purpose.
  *
  * `.world-dark` exists for the marketing pages. They are dark because the brand
- * is dark — it is a pinned commitment, not a default picked by category — and
+ * is dark, it is a pinned commitment, not a default picked by category, and
  * they used to say so in hardcoded hex, which meant 44 colour literals, no
  * response to anything, and text tuned by eye at `white/35` (3.11:1). Written
  * as a token scope instead, they stay dark under `[data-theme='light']` while
@@ -53,7 +63,7 @@
    * figure worth reading twice.
    *
    * A tint of the primary rather than the primary itself. #7240ff on this
-   * ground is 3.73:1 — fine for a button's fill, not for words someone has to
+   * ground is 3.73:1, fine for a button's fill, not for words someone has to
    * read. This lands at 7.57:1 dark and 7.53:1 light, which is why the value
    * differs either side and the ramp does not.
    */
@@ -69,7 +79,7 @@
   /*
    * The ramp, anchored to the mark.
    *
-   * The logo is #7240ff — a bluer, more saturated violet than the #7c3aed this
+   * The logo is #7240ff, a bluer, more saturated violet than the #7c3aed this
    * system was built on. Re-anchoring rather than adding: everything from the
    * focus ring to the lit card edge reads `--brand-primary`, so the mark and
    * the interface stay the same colour by construction rather than by
@@ -84,15 +94,15 @@
    * The ramp, turned to face the horizon.
    *
    * This was a 135deg sweep whose three stops all sat within 3% of each other
-   * in luminance — by design, because each one had to carry a white label. That
+   * in luminance, by design, because each one had to carry a white label. That
    * makes a beautiful hue journey and a completely flat object: rotate it
    * vertical and it reads as a colour change, not as a lit surface.
    *
    * The reference lights every control from below, and it gets away with it
    * because its two stops really do climb: #f6711c to #ff863d is a 35% rise in
    * luminance. So this ramp is graded as well as rotated. The bottom edge is
-   * the mark's violet at full strength — the brightest point, nearest the
-   * light — and it sinks through indigo into a deep blue at the top.
+   * the mark's violet at full strength, the brightest point, nearest the
+   * light, and it sinks through indigo into a deep blue at the top.
    *
    * Measured white-on-fill down the ramp: 5.44:1 at the violet bottom, 7.00:1
    * at the indigo middle, 9.47:1 at the blue top. Every stop carries a 14px
@@ -110,7 +120,7 @@
    *
    * A token rather than a repeated literal because `control-lit` and
    * `field-lit` both need the exact same pair, and the second has to restate
-   * them alongside its focus ring — `box-shadow` does not stack across rules.
+   * them alongside its focus ring, `box-shadow` does not stack across rules.
    */
   --lit-inset: inset 0 1px 0 0 color-mix(in srgb, #ffffff 5%, transparent),
     inset 0 -1px 0 0 color-mix(in srgb, var(--brand-primary) 32%, transparent);
@@ -131,18 +141,46 @@
  * A customer's teal or their clay brown arriving onto a blue-black ground has
  * to fight it for the eye, so the ground stops competing: the only colour in
  * the frame is the one the run produced. The violet stays, but as the
- * product's signature spent twice per view — the mark and the primary control
- * — rather than as the light the whole room is lit by.
+ * product's signature spent twice per view, the mark and the primary control
+ *, rather than as the light the whole room is lit by.
  *
  * The three steps keep their luminance ladder, so nothing measured against
  * them moves: white lands at 20.01:1, 19.00:1 and 16.97:1 here against 20.12,
  * 19.13 and 17.31 on navy. The two body tones are re-cut neutral for the same
- * reason the ground is, and they were checked rather than eyeballed —
+ * reason the ground is, and they were checked rather than eyeballed ,
  * secondary 9.00 / 8.54 / 7.63, muted 5.61 / 5.33 / 4.76, each within 0.2 of
  * the navy value it replaces.
  *
  * Scoped to `.world-dark` on purpose. The app behind the login is a different
  * argument and is not part of this change; `:root` above still owns it.
+ */
+/*
+ * The marketing world prints on paper.
+ *
+ * It was near-black with a violet horizon rising behind it, which is the ground
+ * of every AI product's landing page since 2023, and the argument for it here
+ * was that "the brand is dark". The brand is not what that page sells. What it
+ * sells is a printed brand book: paper, plates, a palette laid along a base, a
+ * PDF a customer downloads. A dark page with pictures of printed matter on it is
+ * a picture of the product. This is the product.
+ *
+ * The stock is deliberately not white and deliberately not either brand's paper.
+ * Sultana prints on #FEFAF5 and Makān on #FAF6F0, both brighter than this, so a
+ * plate reads as a sheet laid on the page rather than as a panel cut into it.
+ *
+ * Measured, not eyeballed, against all three grounds, ink 14.63 / 15.71 / 16.70,
+ * secondary 7.86 / 8.43 / 8.97, muted 4.78 / 5.13 / 5.45, accent 6.22 / 6.67 /
+ * 7.10. The ink is warm rather than #000: print ink never is, and pure black on
+ * cream reads as a screenshot of paper instead of as paper.
+ */
+/*
+ * Still here, and only for `/pricing` and the auth layout.
+ *
+ * They share this world with the landing page and have not had their pass yet.
+ * Repointing them at paper in the same change would ship two pages whose cards,
+ * controls and rules are all still drawn for a dark ground, broken now against
+ * a promise to fix them later. They keep the old ground until they are rewritten,
+ * and this block goes with the last of them.
  */
 .world-dark {
   --bg-base: #08080a;
@@ -151,6 +189,23 @@
 
   --text-secondary: #adadb8;
   --text-muted: #87878f;
+}
+
+.world-paper {
+  --bg-base: #ede9e1;
+  --bg-surface: #f4f1ea;
+  --bg-elevated: #faf8f4;
+
+  --text-primary: #1a1815;
+  --text-secondary: #4a453c;
+  --text-muted: #6b6559;
+  /* The same value the light theme already resolved for reading the accent on a
+     pale ground. There is no reason for this page to pick a second one. */
+  --text-accent: #5b33cc;
+
+  /* Hairlines are printed rules: mixed from the ink, never a grey. */
+  --border: color-mix(in srgb, #1a1815 16%, transparent);
+  --border-strong: color-mix(in srgb, #1a1815 28%, transparent);
 }
 
 /* Attribute, not class: React owns <html>'s className and wipes a class added
@@ -184,7 +239,7 @@
   /*
    * Status, darkened for a light ground.
    *
-   * These three were declared once, for the dark theme, and never overridden —
+   * These three were declared once, for the dark theme, and never overridden ,
    * so every "Verified" badge, every `+490` and every error message measured
    * 1.84–3.76:1 in light. The dark values are unchanged and correct there.
    *
@@ -203,7 +258,7 @@
    * No --color-base here, deliberately.
    *
    * Registering a colour called "base" makes Tailwind compile `.text-base`
-   * to `color: var(--bg-base)` instead of a font size — so every large
+   * to `color: var(--bg-base)` instead of a font size, so every large
    * button rendered its label in the page's own background colour, near
    * black on the brand gradient. The ground colour is applied through
    * `var(--bg-base)` in this file, and nothing ever wanted `bg-base` as a
@@ -230,9 +285,10 @@
     border-color: var(--border);
   }
 
-  /* A dark subtree carries its own ground and ink rather than inheriting the
-     document's, which may be light. */
-  .world-dark {
+  /* A world carries its own ground and ink rather than inheriting the
+     document's, which may be the opposite polarity. */
+  .world-dark,
+  .world-paper {
     background-color: var(--bg-base);
     color: var(--text-primary);
   }
@@ -298,7 +354,7 @@
  * every heading.
  *
  * There were five of these on the landing page alone, each spelling out its own
- * clamp, weight, leading, tracking and both RTL overrides — which is how one of
+ * clamp, weight, leading, tracking and both RTL overrides, which is how one of
  * them ended up a step off from the others. The same failure the `Eyebrow`
  * token was written to fix.
  *
@@ -306,7 +362,7 @@
  * advance, which is a leading of 1.13 against the 1.05 this had, and a 6px stem
  * on that 48px cap, which is a weight of about 500 against the 700 this had.
  * Large, light and airy rather than tight and heavy. Weight lands on 600 here
- * rather than 500 — Plus Jakarta Sans is not the reference's face, and at 500 it
+ * rather than 500, Plus Jakarta Sans is not the reference's face, and at 500 it
  * goes thin against a near-black ground.
  *
  * Tracking opens with it, from -0.035em to -0.02em. Negative tracking exists to
@@ -317,35 +373,205 @@
  * vowels above the line, and negative letter-spacing pulls joined letterforms
  * into each other rather than tightening a word.
  */
-@utility type-display {
-  font-size: clamp(2.6rem, 6.2vw, 4.6rem);
-  font-weight: 600;
-  line-height: 1.12;
-  letter-spacing: -0.02em;
+/*
+ * The book faces, set the way a book sets them.
+ *
+ * These two used to be Plus Jakarta Sans at 600 with -0.02em tracking, which is
+ * the exact drawing every AI product's landing page opens with. The face is the
+ * signal, not the size: a geometric sans at 4.6rem reads as a template before a
+ * visitor has finished the first word of it.
+ *
+ * Weight drops to 400. A book title is large, not bold, bold at 4.6rem is a
+ * web heading wearing a serif, which is worse than an honest sans. Tracking goes
+ * to normal for the same reason it was negative before: negative tracking exists
+ * to stop heavy letterforms colliding, and there is no weight here to collide.
+ *
+ * `opsz` is set explicitly rather than left to the browser. Fraunces carries an
+ * optical-size axis, and the whole reason for choosing a variable face over a
+ * single drawing is that the title and the running head are different drawings
+ * of the same family rather than one scaled to both.
+ */
+@utility type-plate {
+  font-family: var(--font-book);
+  font-size: clamp(2.75rem, 6.4vw, 5.25rem);
+  font-weight: 400;
+  line-height: 1.02;
+  letter-spacing: -0.005em;
+  font-variation-settings: 'opsz' 144, 'SOFT' 20, 'WONK' 1;
 
+  /*
+   * Arabic takes Amiri and none of the Latin metrics. Naskh carries vowels
+   * above the line and descenders well below it, so 1.02 leading sets the
+   * marks of one line into the ascenders of the next; and letter-spacing on a
+   * joined script pulls the letterforms apart at the joins rather than
+   * tightening a word.
+   */
   [dir='rtl'] & {
-    line-height: 1.4;
+    font-family: var(--font-book-ar);
+    line-height: 1.5;
     letter-spacing: normal;
+    font-variation-settings: normal;
   }
 }
 
-@utility type-section {
-  font-size: clamp(2rem, 4vw, 3.2rem);
-  font-weight: 600;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+@utility type-plate-sm {
+  font-family: var(--font-book);
+  font-size: clamp(1.9rem, 3.6vw, 2.9rem);
+  font-weight: 400;
+  line-height: 1.08;
+  letter-spacing: -0.005em;
+  font-variation-settings: 'opsz' 72, 'SOFT' 20, 'WONK' 1;
 
   [dir='rtl'] & {
-    line-height: 1.4;
+    font-family: var(--font-book-ar);
+    line-height: 1.55;
     letter-spacing: normal;
+    font-variation-settings: normal;
+  }
+}
+
+/*
+ * The running head: the small line at the top of every page of a printed book
+ * saying which book you are in and which plate you are on.
+ *
+ * Set in the sans on purpose. A book's running heads and folios are routinely a
+ * different family from its text, they are apparatus, not voice, and holding
+ * the serif here would make the page feel costumed rather than typeset.
+ *
+ * `font-feature-settings` rather than `text-transform: uppercase`: real small
+ * caps keep the letterforms at the right weight, where faked ones are just
+ * shrunk capitals sitting too light against the text around them. Arabic is
+ * unicameral, so there are no caps to set and the tracking comes off with them.
+ */
+@utility type-runhead {
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-feature-settings: 'c2sc', 'smcp';
+  color: var(--text-muted);
+
+  [dir='rtl'] & {
+    font-family: var(--font-arabic);
+    letter-spacing: normal;
+    text-transform: none;
+    font-size: 0.75rem;
+  }
+}
+
+/*
+ * The controls, stamped rather than lit.
+ *
+ * Every call to action on this page was a gradient-filled pill with a coloured
+ * glow under it, the control every AI product ships, and three of them were
+ * visible in the first viewport. On paper the loudest thing available is solid
+ * ink, and it costs no colour at all: a block of ink with the paper showing
+ * through the letters is both the strongest control on the page and the one
+ * that looks least like software.
+ *
+ * A small radius rather than a pill and rather than a hard corner. A pill is a
+ * screen shape; a perfect square is a wireframe. Print trims somewhere between.
+ */
+@utility stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  border-radius: 0.25rem;
+  padding: 0.9375rem 1.75rem;
+  background-color: var(--text-primary);
+  color: var(--bg-base);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition:
+    background-color 0.2s var(--ease-out-soft),
+    transform 0.2s var(--ease-out-soft);
+
+  /* Arabic is unicameral, so uppercase is a no-op and the tracking that exists
+     to open up capitals only breaks the joins. */
+  [dir='rtl'] & {
+    letter-spacing: normal;
+    text-transform: none;
+    font-size: 0.875rem;
+  }
+
+  &:hover {
+    background-color: var(--text-secondary);
+  }
+
+  /* The press: it goes down into the page, like something being stamped. */
+  &:active {
+    transform: translateY(1px);
+  }
+}
+
+/* The same block, unfilled: a hairline box for the secondary choice. */
+@utility stamp-quiet {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  border-radius: 0.25rem;
+  padding: 0.6875rem 1.25rem;
+  border: 1px solid var(--border-strong);
+  color: var(--text-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition:
+    border-color 0.2s var(--ease-out-soft),
+    background-color 0.2s var(--ease-out-soft);
+
+  [dir='rtl'] & {
+    letter-spacing: normal;
+    text-transform: none;
+    font-size: 0.8125rem;
+  }
+
+  &:hover {
+    border-color: var(--text-primary);
+    background-color: color-mix(in srgb, var(--text-primary) 5%, transparent);
+  }
+}
+
+/*
+ * A sheet laid on the page.
+ *
+ * Not a card. A card is a rounded panel with a soft ambient shadow, floating in
+ * space with nothing behind it, the whole vocabulary of a dark UI. A plate is a
+ * physical sheet on a physical page: square-ish, a printed hairline for its cut
+ * edge, and a short hard shadow offset down-page as though one light source is
+ * above it. The shadow is small on purpose; paper does not hover.
+ */
+@utility plate {
+  border-radius: 0.125rem;
+  border: 1px solid var(--border);
+  box-shadow:
+    0 1px 0 0 color-mix(in srgb, var(--text-primary) 6%, transparent),
+    0 12px 28px -18px color-mix(in srgb, var(--text-primary) 45%, transparent);
+}
+
+/* Small print set beside a plate: what it is, what it was made in, what it
+   measures. The size a real caption is, not the size a web page defaults to. */
+@utility type-caption {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+
+  [dir='rtl'] & {
+    font-family: var(--font-arabic);
+    line-height: 1.9;
   }
 }
 
 /*
  * The trailing clause of a heading, dropped to the secondary ink.
  *
- * The reference does this on every section title — "Pricing Plans for
- * *Success*" measures #ffffff then #b7b8ba — and it is the cheapest way to give
+ * The reference does this on every section title, "Pricing Plans for
+ * *Success*" measures #ffffff then #b7b8ba, and it is the cheapest way to give
  * a headline a shape without a second size or a second colour. The product
  * already did it by hand in three places; this names it.
  */
@@ -368,7 +594,7 @@
  * Durations sit in the 150–300ms band where interface motion reads as
  * responsive rather than decorative; entrances ease out, so they arrive fast
  * and settle, and exits ease in. Nothing here loops forever except the two
- * "live" states — a running generation and a loading skeleton — because a
+ * "live" states, a running generation and a loading skeleton, because a
  * permanent animation in the corner of the eye is a permanent distraction.
  *
  * The three easing curves this section uses are declared once, at the top of
@@ -416,7 +642,7 @@
   }
 }
 
-/* A single expanding ring — one running step, not a row of bouncing dots. */
+/* A single expanding ring, one running step, not a row of bouncing dots. */
 @keyframes pulse-ring {
   0% {
     box-shadow: 0 0 0 0 color-mix(in srgb, var(--brand-primary) 55%, transparent);
@@ -520,7 +746,7 @@
 /*
  * The mark's slow breath, about its own centre.
  *
- * The origin used to be `26px 50px` — a point inside the old 986×872 letterform,
+ * The origin used to be `26px 50px`, a point inside the old 986×872 letterform,
  * where the sparkle it animated actually sat. The mark is now a four-point star
  * on a 100-unit box, so that origin was a spot outside the figure entirely and
  * the "shimmer" was the whole logo swinging around a pivot off to one side.
@@ -547,7 +773,7 @@
    * took the product's two live signals with it: the loading skeleton's
    * shimmer and the running job's pulse both collapsed to a single frame, so a
    * generation in progress rendered as a static gradient with nothing to say
-   * it was working. A fast animation is still motion — but a colour easing
+   * it was working. A fast animation is still motion, but a colour easing
    * over 100ms is not motion, it is the interface answering.
    */
   *,
@@ -594,8 +820,8 @@
  * Depth, applied sparingly.
  *
  * The app was flat panels on a flat background, which reads as unfinished at
- * any size. These give the eye a hierarchy — a lit edge on what matters, a
- * plain border on what does not — without turning every card into a gradient.
+ * any size. These give the eye a hierarchy, a lit edge on what matters, a
+ * plain border on what does not, without turning every card into a gradient.
  */
 
 /*
@@ -603,7 +829,7 @@
  *
  * Eleven pixels above the reference's primary control the ground still reads
  * the accent at 15%, and it is still reading it at the edge of the frame. That
- * is not a drop shadow with a downward offset — it is a light source with a
+ * is not a drop shadow with a downward offset, it is a light source with a
  * halo around it, which is why both layers here are centred and why the wide
  * one is allowed to be enormous.
  *
@@ -621,7 +847,7 @@
 /*
  * The light inside the card.
  *
- * The reference does not only light its controls from below — every dark card
+ * The reference does not only light its controls from below, every dark card
  * on that page has a source *inside* it, a wide radial that blooms out of one
  * corner or up from the base and dies before it reaches the opposite edge. It
  * is the single thing that separates its bento from a grid of dark rectangles,
@@ -629,8 +855,8 @@
  * ring, which is correct and inert.
  *
  * Positioned by three variables rather than by three near-identical utilities.
- * `--bloom-x` and `--bloom-y` are percentages of the card, so the default —
- * centred on the bottom edge — puts the source where the horizon is, and a
+ * `--bloom-x` and `--bloom-y` are percentages of the card, so the default ,
+ * centred on the bottom edge, puts the source where the horizon is, and a
  * panel that wants the reference's corner source sets `--bloom-x: 85%`.
  *
  * `isolation: isolate` is what makes `z-index: -1` safe: it keeps the layer
@@ -687,7 +913,7 @@
   -webkit-backdrop-filter: blur(14px) saturate(1.4);
 }
 
-/* Tinted chip behind a feature icon — the cheapest way to add colour without
+/* Tinted chip behind a feature icon, the cheapest way to add colour without
    painting whole surfaces. */
 @utility icon-chip {
   display: inline-flex;
@@ -722,7 +948,7 @@
  * sides is what made the app read as a template next to its own marketing.
  *
  * The lit edge is at the bottom, not the top. The light in this product is the
- * arc rising behind the fold — one source, below the content, which is what
+ * arc rising behind the fold, one source, below the content, which is what
  * the reference does and the reason its controls and its horizon look like the
  * same idea. This edge used to be at the top, from a ceiling that nothing in
  * the product ever drew.
@@ -743,7 +969,7 @@
  * The same light on something you operate.
  *
  * The reference's secondary control has a fill of #181619 with a #27201d top
- * edge and a #36251c bottom edge — both lift out of the fill, the bottom lifts
+ * edge and a #36251c bottom edge, both lift out of the fill, the bottom lifts
  * roughly twice as far, and the bottom one is warm where the top one is not.
  * So: a faint neutral line along the top, and an accent-tinted one along the
  * bottom where the light lands.
@@ -775,8 +1001,8 @@
  * A rule that stops before it reaches the edges.
  *
  * The reference's header rule measures white at 4% in the middle and is simply
- * gone by the last 60px either side. A border-bottom cannot do that — it runs
- * corner to corner or it does not exist — so this is a gradient on a 1px box.
+ * gone by the last 60px either side. A border-bottom cannot do that, it runs
+ * corner to corner or it does not exist, so this is a gradient on a 1px box.
  *
  * It matters more than it sounds. A full-bleed line is the single clearest
  * signal that a page is a template; the same line stopping short reads as a
@@ -804,7 +1030,7 @@
  * `rail` and `rail-node` used to live here: a violet-to-blue gradient for
  * anything sequential, and a disc lit from within to sit on it. The landing
  * page's five steps were the only caller either ever had, and they now draw
- * that rail in the palette of the run they describe rather than in ours — the
+ * that rail in the palette of the run they describe rather than in ours, the
  * one section arguing that a run turns nothing into a customer's brand is the
  * last place Brandora's own colour should be the thing descending the page.
  *

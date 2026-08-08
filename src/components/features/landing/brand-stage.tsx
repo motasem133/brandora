@@ -72,9 +72,18 @@ export function BrandStage({
         this paper and stepped until they clear 4.5:1, rather than being the
         palette's `text` value used raw.
       */}
+      {/*
+        A sheet, not a card.
+
+        This was `rounded-panel` with a ring, which is the right drawing for a
+        panel floating on a dark ground and the wrong one on a page: a 24px
+        radius reads as software, and the plate is meant to read as a sheet of
+        the brand's own stock laid on the book's. `plate` gives it a cut edge and
+        a short shadow falling down-page from a single light above it.
+      */}
       <div
         style={theme.vars}
-        className="overflow-hidden rounded-panel bg-[var(--guest-paper)] ring-1 ring-[var(--guest-line)] transition-colors duration-500"
+        className="plate overflow-hidden bg-[var(--guest-paper)] transition-colors duration-500"
       >
         {/* Keyed on the brand, so the contents cut over while the ground eases.
             `animate-fade-in` collapses to a single frame under reduced motion,

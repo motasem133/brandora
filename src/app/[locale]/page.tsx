@@ -1,36 +1,42 @@
-import { ArrowRight, Check } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import Image from 'next/image'
 
-import { HeroBadge } from '@/components/features/landing/float'
-import { PillFan, StepMark } from '@/components/features/landing/flourish'
 import { BrandDrawer } from '@/components/features/landing/brand-drawer'
 import { BrandStage } from '@/components/features/landing/brand-stage'
 import { SPECIMENS } from '@/components/features/landing/specimens'
 import type { Specimen } from '@/components/features/landing/specimens'
-import { Cell, SectionArc, ProductFrame, SectionReveal } from '@/components/ui/horizon'
-import { contrast } from '@/lib/brand-theme'
-import { AfterHeadline, HeadlineWords } from '@/components/features/landing/motion-hero'
-import { PricingFaq } from '@/components/features/landing/pricing-faq'
-import { PricingPlans } from '@/components/features/landing/pricing-plans'
-import { buttonVariants } from '@/components/ui/button'
+import { TermsTable } from '@/components/features/landing/terms-table'
+import { SectionReveal } from '@/components/ui/horizon'
 import { LogoMark } from '@/components/ui/logo'
 import { Link } from '@/i18n/navigation'
-import { cn } from '@/lib/utils'
 
 /**
- * Direction D — Horizon.
+ * The landing page as the thing the product makes.
  *
- * Built to the reference the client supplied: near-black ground, a centred
- * column, and a light source rising behind the fold with the product framed in
- * front of it. The arc is the page's whole visual argument, so it is drawn
- * rather than illustrated — a gradient ring, bloomed, cropped by the section.
+ * Three earlier passes at this page moved pictures between slots and recoloured
+ * details, and the page went on reading as a template, because the template was
+ * never the palette, it was the composition. Read as shapes, what stood here was
+ * the stock AI-product landing page with nothing left out: badge pill, giant
+ * headline, deck, two calls to action, product shot on the right; a glowing arc
+ * behind three dark sections; gradient pill controls; steps one to five down a
+ * lit rail; four pricing cards with the second one scaled up and badged; nine
+ * collapsed accordion rows; a centred closing line; a footer of link columns.
+ * Not one of those is wrong. Together they are anonymous, and no amount of
+ * retinting reaches them.
  *
- * The reference's customer logo wall is deliberately absent: there are no
- * customers yet, and inventing a "trusted by" row is the one thing on that
- * page we cannot honestly copy.
+ * So the composition is the change. Brandora's output is a printed brand book,
+ * paper, plates, a palette laid along a base, a PDF a customer downloads, and
+ * this page is set as one instead of as a dark page with photographs of one on
+ * it. Running heads, plate numbers, captions in the margin, a terms page rather
+ * than a pricing grid, notes rather than an accordion, a colophon rather than a
+ * closing hero. The claim is that this product makes work that does not look
+ * like everybody else's; the page had no standing to make it.
+ *
+ * The one thing that carries over untouched is the argument the fold already
+ * won: a real generated brand, wearing itself, through `brandTheme()`, the same
+ * code path four screens behind the login use.
  */
-export default async function HorizonDirection({
+export default async function BrandBook({
   params,
 }: {
   params: Promise<{ locale: string }>
@@ -42,19 +48,21 @@ export default async function HorizonDirection({
    * Every string on this page comes from the catalogue.
    *
    * The page previously called `setRequestLocale` and then hardcoded English,
-   * so `/ar` rendered English inside an RTL frame — the bidi algorithm
+   * so `/ar` rendered English inside an RTL frame, the bidi algorithm
    * reordering it into "brand entire Your ,identity" on the one surface that
    * has to prove the product generates Arabic natively.
    */
   const t = await getTranslations('Landing')
   const tn = await getTranslations('Nav')
+  const tp = await getTranslations('Pricing')
   const rest = t.raw('restItems') as string[]
   const steps = t.raw('steps') as { name: string; body: string }[]
+  const notes = tp.raw('faq') as { q: string; a: string }[]
 
   /*
    * The two lines are treated differently because they are different things.
    *
-   * Sultana's is ours — an editorial gloss on why the run picked that name — so
+   * Sultana's is ours, an editorial gloss on why the run picked that name, so
    * it goes through the catalogue and is written natively in Arabic. Makān's is
    * the slogan the run generated, so it is reproduced verbatim in both locales,
    * exactly as the brand's name and its font families are. Translating a piece
@@ -68,55 +76,6 @@ export default async function HorizonDirection({
     ...source,
     line: LINES[source.id],
   }))
-
-  /*
-   * The ground the step rail is drawn on: `--bg-base` inside `.world-dark`.
-   *
-   * Written as a literal because a server component cannot read a CSS variable,
-   * and named rather than inlined so the pairing is findable from either end if
-   * that token ever moves.
-   */
-  const GROUND = '#08080a'
-
-  /*
-   * The colours the run in "How a run works" ends in.
-   *
-   * That rail used to be Brandora's violet fading to blue — our colour drawn
-   * down the one section whose entire claim is that a run turns nothing into a
-   * customer's brand. It now begins as a neutral hairline at Brief, where no
-   * brand exists yet, and arrives at the palette the run actually produced by
-   * Publish, where it does.
-   *
-   * Two filters, and both are about honesty rather than taste. The background is
-   * dropped because it is the brand's paper, not one of its colours, and a rail
-   * terminating in near-white says nothing. The contrast floor is dropped
-   * because a generated palette's darkest member is invisible here — Sultana's
-   * #1B3A3A measures 1.63:1 on this ground — and lightening it until it reads
-   * returns #768989, which no visitor would recognise as that brand's teal.
-   * Showing fewer real colours beats showing a grey standing in for one.
-   */
-  const run = SPECIMENS[0]
-  const railColors = run.swatches.filter(
-    (hex) => hex !== run.palette.background && contrast(hex, GROUND) >= 3,
-  )
-  const railFaint = 'color-mix(in srgb, #ffffff 14%, transparent)'
-  /*
-   * Never one stop: a single-stop `linear-gradient` is invalid and would drop
-   * the rail entirely for a brand with no colour legible on this ground.
-   *
-   * The tail fades rather than stopping. The rail is positioned against a column
-   * whose height is set by the last step's paragraph, not by the last step's
-   * mark, so it runs some distance past that mark — 42px at this width in
-   * English, and a different number in Arabic, or at any width where a body
-   * wraps to another line. While the gradient ended in Brandora's violet fading
-   * to nothing that overrun was invisible; ending in a solid colour turned it
-   * into a loose thread hanging below the sequence. Dissolving after the last
-   * mark is correct at every length instead of at one.
-   */
-  const railStops =
-    railColors.length > 0
-      ? [railFaint, ...railColors.slice(0, -1), `${railColors[railColors.length - 1]} 92%`, 'transparent']
-      : [railFaint, 'transparent']
 
   const stageLabels = {
     swap: t('stageSwap'),
@@ -140,49 +99,54 @@ export default async function HorizonDirection({
     pdf: t('kitPdf'),
   }
 
+  /* A book's margins are wide and its measure is short. A landing page's are
+     neither, which is most of why one reads as printed and the other does not. */
+  const page = 'mx-auto w-full max-w-[78rem] px-6 sm:px-10 lg:px-16'
+
   return (
-    <div className="world-dark min-h-dvh overflow-x-hidden">
-      <header className="relative z-20 mx-auto flex max-w-7xl items-center justify-between px-8 py-6">
-        <span className="flex items-center gap-2.5">
-          <LogoMark className="size-12" />
-          <span className="text-lg font-semibold tracking-[-0.01em]">Brandora</span>
-        </span>
+    <div className="world-paper min-h-dvh overflow-x-hidden">
+      {/*
+        The running head, which is what a book has instead of a navigation bar.
 
-        <nav className="hidden items-center gap-8 text-sm text-fg-secondary md:flex">
-          <a href="#kit" className="transition-colors hover:text-white">
-            {t('navKit')}
-          </a>
-          <a href="#how" className="transition-colors hover:text-white">
-            {t('navHow')}
-          </a>
-          <a href="#pricing" className="transition-colors hover:text-white">
-            {t('navPricing')}
-          </a>
-        </nav>
+        It is the same links, set as apparatus: the title of the book on one
+        side, where you are in it on the other. The rule under it runs the full
+        measure rather than fading, because on a printed page a rule is a rule,
+        the fade existed to stop a full-bleed line reading as a template frame on
+        a dark page, and a page with margins does not have that problem.
+      */}
+      {/* `bg-base` is deliberately not a registered colour utility, it would
+          compile `.text-base` to a colour instead of a font size, so the ground
+          is mixed from the token directly. */}
+      <header className="sticky top-0 z-30 border-b border-line bg-[color-mix(in_srgb,var(--bg-base)_88%,transparent)] backdrop-blur">
+        <div className={`${page} flex items-center justify-between gap-6 py-3.5`}>
+          <Link href="/" className="flex items-center gap-2.5">
+            <LogoMark className="size-7" />
+            <span className="type-runhead !text-fg">Brandora</span>
+          </Link>
 
-        {/*
-          The same control the app uses, in the marketing world's shape.
+          <nav className="hidden items-center gap-9 md:flex">
+            <a href="#specimens" className="type-runhead transition-colors hover:!text-fg">
+              {t('navKit')}
+            </a>
+            <a href="#process" className="type-runhead transition-colors hover:!text-fg">
+              {t('navHow')}
+            </a>
+            <a href="#terms" className="type-runhead transition-colors hover:!text-fg">
+              {t('navPricing')}
+            </a>
+          </nav>
 
-          These CTAs were four hand-rolled copies of the primary button that had
-          already drifted apart — three padding pairs, three shadow radii, none
-          of them the component. `shape="pill"` is what the reference does with
-          every control and what this page was reaching for by hand.
-        */}
-        <Link href="/register" className={buttonVariants({ shape: 'pill' })}>
-          {t('ctaPrimary')}
-          <ArrowRight className="size-4 rtl:rotate-180" />
-        </Link>
+          <Link href="/register" className="stamp !px-5 !py-2.5">
+            {t('ctaPrimary')}
+          </Link>
+        </div>
       </header>
 
-      {/* The header's rule stops before the edges. A line running corner to
-          corner is the clearest signal a page is a template. */}
-      <div aria-hidden className="rule-fade relative z-20" />
-
       {/*
-        Without JavaScript, 49 elements below the fold stayed at `opacity: 0`
-        for good — about four thousand pixels of blank ground on a phone,
-        because the reveal never fired. The reveal is an enhancement; the
-        content is not conditional on it.
+        Without JavaScript, the elements below the fold stayed at `opacity: 0`
+        for good, thousands of pixels of blank ground on a phone, because the
+        reveal never fired. The reveal is an enhancement; the content is not
+        conditional on it.
       */}
       <noscript>
         <style
@@ -194,144 +158,91 @@ export default async function HorizonDirection({
       </noscript>
 
       <main id="content" tabIndex={-1}>
-      {/* ------------------------------------------------------------- hero */}
-      {/*
-        The fold's light used to be the `<Horizon>` arc: a violet crest behind
-        the copy, throwing a 46rem bloom up into it. It is a good drawing and it
-        was the problem. Every colour in the first viewport came from Brandora,
-        which is the composition of every AI product's landing page, and it left
-        the customer's brand as five chips a scroll further down. The arc is
-        gone from this section and stays in the four below it, where there is no
-        generated brand to compete with.
-      */}
-      {/*
-        Two columns from `lg`, and the narrow one is ours.
+        {/* ---------------------------------------------------------- cover */}
+        {/*
+          A title page, not a hero.
 
-        Stacked and centred, the copy alone filled a laptop viewport — badge,
-        three lines of display type, a deck and two controls came to about 500px
-        — and the plate below it crested the fold by a hundred pixels. That is
-        the old composition with a new picture in it. Side by side, the brand
-        holds roughly two thirds of the frame and is whole above the fold, which
-        is the only arrangement that makes the argument the section is for.
-      */}
-      <section className="relative overflow-hidden pb-0 pt-14 sm:pt-20">
-        <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-x-14 gap-y-12 px-8 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
-        <div className="text-center lg:text-start">
-          <HeroBadge>
-            {/*
-              The pill's gradient fill went with the arc. There are two spends
-              of the brand ramp in this viewport now — the mark in the header and
-              the primary control — and a badge is not worth one of them.
-            */}
-            <span className="inline-flex items-center gap-2.5 rounded-full border border-line bg-elevated/40 px-4 py-1.5 text-sm backdrop-blur">
-              <span className="font-semibold">{t('badgePill')}</span>
-              <span aria-hidden className="h-3.5 w-px bg-line-strong" />
-              <span className="text-fg-secondary">{t('badgeText')}</span>
-            </span>
-          </HeroBadge>
-
-          <div className="mt-8">
-            {/*
-              One sentence, one heading. The second clause was a `<p>` at
-              identical display size, which left the page's accessible title as
-              the fragment "Your entire brand identity,".
-
-              Word-level split, which is what keeps this legible in Arabic:
-              characters join, so a per-letter animation would break the script
-              outright.
-
-              Size, weight, leading and both Arabic overrides now live in
-              `type-display`. They were spelled out here and in four other
-              headings on this page, which is how one of them ended up a step
-              off from the rest.
-
-              The section step rather than the display one, which is the whole
-              point: the largest thing in this viewport is the customer's mark,
-              not our sentence about it. The page's own voice takes the display
-              size once, at the close, where there is no brand to speak over.
-            */}
-            <h1 className="type-section">
-              <HeadlineWords text={t('heroHeadline')} />{' '}
-              <AfterHeadline delay={0.3}>
-                <span className="type-trail block">{t('heroHeadlineAfter')}</span>
-              </AfterHeadline>
-            </h1>
+          What stood here was a badge pill above three lines of display type
+          above a deck above two controls, beside a product shot, the fold of
+          every AI product on the internet, drawn from the same parts in the same
+          order. A book opens on its title: the name of the thing, what it is,
+          and nothing else competing for the same glance. The controls stay,
+          because this page still has to sell, but they sit below the title as
+          the imprint line rather than as the second thing you see.
+        */}
+        <section className={`${page} pb-24 pt-20 sm:pb-32 sm:pt-32`}>
+          <div className="flex items-baseline justify-between gap-6 border-b border-line-strong pb-4">
+            <span className="type-runhead">{t('coverImprint')}</span>
+            <span className="type-runhead">{t('coverEdition')}</span>
           </div>
 
-          <AfterHeadline delay={0.5}>
-            <p className="mt-6 max-w-[44ch] leading-relaxed text-fg-secondary max-lg:mx-auto">
-              {t('heroDeck')}
-            </p>
-          </AfterHeadline>
-
-          <AfterHeadline delay={0.62}>
-            <div className="mt-9 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
-              <Link
-                href="/pricing"
-                className={buttonVariants({ variant: 'outline', shape: 'pill' })}
-              >
-                {t('ctaSecondary')}
-              </Link>
-              <Link href="/register" className={buttonVariants({ shape: 'pill' })}>
-                {t('ctaPrimary')}
-                <ArrowRight className="size-4 rtl:rotate-180" />
-              </Link>
-            </div>
-          </AfterHeadline>
-        </div>
-
-        {/*
-          The output, not a picture of the tool that made it.
-
-          What stood here was a screenshot of the dashboard in a lit frame,
-          which is the same sentence as the headline said in a second medium:
-          "this is a product that generates brands". The plate says something
-          the copy cannot, because it is a brand, wearing itself, in the
-          majority of the frame — and pressing the other chip repaints it
-          through the same code path the app uses behind the login.
-        */}
-        <ProductFrame>
-          <BrandStage specimens={specimens} labels={stageLabels} />
-        </ProductFrame>
-        </div>
-      </section>
-
-      {/* -------------------------------------------------------------- kit */}
-      <div aria-hidden className="rule-fade" />
-      {/*
-        No `<SectionArc>` here, unlike every other section below the fold.
-
-        The arc is Brandora's violet drawn across the top of a section, which is
-        right where the section holds our argument and wrong where it holds a
-        customer's work. It was crossing a cream drawer and tinting the top of
-        Sultana's own paper, which is the same mistake the bento made with a
-        lit edge, in a larger size.
-      */}
-      <section id="kit" className="relative overflow-hidden bg-surface/50">
-        <div className="relative z-10 mx-auto max-w-6xl px-8 py-28">
           <SectionReveal>
-            <h2 className="type-section max-w-2xl">
-              {t('kitTitle')}
-              <span className="type-trail"> {t('kitTitleAccent')}</span>
-            </h2>
+            {/* A wider measure in Arabic. `ch` is the width of a `0` in the
+                current font, so 19ch set on Amiri is a much shorter line than
+                19ch set on Fraunces, and the Arabic title broke with its last
+                word alone on a third line. */}
+            <h1 className="type-plate mt-12 max-w-[19ch] rtl:max-w-[26ch]">
+              {t('heroHeadline')} <span className="text-fg-secondary">{t('heroHeadlineAfter')}</span>
+            </h1>
           </SectionReveal>
 
+          <SectionReveal delay={0.12}>
+            {/*
+              The measure is 52 characters, which is a book's, not a landing
+              page's 70-plus. It is the single cheapest thing that makes a block
+              of text read as typeset rather than as filled to the container.
+            */}
+            <p className="mt-10 max-w-[52ch] text-lg leading-[1.7] text-fg-secondary">
+              {t('heroDeck')}
+            </p>
+          </SectionReveal>
+
+          <SectionReveal delay={0.2}>
+            <div className="mt-12 flex flex-wrap items-center gap-4">
+              <Link href="/register" className="stamp">
+                {t('ctaPrimary')}
+              </Link>
+              <Link href="#terms" className="stamp-quiet">
+                {t('ctaSecondary')}
+              </Link>
+            </div>
+          </SectionReveal>
+        </section>
+
+        {/* ------------------------------------------------------ plate 01 */}
+        {/*
+          The plates are numbered and captioned because that is what makes a
+          sequence of sections read as one document rather than as blocks
+          stacked by a page builder. A visitor who has seen "PLATE 01" knows
+          there is a plate 02 without being told, which is work a scroll cue
+          used to do with an animation.
+        */}
+        <section id="specimens" className={`${page} pb-24 sm:pb-32`}>
+          {/* Not `stageWall` here: `BrandStage` already prints that line under
+              its own plate, and the two sat a screen apart saying the same
+              sentence twice. */}
+          <PlateHead
+            label={t('plateLabel')}
+            number="01"
+            title={t('plateSpecimen')}
+            note={t('plateSpecimenNote')}
+          />
+
+          <SectionReveal>
+            <BrandStage className="mt-10" specimens={specimens} labels={stageLabels} />
+          </SectionReveal>
+        </section>
+
+        {/* ------------------------------------------------------ plate 02 */}
+        <section className={`${page} pb-24 sm:pb-32`}>
+          <PlateHead label={t("plateLabel")} number="02" title={t('kitTitle')} note={t('kitTitleAccent')} />
+
           {/*
-            A cabinet of runs, not a grid of deliverables.
-
-            The bento that stood here showed six cells of unequal size, every
-            one of them Brandora's dark surface with a violet lit edge, holding
-            a customer's logo, a customer's palette and a customer's posts. The
-            section claims a run produces one coherent brand and then rendered
-            that brand as six fragments of our chrome.
-
-            Each drawer is a whole run instead, wearing its own paper, and the
-            open one shows what that run left behind. It is also the shape the
-            product actually has: `PRODUCT.md` says the account accumulates
-            brands rather than settling on one, so a cabinet a visitor could
-            keep pulling from is the honest picture of it.
+            A cabinet of runs, each wearing its own paper. Kept from the pass
+            before this one: it was the one section below the fold that was
+            already arguing in the customer's colours rather than in ours.
           */}
-          <div className="mt-16 grid gap-4">
+          <div className="mt-10 grid gap-4">
             {specimens.map((specimen, index) => (
               <SectionReveal key={specimen.id} delay={Math.min(index * 0.08, 0.3)}>
                 <BrandDrawer specimen={specimen} open={index === 0} labels={drawerLabels} />
@@ -339,278 +250,238 @@ export default async function HorizonDirection({
             ))}
           </div>
 
-          {/*
-            What every run produces regardless of which drawer is open. It is
-            our list rather than a brand's, so it stays out on the neutral
-            ground rather than being painted into one of them.
-          */}
-          <SectionReveal className="mt-14">
-            <p className="text-sm text-fg-muted">{t('kitRest')}</p>
-            <PillFan items={rest} className="mt-4 flex flex-wrap gap-2" />
+          <SectionReveal className="mt-10">
+            <p className="type-caption">{t('kitRest')}</p>
+            {/*
+              A set list, not a fan of pills that part around the pointer. The
+              pills were a nice piece of motion and they were the page reaching
+              for personality in the one place it had nothing to say; a printed
+              index says it in less space and does not need a mouse.
+            */}
+            <ul className="mt-4 grid gap-x-10 gap-y-1.5 sm:grid-cols-2 lg:grid-cols-3">
+              {rest.map((item) => (
+                <li
+                  key={item}
+                  className="flex items-baseline gap-3 border-t border-line py-2 text-sm"
+                >
+                  <span aria-hidden className="type-runhead">
+                    &middot;
+                  </span>
+                  {item}
+                </li>
+              ))}
+            </ul>
           </SectionReveal>
-        </div>
-      </section>
+        </section>
 
-      {/* -------------------------------------------------------------- how */}
-      <div aria-hidden className="rule-fade" />
-      {/*
-        No `<SectionArc>`, for the reason the kit section has none.
+        {/* ------------------------------------------------------ plate 03 */}
+        <section id="process" className={`${page} pb-24 sm:pb-32`}>
+          <PlateHead label={t("plateLabel")} number="03" title={t('howTitle')} note={t('processNote')} />
 
-        The arc is a 90rem violet crest, and there were three of them below this
-        fold plus five step marks each throwing a 28px violet glow — which is
-        Brandora's colour spent eight times in the space between the cabinet and
-        the close, on a page whose argument is that the colour on screen belongs
-        to the customer. This section keeps the light it earns: the rail, in the
-        run's own palette.
-      */}
-      <section id="how" className="relative overflow-hidden">
-        <div className="relative z-10 mx-auto max-w-7xl px-8 py-28">
-          <SectionReveal>
-            <h2 className="type-section">{t('howTitle')}</h2>
-          </SectionReveal>
-
-          {/*
-            Two columns, because one was stranding this section.
-
-            The descent is unchanged and still right — the run happens in
-            sequence, and a row of equal boxes said nothing about order. But a
-            58ch column of text inside a 1024px section left the right-hand
-            third of the widest part of this page empty, and the fix for empty
-            space on a page selling generated output is not wider margins: it is
-            the output. So the space now holds the product doing the thing the
-            list is describing.
-          */}
-          {/*
-            The rail sits outside the list. An `<ol>` may contain only `<li>`,
-            and this one held a decorative div plus a motion wrapper around
-            every item — enough for several screen readers to drop the list
-            semantics, so "How a run works" stopped announcing five steps.
-          */}
-          <div className="mt-16 grid gap-x-16 gap-y-16 lg:grid-cols-[minmax(0,24rem)_1fr] lg:items-start">
-          <div className="relative">
-            {/* The `rail` utility this used to carry was Brandora's ramp, and it
-                is gone from the stylesheet along with `rail-node`: this was the
-                only caller of either, and neither survives contact with the rule
-                that a run's own colours are the ones drawn here. */}
-            <div
-              aria-hidden
-              className="absolute bottom-8 start-[1.55rem] top-4 w-px"
-              style={{ backgroundImage: `linear-gradient(180deg, ${railStops.join(', ')})` }}
-            />
-
-            <ol>
+          <div className="mt-10 grid gap-x-16 gap-y-12 lg:grid-cols-[1fr_minmax(0,26rem)] lg:items-start">
+            {/*
+              The steps as a set sequence: a folio number in the margin, a rule
+              between entries, and the text on a book measure. What this replaces
+              was a vertical rail with five discs on it, correct about the order
+              and wrong about the medium, since a rail with nodes is a diagram of
+              a process and a numbered list is the process written down.
+            */}
+            <ol className="border-t border-line-strong">
               {steps.map((step, index) => (
-                <li key={step.name} className="pb-14 last:pb-0">
-                  {/* The reveal wraps a real box: under `display: contents` it
-                      would generate none, and animate nothing.
-
-                      `lift` is off. The cell is a number and two lines of text,
-                      and a paragraph that rises when the pointer crosses it is
-                      the reflex this page is being taken apart for: motion
-                      spent where nothing is being operated. */}
-                  <Cell
-                    index={index}
-                    lift={false}
-                    className="relative grid grid-cols-[3.5rem_1fr] items-start gap-x-6"
-                  >
-                  {/*
-                    The marks are quiet except the last one.
-
-                    Every one of them used to be a lit violet disc, which made
-                    five equal beacons out of a sequence and said the same thing
-                    five times. They are plain now, and the mark at Publish takes
-                    the colour the rail lands on — the one step where the brand
-                    exists, wearing the brand.
-                  */}
-                  <StepMark
-                    index={index}
-                    className="relative z-10 flex size-14 items-center justify-center rounded-card border bg-base text-lg font-semibold"
-                    style={{
-                      borderColor:
-                        index === steps.length - 1 && railColors.length > 0
-                          ? railColors[railColors.length - 1]
-                          : railFaint,
-                    }}
-                  >
-                    {index + 1}
-                  </StepMark>
-
-                    <div className="pt-2.5">
-                      <p className="text-2xl font-semibold tracking-[-0.02em]">{step.name}</p>
-                      <p className="mt-2 max-w-[58ch] leading-relaxed text-fg-secondary">
-                        {step.body}
-                      </p>
-                    </div>
-                  </Cell>
+                <li
+                  key={step.name}
+                  className="grid grid-cols-[3rem_1fr] gap-x-6 border-b border-line py-7"
+                >
+                  <span className="type-runhead pt-1.5 tabular-nums">
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+                  <div>
+                    <p className="type-plate-sm">{step.name}</p>
+                    <p className="mt-2 max-w-[54ch] leading-[1.7] text-fg-secondary">{step.body}</p>
+                  </div>
                 </li>
               ))}
             </ol>
-          </div>
 
-          {/*
-            The run itself, cropped out of the product and floated in the
-            section's own light — which is what the reference does with every
-            fragment of its app it puts on that page.
-
-            Sticky, so it stays beside whichever step is being read rather than
-            scrolling past the first one. Only from `lg`, where there are two
-            columns for it to stay beside.
-          */}
-          <SectionReveal delay={0.15} className="lg:sticky lg:top-24">
             {/*
-              A plain frame, where this was `lit` over `bloom`.
+              The brief, as a plate with a caption under it.
 
-              Both read `--brand-primary`, so the one screenshot of our own
-              product on this page sat inside a violet edge with a violet wash
-              rising through it — the treatment the fold dropped, surviving in
-              the section directly below it. The utilities stay; they are right
-              on a card you operate, and a dozen surfaces behind the login use
-              them. This is a picture in a frame, so it gets a hairline.
+              Two things about this picture are still wrong and neither is
+              fixable here: it is full of the product's old violet chrome, and it
+              is in English on `/ar`, on the page whose proof is that this
+              product writes Arabic natively. Both need a fresh capture of the
+              running app, which is a separate job from setting this page.
             */}
-            <div className="rounded-panel border border-line bg-surface p-4 sm:p-6">
-                <Image
-                  src="/marketing/run-brief.webp"
-                  alt={t('howShot')}
-                  /* The capture's own pixel dimensions. `w-full` with no height
-                     class takes its aspect from these, so a stale pair here
-                     stretches the screenshot rather than failing loudly. */
-                  width={1440}
-                  height={624}
-                  className="w-full rounded-card"
-                  sizes="(max-width: 1024px) 100vw, 640px"
-                />
-            </div>
-            <p className="mt-4 max-w-[46ch] text-sm text-fg-muted">{t('howShot')}</p>
-          </SectionReveal>
+            <SectionReveal delay={0.1} className="lg:sticky lg:top-24">
+              <figure>
+                <div className="plate overflow-hidden bg-elevated p-2">
+                  <Image
+                    src="/marketing/run-brief.webp"
+                    alt={t('howShot')}
+                    /* The capture's own pixel dimensions. `w-full` with no height
+                       class takes its aspect from these, so a stale pair here
+                       stretches the screenshot rather than failing loudly. */
+                    width={1440}
+                    height={624}
+                    className="w-full rounded-[0.0625rem]"
+                    sizes="(max-width: 1024px) 100vw, 420px"
+                  />
+                </div>
+                <figcaption className="type-caption mt-3 max-w-[46ch]">{t('howShot')}</figcaption>
+              </figure>
+            </SectionReveal>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ---------------------------------------------------------- pricing */}
-      <div aria-hidden className="rule-fade" />
-      <section id="pricing" className="relative overflow-hidden bg-surface/50">
-        <SectionArc className="top-0" />
+        {/* ------------------------------------------------------ plate 04 */}
+        <section id="terms" className={`${page} pb-24 sm:pb-32`}>
+          <PlateHead label={t("plateLabel")} number="04" title={t('pricingHeading')} note={t('pricingDeck')} />
 
-        <div className="relative z-10 mx-auto max-w-7xl px-8 py-28">
+          <SectionReveal className="mt-10">
+            <TermsTable locale={locale} />
+          </SectionReveal>
+        </section>
+
+        {/* --------------------------------------------------------- notes */}
+        {/*
+          The questions, printed open.
+
+          They were nine identical collapsed bars, a wall of grey rectangles
+          that answered nothing until pressed nine times, and the single most
+          template-looking block on the page after the pricing grid. Someone
+          deciding whether to pay wants to read the answers, not to operate a
+          list. Two columns of set notes fit all nine in less height than the
+          closed accordion occupied, and the browser's own page search finds
+          them.
+        */}
+        <section className={`${page} pb-24 sm:pb-32`}>
+          <PlateHead label={t("plateLabel")} number="05" title={tp('faqTitle')} note={t('notesNote')} />
+
           <SectionReveal>
-            <div className="flex flex-wrap items-end justify-between gap-6">
-              <h2 className="type-section">{t('pricingHeading')}</h2>
-              <p className="max-w-[42ch] text-fg-secondary">{t('pricingDeck')}</p>
+            <dl className="mt-10 columns-1 gap-x-16 lg:columns-2">
+              {notes.map((note) => (
+                <div key={note.q} className="mb-7 break-inside-avoid border-t border-line pt-4">
+                  <dt className="font-semibold">{note.q}</dt>
+                  <dd className="mt-1.5 text-sm leading-[1.75] text-fg-secondary">{note.a}</dd>
+                </div>
+              ))}
+            </dl>
+          </SectionReveal>
+        </section>
+
+        {/* ------------------------------------------------------- colophon */}
+        {/*
+          A colophon: the note at the back of a book saying what it was set in
+          and who made it. It is the honest ending for this page and it replaces
+          a centred display headline over a fifth copy of the same button,
+          which asked, one more time, for the press a reader had already declined
+          four times on the way down.
+        */}
+        {/* The rule sits inside the margins, not on the section box. On the
+            section it spanned the full 78rem while every other rule on the page
+            stops at the text edge, so the one closing the book was the only one
+            that did not line up with the rest. */}
+        <section className={`${page} pb-24 pt-16 sm:pb-32`}>
+          <div className="grid gap-12 border-t border-line-strong pt-16 lg:grid-cols-[1fr_minmax(0,24rem)]">
+            <div>
+              <h2 className="type-plate-sm max-w-[20ch]">
+                {t('closeTitle')}{' '}
+                <span className="text-fg-secondary">{t('closeTitleAccent')}</span>
+              </h2>
+              <Link href="/register" className="stamp mt-8">
+                {t('ctaPrimary')}
+              </Link>
             </div>
-          </SectionReveal>
 
-          {/*
-            The same component the pricing page renders, from the same table
-            that bills for it. These were two hand-written ladders that could —
-            and did — disagree about what a plan includes.
-          */}
-          <div className="mt-16">
-            <PricingPlans locale={locale} />
+            <dl className="type-caption self-end">
+              <div className="flex justify-between gap-6 border-t border-line py-2">
+                <dt>{t('colophonSet')}</dt>
+                <dd className="text-fg" dir="ltr">
+                  Fraunces &middot; Amiri &middot; Plus Jakarta Sans
+                </dd>
+              </div>
+              {/* The brands, by name. This row carried the whole `stageWall`
+                  sentence, which is a caption, not a colophon entry: a colophon
+                  lists what a thing is made of in as few words as it takes. */}
+              <div className="flex justify-between gap-6 border-t border-line py-2">
+                <dt>{t('colophonPlates')}</dt>
+                <dd className="text-fg">{specimens.map((s) => s.name).join(', ')}</dd>
+              </div>
+              <div className="flex justify-between gap-6 border-t border-line py-2">
+                <dt>{t('poweredBy')}</dt>
+                <dd>
+                  <a
+                    href="https://enigmitic.com"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-fg underline decoration-line underline-offset-4 transition-colors hover:decoration-current"
+                  >
+                    Enigmitic
+                  </a>
+                </dd>
+              </div>
+            </dl>
           </div>
-
-          {/*
-            The questions are part of the pricing section, not a page you have
-            to go and find. Someone deciding on this page is the person with
-            the questions, and sending them elsewhere to read the answers is
-            where the decision gets postponed.
-          */}
-          <SectionReveal>
-            <PricingFaq className="mt-16" />
-          </SectionReveal>
-
-          <p className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-fg-muted">
-            <span className="flex items-center gap-2">
-              <Check className="size-4 accent-text" />
-              {t('assuranceCard')}
-            </span>
-            <span className="flex items-center gap-2">
-              <Check className="size-4 accent-text" />
-              {t('assuranceCredits')}
-            </span>
-            <span className="flex items-center gap-2">
-              <Check className="size-4 accent-text" />
-              {t('assuranceCancel')}
-            </span>
-          </p>
-        </div>
-      </section>
-
-      <div aria-hidden className="rule-fade" />
-      <section className="relative overflow-hidden">
-        <SectionArc className="top-[38%]" />
-        <div className="relative z-10 mx-auto max-w-7xl px-8 py-28 text-center">
-          <SectionReveal>
-            {/* The page's closing heading was a fifth size — 2.2rem to 4rem
-                against the hero's 2.6 to 4.6 — for no reason anyone recorded.
-                It takes the display step, like the hero. */}
-            <h2 className="type-display mx-auto max-w-3xl">
-              {t('closeTitle')}
-              <span className="type-trail"> {t('closeTitleAccent')}</span>
-            </h2>
-          </SectionReveal>
-          <SectionReveal delay={0.1}>
-            <Link
-              href="/register"
-              className={cn(buttonVariants({ size: 'lg', shape: 'pill' }), 'mt-10')}
-            >
-              {t('ctaPrimary')}
-              <ArrowRight className="size-4 rtl:rotate-180" />
-            </Link>
-          </SectionReveal>
-        </div>
-      </section>
-
+        </section>
       </main>
 
-      {/*
-        The foot of the page carries the page's own sections and the two
-        destinations that exist off it. It used to be the mark and a single
-        link, which is the one part of a long page a visitor reaches having
-        decided not to press anything yet — and it offered them the same press
-        they had already declined four times.
-      */}
-      <div aria-hidden className="rule-fade" />
-      <footer>
-        <div className="mx-auto flex max-w-7xl flex-wrap items-start justify-between gap-x-16 gap-y-8 px-8 py-12">
-          <div>
-            <span className="flex items-center gap-2.5">
-              <LogoMark className="size-11" />
-              <span className="text-sm font-semibold">Brandora</span>
-            </span>
-            <p className="mt-3 max-w-[34ch] text-sm text-fg-muted">{t('heroDeck')}</p>
-            {/* The studio behind it, said once, quietly, at the bottom. */}
-            <p className="mt-4 text-xs text-fg-muted">
-              {t('poweredBy')}{' '}
-              <a
-                href="https://enigmitic.com"
-                target="_blank"
-                rel="noreferrer"
-                className="text-fg-secondary transition-colors hover:text-white"
-              >
-                Enigmitic
-              </a>
-            </p>
-          </div>
+      <footer className="border-t border-line">
+        <div className={`${page} flex flex-wrap items-center justify-between gap-x-10 gap-y-4 py-6`}>
+          <span className="flex items-center gap-2.5">
+            <LogoMark className="size-6" />
+            <span className="type-runhead !text-fg">Brandora</span>
+          </span>
 
-          <nav aria-label={t('navKit')} className="flex flex-wrap gap-x-8 gap-y-2 text-sm">
-            <a href="#kit" className="text-fg-secondary transition-colors hover:text-white">
+          <nav aria-label={t('navKit')} className="flex flex-wrap gap-x-8 gap-y-2">
+            <a href="#specimens" className="type-runhead transition-colors hover:!text-fg">
               {t('navKit')}
             </a>
-            <a href="#how" className="text-fg-secondary transition-colors hover:text-white">
-              {t('navHow')}
-            </a>
-            <Link
-              href="/pricing"
-              className="text-fg-secondary transition-colors hover:text-white"
-            >
+            <a href="#terms" className="type-runhead transition-colors hover:!text-fg">
               {t('navPricing')}
+            </a>
+            <Link href="/pricing" className="type-runhead transition-colors hover:!text-fg">
+              {t('pricingCompare')}
             </Link>
-            <Link href="/login" className="text-fg-secondary transition-colors hover:text-white">
+            <Link href="/login" className="type-runhead transition-colors hover:!text-fg">
               {tn('signIn')}
             </Link>
           </nav>
         </div>
       </footer>
     </div>
+  )
+}
+
+/**
+ * The head of a plate: its number, its title, and one line of caption.
+ *
+ * Declared here rather than in `components/` because it is this document's
+ * furniture and has exactly one document. A shared component for a thing with
+ * one caller is how the utility this page just deleted came to exist.
+ */
+function PlateHead({
+  number,
+  title,
+  note,
+  label,
+}: {
+  number: string
+  title: string
+  note: string
+  label: string
+}) {
+  return (
+    <SectionReveal>
+      <div className="flex items-baseline justify-between gap-6 border-b border-line-strong pb-3">
+        <span className="type-runhead tabular-nums">
+          {label} {number}
+        </span>
+        <span className="type-runhead">Brandora</span>
+      </div>
+      <div className="mt-6 flex flex-wrap items-end justify-between gap-x-12 gap-y-3">
+        <h2 className="type-plate-sm max-w-[18ch]">{title}</h2>
+        <p className="type-caption max-w-[42ch]">{note}</p>
+      </div>
+    </SectionReveal>
   )
 }
