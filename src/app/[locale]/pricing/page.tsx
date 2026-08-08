@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { CurrencySwitch } from '@/components/features/billing/currency-switch'
+import { PricingFaq } from '@/components/features/landing/pricing-faq'
 import { PricingPlans } from '@/components/features/landing/pricing-plans'
 import { buttonVariants } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -10,7 +11,6 @@ import { formatPrice, isCurrency, pickPrice, type Currency } from '@/lib/utils'
 import { db } from '@/server/db'
 import { creditPacks, plans } from '@/server/db/schema'
 import { PlanComparison } from '@/components/features/billing/plan-comparison'
-import { Disclosure } from '@/components/ui/disclosure'
 
 export default async function PricingPage({
   params,
@@ -31,12 +31,6 @@ export default async function PricingPage({
     db.select().from(plans).where(eq(plans.isActive, true)).orderBy(plans.sortOrder),
   ])
 
-  /*
-   * Every answer here has to match what the application does. They are written
-   * once, in the catalogue, rather than in the markup — an FAQ that drifts from
-   * the product is worse than no FAQ, because it is read as a promise.
-   */
-  const faq = t.raw('faq') as { q: string; a: string }[]
 
   return (
     <div className="world-dark min-h-dvh">
@@ -89,16 +83,8 @@ export default async function PricingPage({
           </div>
         </div>
 
-        <div className="mt-16">
-          <h2 className="font-display text-xl font-semibold">{t('faqTitle')}</h2>
-          <div className="mt-5 space-y-3">
-            {faq.map((item) => (
-              <Disclosure key={item.q} title={item.q}>
-                <p className="max-w-[70ch] text-sm leading-relaxed text-fg-secondary">{item.a}</p>
-              </Disclosure>
-            ))}
-          </div>
-        </div>
+        {/* One component, so the landing page and this one cannot disagree. */}
+        <PricingFaq className="mt-16" />
 
         <div className="mt-16">
           <h2 className="font-display text-xl font-semibold">{t('packsTitle')}</h2>

@@ -13,6 +13,7 @@ import {
   SectionReveal,
 } from '@/components/ui/horizon'
 import { AfterHeadline, HeadlineWords } from '@/components/features/landing/motion-hero'
+import { PricingFaq } from '@/components/features/landing/pricing-faq'
 import { PricingPlans } from '@/components/features/landing/pricing-plans'
 import { buttonVariants } from '@/components/ui/button'
 import { LogoMark } from '@/components/ui/logo'
@@ -502,6 +503,16 @@ export default async function HorizonDirection({
           <div className="mt-16">
             <PricingPlans locale={locale} />
           </div>
+
+          {/*
+            The questions are part of the pricing section, not a page you have
+            to go and find. Someone deciding on this page is the person with
+            the questions, and sending them elsewhere to read the answers is
+            where the decision gets postponed.
+          */}
+          <SectionReveal>
+            <PricingFaq className="mt-16" />
+          </SectionReveal>
 
           <p className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-fg-muted">
             <span className="flex items-center gap-2">
