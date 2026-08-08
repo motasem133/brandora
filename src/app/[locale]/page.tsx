@@ -306,23 +306,33 @@ export default async function BrandBook({
             {/*
               The brief, as a plate with a caption under it.
 
-              Two things about this picture are still wrong and neither is
-              fixable here: it is full of the product's old violet chrome, and it
-              is in English on `/ar`, on the page whose proof is that this
-              product writes Arabic natively. Both need a fresh capture of the
-              running app, which is a separate job from setting this page.
+              Two captures, not one. The page's whole argument is that this
+              product writes Arabic natively, and a screenshot of an English
+              wizard sitting inside the Arabic edition of the book was the
+              loudest possible contradiction of it: the reader is looking at the
+              product speaking their language everywhere except in the picture
+              of the product. The Arabic capture is the same step of the same
+              wizard, mirrored, with the name typed in Arabic.
+
+              The violet chrome stays, and it is not a defect. That is what the
+              app behind the login actually looks like (`:root` is still the
+              dark navy world, and only the marketing pages moved to paper), so a
+              recolour here would be a photograph of a product that does not
+              exist. The plate frames it as what it is: a screen, printed.
             */}
             <SectionReveal delay={0.1} className="lg:sticky lg:top-24">
               <figure>
                 <div className="plate overflow-hidden bg-elevated p-2">
                   <Image
-                    src="/marketing/run-brief.webp"
+                    src={locale === 'ar' ? '/marketing/run-brief-ar.webp' : '/marketing/run-brief.webp'}
                     alt={t('howShot')}
                     /* The capture's own pixel dimensions. `w-full` with no height
                        class takes its aspect from these, so a stale pair here
-                       stretches the screenshot rather than failing loudly. */
-                    width={1440}
-                    height={624}
+                       stretches the screenshot rather than failing loudly. Both
+                       locales are captured from the same clip, so one pair
+                       serves both. */
+                    width={1488}
+                    height={648}
                     className="w-full rounded-[0.0625rem]"
                     sizes="(max-width: 1024px) 100vw, 420px"
                   />
