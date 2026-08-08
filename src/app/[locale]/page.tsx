@@ -1,4 +1,4 @@
-import { ArrowRight, Check, FileText } from 'lucide-react'
+import { Check, FileText } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import Image from 'next/image'
 
@@ -15,11 +15,12 @@ import {
 import { AfterHeadline, HeadlineWords } from '@/components/features/landing/motion-hero'
 import { PricingFaq } from '@/components/features/landing/pricing-faq'
 import { PricingPlans } from '@/components/features/landing/pricing-plans'
+import { StartCta } from '@/components/features/landing/start-cta'
 import { buttonVariants } from '@/components/ui/button'
 import { LogoMark } from '@/components/ui/logo'
 import { MomentumField, MomentumItem } from '@/components/ui/momentum'
 import { Link } from '@/i18n/navigation'
-import { cn } from '@/lib/utils'
+import { getSession } from '@/server/session'
 
 /**
  * Direction D — Horizon.
@@ -89,6 +90,8 @@ export default async function HorizonDirection({
    */
   const t = await getTranslations('Landing')
   const tn = await getTranslations('Nav')
+  // Shared with StartCta's own lookup — getSession is cache()d per render.
+  const session = await getSession()
   const rest = t.raw('restItems') as string[]
   const steps = t.raw('steps') as { name: string; body: string }[]
 
@@ -120,10 +123,7 @@ export default async function HorizonDirection({
           of them the component. `shape="pill"` is what the reference does with
           every control and what this page was reaching for by hand.
         */}
-        <Link href="/register" className={buttonVariants({ shape: 'pill' })}>
-          {t('ctaPrimary')}
-          <ArrowRight className="size-4 rtl:rotate-180" />
-        </Link>
+        <StartCta />
       </header>
 
       {/* The header's rule stops before the edges. A line running corner to
@@ -197,10 +197,7 @@ export default async function HorizonDirection({
               >
                 {t('ctaSecondary')}
               </Link>
-              <Link href="/register" className={buttonVariants({ shape: 'pill' })}>
-                {t('ctaPrimary')}
-                <ArrowRight className="size-4 rtl:rotate-180" />
-              </Link>
+              <StartCta />
             </div>
           </AfterHeadline>
         </div>
@@ -556,13 +553,7 @@ export default async function HorizonDirection({
             </h2>
           </SectionReveal>
           <SectionReveal delay={0.1}>
-            <Link
-              href="/register"
-              className={cn(buttonVariants({ size: 'lg', shape: 'pill' }), 'mt-10')}
-            >
-              {t('ctaPrimary')}
-              <ArrowRight className="size-4 rtl:rotate-180" />
-            </Link>
+            <StartCta size="lg" className="mt-10" />
           </SectionReveal>
         </div>
       </section>
@@ -612,9 +603,11 @@ export default async function HorizonDirection({
             >
               {t('navPricing')}
             </Link>
-            <Link href="/login" className="text-fg-secondary transition-colors hover:text-white">
-              {tn('signIn')}
-            </Link>
+            {!session && (
+              <Link href="/login" className="text-fg-secondary transition-colors hover:text-white">
+                {tn('signIn')}
+              </Link>
+            )}
           </nav>
         </div>
       </footer>

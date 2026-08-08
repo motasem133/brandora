@@ -4,12 +4,14 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { CurrencySwitch } from '@/components/features/billing/currency-switch'
 import { PricingFaq } from '@/components/features/landing/pricing-faq'
 import { PricingPlans } from '@/components/features/landing/pricing-plans'
+import { StartCta } from '@/components/features/landing/start-cta'
 import { buttonVariants } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Link } from '@/i18n/navigation'
 import { formatPrice, isCurrency, pickPrice, type Currency } from '@/lib/utils'
 import { db } from '@/server/db'
 import { creditPacks, plans } from '@/server/db/schema'
+import { getSession } from '@/server/session'
 import { PlanComparison } from '@/components/features/billing/plan-comparison'
 
 export default async function PricingPage({
@@ -24,6 +26,7 @@ export default async function PricingPage({
   setRequestLocale(locale)
 
   const t = await getTranslations('Pricing')
+  const session = await getSession()
   const currency: Currency = isCurrency(requested) ? requested : locale === 'ar' ? 'aed' : 'usd'
 
   const [packs, ladder] = await Promise.all([
@@ -38,13 +41,15 @@ export default async function PricingPage({
         <Link href="/" className="font-display text-xl font-bold accent-text">
           Brandora
         </Link>
+        {/* Signed in, "Sign in" is as wrong as "Start free" — both offer a
+            door the visitor is already through. StartCta carries them on. */}
         <nav className="flex items-center gap-2">
-          <Link href="/login" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
-            {t('signIn')}
-          </Link>
-          <Link href="/register" className={buttonVariants({ size: 'sm' })}>
-            {t('start')}
-          </Link>
+          {!session && (
+            <Link href="/login" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
+              {t('signIn')}
+            </Link>
+          )}
+          <StartCta size="sm" />
         </nav>
       </header>
 
