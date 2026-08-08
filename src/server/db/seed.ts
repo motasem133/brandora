@@ -1,6 +1,6 @@
 import 'dotenv/config'
 
-import { eq } from 'drizzle-orm'
+import { eq, notInArray } from 'drizzle-orm'
 import postgres from 'postgres'
 import { drizzle } from 'drizzle-orm/postgres-js'
 
@@ -37,6 +37,14 @@ const PLANS = [
     priceYearly: 0,
     priceMonthlyAed: 0,
     priceYearlyAed: 0,
+    /*
+     * One brand, in credits.
+     *
+     * A free brand is branding (1) + logos (6) + the written social copy (1),
+     * because the website and the designed kit are both paid. Ten leaves a
+     * little slack rather than stranding someone one credit short of the thing
+     * they came for.
+     */
     monthlyCredits: 10, // one-time grant, not renewed — enforced in billing logic
     seats: 1,
     maxProjects: 3,
@@ -48,40 +56,68 @@ const PLANS = [
     priorityQueue: false,
     sortOrder: 0,
     features: {
-      en: ['1 full brand generation', '2 logo concepts', 'Colour palette & fonts', 'Brand story'],
-      ar: ['توليد هوية كاملة مرة واحدة', '4 مفاهيم شعار', 'لوحة ألوان وخطوط', 'قصة العلامة'],
+      en: [
+        '5 name ideas, each with its reasoning',
+        'Two logo concepts',
+        'Colour palette and typography',
+        'Brand story, voice and values',
+        'Instagram bio and captions',
+      ],
+      ar: [
+        'خمسة أسماء مقترحة مع سبب كل اسم',
+        'مفهومان للشعار',
+        'لوحة ألوان وخطوط',
+        'قصة العلامة وصوتها وقيمها',
+        'نبذة إنستغرام ونصوص المنشورات',
+      ],
     },
   },
   {
-    slug: 'basic',
-    name: 'Basic',
-    priceMonthly: 2900,
+    slug: 'creator',
+    name: 'Creator',
+    priceMonthly: 1900,
     priceYearly: 0,
-    priceMonthlyAed: 11000,
+    priceMonthlyAed: 6900,
     priceYearlyAed: 0,
-    monthlyCredits: 120,
-    seats: 2,
+    /* 20 brands x 13 credits — see BRAND_COST in billing/credits. */
+    monthlyCredits: 260,
+    seats: 1,
     maxProjects: -1,
     websiteBuilder: true,
-    socialMediaKit: false,
+    socialMediaKit: true,
     vectorExport: true,
-    brandAssistant: false,
+    brandAssistant: true,
     customDomain: false,
     priorityQueue: false,
     sortOrder: 1,
     features: {
-      en: ['Website builder', 'SVG vector export', 'Brand kit ZIP', '2 seats'],
-      ar: ['منشئ المواقع', 'تصدير SVG', 'حزمة الهوية', 'مستخدمان'],
+      en: [
+        'Everything in Free',
+        'Website builder and publishing',
+        'SVG vector logo export',
+        'Social kit — eight designed posts',
+        'Brand book PDF and kit ZIP',
+        'Brand Assistant',
+      ],
+      ar: [
+        'كل ما في المجاني',
+        'منشئ الموقع والنشر',
+        'تصدير الشعار SVG',
+        'حزمة سوشيال — ثمانية تصاميم',
+        'ملف الهوية PDF وحزمة ZIP',
+        'مساعد العلامة',
+      ],
     },
   },
   {
     slug: 'pro',
     name: 'Pro',
-    priceMonthly: 7900,
+    priceMonthly: 4900,
     priceYearly: 0,
-    priceMonthlyAed: 28900,
+    priceMonthlyAed: 17900,
     priceYearlyAed: 0,
-    monthlyCredits: 400,
+    /* 60 brands x 13 credits. */
+    monthlyCredits: 780,
     seats: 5,
     maxProjects: -1,
     websiteBuilder: true,
@@ -89,21 +125,22 @@ const PLANS = [
     vectorExport: true,
     brandAssistant: true,
     customDomain: false,
-    priorityQueue: true,
+    priorityQueue: false,
     sortOrder: 2,
     features: {
-      en: ['Social media kit', 'Brand Assistant AI chat', 'Priority queue', '5 seats'],
-      ar: ['حزمة السوشيال ميديا', 'مساعد العلامة الذكي', 'أولوية في المعالجة', '5 مستخدمين'],
+      en: ['Everything in Creator', 'Three times the monthly brands', '5 team seats'],
+      ar: ['كل ما في Creator', 'ثلاثة أضعاف العلامات شهرياً', 'خمسة مقاعد للفريق'],
     },
   },
   {
-    slug: 'business',
-    name: 'Business',
-    priceMonthly: 19900,
+    slug: 'agency',
+    name: 'Agency',
+    priceMonthly: 9900,
     priceYearly: 0,
-    priceMonthlyAed: 72900,
+    priceMonthlyAed: 36400,
     priceYearlyAed: 0,
-    monthlyCredits: 1200,
+    /* 150 brands x 13 credits. */
+    monthlyCredits: 1950,
     seats: -1,
     maxProjects: -1,
     websiteBuilder: true,
@@ -111,11 +148,21 @@ const PLANS = [
     vectorExport: true,
     brandAssistant: true,
     customDomain: true,
-    priorityQueue: true,
+    priorityQueue: false,
     sortOrder: 3,
     features: {
-      en: ['Custom domains', 'Unlimited seats', 'API access', 'Dedicated support'],
-      ar: ['نطاقات مخصصة', 'مستخدمون بلا حد', 'وصول API', 'دعم مخصص'],
+      en: [
+        'Everything in Pro',
+        'Unlimited seats',
+        'Custom domains on client sites',
+        'Up to 5 client workspaces',
+      ],
+      ar: [
+        'كل ما في Pro',
+        'مقاعد بلا حدود',
+        'نطاقات مخصّصة لمواقع العملاء',
+        'حتى خمس مساحات عمل للعملاء',
+      ],
     },
   },
 ] satisfies (typeof plans.$inferInsert)[]
@@ -137,6 +184,23 @@ async function seedPlans() {
       console.info(`  + created plan: ${plan.slug}`)
     }
   }
+
+  /*
+   * Anything not in the list above is retired rather than left standing.
+   *
+   * The ladder was renamed once — basic became Creator, business became
+   * Agency — and a seed that only upserts left the old rows active, so the
+   * pricing page rendered six plans and two prices for the same thing.
+   * Deactivated rather than deleted, because a subscription may still point
+   * at one.
+   */
+  const retired = await db
+    .update(plans)
+    .set({ isActive: false })
+    .where(notInArray(plans.slug, PLANS.map((plan) => plan.slug)))
+    .returning({ slug: plans.slug })
+
+  for (const plan of retired) console.log(`  · retired plan: ${plan.slug}`)
 }
 
 async function seedCreditPacks() {

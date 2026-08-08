@@ -3,6 +3,7 @@ import { and, eq } from 'drizzle-orm'
 import { db } from '@/server/db'
 import { generatedFiles, projects } from '@/server/db/schema'
 import { toErrorResponse } from '@/server/api-error'
+import { getOrgPlan } from '@/server/db/queries/plans'
 import { requireOrg } from '@/server/session'
 import { signedDownloadUrl } from '@/server/storage/r2'
 
@@ -85,6 +86,24 @@ async function handle(request: Request, params: Promise<{ id: string }>) {
 
   if (!file) {
     return Response.json({ error: { code: 'NOT_FOUND' } }, { status: 404 })
+  }
+
+  /*
+   * The vector file is the one asset the plan actually gates.
+   *
+   * `vectorExport` has existed on the plans table since the beginning and was
+   * never read, so every plan could download SVGs while the pricing page sold
+   * them as a paid feature. Enforced here rather than in the UI because the
+   * URL is guessable by anyone who can see the page.
+   */
+  if (file.kind === 'logo_svg') {
+    const plan = await getOrgPlan(org.id)
+    if (!plan?.vectorExport) {
+      return Response.json(
+        { error: { code: 'FEATURE_LOCKED', message: 'SVG export is available on Creator and above.' } },
+        { status: 403 },
+      )
+    }
   }
 
   const wantsDownload = new URL(request.url).searchParams.has('download')

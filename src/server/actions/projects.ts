@@ -29,7 +29,17 @@ export const createProject = orgAction
 
     // Feature flags are enforced server-side — a client can always send `true`.
     const needsWebsite = parsedInput.needsWebsite && (plan?.websiteBuilder ?? false)
-    const needsSocialMedia = parsedInput.needsSocialMedia && (plan?.socialMediaKit ?? false)
+
+    /*
+     * The written social copy is not gated; the designed kit is.
+     *
+     * They were one flag, which meant the free plan produced no Instagram bio
+     * — a thing the pricing page promises and that costs a single credit and a
+     * fifth of a cent of model time. `socialMediaKit` now governs only the
+     * expensive half: eight rendered posts and the brand book, checked where
+     * that kit is built.
+     */
+    const needsSocialMedia = parsedInput.needsSocialMedia
 
     const [project] = await db
       .insert(projects)
@@ -57,7 +67,9 @@ export const createProject = orgAction
       // Surfaced so onboarding can explain why a requested feature is missing.
       downgraded: {
         website: parsedInput.needsWebsite && !needsWebsite,
-        social: parsedInput.needsSocialMedia && !needsSocialMedia,
+        // Never downgraded any more: the written copy is on every plan, and
+        // the designed kit is requested separately from the project page.
+        social: false,
       },
     }
   })

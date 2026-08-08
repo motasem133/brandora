@@ -154,6 +154,17 @@
     "closeTitle": "Bring a brief.",
     "closeTitleAccent": "Leave with a brand.",
     "planOneBrand": "1 brand",
+    "planBrandsMonth": "{brands} brands a month",
+    "planFor_free": "Try Brandora on a real brand of your own.",
+    "planFor_creator": "For entrepreneurs building their own brand.",
+    "planFor_pro": "For professionals and growing businesses.",
+    "planFor_agency": "For agencies making brands for clients.",
+    "planCta_free": "Create your brand",
+    "planCta_creator": "Start creating",
+    "planCta_pro": "Choose Pro",
+    "planCta_agency": "Choose Agency",
+    "planNoCard": "No credit card required",
+    "planCancel": "Cancel anytime",
     "howShot": "The first of eight questions. Everything the run produces is decided from these answers."
   },
   "Auth": {
@@ -741,7 +752,78 @@
     "choose": "Choose {plan}",
     "packsTitle": "Need more?",
     "packsBody": "One-off credit packs. They never expire and are used after your monthly credits.",
-    "creditsWord": "credits"
+    "creditsWord": "credits",
+    "faqTitle": "Questions",
+    "faq": [
+      {
+        "q": "What counts as one brand?",
+        "a": "One project taken through a full generation: names, story, voice, two logo concepts, palette and typography — plus, on a paid plan, a website, the written social copy and the designed social kit."
+      },
+      {
+        "q": "What happens when I use my monthly brands?",
+        "a": "Generation stops until the next month, and everything you have already made stays yours to download. You can also buy a credit pack at any time, which never expires."
+      },
+      {
+        "q": "Do unused brands roll over?",
+        "a": "No. A paid plan grants its credits again each month and the previous month’s balance is replaced. Credit packs are separate and do not expire."
+      },
+      {
+        "q": "Can I cancel anytime?",
+        "a": "Yes, from the billing portal. You keep the plan until the end of the period you have paid for, and every brand you generated stays downloadable."
+      },
+      {
+        "q": "Can I upgrade or downgrade?",
+        "a": "Yes, at any time. Changes take effect immediately and the difference is prorated."
+      },
+      {
+        "q": "Do I need a credit card for the free plan?",
+        "a": "No. The free plan needs an email address and nothing else."
+      },
+      {
+        "q": "Can I use what I generate commercially?",
+        "a": "Yes. What a generation produces is yours to use, including commercially. Bear in mind that generated artwork cannot be guaranteed unique, so run a trademark check before you register a mark."
+      },
+      {
+        "q": "Can I download logos as SVG?",
+        "a": "On Creator and above. Every plan gets high-resolution PNG; the vector file is a paid export."
+      },
+      {
+        "q": "What is the difference between Creator, Pro and Agency?",
+        "a": "Creator is one person building their own brand. Pro is the same tools with three times the monthly brands and five seats. Agency adds unlimited seats, client workspaces and custom domains on the sites you publish for clients."
+      }
+    ],
+    "compareTitle": "What each plan includes",
+    "compareBody": "Only what the product actually enforces. Nothing here is aspirational.",
+    "groupVolume": "Volume",
+    "groupIdentity": "Brand identity",
+    "groupWebsite": "Website",
+    "groupSocial": "Social",
+    "groupExports": "Exports",
+    "groupTools": "AI tools",
+    "groupTeam": "Team",
+    "rowBrands": "Brands",
+    "rowBrandsMonth": "{brands} / month",
+    "rowBrandsOnce": "{brands}, once",
+    "rowCredits": "Credits",
+    "rowProjects": "Projects",
+    "unlimited": "Unlimited",
+    "rowNames": "Name ideas with reasoning",
+    "rowLogos": "Two logo concepts",
+    "rowPalette": "Palette and typography",
+    "rowStory": "Brand story, voice and values",
+    "rowBuilder": "Website builder",
+    "rowPublish": "Publish to a Brandora address",
+    "rowDomain": "Custom domain",
+    "rowCaptions": "Instagram bio and captions",
+    "rowKit": "Social kit — eight designed posts",
+    "rowBookPdf": "Brand book PDF",
+    "rowPng": "High-resolution PNG",
+    "rowSvg": "Vector SVG",
+    "rowZip": "Brand kit ZIP",
+    "rowAssistant": "Brand Assistant",
+    "rowSeats": "Seats",
+    "included": "Included",
+    "notIncluded": "Not included"
   },
   "Settings": {
     "title": "Settings",

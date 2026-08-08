@@ -26,6 +26,35 @@ export const CREDIT_COSTS = {
   kit: 4,
 } as const
 
+/**
+ * What one brand costs, in credits.
+ *
+ * Customers are sold brands, not credits: "20 brands a month" is a number
+ * someone can act on and "260 credits" is not. This is the exchange rate
+ * between the two, and every plan's headline is derived from it rather than
+ * written down twice — so a change to any section's price moves the pricing
+ * page with it instead of quietly making it wrong.
+ *
+ * Everything a paid plan can produce: the naming and story, both logo
+ * concepts, the website, the written social copy, and the designed kit.
+ */
+export const BRAND_COST =
+  CREDIT_COSTS.branding +
+  CREDIT_COSTS.logos +
+  CREDIT_COSTS.website +
+  CREDIT_COSTS.social +
+  CREDIT_COSTS.kit
+
+/**
+ * What one brand costs on a plan that cannot publish a site or design a kit.
+ *
+ * The free plan's brand is a smaller object than a paid one — the naming, the
+ * story, both logos and the written social copy — so counting it at the full
+ * rate would report "0 brands" for a plan whose entire promise is one.
+ */
+export const BRAND_COST_STARTER =
+  CREDIT_COSTS.branding + CREDIT_COSTS.logos + CREDIT_COSTS.social
+
 export type GenerationSection = keyof typeof CREDIT_COSTS
 
 export function creditsForSections(sections: GenerationSection[]): number {

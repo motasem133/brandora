@@ -6,7 +6,7 @@ import { Cell } from '@/components/ui/horizon'
 import { buttonVariants } from '@/components/ui/button'
 import { Link } from '@/i18n/navigation'
 import { cn, formatPrice, pickPrice, type Currency } from '@/lib/utils'
-import { CREDIT_COSTS } from '@/server/billing/credits'
+import { BRAND_COST, BRAND_COST_STARTER } from '@/server/billing/credits'
 import { db } from '@/server/db'
 import { plans } from '@/server/db/schema'
 
@@ -22,8 +22,34 @@ import { plans } from '@/server/db/schema'
  * full kit costs, so "about 15 runs a month" is arithmetic on the plan's own
  * monthly credits, and cannot drift from the number the customer is granted.
  */
-const FULL_RUN =
-  CREDIT_COSTS.branding + CREDIT_COSTS.logos + CREDIT_COSTS.website + CREDIT_COSTS.social
+/**
+ * How many brands a plan's credits buy.
+ *
+ * Customers are sold brands. "20 brands a month" is a number someone can hold
+ * in their head and act on; "260 credits" is an internal unit that answers no
+ * question they are asking. The credits still run the machine and are still
+ * shown — underneath, in smaller type, for anyone who wants to check the
+ * arithmetic.
+ */
+function brandsFor(plan: { monthlyCredits: number; websiteBuilder: boolean; socialMediaKit: boolean }) {
+  const full = plan.websiteBuilder && plan.socialMediaKit
+  return Math.floor(plan.monthlyCredits / (full ? BRAND_COST : BRAND_COST_STARTER))
+}
+
+/** Copy keyed by the plans this product ships. Anything else falls back. */
+const POSITIONING: Record<string, 'planFor_free'> = {
+  free: 'planFor_free',
+  creator: 'planFor_creator' as 'planFor_free',
+  pro: 'planFor_pro' as 'planFor_free',
+  agency: 'planFor_agency' as 'planFor_free',
+}
+
+const CTA: Record<string, 'planCta_free'> = {
+  free: 'planCta_free',
+  creator: 'planCta_creator' as 'planCta_free',
+  pro: 'planCta_pro' as 'planCta_free',
+  agency: 'planCta_agency' as 'planCta_free',
+}
 
 export async function PricingPlans({
   locale,
@@ -39,7 +65,7 @@ export async function PricingPlans({
     <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
       {rows.map((plan, index) => {
         /* The plan the product recommends, marked once. */
-        const featured = plan.slug === 'pro'
+        const featured = plan.slug === 'creator'
         const price = pickPrice(currency, { usd: plan.priceMonthly, aed: plan.priceMonthlyAed })
         const features = (plan.features as Record<string, string[]>)?.[locale] ?? []
         /*
@@ -47,8 +73,23 @@ export async function PricingPlans({
          * rather than "~1 runs a month" — which reads as a rate for something
          * that happens once.
          */
-        const runs = Math.floor(plan.monthlyCredits / FULL_RUN)
+        const brands = brandsFor(plan)
         const recurring = plan.priceMonthly > 0
+
+        /*
+         * Per-plan copy, looked up rather than interpolated into a key.
+         *
+         * `t('planFor_' + slug)` throws when a slug has no entry, so adding a
+         * plan in the admin screen would take the landing page down with it.
+         * Falling back keeps an unknown plan rendering — plainly, but
+         * rendering.
+         */
+        const positioning = POSITIONING[plan.slug] ? t(POSITIONING[plan.slug]) : plan.name
+        const cta = CTA[plan.slug]
+          ? t(CTA[plan.slug])
+          : recurring
+            ? t('pricingCtaPaid', { plan: plan.name })
+            : t('pricingCta')
 
         return (
           <Cell key={plan.id} index={index}>
@@ -103,18 +144,24 @@ export async function PricingPlans({
                   )}
                 </p>
 
-                {/* The number that actually decides the plan. */}
-                <p className="mt-5 rounded-control border border-line bg-elevated/40 px-3.5 py-2.5 text-sm">
-                  <span className="font-semibold">
-                    {recurring && runs > 1 ? t('planRuns', { runs }) : t('planOneBrand')}
+                {/*
+                  The number that decides the plan, given the whole line.
+                  Credits sit under it because they are how the machine is
+                  metered, not how the decision is made.
+                */}
+                <p className="mt-5 rounded-control border border-line bg-elevated/40 px-3.5 py-3">
+                  <span className="block font-display text-lg font-semibold">
+                    {recurring ? t('planBrandsMonth', { brands }) : t('planOneBrand')}
                   </span>
-                  <span className="text-fg-muted">
-                    {' · '}
+                  <span className="mt-0.5 block text-xs text-fg-muted">
                     {recurring
                       ? t('planCredits', { credits: plan.monthlyCredits })
                       : t('pricingCreditsOnce', { credits: plan.monthlyCredits })}
                   </span>
                 </p>
+
+                {/* What this plan is for, in one line, before the checklist. */}
+                <p className="mt-4 text-sm leading-relaxed text-fg-secondary">{positioning}</p>
 
                 <ul className="mt-6 flex-1 space-y-3">
                   {features.map((feature) => (
@@ -135,10 +182,16 @@ export async function PricingPlans({
                     'mt-8 w-full',
                   )}
                 >
-                  {plan.priceMonthly === 0
-                    ? t('pricingCta')
-                    : t('pricingCtaPaid', { plan: plan.name })}
+                  {cta}
                 </Link>
+
+                {/* Said only where it is true: the free plan takes no card. */}
+                {plan.priceMonthly === 0 && (
+                  <p className="mt-3 text-center text-xs text-fg-muted">{t('planNoCard')}</p>
+                )}
+                {recurring && (
+                  <p className="mt-3 text-center text-xs text-fg-muted">{t('planCancel')}</p>
+                )}
               </div>
             </div>
           </Cell>

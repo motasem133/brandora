@@ -8,7 +8,9 @@ import { Card } from '@/components/ui/card'
 import { Link } from '@/i18n/navigation'
 import { formatPrice, isCurrency, pickPrice, type Currency } from '@/lib/utils'
 import { db } from '@/server/db'
-import { creditPacks } from '@/server/db/schema'
+import { creditPacks, plans } from '@/server/db/schema'
+import { PlanComparison } from '@/components/features/billing/plan-comparison'
+import { Disclosure } from '@/components/ui/disclosure'
 
 export default async function PricingPage({
   params,
@@ -24,11 +26,17 @@ export default async function PricingPage({
   const t = await getTranslations('Pricing')
   const currency: Currency = isCurrency(requested) ? requested : locale === 'ar' ? 'aed' : 'usd'
 
-  const packs = await db
-    .select()
-    .from(creditPacks)
-    .where(eq(creditPacks.isActive, true))
-    .orderBy(creditPacks.sortOrder)
+  const [packs, ladder] = await Promise.all([
+    db.select().from(creditPacks).where(eq(creditPacks.isActive, true)).orderBy(creditPacks.sortOrder),
+    db.select().from(plans).where(eq(plans.isActive, true)).orderBy(plans.sortOrder),
+  ])
+
+  /*
+   * Every answer here has to match what the application does. They are written
+   * once, in the catalogue, rather than in the markup — an FAQ that drifts from
+   * the product is worse than no FAQ, because it is read as a promise.
+   */
+  const faq = t.raw('faq') as { q: string; a: string }[]
 
   return (
     <div className="world-dark min-h-dvh">
@@ -68,7 +76,31 @@ export default async function PricingPage({
           <PricingPlans locale={locale} currency={currency} />
         </div>
 
-        <div className="mt-12">
+        {/*
+          The comparison is built from the columns the application actually
+          checks, not from a hand-written table. A row here exists because a
+          gate exists.
+        */}
+        <div className="mt-16">
+          <h2 className="font-display text-xl font-semibold">{t('compareTitle')}</h2>
+          <p className="mt-1 text-sm text-fg-secondary">{t('compareBody')}</p>
+          <div className="mt-5">
+            <PlanComparison plans={ladder} />
+          </div>
+        </div>
+
+        <div className="mt-16">
+          <h2 className="font-display text-xl font-semibold">{t('faqTitle')}</h2>
+          <div className="mt-5 space-y-3">
+            {faq.map((item) => (
+              <Disclosure key={item.q} title={item.q}>
+                <p className="max-w-[70ch] text-sm leading-relaxed text-fg-secondary">{item.a}</p>
+              </Disclosure>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-16">
           <h2 className="font-display text-xl font-semibold">{t('packsTitle')}</h2>
           <p className="mt-1 text-sm text-fg-secondary">{t('packsBody')}</p>
 
