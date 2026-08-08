@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import { blockSchema } from '@/lib/blocks'
+import { socialPostItemSchema } from '@/lib/content'
 
 /**
  * Structured output contracts.
@@ -101,3 +102,38 @@ export const socialSchema = z.object({
 })
 
 export type SocialOutput = z.infer<typeof socialSchema>
+
+/* -------------------------------------------------------------------------- */
+/*                              Content Studio                                 */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * One generation's worth of captions.
+ *
+ * The item shape is imported rather than restated: `lib/content.ts` owns it,
+ * because the same objects are stored in `content_items.body` and rendered
+ * back. A second declaration here is how the model's output and the column
+ * quietly stop agreeing.
+ */
+export const contentSocialPostSchema = z.object({
+  /** A few words to recognise this set by in the library, not a headline. */
+  title: z.string().min(1).max(80),
+  items: z.array(socialPostItemSchema).min(1).max(5),
+})
+
+/**
+ * The same contract, pinned to the number of captions the customer asked for.
+ *
+ * Asked for three, the model returned five — allowed by a `max(5)` schema, and
+ * wrong: the count is a control the customer set, and the price is quoted
+ * against it. Pinning the length makes a miscount a schema violation, which is
+ * a retry down the model chain rather than something to notice later.
+ */
+export function contentSocialPostSchemaFor(variants: number) {
+  return z.object({
+    title: z.string().min(1).max(80),
+    items: z.array(socialPostItemSchema).length(variants),
+  })
+}
+
+export type ContentSocialPostOutput = z.infer<typeof contentSocialPostSchema>

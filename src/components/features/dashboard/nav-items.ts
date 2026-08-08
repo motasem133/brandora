@@ -1,4 +1,4 @@
-import { CreditCard, LayoutDashboard, Settings, Shield, Sparkles } from 'lucide-react'
+import { CreditCard, LayoutDashboard, PenLine, Settings, Shield, Sparkles } from 'lucide-react'
 
 /**
  * The app's destinations, defined once.
@@ -11,6 +11,8 @@ import { CreditCard, LayoutDashboard, Settings, Shield, Sparkles } from 'lucide-
 export const NAV = [
   { href: '/dashboard', key: 'overview', icon: LayoutDashboard },
   { href: '/dashboard/projects', key: 'projects', icon: Sparkles },
+  // After the brands, because content is made from one.
+  { href: '/dashboard/studio', key: 'studio', icon: PenLine },
   { href: '/dashboard/billing', key: 'billing', icon: CreditCard },
   { href: '/dashboard/settings', key: 'settings', icon: Settings },
 ] as const

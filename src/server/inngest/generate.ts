@@ -12,7 +12,12 @@ import {
 } from '@/server/ai/prompts'
 import { runModel } from '@/server/ai/run'
 import { brandingSchema, socialSchema, websiteSchema, type BrandingOutput } from '@/server/ai/schemas'
-import { CREDIT_COSTS, settleCredits, type GenerationSection } from '@/server/billing/credits'
+import {
+  CREDIT_COSTS,
+  settleCredits,
+  settleForContent,
+  type GenerationSection,
+} from '@/server/billing/credits'
 import { generateLogos } from '@/server/services/logos'
 import type { LayoutKind } from '@/server/render/layouts'
 import { generateKitScenes, printKitPdf, renderKitPosts } from '@/server/services/social-kit'
@@ -20,11 +25,13 @@ import { isStorageConfigured } from '@/server/storage/r2'
 import { db } from '@/server/db'
 import {
   brandingAssets,
+  contentItems,
   generationJobs,
   projects,
   socialMediaAssets,
   websiteAssets,
 } from '@/server/db/schema'
+import { findStuckContent } from '@/server/db/queries/content'
 import { generateRequested, inngest } from './client'
 
 /** Marks one step's state on the job row. This is what the SSE stream tails. */
@@ -144,7 +151,43 @@ export const releaseStuckHolds = inngest.createFunction(
       })
     }
 
-    return { released: stuck.length }
+    /*
+     * Content Studio's holds are swept here too, rather than by a second cron.
+     * The lesson is the same one — a hold with nothing left to release it is
+     * money owed that only a clock will notice — and it is worth having in one
+     * place.
+     *
+     * Fifteen minutes, not ninety. Content generation runs inside a single
+     * request under a 60-second timeout, so anything still `generating` a
+     * quarter of an hour later is not slow, it is gone.
+     */
+    const stuckContent = await step.run('find-content', () => findStuckContent(15))
+
+    for (const item of stuckContent) {
+      await step.run(`release-content-${item.id}`, async () => {
+        await settleForContent({
+          organizationId: item.organizationId,
+          reserved: item.creditsReserved,
+          used: 0,
+          projectId: item.projectId,
+          contentItemId: item.id,
+        })
+
+        await db
+          .update(contentItems)
+          .set({
+            status: 'failed',
+            creditsCharged: 0,
+            error: 'The generation never reported back. Credits were returned automatically.',
+            updatedAt: new Date(),
+          })
+          .where(eq(contentItems.id, item.id))
+
+        console.warn(`[credits] released a stuck hold on content ${item.id}`)
+      })
+    }
+
+    return { released: stuck.length, contentReleased: stuckContent.length }
   },
 )
 

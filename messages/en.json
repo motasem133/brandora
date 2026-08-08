@@ -68,13 +68,13 @@
     "arabicBody": "Brief it in Arabic and the model works in Arabic from the start. Naming, idiom and rhythm do not survive translation, so we do not translate.",
     "closingTitle": "Bring a brief.",
     "closingBody": "The free plan generates a full identity. No card.",
-    "priceFrom": "Paid plans from $29 a month",
+    "priceFrom": "Paid plans from $19 a month",
     "badge": "One brief in. A whole brand out.",
     "heroTitleLead": "Your entire brand,",
     "heroTitleAccent": "generated together.",
     "statLabel": "artifacts from one run",
     "pricingTitle": "Simple pricing",
-    "pricingLead": "Start free. Upgrade when you need more brands, more credits, or your own domain.",
+    "pricingLead": "Start free. Upgrade when you need more credits to keep creating with your brand.",
     "pricingPopular": "Most popular",
     "pricingFree": "Free",
     "pricingPerMonth": "/month",
@@ -145,7 +145,7 @@
       }
     ],
     "pricingHeading": "Pricing",
-    "pricingDeck": "Every plan generates the full identity. What changes is how many brands you can run, and where the site can live.",
+    "pricingDeck": "Every plan generates the full identity. Credits are what you spend across Brandora — on brands, and on the content you keep making with them.",
     "pricingChosen": "Recommended",
     "planCredits": "{credits} credits a month",
     "planRuns": "~{runs} runs a month",
@@ -156,6 +156,10 @@
     "closeTitleAccent": "Leave with a brand.",
     "planOneBrand": "1 brand",
     "planBrandsMonth": "{brands} brands a month",
+    "planCreditsLead": "{credits, number} AI credits a month",
+    "planCreditsOnceLead": "{credits, number} AI credits",
+    "planWorth": "≈ {brands} brands, or {pieces, number} pieces of content",
+    "planWorthOnce": "One brand, or {pieces, number} pieces of content",
     "planFor_free": "Try Brandora on a real brand of your own.",
     "planFor_creator": "For entrepreneurs building their own brand.",
     "planFor_pro": "For professionals and growing businesses.",
@@ -214,7 +218,8 @@
     "signIn": "Sign in",
     "sections": "Sections",
     "credits": "Credits",
-    "account": "Account"
+    "account": "Account",
+    "studio": "Content Studio"
   },
   "Dashboard": {
     "welcome": "Welcome back, {name}",
@@ -263,6 +268,39 @@
     "deleteTitle": "Delete this brand?",
     "emptyCta": "Create your first brand",
     "loading": "Loading your brands"
+  },
+  "Studio": {
+    "title": "Content Studio",
+    "subtitle": "Create content that stays true to your brand.",
+    "brandLabel": "Brand",
+    "brandHint": "Content is written from this brand's voice, values and story.",
+    "composeTitle": "What should this post be about?",
+    "typeLabel": "Content type",
+    "type_social_post": "Instagram captions",
+    "briefLabel": "Topic",
+    "briefPlaceholder": "e.g. launching our summer collection next Thursday",
+    "briefHint": "A sentence is enough. Brandora already knows the brand.",
+    "toneLabel": "Tone for this post",
+    "tonePlaceholder": "Optional — overrides the brand voice",
+    "variantsLabel": "How many captions",
+    "generate": "Create content",
+    "generating": "Creating your content…",
+    "cost": "Costs {cost, plural, one {# credit} other {# credits}} — you have {balance}",
+    "insufficient": "Not enough credits. You need {cost} and have {balance}.",
+    "charged": "{cost, plural, one {# credit} other {# credits}} used · {balance} left",
+    "lowCredits": "You've used {percent}% of your credits.",
+    "getMore": "Get more credits",
+    "libraryTitle": "Your content",
+    "libraryLoading": "Loading your content",
+    "emptyTitle": "Nothing here yet",
+    "emptyBody": "Pick a brand, say what the post is about, and Brandora writes it in that brand's voice.",
+    "noBrandsTitle": "Create a brand first",
+    "noBrandsBody": "Content Studio writes from a brand you have already generated — its voice, values and story.",
+    "noBrandsCta": "Create your brand",
+    "statusFailed": "Failed",
+    "statusGenerating": "Writing…",
+    "hashtags": "Hashtags",
+    "all": "All brands"
   },
   "Onboarding": {
     "title": "Let's build your brand",
@@ -612,7 +650,9 @@
     "brandsLeft": "Brands left",
     "brandsPerMonth": "{brands, plural, one {# brand} other {# brands}} a month",
     "creditsBalance": "{credits} credits",
-    "brandsOnce": "{brands, plural, one {# brand} other {# brands}}, once"
+    "brandsOnce": "{brands, plural, one {# brand} other {# brands}}, once",
+    "creditsOnce": "{credits, number} credits, once",
+    "worth": "≈ {brands, plural, one {# brand} other {# brands}}, or {pieces, plural, one {# piece} other {# pieces}} of content"
   },
   "Assistant": {
     "emptyTitle": "Refine your brand",
@@ -747,7 +787,7 @@
   },
   "Pricing": {
     "title": "Simple pricing",
-    "subtitle": "Every plan includes the full brand identity. Bigger plans generate more of them.",
+    "subtitle": "Every plan includes the full brand identity. Bigger plans carry more credits, to keep creating with it.",
     "signIn": "Sign in",
     "start": "Start free",
     "popular": "Most popular",
@@ -794,7 +834,7 @@
       },
       {
         "q": "What is the difference between Creator, Pro and Agency?",
-        "a": "Creator is one person building their own brand. Pro is the same tools with three times the monthly brands and five seats. Agency adds unlimited seats, client workspaces and custom domains on the sites you publish for clients."
+        "a": "Creator is one person building their own brand. Pro is the same tools with a little over three times the monthly credits, for anyone producing content regularly. Agency adds custom domains on the sites you publish, and enough credits to run several brands at once."
       }
     ],
     "compareTitle": "What each plan includes",
@@ -809,7 +849,8 @@
     "rowBrands": "Brands",
     "rowBrandsMonth": "{brands} / month",
     "rowBrandsOnce": "{brands}, once",
-    "rowCredits": "Credits",
+    "rowCredits": "AI credits",
+    "rowContent": "Content pieces",
     "rowProjects": "Projects",
     "unlimited": "Unlimited",
     "rowNames": "Name ideas with reasoning",

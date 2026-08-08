@@ -58,11 +58,18 @@ Supporting truths, real but not the headline:
   monochrome mark and a brand-kit ZIP.
 - Published customer sites are live on a subdomain, and Business plans can
   attach their own domain.
-- Pricing is real and seeded: Free, Basic $29, Pro $79, Business $199 — monthly,
+- Pricing is real and seeded: Free, Creator $19, Pro $49, Agency $99 — monthly,
   and only monthly.
+- **Plans are sold in AI credits, not in brands.** A brand count was the
+  headline until it stopped describing the product: almost nobody makes twenty
+  brands a month, and credits now buy content as well as brands. Surfaces still
+  show what a balance is worth in brands, derived rather than restated.
 - A run costs credits per section: branding 1, logos 6, website 1, social 1. A
   fresh set of logo concepts is therefore the most expensive thing a customer
   can ask for, and the only one they ask for repeatedly.
+- Content Studio prices its own operations in `CONTENT_CREDIT_COSTS`, kept apart
+  from the brand run's `CREDIT_COSTS` because `GenerationSection` is derived
+  from the latter and reaches the Inngest pipeline.
 - Generation is gated on a verified email address. Free credits are the obvious
   abuse target, so verification gates spending rather than sign-in.
 

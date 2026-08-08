@@ -13,6 +13,8 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core'
 
+import type { ContentBody } from '@/lib/content'
+
 /* -------------------------------------------------------------------------- */
 /*                                   Enums                                     */
 /* -------------------------------------------------------------------------- */
@@ -90,6 +92,35 @@ export const aiFeatureEnum = pgEnum('ai_feature', [
   'logo',
   'assistant',
   'vectorize',
+  /** Content Studio. Must stay in step with `UsageContext` in server/ai/run.ts:
+      `recordUsage` swallows its own insert errors, so a value missing here
+      loses every content row silently rather than failing anything. */
+  'content',
+])
+
+/* Content Studio. Every value is declared now, including the types that are not
+   built yet — adding one later means an ALTER TYPE in its own migration, and
+   there is nothing to gain from spreading that out. */
+export const contentTypeEnum = pgEnum('content_type', [
+  'social_post',
+  'carousel',
+  'story',
+  'platform_post',
+  'ad',
+  'campaign',
+  'blog',
+])
+
+export const contentStatusEnum = pgEnum('content_status', ['generating', 'ready', 'failed'])
+
+export const contentPlatformEnum = pgEnum('content_platform', [
+  'instagram',
+  'linkedin',
+  'x',
+  'facebook',
+  'tiktok',
+  'threads',
+  'youtube',
 ])
 export const aiProviderEnum = pgEnum('ai_provider', ['openrouter', 'byteplus', 'fal'])
 export const aiStatusEnum = pgEnum('ai_status', ['success', 'error', 'timeout'])
@@ -692,6 +723,86 @@ export const assistantMessages = pgTable(
 )
 
 /* -------------------------------------------------------------------------- */
+/*                              Content Studio                                 */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * A piece of generated content, and the charge that produced it.
+ *
+ * Organization-scoped as well as project-scoped: the library lists an account's
+ * content without joining projects, and every read is tenant-filtered on the
+ * column rather than trusting the id in the URL.
+ *
+ * Deliberately not a `generation_jobs` row. That table is per-project and
+ * singular — `getLatestJobForProject` is what the project page and the SSE
+ * stream read as "this brand's run", and the pipeline writes `projects.status`
+ * alongside it. Content written there would put a brand generation on screen
+ * with steps nothing can name.
+ */
+export const contentItems = pgTable(
+  'content_items',
+  {
+    /*
+     * Supplied by the client, not generated here. It is the idempotency key for
+     * both the row and its ledger entries, so a double-submitted form is one
+     * piece of content and one charge.
+     */
+    id: uuid('id').primaryKey(),
+    organizationId: text('organization_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+    projectId: uuid('project_id')
+      .notNull()
+      .references(() => projects.id, { onDelete: 'cascade' }),
+    createdBy: text('created_by').references(() => users.id, { onDelete: 'set null' }),
+
+    type: contentTypeEnum('type').notNull(),
+    /** Only set for types that target one network. */
+    platform: contentPlatformEnum('platform'),
+    status: contentStatusEnum('status').notNull().default('generating'),
+
+    title: text('title'),
+    body: jsonb('body').$type<ContentBody | Record<string, never>>().notNull().default({}),
+    /** What the customer asked for, in their words. */
+    brief: text('brief'),
+    /** Overrides the brand's own voice for this piece only. */
+    tone: text('tone'),
+    language: localeEnum('language').notNull().default('en'),
+
+    creditsReserved: integer('credits_reserved').notNull().default(0),
+    creditsCharged: integer('credits_charged').notNull().default(0),
+
+    /** Same provenance pair the branding assets carry. */
+    modelUsed: text('model_used'),
+    promptVersion: text('prompt_version'),
+    error: text('error'),
+
+    /*
+     * Version lineage. Regenerating writes a new row rather than overwriting,
+     * so a customer never loses a version to a worse one — and each row keeps
+     * its own ledger keys.
+     */
+    rootId: uuid('root_id').notNull(),
+    parentId: uuid('parent_id'),
+    version: integer('version').notNull().default(1),
+    isLatest: boolean('is_latest').notNull().default(true),
+    /** Set when a human changes the text. A version means the model wrote it. */
+    editedAt: timestamp('edited_at', { withTimezone: true }),
+
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [
+    index('content_items_org_created_idx').on(t.organizationId, t.createdAt),
+    index('content_items_project_created_idx').on(t.projectId, t.createdAt),
+    index('content_items_root_idx').on(t.rootId, t.version),
+    /** The sweeper that refunds holds left behind by a crashed request. */
+    index('content_items_status_created_idx').on(t.status, t.createdAt),
+  ],
+)
+
+/* -------------------------------------------------------------------------- */
 /*                                Inferred types                               */
 /* -------------------------------------------------------------------------- */
 
@@ -713,3 +824,5 @@ export type GenerationJob = typeof generationJobs.$inferSelect
 export type AiUsage = typeof aiUsage.$inferSelect
 export type AssistantThread = typeof assistantThreads.$inferSelect
 export type AssistantMessage = typeof assistantMessages.$inferSelect
+export type ContentItem = typeof contentItems.$inferSelect
+export type NewContentItem = typeof contentItems.$inferInsert

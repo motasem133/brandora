@@ -1,3 +1,5 @@
+import type { BrandingAsset } from '@/server/db/schema'
+
 import type { BrandingOutput } from './schemas'
 
 /**
@@ -15,6 +17,9 @@ export const PROMPT_VERSIONS = {
   branding: 'branding@v1',
   website: 'website@v1',
   social: 'social@v1',
+  /* Content Studio versions its types separately: they will move at different
+     times, and one shared string would misattribute every one of them. */
+  contentSocialPost: 'content.social_post@v1',
 } as const
 
 type Locale = 'en' | 'ar'
@@ -166,5 +171,100 @@ Established brand:
 - Values: ${branding.brandValues.join(', ')}
 
 Write nine Instagram posts that could be scheduled as a coherent launch sequence.
+`.trim()
+}
+
+/* -------------------------------------------------------------------------- */
+/*                              Brand grounding                                */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The stored brand, written out for a model to work from.
+ *
+ * The whole thing rather than a summary: a summary is exactly where a model
+ * starts inventing details it was never given, and the context window makes
+ * truncation unnecessary.
+ *
+ * This takes the database row, not `BrandingOutput`. Everything that grounds
+ * itself on an *existing* brand — the assistant, Content Studio — is reading
+ * what was stored, and the two shapes differ in exactly the way that matters:
+ * every field on the row is nullable, because a run can half-succeed.
+ */
+export function brandContextBlock(
+  branding: BrandingAsset | null,
+  options: { chosenName: string | null },
+) {
+  if (!branding) return 'This project has not been generated yet.'
+
+  return [
+    `Name ideas: ${branding.businessNameIdeas.map((i) => i.name).join(', ') || '—'}`,
+    `Chosen name: ${options.chosenName ?? 'none yet — the customer has not picked one'}`,
+    `Slogan: ${branding.slogan ?? '—'}`,
+    `Voice: ${branding.brandVoice ?? '—'}`,
+    `Values: ${branding.brandValues.join(', ') || '—'}`,
+    `Palette: ${branding.colorPalette ? Object.entries(branding.colorPalette).map(([k, v]) => `${k} ${v}`).join(', ') : '—'}`,
+    `Fonts: ${branding.fontRecommendations ? `${branding.fontRecommendations.heading} / ${branding.fontRecommendations.body}` : '—'}`,
+    `Story: ${branding.brandStory ?? '—'}`,
+  ].join('\n')
+}
+
+/* -------------------------------------------------------------------------- */
+/*                              Content Studio                                 */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * What separates this from a generic caption generator is the grounding, not
+ * the instructions: the model is handed a brand that already exists and told
+ * the copy has to sound like it. "Write a post" and "write a post for this
+ * brand" are the same request with a different amount of context.
+ */
+export function contentSocialPostSystem(locale: Locale) {
+  return `
+You write social media copy for a brand you have been given in full.
+
+${languageRule(locale)}
+
+Hard rules:
+- The brand's voice governs. If the voice and the topic disagree, the voice wins.
+- Each caption is a different angle on the topic, not a reworded version of the
+  same one. Name the angle in "intent" in two or three words — a label, not a
+  sentence.
+- Open on the line that earns the scroll. No throat-clearing.
+- Hashtags belong in "hashtags" only. Do not repeat them at the end of the
+  caption: they are attached separately, and a caption carrying its own copy of
+  them arrives with everything listed twice.
+- Hashtags are lowercase, without the # symbol, specific to this business rather
+  than generic reach bait.
+- Never invent facts about the business — no prices, dates, locations, offers or
+  claims that are not in the brief or the brand. Write around what you were not
+  told rather than filling it in.
+- No placeholders of any kind. Every caption ships as written.
+`.trim()
+}
+
+export function contentSocialPostPrompt(params: {
+  project: ProjectBrief
+  branding: BrandingAsset | null
+  chosenName: string | null
+  brief: string
+  tone: string | null
+  variants: number
+}) {
+  const name = params.chosenName || params.project.businessName || 'this business'
+
+  return `
+Write ${params.variants} Instagram caption${params.variants === 1 ? '' : 's'} for "${name}".
+
+What the post is about, from the customer:
+${params.brief}
+${params.tone ? `\nTone for this post specifically (overrides the brand voice): ${params.tone}` : ''}
+
+${projectBrief(params.project)}
+
+The brand, as it already exists:
+${brandContextBlock(params.branding, { chosenName: params.chosenName })}
+
+Give a short title for this set — a few words the customer will recognise it by
+in a list, not a headline for the post.
 `.trim()
 }

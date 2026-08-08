@@ -13,6 +13,8 @@ import {
   type SocialMediaAsset,
 } from '@/server/db/schema'
 
+import { brandContextBlock } from './prompts'
+
 /**
  * Brand Assistant tools.
  *
@@ -274,20 +276,9 @@ export function assistantSystemPrompt(params: {
   hasSocial: boolean
   chosenName: string | null
 }) {
-  const { branding } = params
-
-  const brand = branding
-    ? [
-        `Name ideas: ${branding.businessNameIdeas.map((i) => i.name).join(', ') || '—'}`,
-        `Chosen name: ${params.chosenName ?? 'none yet — the customer has not picked one'}`,
-        `Slogan: ${branding.slogan ?? '—'}`,
-        `Voice: ${branding.brandVoice ?? '—'}`,
-        `Values: ${branding.brandValues.join(', ') || '—'}`,
-        `Palette: ${branding.colorPalette ? Object.entries(branding.colorPalette).map(([k, v]) => `${k} ${v}`).join(', ') : '—'}`,
-        `Fonts: ${branding.fontRecommendations ? `${branding.fontRecommendations.heading} / ${branding.fontRecommendations.body}` : '—'}`,
-        `Story: ${branding.brandStory ?? '—'}`,
-      ].join('\n')
-    : 'This project has not been generated yet.'
+  // Shared with Content Studio. Both ground themselves on a brand that already
+  // exists, and two copies of that block would drift.
+  const brand = brandContextBlock(params.branding, { chosenName: params.chosenName })
 
   return `
 You are the brand assistant for "${params.projectName}".

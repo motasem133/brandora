@@ -57,18 +57,22 @@ const PLANS = [
     sortOrder: 0,
     features: {
       en: [
+        '10 AI credits — one complete brand',
         '5 name ideas, each with its reasoning',
         'Two logo concepts',
         'Colour palette and typography',
         'Brand story, voice and values',
         'Instagram bio and captions',
+        'Content Studio, while your credits last',
       ],
       ar: [
+        '10 أرصدة ذكاء اصطناعي — علامة كاملة واحدة',
         'خمسة أسماء مقترحة مع سبب كل اسم',
         'مفهومان للشعار',
         'لوحة ألوان وخطوط',
         'قصة العلامة وصوتها وقيمها',
         'نبذة إنستغرام ونصوص المنشورات',
+        'استوديو المحتوى، ما دام رصيدك متاحاً',
       ],
     },
   },
@@ -79,8 +83,14 @@ const PLANS = [
     priceYearly: 0,
     priceMonthlyAed: 6900,
     priceYearlyAed: 0,
-    /* 20 brands x 13 credits — see BRAND_COST in billing/credits. */
-    monthlyCredits: 260,
+    /*
+     * Credits are the unit sold, so this is the input rather than a brand count
+     * derived from it. 150 a month is enough to build a brand and keep posting
+     * for it — which is the behaviour the plan exists to fund. What that comes
+     * to in brands or in posts is arithmetic on BRAND_COST and
+     * CONTENT_CREDIT_COSTS, done at the surface that shows it.
+     */
+    monthlyCredits: 150,
     seats: 1,
     maxProjects: -1,
     websiteBuilder: true,
@@ -92,7 +102,10 @@ const PLANS = [
     sortOrder: 1,
     features: {
       en: [
+        '150 AI credits every month',
         'Everything in Free',
+        'Unlimited brand workspaces',
+        'Content Studio for social posts',
         'Website builder and publishing',
         'SVG vector logo export',
         'Social kit — eight designed posts',
@@ -100,7 +113,10 @@ const PLANS = [
         'Brand Assistant',
       ],
       ar: [
+        '150 رصيد ذكاء اصطناعي كل شهر',
         'كل ما في المجاني',
+        'مساحات علامات بلا حدود',
+        'استوديو المحتوى لمنشورات السوشيال',
         'منشئ الموقع والنشر',
         'تصدير الشعار SVG',
         'حزمة سوشيال — ثمانية تصاميم',
@@ -116,8 +132,9 @@ const PLANS = [
     priceYearly: 0,
     priceMonthlyAed: 17900,
     priceYearlyAed: 0,
-    /* 60 brands x 13 credits. */
-    monthlyCredits: 780,
+    /* Credits are the difference. Pro carries the same capabilities as Creator
+       and about three times the monthly output. */
+    monthlyCredits: 500,
     seats: 5,
     maxProjects: -1,
     websiteBuilder: true,
@@ -128,8 +145,14 @@ const PLANS = [
     priorityQueue: false,
     sortOrder: 2,
     features: {
-      en: ['Everything in Creator', 'Three times the monthly brands', '5 team seats'],
-      ar: ['كل ما في Creator', 'ثلاثة أضعاف العلامات شهرياً', 'خمسة مقاعد للفريق'],
+      /*
+       * Seats are not listed. `plans.seats` is carried on the table but nothing
+       * reads it, and Settings already tells the customer that inviting
+       * teammates is not available yet — so selling it here would contradict
+       * the product one screen away.
+       */
+      en: ['500 AI credits every month', 'Everything in Creator'],
+      ar: ['500 رصيد ذكاء اصطناعي كل شهر', 'كل ما في Creator'],
     },
   },
   {
@@ -139,8 +162,9 @@ const PLANS = [
     priceYearly: 0,
     priceMonthlyAed: 36400,
     priceYearlyAed: 0,
-    /* 150 brands x 13 credits. */
-    monthlyCredits: 1950,
+    /* Enough monthly output to run several brands at once, which is what an
+       agency does with the same tools. */
+    monthlyCredits: 1500,
     seats: -1,
     maxProjects: -1,
     websiteBuilder: true,
@@ -151,18 +175,18 @@ const PLANS = [
     priorityQueue: false,
     sortOrder: 3,
     features: {
+      /*
+       * Four bullets the brief asked for are absent: unlimited seats, client
+       * workspaces, white-label, an API, an agency dashboard, analytics and
+       * priority support. None of them exist in the product. A pricing page is
+       * the worst place to describe something that has not been built.
+       */
       en: [
+        '1,500 AI credits every month',
         'Everything in Pro',
-        'Unlimited seats',
-        'Custom domains on client sites',
-        'Up to 5 client workspaces',
+        'Custom domains on published sites',
       ],
-      ar: [
-        'كل ما في Pro',
-        'مقاعد بلا حدود',
-        'نطاقات مخصّصة لمواقع العملاء',
-        'حتى خمس مساحات عمل للعملاء',
-      ],
+      ar: ['1500 رصيد ذكاء اصطناعي كل شهر', 'كل ما في Pro', 'نطاقات مخصّصة للمواقع المنشورة'],
     },
   },
 ] satisfies (typeof plans.$inferInsert)[]

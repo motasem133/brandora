@@ -22,6 +22,7 @@ test.describe('internal links', () => {
     { name: 'pricing', path: '/en/pricing' },
     { name: 'dashboard', path: '/en/dashboard' },
     { name: 'projects', path: '/en/dashboard/projects' },
+    { name: 'studio', path: '/en/dashboard/studio' },
     { name: 'billing', path: '/en/dashboard/billing' },
     { name: 'settings', path: '/en/dashboard/settings' },
   ]

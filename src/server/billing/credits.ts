@@ -11,6 +11,13 @@ import { creditTransactions, organizations } from '@/server/db/schema'
  *
  * Logos dominate: four Seedream images cost ~$0.30 against ~$0.012 for all the
  * text combined. Pricing levers belong on image count, not tokens.
+ *
+ * This table is the brand run only. Content Studio prices its own operations in
+ * `CONTENT_CREDIT_COSTS` below, and the two must stay apart: `GenerationSection`
+ * is `keyof typeof CREDIT_COSTS`, and it reaches `sectionsForProject`,
+ * `startGeneration({ only })`, the Inngest settle step and the
+ * `Generation.steps.*` message keys. A content type added here would type-check
+ * into a brand run and render a step nothing can name.
  */
 export const CREDIT_COSTS = {
   branding: 1,
@@ -29,11 +36,12 @@ export const CREDIT_COSTS = {
 /**
  * What one brand costs, in credits.
  *
- * Customers are sold brands, not credits: "20 brands a month" is a number
- * someone can act on and "260 credits" is not. This is the exchange rate
- * between the two, and every plan's headline is derived from it rather than
- * written down twice — so a change to any section's price moves the pricing
- * page with it instead of quietly making it wrong.
+ * Customers are sold credits, not brands. A brand count was the headline until
+ * it stopped describing the product: almost nobody makes twenty brands a month,
+ * and once credits also buy content the count says nothing about what a plan is
+ * worth. Credits lead now, and this is the exchange rate that still lets a
+ * surface answer "how many more brands is that" — derived, never written twice,
+ * so changing a section's price moves every surface with it.
  *
  * Everything a paid plan can produce: the naming and story, both logo
  * concepts, the website, the written social copy, and the designed kit.
@@ -78,6 +86,43 @@ export type GenerationSection = keyof typeof CREDIT_COSTS
 
 export function creditsForSections(sections: GenerationSection[]): number {
   return sections.reduce((total, section) => total + CREDIT_COSTS[section], 0)
+}
+
+/**
+ * Credit costs per Content Studio operation. Sibling of `CREDIT_COSTS`, never
+ * merged into it — see the note there for what `GenerationSection` reaches.
+ *
+ * A post is one model call on the `social` chain: the brand block and the brief
+ * are ~1,300 input tokens, the captions ~900 output, which is ~$0.0016 — a
+ * thirtieth of a single generated image. So the number below is not derived
+ * from tokens; one credit is simply the floor, and it is the same floor the
+ * `social` section already sets by buying nine written posts for one credit.
+ *
+ * Only work that calls a model is priced. Editing, duplicating, deleting and
+ * exporting make no call and cost nothing.
+ */
+export const CONTENT_CREDIT_COSTS = {
+  social_post: 1,
+} as const
+
+export type ContentType = keyof typeof CONTENT_CREDIT_COSTS
+
+/** Each variant past the first is another pass over the same brand context. */
+export const CONTENT_VARIANT_COST = 1
+
+export function creditsForContent(params: { type: ContentType; variants?: number }): number {
+  const variants = Math.max(1, params.variants ?? 1)
+  return CONTENT_CREDIT_COSTS[params.type] + (variants - 1) * CONTENT_VARIANT_COST
+}
+
+/**
+ * How many pieces of content a balance is worth.
+ *
+ * The counterpart to `brandsFrom`, and shown beside it: a plan's credits buy
+ * brands or content, and quoting only one of the two understates it.
+ */
+export function contentPiecesFrom(credits: number) {
+  return Math.floor(credits / CONTENT_CREDIT_COSTS.social_post)
 }
 
 type LedgerEntry = {
@@ -218,6 +263,77 @@ export async function settleCredits(params: {
     generationJobId: params.generationJobId,
     idempotencyKey: `settle:${params.generationJobId}`,
     metadata: { kind: 'settlement', reserved: params.reserved, used: params.used },
+  })
+}
+
+/*
+ * Content Studio holds and settles the same way, keyed on the content item
+ * rather than a generation job.
+ *
+ * Separate functions rather than a widened signature: `reserveCredits` and
+ * `settleCredits` are shared with the Inngest pipeline and the cron that sweeps
+ * abandoned holds, and that path is worth leaving exactly as it is. What
+ * carries over is the part that matters — a stable id in the idempotency key,
+ * so a hold is taken once and released once no matter how many times the caller
+ * runs.
+ *
+ * `generationJobId` stays null. The column has no foreign key so a content id
+ * would fit, but writing one would make the admin screens report a job that
+ * does not exist. `projectId` is set, which is what keeps the billing ledger
+ * able to say which brand a charge belongs to.
+ */
+
+/** Holds credits before a content generation runs. */
+export async function reserveForContent(params: {
+  organizationId: string
+  amount: number
+  projectId: string
+  contentItemId: string
+}) {
+  if (params.amount <= 0) return null
+
+  return writeLedgerEntry({
+    organizationId: params.organizationId,
+    amount: -params.amount,
+    reason: 'generation',
+    projectId: params.projectId,
+    idempotencyKey: `reserve:content:${params.contentItemId}`,
+    metadata: { kind: 'reservation', contentItemId: params.contentItemId },
+  })
+}
+
+/**
+ * Settles a content hold. A failed generation is never charged for, so the
+ * usual case here is a full refund written from the action's catch block.
+ */
+export async function settleForContent(params: {
+  organizationId: string
+  reserved: number
+  used: number
+  projectId: string
+  contentItemId: string
+}) {
+  const delta = params.reserved - params.used
+  if (delta === 0) return null
+
+  if (delta < 0) {
+    console.warn(
+      `[credits] content ${params.contentItemId} used ${params.used} credits but reserved ${params.reserved}; charging the difference`,
+    )
+  }
+
+  return writeLedgerEntry({
+    organizationId: params.organizationId,
+    amount: delta,
+    reason: delta > 0 ? 'refund' : 'generation',
+    projectId: params.projectId,
+    idempotencyKey: `settle:content:${params.contentItemId}`,
+    metadata: {
+      kind: 'settlement',
+      contentItemId: params.contentItemId,
+      reserved: params.reserved,
+      used: params.used,
+    },
   })
 }
 

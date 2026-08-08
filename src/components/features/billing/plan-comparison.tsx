@@ -1,7 +1,7 @@
 import { Check, Minus } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 
-import { brandsFrom } from '@/server/billing/credits'
+import { brandsFrom, contentPiecesFrom } from '@/server/billing/credits'
 import type { plans } from '@/server/db/schema'
 
 /**
@@ -39,6 +39,9 @@ export async function PlanComparison({ plans: rows }: { plans: Plan[] }) {
     {
       title: t('groupVolume'),
       rows: [
+        // Credits first: they are what the plan grants. The two rows under it
+        // are the same number spent two different ways.
+        { label: t('rowCredits'), value: (p) => String(p.monthlyCredits) },
         {
           label: t('rowBrands'),
           value: (p) =>
@@ -46,7 +49,7 @@ export async function PlanComparison({ plans: rows }: { plans: Plan[] }) {
               ? t('rowBrandsOnce', { brands: brands(p) })
               : t('rowBrandsMonth', { brands: brands(p) }),
         },
-        { label: t('rowCredits'), value: (p) => String(p.monthlyCredits) },
+        { label: t('rowContent'), value: (p) => String(contentPiecesFrom(p.monthlyCredits)) },
         {
           label: t('rowProjects'),
           value: (p) => (p.maxProjects < 0 ? t('unlimited') : String(p.maxProjects)),

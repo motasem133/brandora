@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { CurrencySwitch } from '@/components/features/billing/currency-switch'
 import { cn, formatDate, formatPrice, isCurrency, pickPrice, type Currency } from '@/lib/utils'
 import { db } from '@/server/db'
-import { brandsFrom } from '@/server/billing/credits'
+import { brandsFrom, contentPiecesFrom } from '@/server/billing/credits'
 import { getOrgPlan } from '@/server/db/queries/plans'
 import {
   entitles,
@@ -183,22 +183,24 @@ export default async function BillingPage({
               These were two cards saying one thing about one account.
             */}
             {/*
-              What the balance is worth, then the balance.
-              Credits are how the machine is metered; brands are what someone
-              came here to count. Both are shown, in that order — a customer
-              deciding whether to top up is asking "how many more brands", not
-              "how many credits".
+              The balance, then what it is worth.
+
+              Brands led here while brands were the unit sold. Credits also buy
+              content now, so a brand count on its own understates the balance
+              and reads as the only thing it can be spent on. Credits are the
+              measured quantity; both derivations sit under them.
             */}
             <div className="sm:text-end">
-              <p className="text-sm text-fg-secondary">{t('brandsLeft')}</p>
-              <p className="stat-figure mt-1 text-4xl">
-                {brandsFrom(org.creditBalance, {
-                  websiteBuilder: currentPlan?.websiteBuilder ?? false,
-                  socialMediaKit: currentPlan?.socialMediaKit ?? false,
-                })}
-              </p>
+              <p className="text-sm text-fg-secondary">{t('creditsLeft')}</p>
+              <p className="stat-figure mt-1 text-4xl">{org.creditBalance}</p>
               <p className="mt-1 text-xs text-fg-muted">
-                {t('creditsBalance', { credits: org.creditBalance })}
+                {t('worth', {
+                  brands: brandsFrom(org.creditBalance, {
+                    websiteBuilder: currentPlan?.websiteBuilder ?? false,
+                    socialMediaKit: currentPlan?.socialMediaKit ?? false,
+                  }),
+                  pieces: contentPiecesFrom(org.creditBalance),
+                })}
               </p>
             </div>
           </div>
@@ -265,12 +267,14 @@ export default async function BillingPage({
                         so "a month" would be a rate for something that
                         happens exactly once.
                       */}
-                      {t(plan.priceMonthly === 0 ? 'brandsOnce' : 'brandsPerMonth', {
-                        brands: brandsFrom(plan.monthlyCredits, plan),
+                      {t(plan.priceMonthly === 0 ? 'creditsOnce' : 'creditsPerMonth', {
+                        credits: plan.monthlyCredits,
                       })}
                       <span className="text-fg-muted">
                         {' · '}
-                        {t('creditsBalance', { credits: plan.monthlyCredits })}
+                        {t(plan.priceMonthly === 0 ? 'brandsOnce' : 'brandsPerMonth', {
+                          brands: brandsFrom(plan.monthlyCredits, plan),
+                        })}
                       </span>
                     </p>
                   </div>

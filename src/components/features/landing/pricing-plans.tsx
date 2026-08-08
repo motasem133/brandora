@@ -6,7 +6,7 @@ import { Cell } from '@/components/ui/horizon'
 import { buttonVariants } from '@/components/ui/button'
 import { Link } from '@/i18n/navigation'
 import { cn, formatPrice, pickPrice, type Currency } from '@/lib/utils'
-import { brandsFrom } from '@/server/billing/credits'
+import { brandsFrom, contentPiecesFrom } from '@/server/billing/credits'
 import { db } from '@/server/db'
 import { plans } from '@/server/db/schema'
 
@@ -60,6 +60,7 @@ export async function PricingPlans({
          * that happens once.
          */
         const brands = brandsFrom(plan.monthlyCredits, plan)
+        const pieces = contentPiecesFrom(plan.monthlyCredits)
         const recurring = plan.priceMonthly > 0
 
         /*
@@ -131,18 +132,26 @@ export async function PricingPlans({
                 </p>
 
                 {/*
-                  The number that decides the plan, given the whole line.
-                  Credits sit under it because they are how the machine is
-                  metered, not how the decision is made.
+                  Credits lead, and what they are worth sits under them.
+
+                  This was the other way up, on the reasoning that a brand count
+                  is a number someone can act on. It is — but almost nobody
+                  makes twenty brands a month, so it described a plan nobody was
+                  buying. Credits are what the plan actually grants and what
+                  every part of the product spends, including the content a
+                  customer comes back for. The brand count survives underneath,
+                  as one of two things the same credits buy.
                 */}
                 <p className="mt-5 rounded-control border border-line bg-elevated/40 px-3.5 py-3">
                   <span className="block font-display text-lg font-semibold">
-                    {recurring ? t('planBrandsMonth', { brands }) : t('planOneBrand')}
+                    {recurring
+                      ? t('planCreditsLead', { credits: plan.monthlyCredits })
+                      : t('planCreditsOnceLead', { credits: plan.monthlyCredits })}
                   </span>
                   <span className="mt-0.5 block text-xs text-fg-muted">
                     {recurring
-                      ? t('planCredits', { credits: plan.monthlyCredits })
-                      : t('pricingCreditsOnce', { credits: plan.monthlyCredits })}
+                      ? t('planWorth', { brands, pieces })
+                      : t('planWorthOnce', { pieces })}
                   </span>
                 </p>
 

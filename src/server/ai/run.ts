@@ -23,7 +23,10 @@ type UsageContext = {
   organizationId: string
   projectId?: string
   generationJobId?: string
-  feature: 'branding' | 'website' | 'social' | 'logo' | 'assistant' | 'vectorize'
+  /* Every value here must also exist in the `ai_feature` enum. `recordUsage`
+     swallows its own insert failures, so one that is missing there loses the
+     telemetry silently instead of failing anything. */
+  feature: 'branding' | 'website' | 'social' | 'logo' | 'assistant' | 'vectorize' | 'content'
 }
 
 type RunOptions<T extends z.ZodType> = {
