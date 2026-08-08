@@ -5,7 +5,7 @@ import { brandTheme, fontStack } from '@/lib/brand-theme'
 import { formatDate } from '@/lib/utils'
 import type { BrandFonts, BrandPalette } from '@/lib/brand-theme'
 import type { GeneratedFile, Project } from '@/server/db/schema'
-import { publicUrl } from '@/server/storage/r2'
+import { assetSrc } from '@/server/storage/r2'
 
 /**
  * The first thing on a brand's page: the brand, wearing itself.
@@ -61,7 +61,7 @@ export async function IdentityPlate({
           {logo ? (
             /* eslint-disable-next-line @next/next/no-img-element */
             <img
-              src={publicUrl(logo.r2Key) ?? `/api/files/${logo.id}`}
+              src={assetSrc(logo)}
               alt=""
               className="size-full object-contain"
             />

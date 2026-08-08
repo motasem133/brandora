@@ -4,7 +4,7 @@ import { Link } from '@/i18n/navigation'
 import { brandTheme, fontStack } from '@/lib/brand-theme'
 import { cn, formatDate } from '@/lib/utils'
 import type { BrandSpecimen as Specimen } from '@/server/db/queries/projects'
-import { publicUrl } from '@/server/storage/r2'
+import { assetSrc } from '@/server/storage/r2'
 
 /** Only unfinished states are worth a word; a finished brand says so by existing. */
 const STATE_DOT = {
@@ -75,7 +75,7 @@ export async function BrandSpecimen({
           {logo ? (
             /* eslint-disable-next-line @next/next/no-img-element */
             <img
-              src={publicUrl(logo.r2Key) ?? `/api/files/${logo.id}`}
+              src={assetSrc(logo)}
               alt=""
               loading="lazy"
               className="max-h-24 w-auto max-w-full object-contain"

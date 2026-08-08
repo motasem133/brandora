@@ -7,7 +7,7 @@ import { brandTheme } from '@/lib/brand-theme'
 import type { BrandPalette } from '@/lib/brand-theme'
 import type { LogoRound } from '@/lib/logo-rounds'
 import type { GeneratedFile } from '@/server/db/schema'
-import { publicUrl } from '@/server/storage/r2'
+import { assetSrc } from '@/server/storage/r2'
 import { LogoComposer } from './logo-composer'
 import { SelectLogoButton } from './logo-actions'
 
@@ -112,7 +112,7 @@ export async function LogoStudio({
             {concept ? (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img
-                src={publicUrl(concept.r2Key) ?? `/api/files/${concept.id}`}
+                src={assetSrc(concept)}
                 alt={style || 'Logo concept'}
                 className="max-h-56 w-auto max-w-full object-contain sm:max-h-80"
               />
@@ -146,7 +146,7 @@ export async function LogoStudio({
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={publicUrl(option.r2Key) ?? `/api/files/${option.id}`}
+                        src={assetSrc(option)}
                         alt={String(option.metadata?.style ?? 'Logo concept')}
                         loading="lazy"
                         className="size-16 object-contain"

@@ -67,6 +67,23 @@ export function publicUrl(key: string): string | null {
 }
 
 /**
+ * Where to point an `<img>` at a generated file.
+ *
+ * The CDN when the bucket has a public domain, and the app's own file route
+ * when it does not — which is the deployment that has no `R2_PUBLIC_URL` set,
+ * where every asset has to be served through a signed redirect instead.
+ *
+ * One function because the expression was written out in seven components, and
+ * a fallback repeated seven times is a fallback six of them can forget. The
+ * route it falls back to is also the one carrying the tenant check, so a
+ * component that skipped the fallback and hard-coded a CDN path would be
+ * serving private assets without one.
+ */
+export function assetSrc(file: { id: string; r2Key: string }): string {
+  return publicUrl(file.r2Key) ?? `/api/files/${file.id}`
+}
+
+/**
  * Time-limited URL for private objects such as the brand kit ZIP.
  *
  * `filename` turns the response into a download rather than a page.

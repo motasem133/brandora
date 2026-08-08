@@ -2,7 +2,7 @@ import { getTranslations } from 'next-intl/server'
 
 import { Disclosure } from '@/components/ui/disclosure'
 import type { GeneratedFile } from '@/server/db/schema'
-import { publicUrl } from '@/server/storage/r2'
+import { assetSrc } from '@/server/storage/r2'
 
 /**
  * Every file that exists for the chosen logo, in one place.
@@ -117,7 +117,7 @@ export async function LogoVariations({
       <div className="mt-4 grid gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {variations.map((variation) => {
           const { file, label, detail, wide } = variation
-          const src = publicUrl(file.r2Key) ?? `/api/files/${file.id}`
+          const src = assetSrc(file)
 
           /*
            * Drawn at the size it actually is.

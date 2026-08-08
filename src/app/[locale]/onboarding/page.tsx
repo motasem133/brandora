@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 
 import { OnboardingWizard } from '@/components/features/onboarding/wizard'
 import { SectionArc } from '@/components/ui/horizon'
-import { CREDIT_COSTS } from '@/server/billing/credits'
+import { CREDIT_COSTS } from '@/lib/credits'
 import { getEntitlements } from '@/server/db/queries/plans'
 import { getLastProjectAnswers } from '@/server/db/queries/projects'
 import { isLogoGenerationAvailable } from '@/server/services/generation'

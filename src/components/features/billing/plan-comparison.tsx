@@ -1,7 +1,7 @@
 import { Check, Minus } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 
-import { brandsFrom } from '@/server/billing/credits'
+import { brandsFrom } from '@/lib/credits'
 import type { plans } from '@/server/db/schema'
 
 /**

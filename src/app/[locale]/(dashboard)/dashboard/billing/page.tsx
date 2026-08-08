@@ -8,7 +8,7 @@ import { CancelSubscriptionButton } from '@/components/features/billing/cancel-b
 import { Badge } from '@/components/ui/badge'
 import { CurrencySwitch } from '@/components/features/billing/currency-switch'
 import { cn, formatDate, formatPrice, isCurrency, pickPrice, type Currency } from '@/lib/utils'
-import { brandsFrom } from '@/server/billing/credits'
+import { brandsFrom } from '@/lib/credits'
 import { getRecentCreditTransactions, getRecentOrders } from '@/server/db/queries/billing'
 import { getActiveCreditPacks, getActivePlans, getOrgPlan } from '@/server/db/queries/plans'
 import { getProjectNames } from '@/server/db/queries/projects'

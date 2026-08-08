@@ -3,7 +3,7 @@ import { getTranslations } from 'next-intl/server'
 
 import { Card, CardTitle } from '@/components/ui/card'
 import type { GeneratedFile } from '@/server/db/schema'
-import { publicUrl } from '@/server/storage/r2'
+import { assetSrc } from '@/server/storage/r2'
 
 /**
  * What the choices on this page actually produce.
@@ -31,7 +31,6 @@ export async function LogoUsage({
 }) {
   const t = await getTranslations('Branding')
 
-  const src = (file: GeneratedFile) => publicUrl(file.r2Key) ?? `/api/files/${file.id}`
   const byVariant = (variant: string) =>
     files.filter((file) => file.metadata?.variant === variant)
 
@@ -66,7 +65,7 @@ export async function LogoUsage({
                 <div className="flex min-w-0 items-center gap-1.5 rounded-t-lg bg-surface px-2.5 py-1.5">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={src(favicon)}
+                    src={assetSrc(favicon)}
                     alt=""
                     className="size-4 shrink-0 rounded-[3px] bg-white object-contain"
                   />
@@ -95,7 +94,7 @@ export async function LogoUsage({
             <div className="flex flex-1 items-center gap-3 rounded-control border border-line bg-elevated/50 p-4">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={src(avatar)}
+                src={assetSrc(avatar)}
                 alt=""
                 className="size-14 shrink-0 rounded-full bg-white object-contain p-1"
               />
@@ -119,7 +118,7 @@ export async function LogoUsage({
             <div className="overflow-hidden rounded-control border border-line">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={src(card)}
+                src={assetSrc(card)}
                 alt=""
                 className="aspect-[1200/630] w-full bg-white object-cover"
               />

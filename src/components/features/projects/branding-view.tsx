@@ -2,7 +2,7 @@ import { getTranslations } from 'next-intl/server'
 
 import { Link } from '@/i18n/navigation'
 import { cn } from '@/lib/utils'
-import { publicUrl } from '@/server/storage/r2'
+import { assetSrc } from '@/server/storage/r2'
 import type { LogoRound } from '@/lib/logo-rounds'
 import type { BrandingAsset, GeneratedFile } from '@/server/db/schema'
 import { BrandSheet } from './brand-sheet'
@@ -92,7 +92,7 @@ export async function BrandingView({
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={publicUrl(cover.r2Key) ?? `/api/files/${cover.id}`}
+                  src={assetSrc(cover)}
                   alt=""
                   loading="lazy"
                   className="size-8 rounded-control bg-white object-contain p-0.5"

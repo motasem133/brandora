@@ -5,7 +5,7 @@ import { Cell } from '@/components/ui/horizon'
 import { buttonVariants } from '@/components/ui/button'
 import { Link } from '@/i18n/navigation'
 import { cn, formatPrice, pickPrice, type Currency } from '@/lib/utils'
-import { brandsFrom } from '@/server/billing/credits'
+import { brandsFrom } from '@/lib/credits'
 import type { Plan } from '@/server/db/schema'
 
 /**

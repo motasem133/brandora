@@ -4,7 +4,7 @@ import { getTranslations } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
 import { cn, formatRelative } from '@/lib/utils'
 import type { LogoRound } from '@/lib/logo-rounds'
-import { publicUrl } from '@/server/storage/r2'
+import { assetSrc } from '@/server/storage/r2'
 
 /** One icon per section, so the current one is never signalled by colour alone. */
 const SECTION_ICONS = {
@@ -117,7 +117,7 @@ export async function ProjectRail({
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={publicUrl(cover.r2Key) ?? `/api/files/${cover.id}`}
+                      src={assetSrc(cover)}
                       alt=""
                       loading="lazy"
                       className="size-10 shrink-0 rounded-control bg-white object-contain p-1"

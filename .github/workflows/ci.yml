@@ -54,6 +54,14 @@ jobs:
         env:
           SKIP_ENV_VALIDATION: 'true'
 
+      # Pure logic, so no database and no server. These cover the arithmetic
+      # nothing else can see fail: the contrast guard, the credits-to-brands
+      # rate every pricing surface derives its headline from, the currency
+      # fallback, and the logo round grouping.
+      - run: pnpm test:unit
+        env:
+          SKIP_ENV_VALIDATION: 'true'
+
       # Schema and plan rows, so the prerender of `/en` has prices to render.
       - name: Prepare the build database
         run: pnpm db:migrate && pnpm db:seed
@@ -107,8 +115,15 @@ jobs:
       BETTER_AUTH_URL: http://localhost:3100
       NEXT_PUBLIC_APP_URL: http://localhost:3100
       TEST_BASE_URL: http://localhost:3100
-      # No AI, storage or billing keys: neither suite calls an external
-      # service. Anything that would has to be exercised deliberately.
+      # No AI or storage keys: no suite calls an external service. Anything
+      # that would has to be exercised deliberately.
+      #
+      # The webhook secret is the exception, and it is not a Polar credential.
+      # The billing suite signs its own deliveries with it and the app verifies
+      # them with the same value, so the pair only has to agree — Polar is never
+      # contacted. Without it the route answers 503 and the suite refuses to run
+      # rather than silently testing nothing.
+      POLAR_WEBHOOK_SECRET: ci-webhook-secret-not-a-real-polar-credential
 
     steps:
       - uses: actions/checkout@v4
@@ -140,6 +155,23 @@ jobs:
 
       - name: System tests
         run: node scripts/system-test.mjs
+
+      # The billing lifecycle, driven by signed webhooks against the real
+      # endpoint: redelivery, renewal, mid-cycle upgrade, failed payment,
+      # revocation. Polar is never called and no card is needed, which is why
+      # this can run here at all — and it is the only suite that exercises the
+      # states nobody can reproduce on demand. It existed and was never wired
+      # in, so the most valuable tests in the repo only ran when someone
+      # remembered to type the command.
+      - name: Billing lifecycle
+        run: pnpm test:billing
+
+      # The contrast guard against palettes designed to break it. A published
+      # customer site once rendered its call to action at 1.42:1 while this
+      # arithmetic sat correct and unused two directories away; no other suite
+      # reads colour.
+      - name: Contrast guard
+        run: pnpm test:contrast
 
       - name: Install Chromium
         run: pnpm exec playwright install --with-deps chromium
