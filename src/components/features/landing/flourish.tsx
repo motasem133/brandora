@@ -32,33 +32,12 @@ function jitter(index: number, spread: number) {
   return Math.round((noise - Math.floor(noise) - 0.5) * 2 * spread * 100) / 100
 }
 
-/**
- * The palette, dealt onto the card.
- *
- * The swatches drop in crooked and straighten as they land, one after another.
- * A palette is the one deliverable a visitor grasps without reading anything,
- * so it is worth the half second it takes to watch it being laid out.
+/*
+ * `PaletteDeal` used to live here: four swatches that dropped in crooked and
+ * straightened as they landed. It went with the bento that was its only caller.
+ * A palette is now part of a brand's own plate, on the brand's own paper, where
+ * dealing it onto the surface would fight the plate arriving as one object.
  */
-export function PaletteDeal({ colors, className }: { colors: string[]; className?: string }) {
-  const reduced = useReducedMotion()
-
-  return (
-    <div className={className}>
-      {colors.map((hex, index) => (
-        <motion.div
-          data-reveal
-          key={hex}
-          className="flex-1 rounded-card"
-          style={{ backgroundColor: hex }}
-          initial={reduced ? false : { opacity: 0, y: 30, rotate: jitter(index, 9) }}
-          whileInView={{ opacity: 1, y: 0, rotate: 0 }}
-          viewport={{ once: true, margin: '-12% 0px' }}
-          transition={{ ...ELASTIC, delay: reduced ? 0 : index * 0.07 }}
-        />
-      ))}
-    </div>
-  )
-}
 
 /**
  * A row that parts around the pointer.

@@ -1,24 +1,19 @@
-import { ArrowRight, Check, FileText } from 'lucide-react'
+import { ArrowRight, Check } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import Image from 'next/image'
 
 import { HeroBadge } from '@/components/features/landing/float'
-import { PaletteDeal, PillFan, StepMark } from '@/components/features/landing/flourish'
+import { PillFan, StepMark } from '@/components/features/landing/flourish'
+import { BrandDrawer } from '@/components/features/landing/brand-drawer'
 import { BrandStage } from '@/components/features/landing/brand-stage'
-import type { Specimen } from '@/components/features/landing/brand-stage'
-import {
-  Cell,
-  LightSweep,
-  SectionArc,
-  ProductFrame,
-  SectionReveal,
-} from '@/components/ui/horizon'
+import { SPECIMENS } from '@/components/features/landing/specimens'
+import type { Specimen } from '@/components/features/landing/specimens'
+import { Cell, SectionArc, ProductFrame, SectionReveal } from '@/components/ui/horizon'
 import { AfterHeadline, HeadlineWords } from '@/components/features/landing/motion-hero'
 import { PricingFaq } from '@/components/features/landing/pricing-faq'
 import { PricingPlans } from '@/components/features/landing/pricing-plans'
 import { buttonVariants } from '@/components/ui/button'
 import { LogoMark } from '@/components/ui/logo'
-import { MomentumField, MomentumItem } from '@/components/ui/momentum'
 import { Link } from '@/i18n/navigation'
 import { cn } from '@/lib/utils'
 
@@ -34,96 +29,6 @@ import { cn } from '@/lib/utils'
  * customers yet, and inventing a "trusted by" row is the one thing on that
  * page we cannot honestly copy.
  */
-/**
- * Real files from a completed run, used as the deliverable specimens.
- *
- * Sultana — a Syrian kitchen — rather than the earlier coffee brand, because
- * it is the project that exercises everything the product now does: two
- * concepts at 1536, a true vector trace, transparent variants, an Arabic
- * wordmark that has to shape correctly, and a social kit. Nothing here is a
- * mockup; every file is what a customer downloads.
- */
-/*
- * Rendered from the run's vector traces, not its raster previews. The previews
- * were downsampled generations — soft edges, mush in the lattice, and a paper
- * background baked in, which put a cream rectangle inside every white tile.
- * Traced, stripped of that paper and trimmed, each mark is transparent and
- * fills its tile, so every one of these carries its own ratio.
- */
-const LOGOS = [
-  { src: '/marketing/sultana-wordmark.webp', width: 1200, height: 464 },
-  { src: '/marketing/sultana-icon.webp', width: 1200, height: 980 },
-  { src: '/marketing/sultana-symbol.webp', width: 1200, height: 792 },
-  { src: '/marketing/sultana-name.webp', width: 1200, height: 260 },
-]
-
-/**
- * The posts the kit produced for that same run, at the size the renderer wrote
- * them. They were 900px re-encodes of these 1080px files, which cost a
- * downscale and a second lossy pass to show the same picture.
- */
-const POSTS = [
-  '/marketing/sultana-post-hero.webp',
-  '/marketing/sultana-post-feature.webp',
-  '/marketing/sultana-post-detail.webp',
-  '/marketing/sultana-post-palette.webp',
-]
-
-/** Sultana's own palette, as the run wrote it. */
-const PALETTE = ['#1B3A3A', '#D4A853', '#F43F5E', '#FEFAF5']
-
-/** Makān's, from `PRODUCT.md` — a coffee brand generated end to end. */
-const MAKAN_PALETTE = ['#6F4E37', '#D4A574', '#C08552', '#FAF6F0']
-
-/*
- * Neither of these carries a `text` colour, because neither run recorded one
- * we can point at. The darkest member of each palette is handed to
- * `brandTheme` as the ink and checked against the paper there like everything
- * else — 11.8:1 for Sultana's teal on its cream, 6.91:1 for Makān's brown on
- * its. If a future specimen's ink failed, the plate would fall back to plain
- * black or white rather than rendering an unreadable one.
- */
-const SULTANA: Omit<Specimen, 'line'> = {
-  id: 'sultana',
-  name: 'Sultana',
-  palette: {
-    primary: '#1B3A3A',
-    secondary: '#D4A853',
-    accent: '#F43F5E',
-    background: '#FEFAF5',
-    text: '#1B3A3A',
-  },
-  swatches: PALETTE,
-  fonts: { heading: 'Reem Kufi Ink', body: 'El Messiri' },
-  /* The wordmark, not `sultana-icon.webp`: the icon export is trimmed too
-     close and clips its own lettering at the frame edge. */
-  mark: { src: '/marketing/sultana-wordmark.webp', width: 1200, height: 464 },
-}
-
-/*
- * Makān has no mark here on purpose. Its four logo concepts are real and sit in
- * R2 with the rest of that run, but nothing has exported them to `public/`, and
- * drawing a stand-in would break the one rule this page cannot break: every
- * file it shows is output a customer would download.
- *
- * The plate handles the absence by setting the name in the brand's own heading
- * face, which is honest about what it is showing and still repaints the whole
- * fold — the ground, the ink, the hairlines and the palette are all Makān's.
- */
-const MAKAN: Omit<Specimen, 'line'> = {
-  id: 'makan',
-  name: 'Makān',
-  palette: {
-    primary: '#6F4E37',
-    secondary: '#D4A574',
-    accent: '#C08552',
-    background: '#FAF6F0',
-    text: '#6F4E37',
-  },
-  swatches: MAKAN_PALETTE,
-  fonts: { heading: 'Sora', body: 'Inter' },
-}
-
 export default async function HorizonDirection({
   params,
 }: {
@@ -154,10 +59,14 @@ export default async function HorizonDirection({
    * exactly as the brand's name and its font families are. Translating a piece
    * of generated output to display it would misrepresent the output.
    */
-  const specimens: Specimen[] = [
-    { ...SULTANA, line: t('kitNameReason') },
-    { ...MAKAN, line: 'Brewed for focus.' },
-  ]
+  const LINES: Record<string, string> = {
+    sultana: t('kitNameReason'),
+    makan: 'Brewed for focus.',
+  }
+  const specimens: Specimen[] = SPECIMENS.map((source) => ({
+    ...source,
+    line: LINES[source.id],
+  }))
 
   const stageLabels = {
     swap: t('stageSwap'),
@@ -166,6 +75,19 @@ export default async function HorizonDirection({
     headingFont: t('headingFont'),
     bodyFont: t('bodyFont'),
     markAlt: t('kitLogoAlt'),
+  }
+
+  const drawerLabels = {
+    logos: t('kitLogos'),
+    logosNote: t('kitLogosNote'),
+    logoAlt: t('kitLogoAlt'),
+    posts: t('kitSocial'),
+    postAlt: t('kitSocialAlt'),
+    values: t('kitValues'),
+    type: t('kitType'),
+    headingFont: t('headingFont'),
+    bodyFont: t('bodyFont'),
+    pdf: t('kitPdf'),
   }
 
   return (
@@ -326,10 +248,17 @@ export default async function HorizonDirection({
 
       {/* -------------------------------------------------------------- kit */}
       <div aria-hidden className="rule-fade" />
+      {/*
+        No `<SectionArc>` here, unlike every other section below the fold.
+
+        The arc is Brandora's violet drawn across the top of a section, which is
+        right where the section holds our argument and wrong where it holds a
+        customer's work. It was crossing a cream drawer and tinting the top of
+        Sultana's own paper, which is the same mistake the bento made with a
+        lit edge, in a larger size.
+      */}
       <section id="kit" className="relative overflow-hidden bg-surface/50">
-        <SectionArc className="top-0" />
-        <LightSweep />
-        <div className="relative z-10 mx-auto max-w-7xl px-8 py-28">
+        <div className="relative z-10 mx-auto max-w-6xl px-8 py-28">
           <SectionReveal>
             <h2 className="type-section max-w-2xl">
               {t('kitTitle')}
@@ -338,168 +267,37 @@ export default async function HorizonDirection({
           </SectionReveal>
 
           {/*
-            The deliverables are shown, not listed. Ten identical cells told the
-            visitor a count; these tiles hand over the actual artifacts a run
-            produced, sized by how much looking each one rewards.
+            A cabinet of runs, not a grid of deliverables.
+
+            The bento that stood here showed six cells of unequal size, every
+            one of them Brandora's dark surface with a violet lit edge, holding
+            a customer's logo, a customer's palette and a customer's posts. The
+            section claims a run produces one coherent brand and then rendered
+            that brand as six fragments of our chrome.
+
+            Each drawer is a whole run instead, wearing its own paper, and the
+            open one shows what that run left behind. It is also the shape the
+            product actually has: `PRODUCT.md` says the account accumulates
+            brands rather than settling on one, so a cabinet a visitor could
+            keep pulling from is the honest picture of it.
           */}
-          <div className="mt-16 grid auto-rows-[13rem] grid-cols-2 gap-4 lg:grid-cols-4">
-            {/*
-              The one place on the page a visitor can put a hand on the output,
-              so it is the one place that answers back individually. The old
-              behaviour scaled all four whenever the cell was hovered, which
-              told you the cell was hoverable and nothing about the logos.
-            */}
-            {/*
-              The row span is what the inner grid measures itself against. Set
-              to one row's height while spanning two, the four concept tiles
-              overflowed this card by 179px and the two at the bottom were
-              covered by the tile beneath — so the one place a visitor can look
-              at real output showed half of it.
-            */}
-            <Cell index={0} className="col-span-2 row-span-2 min-h-0" lift={false}>
-              {/*
-                `lit` and `lit-inner`, not a sixth hand-written copy of them.
-
-                All six cells in this grid spelled the edge out inline and had
-                drifted to three different accent strengths — 28%, 30% and 35% —
-                for no reason anyone recorded. They were also lit from the top,
-                which is the light this system no longer has.
-              */}
-              {/*
-                No bloom on this one, deliberately. `bloom` clips to its own box
-                so a radial cannot bleed past a rounded corner, and the four
-                concepts in here can be picked up and thrown — a card flicked to
-                the edge would be cut in half by the clip, on the one part of
-                the page where a visitor can put a hand on real output.
-              */}
-              <div className="lit relative h-full">
-                <div className="lit-inner flex min-h-0 flex-col p-7">
-                  <p className="text-sm text-fg-secondary">{t('kitLogos')}</p>
-                  {/*
-                    Two explicit rows. The inner grid's rows were `auto`, so
-                    each one took the natural height of a square image at half
-                    the card's width — about 500px of content in 300px of card,
-                    which is how two of the four concepts ended up underneath
-                    the tile below.
-                  */}
-                  <MomentumField className="mt-5 grid min-h-0 flex-1 grid-cols-2 grid-rows-2 gap-3">
-                    {LOGOS.map((logo) => (
-                      <MomentumItem key={logo.src} throwGain={0.4} spinGain={0.09}>
-                        <div className="h-full min-h-0 overflow-hidden rounded-control bg-white/95">
-                          <Image
-                            src={logo.src}
-                            alt={t('kitLogoAlt')}
-                            width={logo.width}
-                            height={logo.height}
-                            className="size-full object-contain p-2"
-                            sizes="160px"
-                          />
-                        </div>
-                      </MomentumItem>
-                    ))}
-                  </MomentumField>
-                  <p className="mt-4 text-xs text-fg-muted">{t('kitLogosNote')}</p>
-                </div>
-              </div>
-            </Cell>
-
-            <Cell index={1} className="col-span-2">
-              <div className="lit h-full">
-                <div className="lit-inner flex flex-col p-7">
-                  <p className="text-sm text-fg-secondary">{t('kitPalette')}</p>
-                  <PaletteDeal colors={PALETTE} className="mt-5 flex flex-1 gap-2" />
-                  <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 font-mono text-xs text-fg-muted">
-                    {PALETTE.map((hex) => (
-                      <span key={hex}>{hex}</span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </Cell>
-
-            <Cell index={2}>
-              <div className="lit h-full">
-                {/*
-                  The light inside the card, which the reference gives its bento
-                  and this grid did not have: a source rising from the card's
-                  own base rather than an even fill inside a lit ring.
-
-                  Two of the six carry it — this one and the last — because the
-                  reference lights two of its six, and a bento where every cell
-                  glows is a bento where nothing is lit.
-                */}
-                <div className="lit-inner bloom flex flex-col justify-between p-7 [--bloom-strength:18%]">
-                  <p className="text-sm text-fg-secondary">{t('kitNames')}</p>
-                  <div>
-                    <p className="text-2xl font-semibold tracking-[-0.02em]">Sultana</p>
-                    <p className="mt-1.5 text-xs leading-relaxed text-fg-muted">
-                      {t('kitNameReason')}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </Cell>
-
-            <Cell index={3}>
-              <div className="lit h-full">
-                <div className="lit-inner flex flex-col justify-between p-7">
-                  <p className="text-sm text-fg-secondary">{t('kitType')}</p>
-                  <div>
-                    <p className="text-3xl font-semibold tracking-[-0.02em]">Reem Kufi Ink</p>
-                    <p className="text-sm text-fg-secondary">El Messiri</p>
-                  </div>
-                </div>
-              </div>
-            </Cell>
-
-            <Cell index={4} className="col-span-2">
-              <div className="lit h-full">
-                <div className="lit-inner flex h-full flex-col p-7">
-                  <p className="text-sm text-fg-secondary">{t('kitSocial')}</p>
-
-                  {/* Four of the eight, at the size a grid of posts is read. */}
-                  <div className="mt-5 grid flex-1 grid-cols-4 gap-2.5">
-                    {POSTS.map((post) => (
-                      <div key={post} className="overflow-hidden rounded-control bg-white/95">
-                        <Image
-                          src={post}
-                          alt={t('kitSocialAlt')}
-                          width={1080}
-                          height={1080}
-                          className="size-full object-cover"
-                          sizes="130px"
-                        />
-                      </div>
-                    ))}
-                  </div>
-
-                  {/*
-                    The document itself, not a picture of it. It is the real
-                    file the run produced, so the claim can be checked rather
-                    than believed.
-                  */}
-                  <a
-                    href="/marketing/sultana-brand-kit.pdf"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-4 inline-flex w-fit items-center gap-2 rounded-control border border-line px-3 py-2 text-xs text-fg-secondary transition-colors hover:bg-elevated hover:text-white"
-                  >
-                    <FileText className="size-3.5" />
-                    {t('kitPdf')}
-                  </a>
-                </div>
-              </div>
-            </Cell>
-
-            <Cell index={5} className="col-span-2">
-              <div className="lit h-full">
-                <div className="lit-inner bloom flex flex-col justify-between p-7 [--bloom-x:84%] [--bloom-strength:18%]">
-                  <p className="text-sm text-fg-secondary">{t('kitRest')}</p>
-                  <PillFan items={rest} className="flex flex-wrap gap-2" />
-                </div>
-              </div>
-            </Cell>
+          <div className="mt-16 grid gap-4">
+            {specimens.map((specimen, index) => (
+              <SectionReveal key={specimen.id} delay={Math.min(index * 0.08, 0.3)}>
+                <BrandDrawer specimen={specimen} open={index === 0} labels={drawerLabels} />
+              </SectionReveal>
+            ))}
           </div>
+
+          {/*
+            What every run produces regardless of which drawer is open. It is
+            our list rather than a brand's, so it stays out on the neutral
+            ground rather than being painted into one of them.
+          */}
+          <SectionReveal className="mt-14">
+            <p className="text-sm text-fg-muted">{t('kitRest')}</p>
+            <PillFan items={rest} className="mt-4 flex flex-wrap gap-2" />
+          </SectionReveal>
         </div>
       </section>
 

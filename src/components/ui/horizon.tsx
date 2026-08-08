@@ -339,28 +339,10 @@ export function Cell({
   )
 }
 
-/**
- * A slow band of light crossing the section, once per cycle.
- *
- * Cheap to run — one transform on a masked gradient — and it is what keeps a
- * dark page from looking like a still image between reveals.
+/*
+ * `LightSweep` used to live here: a violet band crossing the kit section on a
+ * loop. It went with the bento it was lighting. That section now holds brands
+ * wearing their own paper, and a violet wash travelling across a customer's
+ * cream is our colour landing on their work, which is the exact thing the
+ * section was rebuilt to stop doing.
  */
-export function LightSweep() {
-  const reduced = useReducedMotion()
-  if (reduced) return null
-
-  return (
-    <motion.div
-      data-reveal
-      aria-hidden
-      className="pointer-events-none absolute inset-y-0 w-[42rem] skew-x-[-18deg]"
-      style={{
-        background:
-          'linear-gradient(90deg, transparent, rgba(170,140,255,0.09) 45%, rgba(147,197,253,0.06) 60%, transparent)',
-      }}
-      initial={{ x: '-60vw' }}
-      animate={{ x: '120vw' }}
-      transition={{ duration: 9, repeat: Infinity, repeatDelay: 5, ease: 'easeInOut' }}
-    />
-  )
-}
