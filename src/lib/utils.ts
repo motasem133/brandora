@@ -67,16 +67,40 @@ export function billingHref(base: string, params: { currency: Currency }) {
  *
  * Fraction digits are dropped only for whole amounts, so $29 stays "$29" while
  * AED 54.99 keeps its cents rather than rounding to a price nobody is charged.
+ *
+ * On `/ar` the currency is wrapped in a bidi isolate. `ar-AE` renders USD as
+ * "US$", the "$" is bidi-neutral, and the algorithm cuts it off the letters it
+ * belongs to and re-seats it at the other end of the run, so every price on the
+ * Arabic pages read "$US 19". The isolate says "this is one token, resolve it on
+ * its own", the same fix a hex code needed on the landing page, and it wraps the
+ * currency alone so the digits still take direction from the sentence they are
+ * in.
+ *
+ * The English path is left exactly as `Intl` writes it. An LTR page with a Latin
+ * currency mark has no direction to resolve, so an isolate there buys nothing
+ * and costs two invisible characters in every string the product prints,
+ * searches or asserts on.
  */
 export function formatPrice(minorUnits: number, currency: Currency = 'usd', locale = 'en') {
   const hasFraction = minorUnits % 100 !== 0
 
-  return new Intl.NumberFormat(locale === 'ar' ? 'ar-AE' : 'en-US', {
+  const rtl = locale === 'ar'
+  const format = new Intl.NumberFormat(rtl ? 'ar-AE' : 'en-US', {
     style: 'currency',
     currency: currency.toUpperCase(),
     minimumFractionDigits: hasFraction ? 2 : 0,
     maximumFractionDigits: hasFraction ? 2 : 0,
-  }).format(minorUnits / 100)
+  })
+
+  if (!rtl) return format.format(minorUnits / 100)
+
+  return format
+    .formatToParts(minorUnits / 100)
+    /* \u2068 is FIRST STRONG ISOLATE and \u2069 is POP DIRECTIONAL ISOLATE.
+       They are written as escapes because they are invisible characters, and a
+       reviewer has to be able to see that they are there. */
+    .map((part) => (part.type === 'currency' ? `\u2068${part.value}\u2069` : part.value))
+    .join('')
 }
 
 /**
