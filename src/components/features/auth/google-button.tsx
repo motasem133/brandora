@@ -14,6 +14,7 @@ export function GoogleButton({ label }: { label: string }) {
     <Button
       type="button"
       variant="outline"
+      shape="control"
       className="w-full"
       disabled={pending}
       onClick={async () => {

@@ -17,7 +17,7 @@ export default async function ResetPasswordPage({
   return (
     <>
       <div className="mb-6 text-center">
-        <h1 className="font-display text-2xl font-semibold">{t('resetTitle')}</h1>
+        <h1 className="type-plate-sm">{t('resetTitle')}</h1>
         <p className="mt-1.5 text-sm text-fg-secondary">{t('resetSubtitle')}</p>
       </div>
       <ResetPasswordForm token={token ?? null} linkError={error ?? null} />

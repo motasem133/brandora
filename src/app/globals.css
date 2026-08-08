@@ -34,18 +34,15 @@
 }
 
 /*
- * The dark palette, declared for the document and for any subtree that is dark
- * on purpose.
+ * The dark palette, and now the document's only one.
  *
- * `.world-dark` exists for the marketing pages. They are dark because the brand
- * is dark, it is a pinned commitment, not a default picked by category, and
- * they used to say so in hardcoded hex, which meant 44 colour literals, no
- * response to anything, and text tuned by eye at `white/35` (3.11:1). Written
- * as a token scope instead, they stay dark under `[data-theme='light']` while
- * every value in them is the measured one.
+ * `.world-dark` used to sit alongside `:root` here, for the marketing pages,
+ * which were dark because "the brand is dark". Every one of those pages is now
+ * paper: the book, its appendix at `/pricing`, and the sign-in leaves. What is
+ * left on this palette is the workspace behind the login, which was never part
+ * of that argument and is not being redesigned as a side effect of it.
  */
-:root,
-.world-dark {
+:root {
   /* Dark Navy, and two steps lifted out of it rather than grey panels. */
   --bg-base: #05070f;
   --bg-surface: #0a0f1c;
@@ -135,26 +132,6 @@
 }
 
 /*
- * The marketing ground, taken off navy and onto true neutral.
- *
- * The pages in this scope exist to show a generated brand, and navy is a hue.
- * A customer's teal or their clay brown arriving onto a blue-black ground has
- * to fight it for the eye, so the ground stops competing: the only colour in
- * the frame is the one the run produced. The violet stays, but as the
- * product's signature spent twice per view, the mark and the primary control
- *, rather than as the light the whole room is lit by.
- *
- * The three steps keep their luminance ladder, so nothing measured against
- * them moves: white lands at 20.01:1, 19.00:1 and 16.97:1 here against 20.12,
- * 19.13 and 17.31 on navy. The two body tones are re-cut neutral for the same
- * reason the ground is, and they were checked rather than eyeballed ,
- * secondary 9.00 / 8.54 / 7.63, muted 5.61 / 5.33 / 4.76, each within 0.2 of
- * the navy value it replaces.
- *
- * Scoped to `.world-dark` on purpose. The app behind the login is a different
- * argument and is not part of this change; `:root` above still owns it.
- */
-/*
  * The marketing world prints on paper.
  *
  * It was near-black with a violet horizon rising behind it, which is the ground
@@ -173,24 +150,6 @@
  * 7.10. The ink is warm rather than #000: print ink never is, and pure black on
  * cream reads as a screenshot of paper instead of as paper.
  */
-/*
- * Still here, and only for `/pricing` and the auth layout.
- *
- * They share this world with the landing page and have not had their pass yet.
- * Repointing them at paper in the same change would ship two pages whose cards,
- * controls and rules are all still drawn for a dark ground, broken now against
- * a promise to fix them later. They keep the old ground until they are rewritten,
- * and this block goes with the last of them.
- */
-.world-dark {
-  --bg-base: #08080a;
-  --bg-surface: #101013;
-  --bg-elevated: #1c1c21;
-
-  --text-secondary: #adadb8;
-  --text-muted: #87878f;
-}
-
 .world-paper {
   --bg-base: #ede9e1;
   --bg-surface: #f4f1ea;
@@ -286,8 +245,7 @@
   }
 
   /* A world carries its own ground and ink rather than inheriting the
-     document's, which may be the opposite polarity. */
-  .world-dark,
+     document's, which is the opposite polarity. */
   .world-paper {
     background-color: var(--bg-base);
     color: var(--text-primary);
@@ -1038,3 +996,26 @@
  * want its own answer to whose colour it is carrying, and a utility named after
  * the shape rather than the source is what let this one go unexamined.
  */
+
+/*
+ * Fields, re-cut for paper, in the one place a field appears on it.
+ *
+ * `Input` is the workspace's control and is drawn as one: a rounded surface
+ * lifted off the ground, lit along its bottom edge in the brand's violet.
+ * That is correct behind the login and is the single object that gives away
+ * a borrowed form when it lands on the sign-in leaves. On paper a field is a
+ * ruled box: no fill, no glow, and the rule goes to full ink when you are in
+ * it. Scoped rather than a second component, because the markup is right and
+ * only the drawing is wrong.
+ */
+.world-paper :is(input, textarea, select) {
+  border-radius: 0.25rem;
+  border-color: var(--border-strong);
+  background-color: transparent;
+  box-shadow: none;
+}
+
+.world-paper :is(input, textarea, select):focus-visible {
+  border-color: var(--text-primary);
+  box-shadow: none;
+}

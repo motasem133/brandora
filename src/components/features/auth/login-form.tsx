@@ -119,7 +119,7 @@ export function LoginForm({ google }: { google: boolean }) {
 
         <FieldError message={error} />
 
-        <Button type="submit" className="w-full" disabled={pending}>
+        <Button type="submit" variant="stamp" shape="control" className="w-full" disabled={pending}>
           {pending && <Loader2 className="animate-spin" />}
           {pending ? tc('loading') : t('signIn')}
         </Button>

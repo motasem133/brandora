@@ -11,7 +11,7 @@ export default async function LoginPage({ params }: { params: Promise<{ locale: 
   return (
     <>
       <div className="mb-6 text-center">
-        <h1 className="font-display text-2xl font-semibold">{t('signInTitle')}</h1>
+        <h1 className="type-plate-sm">{t('signInTitle')}</h1>
         <p className="mt-1.5 text-sm text-fg-secondary">{t('signInSubtitle')}</p>
       </div>
       <LoginForm google={hasGoogle} />

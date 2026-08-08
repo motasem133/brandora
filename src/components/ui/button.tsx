@@ -39,6 +39,17 @@ const buttonVariants = cva(
         danger:
           'bg-danger text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1),inset_0_-1px_0_0_rgba(255,255,255,0.28)] hover:opacity-90',
         link: 'accent-text underline-offset-4 hover:underline',
+        /*
+         * The printed control, for the pages set on paper.
+         *
+         * The book's calls to action are the `stamp` utility, and the sign-in
+         * leaves are part of the book now. A gradient pill with a violet halo
+         * on cream stock is the one object that gives away that the form was
+         * borrowed from a dark interface, so the submit takes solid ink like
+         * every other press in the publication. Pair it with `shape="control"`,
+         * a pill is a screen shape and print trims squarer than that.
+         */
+        stamp: 'stamp justify-center',
       },
       size: {
         sm: 'h-9 px-3 text-sm',

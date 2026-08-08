@@ -11,7 +11,7 @@ export default async function RegisterPage({ params }: { params: Promise<{ local
   return (
     <>
       <div className="mb-6 text-center">
-        <h1 className="font-display text-2xl font-semibold">{t('signUpTitle')}</h1>
+        <h1 className="type-plate-sm">{t('signUpTitle')}</h1>
         <p className="mt-1.5 text-sm text-fg-secondary">{t('signUpSubtitle')}</p>
       </div>
       <RegisterForm google={hasGoogle} />
