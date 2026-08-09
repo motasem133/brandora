@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { and, desc, eq } from 'drizzle-orm'
+import { and, desc, eq, sql } from 'drizzle-orm'
 
 import { env } from '@/lib/env'
 import { AppError } from '@/lib/errors'
@@ -15,6 +15,7 @@ import {
   websiteAssets,
 } from '@/server/db/schema'
 import { inngest } from '@/server/inngest/client'
+import { findStuckJobs, releaseHold } from '@/server/services/stuck-holds'
 import { isStorageConfigured } from '@/server/storage/r2'
 
 /**
@@ -90,6 +91,46 @@ export function isLogoGenerationAvailable() {
   return Boolean(env.FAL_KEY) && isStorageConfigured()
 }
 
+/**
+ * Whether the pipeline is currently failing to collect the work it is given.
+ *
+ * Runs are handed to Inngest and picked up within seconds. When that delivery
+ * breaks — no app synced to this deployment, keys missing, the wrong
+ * environment answering — nothing throws: the event is accepted and no worker
+ * ever comes. Every customer who presses the button in that window pays for a
+ * run that will not happen and watches a spinner until a clock refunds them.
+ *
+ * So the evidence is read from the jobs themselves rather than from a health
+ * check on Inngest, which would only tell us whether the service is up and not
+ * whether *our* functions are reachable. A job that has been sitting for three
+ * minutes without starting is already far outside normal.
+ *
+ * The second half is what stops this latching on forever: if anything has
+ * started since the newest undelivered job, delivery is working again and this
+ * clears itself. No flag to reset, no state to get stuck.
+ */
+export async function deliveryLooksBroken(): Promise<boolean> {
+  const rows = await db.execute<{
+    undelivered: number
+    newest_undelivered: Date | null
+    last_started: Date | null
+  }>(sql`
+    SELECT
+      count(*) FILTER (WHERE started_at IS NULL AND created_at < now() - interval '3 minutes')
+        AS undelivered,
+      max(created_at) FILTER (WHERE started_at IS NULL AND created_at < now() - interval '3 minutes')
+        AS newest_undelivered,
+      max(started_at) AS last_started
+    FROM generation_jobs
+    WHERE created_at > now() - interval '60 minutes'
+  `)
+
+  const row = rows[0]
+  if (!row || Number(row.undelivered) === 0) return false
+
+  return !row.last_started || row.last_started < row.newest_undelivered!
+}
+
 export async function getLatestJobForProject(projectId: string) {
   const [job] = await db
     .select()
@@ -124,13 +165,51 @@ export async function startGeneration(params: {
   if (!project) throw new AppError('NOT_FOUND', 'Project not found.')
 
   if (project.status === 'queued' || project.status === 'generating') {
-    throw new AppError('GENERATION_IN_PROGRESS', 'This project is already generating.')
+    /*
+     * A run that was never delivered leaves the project reading as busy
+     * forever, and this guard then refuses the one action that would recover
+     * it — so the customer is locked out of their own brand with their credits
+     * held, and only an operator can free them. That is exactly what happened
+     * to the first two customers who generated after the Inngest app stopped
+     * being synced to production.
+     *
+     * So a hold that the sweeper would already consider dead is released here
+     * and the new run proceeds. The check is the same one the sweeper uses, so
+     * the two cannot disagree about what "stuck" means, and `settleCredits` is
+     * keyed on the job id, so a late refund from either side is a no-op.
+     */
+    const stuck = await findStuckJobs()
+    const mine = stuck.find((job) => job.projectId === project.id)
+
+    if (!mine) {
+      throw new AppError('GENERATION_IN_PROGRESS', 'This project is already generating.')
+    }
+
+    await releaseHold(
+      mine.id,
+      params.organizationId,
+      project.id,
+      'The run never started. Credits were returned and the brand was queued again.',
+    )
   }
 
   // Free credits are the obvious abuse target, so verification gates spending
   // rather than sign-in.
   if (!params.emailVerified) {
     throw new AppError('EMAIL_NOT_VERIFIED', 'Please verify your email address to generate.')
+  }
+
+  /*
+   * Checked before a single credit moves, which is the whole point of its
+   * position here. Refusing to sell is the cheapest possible failure: the
+   * customer keeps their balance and reads an honest sentence, rather than
+   * paying for a run nobody will collect and finding out ten minutes later.
+   */
+  if (await deliveryLooksBroken()) {
+    throw new AppError(
+      'GENERATION_UNAVAILABLE',
+      'Generation is temporarily unavailable, so nothing was charged. Please try again shortly.',
+    )
   }
 
   const sections = params.only?.length
@@ -168,15 +247,35 @@ export async function startGeneration(params: {
 
   await db.update(projects).set({ status: 'queued' }).where(eq(projects.id, project.id))
 
-  await inngest.send({
-    name: 'brand/generate.requested',
-    data: {
-      projectId: project.id,
-      jobId: job.id,
-      organizationId: params.organizationId,
-      sections,
-    },
-  })
+  /*
+   * If the event cannot even be handed over, the run is not going to happen —
+   * so give the credits straight back rather than leaving a queued row for a
+   * clock to find half an hour later. The customer sees a failure they can act
+   * on, with their balance intact.
+   */
+  try {
+    await inngest.send({
+      name: 'brand/generate.requested',
+      data: {
+        projectId: project.id,
+        jobId: job.id,
+        organizationId: params.organizationId,
+        sections,
+      },
+    })
+  } catch (error) {
+    await releaseHold(
+      job.id,
+      params.organizationId,
+      project.id,
+      'The run could not be queued. Credits were returned automatically.',
+    )
+    console.error('[generation] could not send the generate event', error)
+    throw new AppError(
+      'GENERATION_UNAVAILABLE',
+      'Could not start the run. Your credits were not taken.',
+    )
+  }
 
   return { jobId: job.id, creditsReserved: cost, sections }
 }

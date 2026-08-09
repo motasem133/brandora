@@ -20,6 +20,8 @@ export type ErrorCode =
   | 'SEAT_LIMIT'
   // generation
   | 'GENERATION_IN_PROGRESS'
+  /** The run could not be handed to the queue at all. Credits are given back. */
+  | 'GENERATION_UNAVAILABLE'
   | 'AI_PROVIDER_ERROR'
   | 'RATE_LIMITED'
 
@@ -34,6 +36,7 @@ const DEFAULT_STATUS: Record<ErrorCode, number> = {
   FEATURE_LOCKED: 403,
   SEAT_LIMIT: 403,
   GENERATION_IN_PROGRESS: 409,
+  GENERATION_UNAVAILABLE: 503,
   AI_PROVIDER_ERROR: 502,
   RATE_LIMITED: 429,
 }
