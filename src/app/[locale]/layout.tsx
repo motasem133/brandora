@@ -1,3 +1,4 @@
+import { Analytics } from '@vercel/analytics/next'
 import type { Metadata } from 'next'
 import { NextIntlClientProvider, hasLocale } from 'next-intl'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
@@ -69,6 +70,16 @@ export default async function LocaleLayout({
       <body>
         <NextIntlClientProvider>
           <PostHogProvider />
+          {/*
+            Vercel's own counting, beside PostHog rather than instead of it.
+            They answer different questions: PostHog follows a person through a
+            funnel, this reports traffic against the routes as deployed, and it
+            is the only one that sees a visit the product code never ran for.
+
+            No proxy needed, unlike PostHog above: the script is served from
+            this origin under /_vercel, so an ad blocker has nothing to match.
+          */}
+          <Analytics />
           {/*
             The first thing in the tab order, hidden until it takes focus.
             Every signed-in route puts ten chrome stops — a wordmark, a collapse
