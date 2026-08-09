@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { and, desc, eq } from 'drizzle-orm'
+import { and, desc, eq, sql } from 'drizzle-orm'
 
 import { env } from '@/lib/env'
 import { AppError } from '@/lib/errors'
@@ -91,6 +91,46 @@ export function isLogoGenerationAvailable() {
   return Boolean(env.FAL_KEY) && isStorageConfigured()
 }
 
+/**
+ * Whether the pipeline is currently failing to collect the work it is given.
+ *
+ * Runs are handed to Inngest and picked up within seconds. When that delivery
+ * breaks — no app synced to this deployment, keys missing, the wrong
+ * environment answering — nothing throws: the event is accepted and no worker
+ * ever comes. Every customer who presses the button in that window pays for a
+ * run that will not happen and watches a spinner until a clock refunds them.
+ *
+ * So the evidence is read from the jobs themselves rather than from a health
+ * check on Inngest, which would only tell us whether the service is up and not
+ * whether *our* functions are reachable. A job that has been sitting for three
+ * minutes without starting is already far outside normal.
+ *
+ * The second half is what stops this latching on forever: if anything has
+ * started since the newest undelivered job, delivery is working again and this
+ * clears itself. No flag to reset, no state to get stuck.
+ */
+export async function deliveryLooksBroken(): Promise<boolean> {
+  const rows = await db.execute<{
+    undelivered: number
+    newest_undelivered: Date | null
+    last_started: Date | null
+  }>(sql`
+    SELECT
+      count(*) FILTER (WHERE started_at IS NULL AND created_at < now() - interval '3 minutes')
+        AS undelivered,
+      max(created_at) FILTER (WHERE started_at IS NULL AND created_at < now() - interval '3 minutes')
+        AS newest_undelivered,
+      max(started_at) AS last_started
+    FROM generation_jobs
+    WHERE created_at > now() - interval '60 minutes'
+  `)
+
+  const row = rows[0]
+  if (!row || Number(row.undelivered) === 0) return false
+
+  return !row.last_started || row.last_started < row.newest_undelivered!
+}
+
 export async function getLatestJobForProject(projectId: string) {
   const [job] = await db
     .select()
@@ -157,6 +197,19 @@ export async function startGeneration(params: {
   // rather than sign-in.
   if (!params.emailVerified) {
     throw new AppError('EMAIL_NOT_VERIFIED', 'Please verify your email address to generate.')
+  }
+
+  /*
+   * Checked before a single credit moves, which is the whole point of its
+   * position here. Refusing to sell is the cheapest possible failure: the
+   * customer keeps their balance and reads an honest sentence, rather than
+   * paying for a run nobody will collect and finding out ten minutes later.
+   */
+  if (await deliveryLooksBroken()) {
+    throw new AppError(
+      'GENERATION_UNAVAILABLE',
+      'Generation is temporarily unavailable, so nothing was charged. Please try again shortly.',
+    )
   }
 
   const sections = params.only?.length

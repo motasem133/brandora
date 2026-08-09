@@ -81,6 +81,54 @@ test.describe('stuck holds', () => {
     expect(project.status).toBe('failed')
   })
 
+  /*
+   * The other half of the incident: recovering the money afterwards is not the
+   * same as not taking it. While delivery is broken, every customer who
+   * presses the button pays for a run nobody will collect — so the button has
+   * to stop selling, and it has to do that before a credit moves.
+   */
+  test('while nothing is being collected, generating is refused before charging', async ({
+    page,
+  }) => {
+    const [before] = await sql`
+      SELECT credit_balance FROM organizations WHERE id = ${organizationId}`
+    const opening = before.credit_balance as number
+
+    /*
+     * Evidence that delivery is broken: a job five minutes old that no worker
+     * ever started. Old enough to count (three minutes), young enough that the
+     * sweeper leaves it alone (ten), and already `failed` so the project's own
+     * controls stay pressable — a hold the sweeper has since released is still
+     * evidence, which is why the check does not filter on status.
+     */
+    const [job] = await sql`
+      INSERT INTO generation_jobs (project_id, trigger, sections, progress, status,
+                                   credits_reserved, created_at)
+      VALUES (${projectId}, 'initial', ${sql.json(['branding'])},
+              ${sql.json({ branding: { status: 'pending' } })}, 'failed', 0,
+              now() - interval '5 minutes')
+      RETURNING id`
+    jobId = job.id as string
+
+    const [{ count: jobsBefore }] = await sql`
+      SELECT count(*)::int FROM generation_jobs WHERE project_id = ${projectId}`
+
+    await page.goto(`/en/dashboard/projects/${projectId}`)
+    await page.getByRole('button', { name: /Try again|Generate/ }).first().click()
+
+    await expect(page.getByText(/temporarily unavailable/i)).toBeVisible()
+
+    // The two things that actually matter: no charge, and no queued row left
+    // behind for a clock to find.
+    const [after] = await sql`
+      SELECT credit_balance FROM organizations WHERE id = ${organizationId}`
+    expect(after.credit_balance).toBe(opening)
+
+    const [{ count: jobsAfter }] = await sql`
+      SELECT count(*)::int FROM generation_jobs WHERE project_id = ${projectId}`
+    expect(jobsAfter).toBe(jobsBefore)
+  })
+
   test('a run that is merely young is left alone', async ({ request }) => {
     const [before] = await sql`
       SELECT credit_balance FROM organizations WHERE id = ${organizationId}`

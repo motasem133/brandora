@@ -8,6 +8,20 @@ import { z } from 'zod'
  * request that happens to need it. Variables for phases not yet built are
  * optional here and become required as their features land.
  */
+/**
+ * A variable the production deployment cannot do without.
+ *
+ * `VERCEL_ENV` is set during the build as well as at runtime, so a production
+ * build missing one of these fails there rather than serving something broken.
+ * Previews and local development stay optional — they are the environments
+ * where working without a given integration is normal.
+ */
+function requiredInProduction() {
+  return process.env.VERCEL_ENV === 'production'
+    ? z.string().min(1)
+    : z.string().min(1).optional()
+}
+
 export const env = createEnv({
   server: {
     // --- Phase 1: database + auth ---
@@ -27,8 +41,19 @@ export const env = createEnv({
     FAL_KEY: z.string().min(1).optional(),
     FAL_IMAGE_MODEL: z.string().min(1).optional(),
 
-    INNGEST_EVENT_KEY: z.string().min(1).optional(),
-    INNGEST_SIGNING_KEY: z.string().min(1).optional(),
+    /*
+     * Required in production, optional everywhere else.
+     *
+     * Without these the SDK falls back to its development behaviour and looks
+     * for a worker on localhost. In production that means every generation is
+     * accepted, charged for, and never run — which is exactly how two
+     * customers ended up watching a spinner with their credits taken. A
+     * deployment missing them used to boot perfectly happily and fail only
+     * once somebody paid, so the check belongs at the build, where it is one
+     * loud failure instead of a quiet one per customer.
+     */
+    INNGEST_EVENT_KEY: requiredInProduction(),
+    INNGEST_SIGNING_KEY: requiredInProduction(),
 
     // --- Phase 4+: storage ---
     R2_ACCOUNT_ID: z.string().min(1).optional(),

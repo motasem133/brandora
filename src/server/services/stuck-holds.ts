@@ -2,6 +2,7 @@ import 'server-only'
 
 import { and, eq, inArray, isNull, lt, or, sql } from 'drizzle-orm'
 
+import { reportError } from '@/lib/observability'
 import { settleCredits, settleForContent } from '@/server/billing/credits'
 import { db } from '@/server/db'
 import { findStuckContent } from '@/server/db/queries/content'
@@ -162,6 +163,21 @@ export async function sweepStuckHolds() {
       .where(eq(contentItems.id, item.id))
 
     console.warn(`[credits] released a stuck hold on content ${item.id}`)
+  }
+
+  /*
+   * A released hold is never routine. It means somebody paid for work that did
+   * not happen, and the only reason it was noticed is that a clock came round.
+   * The first time this happened nothing said so, and it was found by reading
+   * customer projects days later — so it is reported rather than merely logged.
+   */
+  if (jobs.length || content.length) {
+    reportError(
+      new Error(
+        `Released ${jobs.length} generation and ${content.length} content holds that were never collected`,
+      ),
+      { jobs: jobs.length, content: content.length },
+    )
   }
 
   return { jobs: jobs.length, content: content.length }
