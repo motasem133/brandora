@@ -108,6 +108,23 @@ const nextConfig: NextConfig = {
      * started, so work in progress appeared to have vanished.
      */
     staleTimes: { dynamic: 0, static: 180 },
+
+    /*
+     * Fetch the page on intent rather than on click.
+     *
+     * Every destination in this app is a dynamic route — session, org, and a
+     * handful of queries — so the ordinary prefetch has nothing to fetch: it
+     * gets the static shell, which for these routes is empty. The whole render
+     * therefore happened between the press and the paint, which is what made
+     * changing tabs feel slow.
+     *
+     * With this on, a Link marked `unstable_dynamicOnHover` upgrades its
+     * prefetch to the full dynamic payload on hover or touchstart, so by the
+     * time the press lands the page is usually already in hand. It only affects
+     * links that opt in, and it does not touch `staleTimes` above: in the
+     * segment cache that value governs back/forward restores, not prefetches.
+     */
+    dynamicOnHover: true,
   },
 }
 

@@ -63,16 +63,28 @@ export default async function ProjectDetailPage({
   const project = await getProject(org.id, id)
   if (!project) notFound()
 
-  const [branding, website, social] = await Promise.all([
+  /*
+   * One wait, not six.
+   *
+   * Nothing below needs anything above it — they all hang off `project`, which
+   * is already resolved — but they were awaited one after another, so the page
+   * paid six sequential database round trips before it rendered a pixel. On a
+   * hosted database that is most of the time it takes to change tabs here.
+   * `getThreadMessages` stays behind, because whether to ask for it at all
+   * depends on the plan.
+   */
+  const [branding, website, social, files, job, sections, plan] = await Promise.all([
     db.select().from(brandingAssets).where(eq(brandingAssets.projectId, project.id)).limit(1),
     db.select().from(websiteAssets).where(eq(websiteAssets.projectId, project.id)).limit(1),
     db.select().from(socialMediaAssets).where(eq(socialMediaAssets.projectId, project.id)).limit(1),
+    db.select().from(generatedFiles).where(eq(generatedFiles.projectId, project.id)),
+    getLatestJobForProject(project.id),
+    /* What pressing the button will actually run, so the price beside it is the
+       price that will be charged. After a partial run that is the unfinished
+       sections, not the whole plan. */
+    sectionsToRun(project.id, sectionsForProject(project)),
+    getOrgPlan(org.id),
   ])
-
-  const files = await db
-    .select()
-    .from(generatedFiles)
-    .where(eq(generatedFiles.projectId, project.id))
 
   const logoFiles = files.filter((file) => file.kind === 'logo_raster')
 
@@ -115,12 +127,6 @@ export default async function ProjectDetailPage({
   const kitPosts = files.filter((file) => file.kind === 'social_post')
   const kitPdf = files.find((file) => file.kind === 'brand_kit_pdf') ?? null
 
-  const job = await getLatestJobForProject(project.id)
-  /* What pressing the button will actually run, so the price beside it is the
-     price that will be charged. After a partial run that is the unfinished
-     sections, not the whole plan. */
-  const sections = await sectionsToRun(project.id, sectionsForProject(project))
-
   /*
    * While a job is running, show the steps that job is actually doing.
    * Regenerating only the logos otherwise rendered four steps with three stuck
@@ -128,7 +134,6 @@ export default async function ProjectDetailPage({
    */
   const isJobActive = job?.status === 'queued' || job?.status === 'running'
   const panelSections = isJobActive && job.sections.length ? job.sections : sections
-  const plan = await getOrgPlan(org.id)
 
   // The assistant only makes sense once there is a brand to refine, and it is
   // a paid feature — so the section appears only when both are true.
@@ -169,6 +174,9 @@ export default async function ProjectDetailPage({
           {canAssist && (
             <Link
               href={`/dashboard/projects/${project.id}?tab=${onAssistant ? 'branding' : 'assistant'}`}
+              /* Same reason as the app bar's tabs: this page is dynamic, so
+                 without this the switch renders it from cold on the press. */
+              unstable_dynamicOnHover
               className={buttonVariants({ variant: 'secondary', size: 'sm' })}
             >
               {onAssistant ? <Palette /> : <MessageSquare />}

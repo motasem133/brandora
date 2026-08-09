@@ -45,6 +45,31 @@ export function AppNav({
 
   const items = isAdmin ? [...NAV, ADMIN_NAV] : NAV
 
+  /*
+   * Bring the current destination into view on the small-screen row.
+   *
+   * Five destinations — six for an admin — are about six hundred pixels of
+   * pills, and a phone is three hundred and ninety. Billing, Settings and Admin
+   * therefore sat off the end of a row that starts at Overview, so the two
+   * things a visitor needs from navigation were both missing: where they are,
+   * and what else there is. Anyone on Settings saw a row of other people's
+   * pages with nothing marked.
+   *
+   * Centred rather than merely scrolled to, so the neighbours on both sides
+   * come with it — which is the part that says the row continues.
+   */
+  const railRef = React.useRef<HTMLDivElement>(null)
+
+  React.useEffect(() => {
+    railRef.current?.querySelector('[aria-current="page"]')?.scrollIntoView({
+      inline: 'center',
+      // Never vertically: this row is inside a sticky header, and pulling the
+      // page down to "reveal" something already on screen is a jump nobody asked
+      // for.
+      block: 'nearest',
+    })
+  }, [pathname])
+
   return (
     <header className="sticky top-0 z-30">
       {/*
@@ -125,7 +150,27 @@ export function AppNav({
         which happens after you have scrolled.
       */}
       <nav aria-label={t('sections')} className="glass border-b border-line lg:hidden">
-        <div className="flex gap-1 overflow-x-auto px-6 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {/*
+          The row fades out at both ends instead of stopping dead at them.
+
+          A hidden scrollbar with a hard edge is indistinguishable from a row
+          that simply ends, so the destinations past the fold read as not
+          existing. The mask makes the last pill dissolve rather than get cut,
+          which is the whole of the affordance — and it is symmetric, so it says
+          the same thing in Arabic without a mirrored rule.
+
+          `scroll-smooth` and `snap` are deliberately absent: this row is
+          centred programmatically on every navigation, and snapping would fight
+          that by re-settling on whichever pill happened to be nearest.
+        */}
+        <div
+          ref={railRef}
+          /* The padding has to be wider than the fade, or the first and last
+             pills — which is where the active one ends up, since centring
+             cannot centre an end — are dissolved by the very thing that exists
+             to say there is more beyond them. 24px of padding, 16px of fade. */
+          className="flex gap-1 overflow-x-auto px-6 py-2 [mask-image:linear-gradient(to_right,transparent,#000_1rem,#000_calc(100%-1rem),transparent)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
           {items.map(({ href, key, icon: Icon }) => (
             <NavItem
               key={href}
@@ -163,6 +208,10 @@ function NavItem({
   return (
     <Link
       href={href}
+      /* These are the app's tabs and every one of them is a dynamic route, so
+         the ordinary prefetch fetches nothing useful. Hovering — or the touch
+         that precedes the tap — pulls the whole page instead. */
+      unstable_dynamicOnHover
       aria-current={active ? 'page' : undefined}
       className={cn(
         'group flex min-h-11 shrink-0 items-center gap-2 rounded-full px-4 text-sm transition-all duration-200',
