@@ -206,8 +206,16 @@ export default async function HorizonDirection({
         <div className="relative z-10 mx-auto mt-28 max-w-6xl px-8 sm:mt-36">
           <ProductFrame>
             <div className="rounded-t-panel border border-line bg-elevated/30 p-2 shadow-[0_-10px_80px_-20px_color-mix(in_srgb,var(--brand-indigo)_60%,transparent)] backdrop-blur">
+              {/*
+                Renamed, not overwritten. The optimizer keys its cache on this
+                path, so replacing the file behind the same name leaves every
+                layer between here and a browser — the image cache, the CDN, the
+                visitor's disk — serving the old picture. The greeting in it is
+                the whole reason it changed, so it cannot be the one thing that
+                does not arrive.
+              */}
               <Image
-                src="/marketing/app-dashboard.webp"
+                src="/marketing/app-overview.webp"
                 alt={t('productAlt')}
                 width={1600}
                 height={900}
