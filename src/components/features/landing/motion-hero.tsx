@@ -9,6 +9,16 @@ import * as React from 'react'
  * Motion here is on load, not on scroll. The previous version put every
  * entrance behind a scroll trigger, which meant the first viewport — the only
  * one most visitors see — was completely static.
+ *
+ * Timed for a phone, which is the harder case and the one that was wrong.
+ *
+ * The sequence used to run for 2.1 seconds end to end: the last word of the
+ * headline landed at 0.9s, the buttons at 1.4s, the product frame at 2.0s.
+ * That reads as considered on a desktop that opened the page a second ago and
+ * as broken on a phone, where the thumb is already moving and the one control
+ * the page exists to offer is still fading in underneath it. Nothing here is
+ * removed — the order is the same and every piece still arrives — it is just
+ * played at roughly half the length, finishing inside a second.
  */
 
 const EASE = [0.16, 1, 0.3, 1] as const
@@ -40,9 +50,12 @@ export function HeadlineWords({ text, className }: { text: string; className?: s
           data-reveal
           key={`${word}-${index}`}
           className="inline-block"
-          initial={{ opacity: 0, y: '0.5em', filter: 'blur(10px)' }}
+          /* 6px rather than 10px: this is the one blur that runs on several
+             elements at once, and past about 6px on display type the word is
+             unreadable for the first half of its own entrance anyway. */
+          initial={{ opacity: 0, y: '0.5em', filter: 'blur(6px)' }}
           animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-          transition={{ duration: 0.75, ease: EASE, delay: 0.06 * index }}
+          transition={{ duration: 0.5, ease: EASE, delay: 0.04 * index }}
         >
           {word}
           {index < words.length - 1 && ' '}
@@ -68,9 +81,9 @@ export function AfterHeadline({
     <motion.div
       data-reveal
       className={className}
-      initial={reduced ? false : { opacity: 0, y: 20, filter: 'blur(8px)' }}
+      initial={reduced ? false : { opacity: 0, y: 20, filter: 'blur(6px)' }}
       animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-      transition={{ duration: 0.8, ease: EASE, delay: reduced ? 0 : delay }}
+      transition={{ duration: 0.55, ease: EASE, delay: reduced ? 0 : delay }}
     >
       {children}
     </motion.div>

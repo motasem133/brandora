@@ -177,19 +177,19 @@ export default async function HorizonDirection({
             */}
             <h1 className="type-display">
               <HeadlineWords text={t('heroHeadline')} />{' '}
-              <AfterHeadline delay={0.3}>
+              <AfterHeadline delay={0.18}>
                 <span className="type-trail block">{t('heroHeadlineAfter')}</span>
               </AfterHeadline>
             </h1>
           </div>
 
-          <AfterHeadline delay={0.5}>
+          <AfterHeadline delay={0.3}>
             <p className="mx-auto mt-7 max-w-[52ch] text-lg leading-relaxed text-fg-secondary">
               {t('heroDeck')}
             </p>
           </AfterHeadline>
 
-          <AfterHeadline delay={0.62}>
+          <AfterHeadline delay={0.4}>
             <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
               <Link
                 href="/pricing"

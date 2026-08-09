@@ -145,7 +145,7 @@ export function Horizon() {
         className="relative flex justify-center"
         initial={{ y: 120, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 1.8, ease: EASE, delay: 0.15 }}
+        transition={{ duration: 1.1, ease: EASE, delay: 0.1 }}
       >
         {/* The bloom the crest throws up into the copy. */}
         {/*
@@ -155,7 +155,11 @@ export function Horizon() {
         */}
         <motion.div
           data-reveal
-          className="absolute -top-[15rem] left-1/2 size-[46rem] -translate-x-1/2 rounded-full blur-[120px]"
+          /* The blur radius is the whole cost of this layer, and it scales with
+             the area being re-rasterised. A phone gets a 736px circle blurred
+             at 60px instead of 120px, which at that width is visually the same
+             wash and a quarter of the work. */
+          className="absolute -top-[15rem] left-1/2 size-[46rem] -translate-x-1/2 rounded-full blur-[60px] sm:blur-[120px]"
           style={{
             background:
               'radial-gradient(circle, rgba(143,102,255,0.42), rgba(91,92,251,0.18) 45%, transparent 70%)',
@@ -267,9 +271,20 @@ export function ProductFrame({ children }: { children: React.ReactNode }) {
       data-reveal
       ref={ref}
       style={reduced ? undefined : { y }}
-      initial={reduced ? false : { opacity: 0, y: 90, rotateX: 9, filter: 'blur(12px)' }}
-      animate={{ opacity: 1, y: 0, rotateX: 0, filter: 'blur(0px)' }}
-      transition={{ duration: 1.2, ease: EASE, delay: 0.75 }}
+      /*
+       * No blur on this one.
+       *
+       * It is the largest layer on the page — a full-bleed screenshot inside a
+       * perspective container — and animating a 12px blur across it means the
+       * browser re-rasterises the whole thing every frame, on the phone that
+       * has just finished decoding the image. The rise and the tilt already say
+       * "placed in front of the light"; the blur was the expensive tenth of the
+       * effect. It also used to land at two seconds, which is well past the
+       * point a visitor has started scrolling.
+       */
+      initial={reduced ? false : { opacity: 0, y: 90, rotateX: 9 }}
+      animate={{ opacity: 1, y: 0, rotateX: 0 }}
+      transition={{ duration: 0.8, ease: EASE, delay: 0.4 }}
       className="[perspective:1200px]"
     >
       {children}
@@ -293,10 +308,12 @@ export function SectionReveal({
     <motion.div
       data-reveal
       className={className}
-      initial={reduced ? false : { opacity: 0, y: 26, filter: 'blur(8px)' }}
+      initial={reduced ? false : { opacity: 0, y: 26, filter: 'blur(6px)' }}
       whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-      viewport={{ once: true, margin: '-12% 0px' }}
-      transition={{ duration: 0.75, ease: EASE, delay }}
+      /* Fires earlier and finishes sooner. A reveal tuned to a desktop viewport
+         is a reveal that happens after the phone has already scrolled past it. */
+      viewport={{ once: true, margin: '-8% 0px' }}
+      transition={{ duration: 0.55, ease: EASE, delay }}
     >
       {children}
     </motion.div>
@@ -327,10 +344,13 @@ export function Cell({
   return (
     <motion.div
       data-reveal
-      initial={reduced ? false : { opacity: 0, y: 22, filter: 'blur(6px)' }}
+      initial={reduced ? false : { opacity: 0, y: 22, filter: 'blur(4px)' }}
       whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-      viewport={{ once: true, margin: '-10% 0px' }}
-      transition={{ duration: 0.6, ease: EASE, delay: reduced ? 0 : Math.min(index * 0.05, 0.4) }}
+      viewport={{ once: true, margin: '-6% 0px' }}
+      /* The cap matters more than the step: a two-column grid on a phone puts
+         the last cell at index 6, and 0.4s of waiting to see it was most of why
+         the page felt like it was catching up with the scroll. */
+      transition={{ duration: 0.45, ease: EASE, delay: reduced ? 0 : Math.min(index * 0.035, 0.2) }}
       whileHover={reduced || !lift ? undefined : { y: -4, transition: { duration: 0.2, ease: EASE } }}
       className={`h-full ${className ?? ''}`}
     >
