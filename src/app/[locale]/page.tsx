@@ -2,7 +2,6 @@ import { Check, FileText } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import Image from 'next/image'
 
-import { HeroBadge } from '@/components/features/landing/float'
 import { PaletteDeal, PillFan, StepMark } from '@/components/features/landing/flourish'
 import {
   Cell,
@@ -151,14 +150,16 @@ export default async function HorizonDirection({
         <Horizon />
 
         <div className="relative z-10 mx-auto max-w-4xl px-8">
-          <HeroBadge>
-            <span className="inline-flex items-center gap-2.5 rounded-full border border-line bg-elevated/40 py-1 pe-4 ps-1 text-sm backdrop-blur">
-              <span className="rounded-full bg-[image:var(--brand-gradient)] px-3 py-1 text-xs font-semibold">
-                {t('badgePill')}
-              </span>
-              <span className="text-fg-secondary">{t('badgeText')}</span>
+          {/* `sm:backdrop-blur`: a backdrop filter has to re-sample and re-blur
+              whatever is behind it, and what is behind this is the horizon —
+              which moves. On a phone that is a per-frame cost for a wash nobody
+              can see over a 390px pill. */}
+          <span className="animate-fade-in inline-flex items-center gap-2.5 rounded-full border border-line bg-elevated/40 py-1 pe-4 ps-1 text-sm sm:backdrop-blur">
+            <span className="rounded-full bg-[image:var(--brand-gradient)] px-3 py-1 text-xs font-semibold">
+              {t('badgePill')}
             </span>
-          </HeroBadge>
+            <span className="text-fg-secondary">{t('badgeText')}</span>
+          </span>
 
           <div className="mt-8">
             {/*

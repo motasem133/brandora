@@ -449,6 +449,37 @@
 }
 
 /*
+ * A one-shot arrival, sized by whoever uses it.
+ *
+ * This exists so the landing hero's entrance can be CSS rather than a JS
+ * timeline, which is a performance decision rather than a stylistic one.
+ * Measured on a throttled phone, every dropped frame in that entrance sat
+ * under a long task — script evaluation and hydration, 50 to 180ms each, all
+ * of it inside the first 700ms, which is exactly when the entrance plays. A
+ * timeline driven from the main thread cannot get a turn during that; opacity
+ * and transform handed to the compositor keep their own time and play through
+ * it untouched.
+ *
+ * Distance, tilt, duration and delay come in as custom properties so one
+ * keyframe covers the horizon rising 120px and the product frame rising 90px
+ * with a tilt, rather than a keyframe per element.
+ */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--rise-y, 12px)) rotateX(var(--rise-tilt, 0deg));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility animate-rise {
+  animation: rise var(--rise-duration, 0.8s) var(--ease-out-soft) var(--rise-delay, 0s) both;
+}
+
+/*
  * Stagger without a JS timeline: each child declares its index as --i and the
  * delay falls out of it. Capped so a long list never leaves the last row
  * waiting seconds to appear.
