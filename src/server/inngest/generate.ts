@@ -1,4 +1,4 @@
-import { and, eq, inArray, lt } from 'drizzle-orm'
+import { and, eq, inArray, lt, sql } from 'drizzle-orm'
 
 import { brandingTask } from '@/server/ai/models'
 import {
@@ -34,28 +34,47 @@ import {
 import { findStuckContent } from '@/server/db/queries/content'
 import { generateRequested, inngest } from './client'
 
-/** Marks one step's state on the job row. This is what the SSE stream tails. */
+/**
+ * Marks one step's state on the job row. This is what the SSE stream tails.
+ *
+ * Merged in the database rather than in this process. It used to read the whole
+ * `progress` object, change one key and write it all back — which is safe only
+ * while exactly one step is running. The sections after branding run together
+ * now, so two of them can read the same object and write it back a moment
+ * apart, and the second one silently erases the first: a step that finished
+ * shows "pending" for the rest of the run, on the panel whose whole job is
+ * saying what is happening.
+ *
+ * `||` on jsonb merges shallowly, so the nested merge is spelled out: keep
+ * whatever this step already had — `startedAt`, most importantly — and lay the
+ * new fields over it. One statement, so concurrent writers cannot interleave.
+ */
 async function markStep(
   jobId: string,
   step: string,
   status: 'running' | 'done' | 'failed',
   error?: string,
 ) {
-  const [job] = await db.select().from(generationJobs).where(eq(generationJobs.id, jobId)).limit(1)
-  if (!job) return
+  const now = new Date().toISOString()
 
-  const progress = { ...job.progress }
-  const existing = progress[step] ?? { status: 'pending' }
-
-  progress[step] = {
-    ...existing,
+  const fields = {
     status,
-    ...(status === 'running' ? { startedAt: new Date().toISOString() } : {}),
-    ...(status !== 'running' ? { finishedAt: new Date().toISOString() } : {}),
+    ...(status === 'running' ? { startedAt: now } : { finishedAt: now }),
     ...(error ? { error } : {}),
   }
 
-  await db.update(generationJobs).set({ progress }).where(eq(generationJobs.id, jobId))
+  await db
+    .update(generationJobs)
+    .set({
+      progress: sql`
+        coalesce(${generationJobs.progress}, '{}'::jsonb)
+          || jsonb_build_object(
+               ${step}::text,
+               coalesce(${generationJobs.progress} -> ${step}, '{}'::jsonb) || ${JSON.stringify(fields)}::jsonb
+             )
+      `,
+    })
+    .where(eq(generationJobs.id, jobId))
 }
 
 /**
@@ -323,7 +342,44 @@ export const generateBrand = inngest.createFunction(
 
     // Without branding there is nothing to ground the other sections in.
     if (branding) {
-      if (requested.includes('logos')) {
+      /*
+       * The three that follow branding run together, because none of them
+       * needs another one's output.
+       *
+       * They used to run in file order, which meant the website waited for the
+       * logos — and the logos are the long pole by a wide margin: four concepts
+       * drawn, vectorised, rasterised at three sizes and uploaded, where the
+       * website and the social copy are one model call each. So a customer sat
+       * watching "website" spin for minutes while nothing about the website was
+       * happening. Whatever the run costs now, it is the slowest section rather
+       * than the sum of all of them.
+       *
+       * `allSettled`, not `all`: these already record their own outcome and a
+       * failed website must not take a finished set of logos down with it.
+       * Inngest memoises each `step.run` separately, so a replay after any one
+       * of them still skips the work that has already been done.
+       */
+      /*
+       * Handed in rather than closed over. `branding` is a `let` that starts
+       * null, and a closure cannot keep the narrowing the `if` above proved —
+       * so the parameter is the non-null one, and shadows it inside each.
+       */
+      const outcomes = await Promise.allSettled([
+        runLogos(branding),
+        runWebsite(branding),
+        runSocial(branding),
+      ])
+
+      // Surfaced rather than swallowed: each helper already caught its own
+      // failure, so anything arriving here is a bug in the helper itself.
+      for (const outcome of outcomes) {
+        if (outcome.status === 'rejected') {
+          console.error('[generate] a section threw past its own handler', outcome.reason)
+        }
+      }
+
+      async function runLogos(branding: BrandingOutput) {
+        if (!requested.includes('logos')) return
         try {
           await step.run('logos', async () => {
             await markStep(jobId, 'logos', 'running')
@@ -351,7 +407,8 @@ export const generateBrand = inngest.createFunction(
         }
       }
 
-      if (requested.includes('website') && project.needsWebsite) {
+      async function runWebsite(branding: BrandingOutput) {
+        if (!requested.includes('website') || !project.needsWebsite) return
         try {
           await step.run('website', async () => {
             await markStep(jobId, 'website', 'running')
@@ -391,7 +448,8 @@ export const generateBrand = inngest.createFunction(
         }
       }
 
-      if (requested.includes('social') && project.needsSocialMedia) {
+      async function runSocial(branding: BrandingOutput) {
+        if (!requested.includes('social') || !project.needsSocialMedia) return
         try {
           await step.run('social', async () => {
             await markStep(jobId, 'social', 'running')
