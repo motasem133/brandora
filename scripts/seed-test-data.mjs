@@ -56,7 +56,15 @@ async function main() {
   console.info(`Seeding fixtures against ${BASE}…`)
 
   const userId = await ensureAccount()
-  await sql`UPDATE users SET email_verified = true WHERE id = ${userId}`
+  /*
+   * Verified, and an administrator.
+   *
+   * The admin area had no coverage at all until the support view landed, and
+   * the alternative to promoting this account is a second signed-in state for
+   * the whole suite — a lot of harness for one role. `role` is `input: false`
+   * in the auth config, so it can only be set here, from the database.
+   */
+  await sql`UPDATE users SET email_verified = true, role = 'admin' WHERE id = ${userId}`
 
   const [org] = await sql`
     SELECT o.* FROM organizations o

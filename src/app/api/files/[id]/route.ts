@@ -67,7 +67,18 @@ function downloadName(file: {
 
 async function handle(request: Request, params: Promise<{ id: string }>) {
   const { id } = await params
-  const { org } = await requireOrg()
+  const { org, user } = await requireOrg()
+
+  /*
+   * Support can look at a customer's files; nobody else can look at anybody's.
+   *
+   * The tenant check is still the join — it is only widened for an
+   * administrator, and only because the alternative is a support screen made
+   * entirely of broken images. Read from the session on the server, so it is
+   * the database's answer about who is asking rather than anything the browser
+   * can claim.
+   */
+  const isAdmin = user.role === 'admin'
 
   const [file] = await db
     .select({
@@ -78,15 +89,23 @@ async function handle(request: Request, params: Promise<{ id: string }>) {
       height: generatedFiles.height,
       metadata: generatedFiles.metadata,
       projectTitle: projects.title,
+      organizationId: projects.organizationId,
     })
     .from(generatedFiles)
     .innerJoin(projects, eq(projects.id, generatedFiles.projectId))
-    .where(and(eq(generatedFiles.id, id), eq(projects.organizationId, org.id)))
+    .where(
+      isAdmin
+        ? eq(generatedFiles.id, id)
+        : and(eq(generatedFiles.id, id), eq(projects.organizationId, org.id)),
+    )
     .limit(1)
 
   if (!file) {
     return Response.json({ error: { code: 'NOT_FOUND' } }, { status: 404 })
   }
+
+  /** Whose file this is, which is not always whose session this is. */
+  const ownerOrgId = file.organizationId
 
   /*
    * The vector file is the one asset the plan actually gates.
@@ -96,8 +115,14 @@ async function handle(request: Request, params: Promise<{ id: string }>) {
    * them as a paid feature. Enforced here rather than in the UI because the
    * URL is guessable by anyone who can see the page.
    */
-  if (file.kind === 'logo_svg') {
-    const plan = await getOrgPlan(org.id)
+  if (file.kind === 'logo_svg' && !isAdmin) {
+    /*
+     * The owner's plan, not the viewer's. They are the same account in every
+     * case except an administrator looking at somebody else's project — and an
+     * admin checking whether the vector actually traced is exempt above,
+     * because that is the question the screen exists to answer.
+     */
+    const plan = await getOrgPlan(ownerOrgId)
     if (!plan?.vectorExport) {
       return Response.json(
         { error: { code: 'FEATURE_LOCKED', message: 'SVG export is available on Creator and above.' } },

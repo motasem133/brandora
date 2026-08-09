@@ -212,6 +212,83 @@ export async function listUsers(params: { search?: string; status?: string; limi
   return rows
 }
 
+/**
+ * One project, whoever owns it, for the support screen.
+ *
+ * Deliberately not `getProject`, which scopes to the caller's organization and
+ * is what keeps one customer from reading another's work. That scoping is
+ * correct and stays; this is a second, separate door, and every route to it is
+ * behind the admin layout's role check.
+ *
+ * It carries the owner along — the workspace, who to email, what they are on —
+ * because the question being asked of this screen is always about a person
+ * ("did their brand come out right"), and having to go and look them up
+ * separately is how support screens end up unused.
+ */
+export async function getProjectForAdmin(id: string) {
+  const [row] = await db.execute<{
+    id: string
+    title: string
+    business_name: string | null
+    status: string
+    industry: string
+    country: string
+    language: 'en' | 'ar'
+    brand_style: string
+    brand_brief: string
+    logo_brief: string | null
+    needs_website: boolean
+    needs_social_media: boolean
+    created_at: string
+    organization_id: string
+    org_name: string
+    credit_balance: number
+    plan_name: string | null
+    owner_name: string | null
+    owner_email: string | null
+    cost: number
+  }>(sql`
+    SELECT p.id, p.title, p.business_name, p.status, p.industry, p.country, p.language,
+           p.brand_style, p.brand_brief, p.logo_brief, p.needs_website, p.needs_social_media,
+           p.created_at,
+           o.id AS organization_id, o.name AS org_name, o.credit_balance,
+           (SELECT pl.name FROM subscriptions s JOIN plans pl ON pl.id = s.plan_id
+             WHERE s.organization_id = o.id AND s.status IN ('active', 'trialing')
+             ORDER BY s.created_at DESC LIMIT 1) AS plan_name,
+           (SELECT u.name FROM members m JOIN users u ON u.id = m.user_id
+             WHERE m.organization_id = o.id ORDER BY m.created_at LIMIT 1) AS owner_name,
+           (SELECT u.email FROM members m JOIN users u ON u.id = m.user_id
+             WHERE m.organization_id = o.id ORDER BY m.created_at LIMIT 1) AS owner_email,
+           coalesce((SELECT sum(cost_usd) FROM ai_usage a WHERE a.project_id = p.id), 0)::float AS cost
+    FROM projects p
+    JOIN organizations o ON o.id = p.organization_id
+    WHERE p.id = ${id} AND p.deleted_at IS NULL
+    LIMIT 1
+  `)
+
+  return row ?? null
+}
+
+/** Every model call this project made, newest first — what it cost and whether it worked. */
+export async function getProjectUsage(projectId: string) {
+  return db.execute<{
+    feature: string
+    provider: string
+    model: string
+    status: string
+    cost: number
+    latency_ms: number
+    images: number
+    created_at: string
+  }>(sql`
+    SELECT feature, provider, model, status, cost_usd::float AS cost,
+           latency_ms, images_generated AS images, created_at
+    FROM ai_usage
+    WHERE project_id = ${projectId}
+    ORDER BY created_at
+  `)
+}
+
 export async function listAllProjects(params: { status?: string; limit?: number }) {
   const status = params.status && params.status !== 'all' ? params.status : null
 
