@@ -34,6 +34,21 @@ test.describe('project deliverables', () => {
     }
   })
 
+  /*
+   * The whole point of the door is which brand it opens on. A link to the
+   * Studio without the parameter lands on whichever brand happens to be first,
+   * which looks like it worked and quietly writes for the wrong company — so
+   * this asserts the id travels, not merely that a link exists.
+   */
+  test('writing for this brand starts on this brand', async ({ page }) => {
+    await page.goto(`/en/dashboard/projects/${projectId}`)
+
+    await page.getByRole('link', { name: 'Create content' }).click()
+
+    await expect(page).toHaveURL(new RegExp(`/dashboard/studio\\?brand=${projectId}`))
+    await expect(page.getByLabel('Brand')).toHaveValue(projectId)
+  })
+
   test('the assistant opens onto its own stage', async ({ page }) => {
     await page.goto(`/en/dashboard/projects/${projectId}`)
 

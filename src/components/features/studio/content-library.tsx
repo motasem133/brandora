@@ -15,17 +15,26 @@ import { listContent } from '@/server/db/queries/content'
 export async function ContentLibrary({
   organizationId,
   projectId,
+  limit,
+  emptyBody,
 }: {
   organizationId: string
+  /** Narrows to one brand — and takes the brand's name off every row with it. */
   projectId?: string
+  limit?: number
+  /**
+   * The Studio's own empty state tells you to pick a brand, which is the wrong
+   * instruction on a page where the brand is the thing you are looking at.
+   */
+  emptyBody?: string
 }) {
   const t = await getTranslations('Studio')
-  const items = await listContent(organizationId, { projectId })
+  const items = await listContent(organizationId, { projectId, limit })
 
   if (items.length === 0) {
     return (
       <div className="rounded-panel border border-dashed border-line p-10">
-        <EmptyState title={t('emptyTitle')} body={t('emptyBody')} />
+        <EmptyState title={t('emptyTitle')} body={emptyBody ?? t('emptyBody')} />
       </div>
     )
   }
@@ -59,7 +68,9 @@ export async function ContentLibrary({
                 )}
               </div>
 
-              <p className="shrink-0 text-xs text-fg-muted">{item.brandName}</p>
+              {/* Only when the list spans brands. Scoped to one, it is the same
+                  word at the end of every row. */}
+              {!projectId && <p className="shrink-0 text-xs text-fg-muted">{item.brandName}</p>}
             </li>
           )
         })}

@@ -258,6 +258,7 @@
       "assistant": "Assistant",
       "label": "Project sections"
     },
+    "contentTitle": "Written from this brand",
     "brief": "Brief",
     "briefIndustry": "Industry",
     "briefCountry": "Country",
@@ -293,6 +294,7 @@
     "libraryLoading": "Loading your content",
     "emptyTitle": "Nothing here yet",
     "emptyBody": "Pick a brand, say what the post is about, and Brandora writes it in that brand's voice.",
+    "emptyBodyBrand": "Say what the post is about and Brandora writes it in this brand's voice.",
     "noBrandsTitle": "Create a brand first",
     "noBrandsBody": "Content Studio writes from a brand you have already generated — its voice, values and story.",
     "noBrandsCta": "Create your brand",

@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
+import { Suspense } from 'react'
 
 import { AssistantPanel } from '@/components/features/assistant/assistant-panel'
 import { BrandFonts } from '@/components/features/projects/brand-fonts'
@@ -11,7 +12,11 @@ import { IdentityPlate } from '@/components/features/projects/identity-plate'
 import { SocialKit } from '@/components/features/projects/social-kit'
 import { SocialView } from '@/components/features/projects/social-view'
 import { WebsiteView } from '@/components/features/projects/website-view'
-import { ArrowLeft, Download, MessageSquare, Palette } from 'lucide-react'
+import {
+  ContentLibrary,
+  ContentLibrarySkeleton,
+} from '@/components/features/studio/content-library'
+import { ArrowLeft, Download, MessageSquare, Palette, PenLine } from 'lucide-react'
 
 import { buttonVariants } from '@/components/ui/button'
 import { Disclosure } from '@/components/ui/disclosure'
@@ -57,6 +62,7 @@ export default async function ProjectDetailPage({
 
   const t = await getTranslations('Projects')
   const tb = await getTranslations('Branding')
+  const tst = await getTranslations('Studio')
   const { org, user } = await requireOrg()
 
   // getProject is org-scoped, so a project from another tenant reads as 404.
@@ -274,6 +280,47 @@ export default async function ProjectDetailPage({
 
       {websiteAsset && <WebsiteView website={websiteAsset} />}
       {socialAsset && <SocialView social={socialAsset} />}
+
+      {/*
+        What this brand has written since, and the door to writing more.
+        `content_items.project_id` is required, so every piece of content
+        already belongs to exactly one brand — but the only way in was the app
+        bar's Content Studio, which opens on a brand picker and asks which
+        brand you meant about four seconds after you were looking at it.
+
+        Last of the deliverables on purpose: the run produced everything above,
+        and this is the part that accumulates afterwards.
+      */}
+      {brandingAsset && (
+        <section className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="font-display text-xl font-semibold">{t('contentTitle')}</h2>
+            {/*
+              `?brand=` is the Studio's own parameter, resolved on the server —
+              so this arrives with the brand already chosen and the picker
+              already showing it, rather than landing on someone else's.
+            */}
+            <Link
+              href={`/dashboard/studio?brand=${project.id}`}
+              className={buttonVariants({ variant: 'secondary', size: 'sm' })}
+            >
+              <PenLine />
+              {tst('generate')}
+            </Link>
+          </div>
+
+          {/* A slice, not the archive. The full list, and the composer, are one
+              press away above. */}
+          <Suspense fallback={<ContentLibrarySkeleton label={tst('libraryLoading')} />}>
+            <ContentLibrary
+              organizationId={org.id}
+              projectId={project.id}
+              limit={5}
+              emptyBody={tst('emptyBodyBrand')}
+            />
+          </Suspense>
+        </section>
+      )}
         </>
       )}
 
