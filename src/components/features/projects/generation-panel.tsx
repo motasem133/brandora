@@ -60,6 +60,22 @@ export function GenerationPanel({
   const [progress, setProgress] = useState<Progress>(initialProgress)
   const [status, setStatus] = useState(initialStatus)
   const sourceRef = useRef<EventSource | null>(null)
+  /*
+   * Which steps were already finished when this page was rendered.
+   *
+   * Seeded from the server's own view rather than starting empty: a page
+   * loaded onto a job that has already finished a section must not treat that
+   * section as news and reload itself over it.
+   */
+  const revealed = useRef<Set<string>>(
+    new Set(
+      Object.entries(initialProgress)
+        .filter(([, step]) => step?.status === 'done')
+        .map(([name]) => name),
+    ),
+  )
+  /** One reveal per page, so a run with four sections does not reload four times. */
+  const hasRevealed = useRef(false)
 
   /*
    * True only for a run that finished while somebody was watching.
@@ -115,8 +131,44 @@ export function GenerationPanel({
 
     source.addEventListener('progress', (event) => {
       const payload = JSON.parse((event as MessageEvent).data)
-      setProgress(payload.progress ?? {})
+      const next: Progress = payload.progress ?? {}
+      setProgress(next)
       setStatus(payload.status)
+
+      /*
+       * Show the brand when it exists, not when the run ends.
+       *
+       * The sections take wildly different amounts of time. The naming, the
+       * website and the social copy are all in within about forty-five
+       * seconds; the logos take another hundred on top, because drawing two
+       * images is simply slower than writing text. The page waited for all of
+       * it, so a customer whose brand had been sitting finished in the
+       * database for a minute and a half was still watching a spinner — which
+       * is most of why a run "takes two minutes".
+       *
+       * `router.refresh()` is what this should be and it does not work here.
+       * It was tried: the RSC request goes out on every landing and the DOM
+       * keeps the old output, which is the same fault recorded against the
+       * logo control and at the end of this stream. So this uses the thing
+       * that does work, exactly once, on the first section to land — the rest
+       * arrive with the reload at the end of the run.
+       *
+       * `revealed` is seeded from the progress this page was rendered with, so
+       * arriving at a finished job reloads nothing. Without that it is the
+       * same infinite loop the `done` handler below documents.
+       */
+      const landedNow = Object.entries(next).some(
+        ([name, step]) => step?.status === 'done' && !revealed.current.has(name),
+      )
+
+      for (const [name, step] of Object.entries(next)) {
+        if (step?.status === 'done') revealed.current.add(name)
+      }
+
+      if (landedNow && !hasRevealed.current && witnessedRun.current) {
+        hasRevealed.current = true
+        window.location.assign(window.location.pathname)
+      }
     })
 
     source.addEventListener('done', (event) => {
