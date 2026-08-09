@@ -53,6 +53,9 @@ export async function runModel<T extends z.ZodType>(options: RunOptions<T>): Pro
   const chain = modelChain(options.task)
   let lastError: unknown
 
+  /** How long one model gets before the chain moves on. See the call below. */
+  const ATTEMPT_TIMEOUT_MS = 60_000
+
   /*
    * The chain answers "this model is having a bad day" by trying another one.
    * It has no answer for "there is no network", because in that case every
@@ -102,6 +105,22 @@ export async function runModel<T extends z.ZodType>(options: RunOptions<T>): Pro
         // One retry inside the SDK for transient network errors; anything
         // structural falls through to the next model instead.
         maxRetries: 1,
+        /*
+         * A hung provider used to own the whole run.
+         *
+         * There was no deadline here at all, so an attempt ran until something
+         * further out gave up. `ai_usage` shows what that costs: social has a
+         * median of two seconds and a 90th percentile of eighty-eight, website
+         * twelve and seventy-seven. Those are not slow answers, they are calls
+         * that stopped answering — and the chain below cannot try the next
+         * model while it is still waiting for this one.
+         *
+         * Set well clear of honest work rather than tight: the slowest real
+         * median in the table is branding at thirty-one seconds, and cutting a
+         * call that was going to succeed trades a slow section for a failed
+         * one. This only ends the calls that were never coming back.
+         */
+        abortSignal: AbortSignal.timeout(ATTEMPT_TIMEOUT_MS),
       })
 
       const inputTokens = result.usage?.inputTokens ?? 0
