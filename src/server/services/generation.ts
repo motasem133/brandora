@@ -15,6 +15,7 @@ import {
   websiteAssets,
 } from '@/server/db/schema'
 import { inngest } from '@/server/inngest/client'
+import { findStuckJobs, releaseHold } from '@/server/services/stuck-holds'
 import { isStorageConfigured } from '@/server/storage/r2'
 
 /**
@@ -124,7 +125,32 @@ export async function startGeneration(params: {
   if (!project) throw new AppError('NOT_FOUND', 'Project not found.')
 
   if (project.status === 'queued' || project.status === 'generating') {
-    throw new AppError('GENERATION_IN_PROGRESS', 'This project is already generating.')
+    /*
+     * A run that was never delivered leaves the project reading as busy
+     * forever, and this guard then refuses the one action that would recover
+     * it — so the customer is locked out of their own brand with their credits
+     * held, and only an operator can free them. That is exactly what happened
+     * to the first two customers who generated after the Inngest app stopped
+     * being synced to production.
+     *
+     * So a hold that the sweeper would already consider dead is released here
+     * and the new run proceeds. The check is the same one the sweeper uses, so
+     * the two cannot disagree about what "stuck" means, and `settleCredits` is
+     * keyed on the job id, so a late refund from either side is a no-op.
+     */
+    const stuck = await findStuckJobs()
+    const mine = stuck.find((job) => job.projectId === project.id)
+
+    if (!mine) {
+      throw new AppError('GENERATION_IN_PROGRESS', 'This project is already generating.')
+    }
+
+    await releaseHold(
+      mine.id,
+      params.organizationId,
+      project.id,
+      'The run never started. Credits were returned and the brand was queued again.',
+    )
   }
 
   // Free credits are the obvious abuse target, so verification gates spending
@@ -168,15 +194,35 @@ export async function startGeneration(params: {
 
   await db.update(projects).set({ status: 'queued' }).where(eq(projects.id, project.id))
 
-  await inngest.send({
-    name: 'brand/generate.requested',
-    data: {
-      projectId: project.id,
-      jobId: job.id,
-      organizationId: params.organizationId,
-      sections,
-    },
-  })
+  /*
+   * If the event cannot even be handed over, the run is not going to happen —
+   * so give the credits straight back rather than leaving a queued row for a
+   * clock to find half an hour later. The customer sees a failure they can act
+   * on, with their balance intact.
+   */
+  try {
+    await inngest.send({
+      name: 'brand/generate.requested',
+      data: {
+        projectId: project.id,
+        jobId: job.id,
+        organizationId: params.organizationId,
+        sections,
+      },
+    })
+  } catch (error) {
+    await releaseHold(
+      job.id,
+      params.organizationId,
+      project.id,
+      'The run could not be queued. Credits were returned automatically.',
+    )
+    console.error('[generation] could not send the generate event', error)
+    throw new AppError(
+      'GENERATION_UNAVAILABLE',
+      'Could not start the run. Your credits were not taken.',
+    )
+  }
 
   return { jobId: job.id, creditsReserved: cost, sections }
 }
