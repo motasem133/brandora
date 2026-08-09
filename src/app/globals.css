@@ -289,7 +289,14 @@
  * into each other rather than tightening a word.
  */
 @utility type-display {
-  font-size: clamp(2.6rem, 6.2vw, 4.6rem);
+  /*
+   * The floor is the phone's size, and 2.6rem was too big to be one: at 390px
+   * it put a ten-word headline on four lines, 186px tall, which with the badge
+   * above it was most of the fold before a single claim had been read. 2.05rem
+   * is still display type at that width — it is the only size on the screen —
+   * and it leaves the deck and both buttons above the crease.
+   */
+  font-size: clamp(2.05rem, 6.2vw, 4.6rem);
   font-weight: 600;
   line-height: 1.12;
   letter-spacing: -0.02em;

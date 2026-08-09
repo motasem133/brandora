@@ -32,7 +32,19 @@ export function Horizon() {
    * glow as separate, controllable things.
    */
   const arc = (
-    <svg viewBox="0 0 1600 420" className="w-[110rem] max-w-none" preserveAspectRatio="xMidYMin slice">
+    /*
+     * The width is what makes this a horizon rather than a seam.
+     *
+     * 110rem is 1760px. Over a 1440px desktop that is a 1.2x window onto the
+     * arc and you see the crest. Over a 390px phone it is a 4.5x window onto
+     * the middle of it, where the curve's apex has long left the top of the
+     * box — so the fill below the curve becomes a full-width rectangle of lit
+     * violet with a hard horizontal edge, and the rim reads as a straight
+     * bright line ruled across the paragraph it was meant to sit under. That
+     * is the "hard seam through the copy" this fixes: a phone gets a narrower
+     * arc, so the crest is inside the window at that width too.
+     */
+    <svg viewBox="0 0 1600 420" className="w-[48rem] max-w-none sm:w-[110rem]" preserveAspectRatio="xMidYMin slice">
       <defs>
         {/*
           The rim, across the arc.
@@ -125,9 +137,26 @@ export function Horizon() {
     </svg>
   )
 
+  /*
+   * Where the light sits, and what stops clipping it.
+   *
+   * 34% of the hero is behind the product frame on a desktop and squarely
+   * across the deck on a phone, because the same copy is four times as tall
+   * there — so the crest was ruled through the sentence that explains what the
+   * product does. It starts lower at that width, under the buttons, which is
+   * where the frame it is meant to be behind begins.
+   *
+   * `overflow-hidden` came off with it. It was cutting the bloom in half, and a
+   * blurred radial with a straight edge across the top of it is the one thing
+   * on the page that read as a rendering seam rather than as light. Nothing was
+   * relying on it: the hero section clips its own overflow, which is what keeps
+   * the wide arc from widening the document — checked at 390 and at 1440.
+   */
+  const frame = 'pointer-events-none absolute inset-x-0 top-[52%] z-0 flex justify-center sm:top-[34%]'
+
   if (reduced) {
     return (
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-[34%] z-0 flex justify-center overflow-hidden">
+      <div aria-hidden className={frame}>
         {arc}
       </div>
     )
@@ -137,7 +166,7 @@ export function Horizon() {
     <motion.div
       data-reveal
       aria-hidden
-      className="pointer-events-none absolute inset-x-0 top-[34%] z-0 flex justify-center overflow-hidden"
+      className={frame}
       style={{ y, opacity: fade }}
     >
       <motion.div
@@ -191,7 +220,8 @@ export function SectionArc({ className }: { className?: string }) {
   const reduced = useReducedMotion()
 
   const arc = (
-    <svg viewBox="0 0 1600 300" className="w-[90rem] max-w-none" preserveAspectRatio="xMidYMin slice">
+    /* Narrower on a phone for the same reason as the hero's — see there. */
+    <svg viewBox="0 0 1600 300" className="w-[44rem] max-w-none sm:w-[90rem]" preserveAspectRatio="xMidYMin slice">
       <defs>
         <linearGradient id="section-line" x1="0" y1="0" x2="1" y2="0">
           <stop offset="0%" stopColor="var(--brand-indigo)" stopOpacity="0" />
