@@ -42,6 +42,7 @@
     "@sentry/nextjs": "^10.69.0",
     "@sparticuz/chromium": "^149.0.0",
     "@t3-oss/env-nextjs": "^0.13.11",
+    "@vercel/analytics": "^2.0.1",
     "ai": "^7.0.47",
     "better-auth": "^1.6.25",
     "class-variance-authority": "^0.7.1",
