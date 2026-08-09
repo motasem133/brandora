@@ -74,6 +74,22 @@ export async function releaseHold(
   await db.update(projects).set({ status: 'failed' }).where(eq(projects.id, projectId))
 }
 
+/**
+ * Whether one job is a run nothing ever collected.
+ *
+ * The same rule `findStuckJobs` applies in SQL, in a form that can be asked of
+ * a row already in hand — the progress stream is holding exactly that row, for
+ * exactly the customer whose credits are held.
+ */
+export function isNeverCollected(job: {
+  status: string
+  startedAt: Date | null
+  createdAt: Date
+}): boolean {
+  if (job.status !== 'queued' || job.startedAt) return false
+  return Date.now() - job.createdAt.getTime() > NEVER_STARTED_MINUTES * 60 * 1000
+}
+
 /** Generation jobs that have taken credits and stopped reporting. */
 export async function findStuckJobs() {
   return db

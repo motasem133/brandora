@@ -3,9 +3,17 @@ import { sweepStuckHolds } from '@/server/services/stuck-holds'
 /**
  * Returns credits that were taken for work that never ran.
  *
- * Driven by a Vercel cron (see `vercel.json`) rather than by Inngest, because
- * the job this cleans up after is precisely a job Inngest failed to deliver —
- * see `services/stuck-holds.ts` for the incident that moved it here.
+ * Driven by a Vercel cron rather than by Inngest, because the job this cleans
+ * up after is precisely a job Inngest failed to deliver — see
+ * `services/stuck-holds.ts` for the incident that moved it here.
+ *
+ * The schedule in `vercel.json` is daily, which is the most this plan allows;
+ * a shorter one is rejected at deploy time rather than at runtime. That is
+ * survivable because this is the backstop and not the main path: a customer
+ * watching their own run has the hold released by the progress stream within
+ * seconds, and pressing generate again releases it too. What is left for this
+ * is the holds nobody is waiting on — someone who closed the tab and went to
+ * bed. If the plan ever allows it, every fifteen minutes is the right value.
  */
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60

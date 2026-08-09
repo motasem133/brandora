@@ -129,6 +129,45 @@ test.describe('stuck holds', () => {
     expect(jobsAfter).toBe(jobsBefore)
   })
 
+  /*
+   * The path that matters most in practice. The scheduled sweep runs daily on
+   * this plan, so the customer sitting in front of the spinner cannot be left
+   * waiting for it — the stream they already have open is reading the very row
+   * that says their credits are held.
+   */
+  test('the progress stream refunds the run it is watching', async ({ request }) => {
+    const [before] = await sql`
+      SELECT credit_balance FROM organizations WHERE id = ${organizationId}`
+    const opening = before.credit_balance as number
+
+    const [job] = await sql`
+      INSERT INTO generation_jobs (project_id, trigger, sections, progress, status,
+                                   credits_reserved, created_at)
+      VALUES (${projectId}, 'initial', ${sql.json(['branding'])},
+              ${sql.json({ branding: { status: 'pending' } })}, 'queued', ${HELD},
+              now() - interval '20 minutes')
+      RETURNING id`
+    jobId = job.id as string
+
+    await sql`
+      INSERT INTO credit_transactions (organization_id, amount, balance_after, reason,
+                                       project_id, generation_job_id, idempotency_key, metadata)
+      VALUES (${organizationId}, ${-HELD}, ${opening - HELD}, 'generation', ${projectId},
+              ${jobId}, ${'reserve:' + jobId}, ${sql.json({ kind: 'reservation' })})`
+    await sql`
+      UPDATE organizations SET credit_balance = ${opening - HELD} WHERE id = ${organizationId}`
+    await sql`UPDATE projects SET status = 'queued' WHERE id = ${projectId}`
+
+    const stream = await request.get(`/api/generate/${projectId}/stream`)
+    expect(stream.ok()).toBeTruthy()
+    // The stream ends rather than tailing a job that is never going to move.
+    expect(await stream.text()).toContain('"status":"failed"')
+
+    const [after] = await sql`
+      SELECT credit_balance FROM organizations WHERE id = ${organizationId}`
+    expect(after.credit_balance).toBe(opening)
+  })
+
   test('a run that is merely young is left alone', async ({ request }) => {
     const [before] = await sql`
       SELECT credit_balance FROM organizations WHERE id = ${organizationId}`
