@@ -53,7 +53,6 @@ const COPY = {
       button: 'Accept invitation',
       footer: 'If you were not expecting this, you can ignore this email.',
     },
-    fallbackNote: 'If the button does not work, paste this link into your browser:',
   },
   ar: {
     'verify-email': {
@@ -86,7 +85,6 @@ const COPY = {
       button: 'قبول الدعوة',
       footer: 'إذا لم تكن تتوقع هذه الرسالة، يمكنك تجاهلها.',
     },
-    fallbackNote: 'إذا لم يعمل الزر، الصق هذا الرابط في متصفحك:',
   },
 } as const
 
@@ -99,12 +97,51 @@ function escape(value: string) {
     .replace(/"/g, '&quot;')
 }
 
-function layout(params: {
+/**
+ * Where the mark is fetched from.
+ *
+ * A mail client has no origin to resolve a relative path against, so the image
+ * has to carry the full URL. Read from the raw environment rather than through
+ * `@/lib/env` on purpose: that module validates the whole server environment on
+ * import, and this file is deliberately importable from a plain test.
+ */
+const MARK_URL = `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/brandora-mark.png`
+
+/*
+ * The mark's own ramp, which is the app's — violet at the light end, sinking
+ * through indigo into deep blue. See globals.css, where the same three stops
+ * are the source of every lit surface in the product.
+ */
+const VIOLET = '#7240ff'
+const INDIGO = '#4b46c9'
+const DEEP = '#1e4585'
+/** The violet at 12% on white, and the line it makes. Both mixed flat, because
+    a mail client will not evaluate color-mix. */
+const TINT = '#f4f1ff'
+const TINT_LINE = '#e6dfff'
+/** The readable accent: 7.53:1 on white, where the fill violet is 5.44:1. */
+const ACCENT = '#5b33cc'
+const INK = '#111827'
+const INK_SOFT = '#4b5563'
+const INK_FAINT = '#8b87a3'
+
+/**
+ * The card every email is.
+ *
+ * Tables and inline styles on purpose. Mail clients strip stylesheets and many
+ * still lay out with tables, so this is the shape that survives them — which is
+ * also why the palette above is a set of flat hex values rather than the
+ * product's tokens.
+ *
+ * `main` is whatever the email is actually for: a button, or a code. It is the
+ * only thing that differs between the two, and it used to be the excuse for two
+ * near-identical copies of this markup that drifted apart at the edges.
+ */
+function shell(params: {
   locale: Locale
   heading: string
   body: string
-  button: string
-  url: string
+  main: string
   footer: string
 }) {
   const { locale } = params
@@ -115,10 +152,6 @@ function layout(params: {
     ? "'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, sans-serif"
     : "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
 
-  /*
-   * Tables and inline styles on purpose. Mail clients strip stylesheets and
-   * many still lay out with tables, so this is the shape that survives them.
-   */
   return `<!doctype html>
 <html lang="${locale}" dir="${dir}">
   <head>
@@ -126,24 +159,32 @@ function layout(params: {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>${escape(params.heading)}</title>
   </head>
-  <body style="margin:0;padding:0;background:#f6f6f8;font-family:${font};">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f6f8;padding:32px 12px;">
+  <body style="margin:0;padding:0;background:${TINT};font-family:${font};">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${TINT};padding:40px 12px;">
       <tr>
         <td align="center">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:14px;padding:32px;text-align:${align};">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:16px;border:1px solid ${TINT_LINE};text-align:${align};">
+            <!-- The ramp as a rule along the top edge, running from the reading
+                 edge inwards so the violet lands under the mark in both
+                 directions. Clients that drop the gradient keep the solid
+                 violet under it, which is the stop the mark starts from. -->
             <tr>
-              <td>
-                <p style="margin:0 0 24px;font-size:20px;font-weight:700;color:#7240ff;">Brandora</p>
-                <h1 style="margin:0 0 12px;font-size:22px;line-height:1.3;color:#111827;">${escape(params.heading)}</h1>
-                <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#4b5563;">${escape(params.body)}</p>
-                <a href="${params.url}" style="display:inline-block;background:#7240ff;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-size:15px;font-weight:500;">${escape(params.button)}</a>
-                <p style="margin:24px 0 6px;font-size:12px;color:#9ca3af;">${escape(COPY[locale].fallbackNote)}</p>
-                <!-- The fallback URL is 12px, so it takes the light theme's
-                     readable accent (7.53:1 on white) rather than the fill
-                     colour, which measures 5.44:1. Same rule as the app. -->
-                <p style="margin:0 0 24px;font-size:12px;word-break:break-all;"><a href="${params.url}" style="color:#5b33cc;">${params.url}</a></p>
-                <hr style="border:none;border-top:1px solid #e5e7eb;margin:0 0 16px;" />
-                <p style="margin:0;font-size:12px;line-height:1.6;color:#9ca3af;">${escape(params.footer)}</p>
+              <td style="height:4px;line-height:4px;font-size:0;background-color:${VIOLET};background-image:linear-gradient(${rtl ? 270 : 90}deg,${VIOLET},${INDIGO} 55%,${DEEP});border-radius:16px 16px 0 0;">&nbsp;</td>
+            </tr>
+            <tr>
+              <td style="padding:32px;">
+                <!-- The lockup as inline content rather than a table: an inline
+                     image and its label swap sides with the direction on their own, so
+                     Arabic needs no mirrored copy of this row. -->
+                <p style="margin:0 0 28px;font-size:20px;line-height:1;font-weight:700;color:${VIOLET};">
+                  <img src="${MARK_URL}" width="36" height="36" alt="" style="vertical-align:middle;border:0;outline:none;text-decoration:none;" />
+                  <span style="vertical-align:middle;padding-${rtl ? 'right' : 'left'}:10px;">Brandora</span>
+                </p>
+                <h1 style="margin:0 0 12px;font-size:22px;line-height:1.3;color:${INK};">${escape(params.heading)}</h1>
+                <p style="margin:0 0 28px;font-size:15px;line-height:1.6;color:${INK_SOFT};">${escape(params.body)}</p>
+                ${params.main}
+                <hr style="border:none;border-top:1px solid ${TINT_LINE};margin:28px 0 16px;" />
+                <p style="margin:0;font-size:12px;line-height:1.6;color:${INK_FAINT};">${escape(params.footer)}</p>
               </td>
             </tr>
           </table>
@@ -155,7 +196,30 @@ function layout(params: {
 }
 
 /**
- * The same card, with a code where the button goes.
+ * The card, with the action as a button.
+ *
+ * The button is the whole path: the pasteable copy of the URL that used to sit
+ * under it is gone. It printed a signed one-time token in full across three
+ * lines of an otherwise calm email, which is the part of the message that looks
+ * most like a phishing attempt and the part a customer is most likely to read
+ * as one — and every mail client that can render this can follow a link.
+ */
+function layout(params: {
+  locale: Locale
+  heading: string
+  body: string
+  button: string
+  url: string
+  footer: string
+}) {
+  return shell({
+    ...params,
+    main: `<a href="${params.url}" style="display:inline-block;background-color:${VIOLET};background-image:linear-gradient(135deg,${VIOLET},${INDIGO} 55%,${DEEP});color:#ffffff;text-decoration:none;padding:13px 24px;border-radius:10px;font-size:15px;font-weight:600;">${escape(params.button)}</a>`,
+  })
+}
+
+/**
+ * The card, with a code where the button goes.
  *
  * A code is read and retyped rather than clicked, so it is set large, spaced
  * and monospaced — proportional digits at body size are where a 6 becomes an 8.
@@ -170,45 +234,18 @@ function codeLayout(params: {
   code: string
   footer: string
 }) {
-  const { locale } = params
-  const rtl = locale === 'ar'
-  const dir = rtl ? 'rtl' : 'ltr'
-  const align = rtl ? 'right' : 'left'
-  const font = rtl
-    ? "'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, sans-serif"
-    : "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-
-  return `<!doctype html>
-<html lang="${locale}" dir="${dir}">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>${escape(params.heading)}</title>
-  </head>
-  <body style="margin:0;padding:0;background:#f6f6f8;font-family:${font};">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f6f8;padding:32px 12px;">
-      <tr>
-        <td align="center">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:14px;padding:32px;text-align:${align};">
-            <tr>
-              <td>
-                <p style="margin:0 0 24px;font-size:20px;font-weight:700;color:#7240ff;">Brandora</p>
-                <h1 style="margin:0 0 12px;font-size:22px;line-height:1.3;color:#111827;">${escape(params.heading)}</h1>
-                <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#4b5563;">${escape(params.body)}</p>
-                <!-- The code is always LTR: digits are read left to right in
-                     Arabic too, and letting the RTL context reverse a grouped
-                     string is how a code gets typed in backwards. -->
-                <p dir="ltr" style="margin:0 0 24px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:32px;font-weight:700;letter-spacing:0.28em;color:#111827;text-align:center;background:#f6f6f8;border-radius:14px;padding:18px 12px;">${escape(params.code)}</p>
-                <hr style="border:none;border-top:1px solid #e5e7eb;margin:0 0 16px;" />
-                <p style="margin:0;font-size:12px;line-height:1.6;color:#9ca3af;">${escape(params.footer)}</p>
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
-  </body>
-</html>`
+  return shell({
+    ...params,
+    /* The code is always LTR: digits are read left to right in Arabic too, and
+       letting the RTL context reverse a grouped string is how a code gets typed
+       in backwards. It is set in the readable accent — 6.6:1 on the tint — so
+       the one thing the email exists to carry is also the one thing wearing the
+       brand's colour. */
+    /* `text-indent` cancels the trailing letter-space, which centring counts as
+       part of the string and which otherwise sits the code half a character
+       right of the middle of its own box. */
+    main: `<p dir="ltr" style="margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:32px;font-weight:700;letter-spacing:0.28em;text-indent:0.28em;color:${ACCENT};text-align:center;background:${TINT};border:1px solid ${TINT_LINE};border-radius:14px;padding:18px 12px;">${escape(params.code)}</p>`,
+  })
 }
 
 export function renderEmail(template: EmailTemplate, locale: Locale = 'en') {
