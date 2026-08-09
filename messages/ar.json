@@ -22,7 +22,9 @@
     "copy": "نسخ",
     "copied": "تم النسخ",
     "close": "إغلاق",
-    "skipToContent": "تخطَّ إلى المحتوى"
+    "skipToContent": "تخطَّ إلى المحتوى",
+    "showPassword": "إظهار كلمة المرور",
+    "hidePassword": "إخفاء كلمة المرور"
   },
   "Landing": {
     "heroTitle": "موجز واحد. هويتك كاملة.",

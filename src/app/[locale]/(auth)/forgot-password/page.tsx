@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { ForgotPasswordForm } from '@/components/features/auth/forgot-password-form'
+import { redirectIfSignedIn } from '@/server/session'
 
 export default async function ForgotPasswordPage({
   params,
@@ -9,6 +10,7 @@ export default async function ForgotPasswordPage({
 }) {
   const { locale } = await params
   setRequestLocale(locale)
+  await redirectIfSignedIn(locale)
   const t = await getTranslations('Auth')
 
   return (

@@ -7,15 +7,28 @@ const intlMiddleware = createIntlMiddleware(routing)
 
 /** Paths that require a session, checked after the locale prefix is stripped. */
 const PROTECTED = ['/dashboard', '/onboarding', '/admin']
+
 /*
- * Paths a signed-in user should be bounced away from.
+ * Bouncing a signed-in visitor off /login used to happen here, from the
+ * presence of the cookie. It happens in the pages now — see
+ * `redirectIfSignedIn` — because presence is a guess and the guess can
+ * disagree with the database.
  *
- * /reset-password is deliberately absent: it is reached from an emailed link
- * carrying a token, and someone who is still signed in on that browser is
- * exactly the person who needs it — bouncing them to the dashboard would make
- * the reset link unusable for them.
+ * When it disagreed, the two halves bounced the visitor between them forever:
+ * /dashboard found no session and sent them to /login, this sent them back
+ * because the cookie was still in the browser, and the tab was bricked with
+ * nothing but 307s. Deleting the account while a browser still held the cookie
+ * did it; so would a revoked session or a restored backup.
+ *
+ * The redirect below stays, because it is only a shortcut. It refuses entry to
+ * a page whose own code refuses entry anyway, and a cookie that is present but
+ * dead now fails at the layout and lands somewhere that renders.
+ *
+ * /reset-password was deliberately absent from the old guest-only list: it is
+ * reached from an emailed link carrying a token, and someone still signed in on
+ * that browser is exactly the person who needs it. It still is — the three
+ * pages that call `redirectIfSignedIn` do not include it.
  */
-const GUEST_ONLY = ['/login', '/register', '/forgot-password']
 
 /** Hostnames that are the app itself rather than a customer's published site. */
 const APP_HOSTS = new Set(['localhost', '127.0.0.1'])
@@ -143,30 +156,11 @@ export default function proxy(request: NextRequest) {
     request.cookies.has('__Secure-better-auth.session_token')
 
   const isProtected = PROTECTED.some((p) => pathWithoutLocale.startsWith(p))
-  const isGuestOnly = GUEST_ONLY.some((p) => pathWithoutLocale.startsWith(p))
 
   if (isProtected && !hasSessionCookie) {
     const url = new URL(`/${locale}/login`, request.url)
     url.searchParams.set('redirectTo', pathname)
     return NextResponse.redirect(url)
-  }
-
-  if (isGuestOnly && hasSessionCookie) {
-    /*
-     * Honour where they were going. This sent everyone to the dashboard and
-     * dropped `redirectTo`, which quietly broke the one case that needs it: an
-     * invited person who is already signed in clicks the invitation, is bounced
-     * off /register, and never sees it again.
-     *
-     * Same rule as the sign-in form — relative paths within this app only, so
-     * the parameter cannot become an open redirect.
-     */
-    const requested = request.nextUrl.searchParams.get('redirectTo')
-    const safe = requested && requested.startsWith('/') && !requested.startsWith('//')
-
-    return NextResponse.redirect(
-      new URL(safe ? requested : `/${locale}/dashboard`, request.url),
-    )
   }
 
   return intlMiddleware(request)

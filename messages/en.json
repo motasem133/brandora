@@ -22,7 +22,9 @@
     "copy": "Copy",
     "copied": "Copied",
     "close": "Close",
-    "skipToContent": "Skip to content"
+    "skipToContent": "Skip to content",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
   },
   "Landing": {
     "heroTitle": "One brief. Your entire brand.",

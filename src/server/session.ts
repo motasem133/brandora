@@ -2,6 +2,7 @@ import 'server-only'
 
 import { and, eq } from 'drizzle-orm'
 import { headers } from 'next/headers'
+import { redirect } from 'next/navigation'
 import { cache } from 'react'
 
 import { AppError } from '@/lib/errors'
@@ -22,6 +23,36 @@ import { resolveActiveOrganization } from '@/server/services/organizations'
 export const getSession = cache(async () => {
   return auth.api.getSession({ headers: await headers() })
 })
+
+/**
+ * Sends a genuinely signed-in visitor away from a page meant for guests.
+ *
+ * The proxy used to do this from the presence of the cookie, which is a guess,
+ * and the guess and the truth could disagree — at which point the two halves
+ * bounced the visitor between them forever. Delete the account (or the session
+ * row, or restore an older database) while a browser still holds the cookie
+ * and: /dashboard finds no session and redirects to /login, /login sees a
+ * cookie and redirects to /dashboard, and the tab is bricked with nothing but
+ * 307s. The only exit was clearing cookies by hand, which is not a thing to
+ * expect of anyone.
+ *
+ * So the question is asked of the database on the three pages that care. It
+ * costs a session lookup on pages that are, by definition, mostly reached by
+ * people who do not have one.
+ */
+export async function redirectIfSignedIn(locale: string, redirectTo?: string) {
+  const session = await getSession()
+  if (!session) return
+
+  /*
+   * Honour where they were going — an invited person who is already signed in
+   * clicks the invitation, lands on /register, and must still reach it. Same
+   * rule as the sign-in form: relative paths within this app only, so the
+   * parameter cannot become an open redirect.
+   */
+  const safe = redirectTo && redirectTo.startsWith('/') && !redirectTo.startsWith('//')
+  redirect(safe ? redirectTo : `/${locale}/dashboard`)
+}
 
 export async function requireSession() {
   const session = await getSession()

@@ -6,7 +6,7 @@ import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { FieldError } from '@/components/ui/field-error'
-import { Input } from '@/components/ui/input'
+import { PasswordInput } from '@/components/ui/password-input'
 import { Label } from '@/components/ui/label'
 import { Link, useRouter } from '@/i18n/navigation'
 import { authClient } from '@/lib/auth-client'
@@ -72,10 +72,9 @@ export function ResetPasswordForm({
     <form method="post" onSubmit={onSubmit} className="space-y-4" noValidate>
       <div>
         <Label htmlFor="password">{t('newPassword')}</Label>
-        <Input
+        <PasswordInput
           id="password"
           name="password"
-          type="password"
           autoComplete="new-password"
           aria-invalid={Boolean(errors.password)}
           className="mt-1.5"
@@ -85,10 +84,9 @@ export function ResetPasswordForm({
 
       <div>
         <Label htmlFor="confirmPassword">{t('confirmPassword')}</Label>
-        <Input
+        <PasswordInput
           id="confirmPassword"
           name="confirmPassword"
-          type="password"
           autoComplete="new-password"
           aria-invalid={Boolean(errors.confirmPassword)}
           className="mt-1.5"

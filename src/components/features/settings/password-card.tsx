@@ -7,7 +7,7 @@ import { useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardTitle } from '@/components/ui/card'
 import { FieldError } from '@/components/ui/field-error'
-import { Input } from '@/components/ui/input'
+import { PasswordInput } from '@/components/ui/password-input'
 import { Label } from '@/components/ui/label'
 import { authClient } from '@/lib/auth-client'
 
@@ -61,10 +61,9 @@ export function PasswordCard() {
       <form ref={formRef} method="post" onSubmit={onSubmit} className="space-y-4" noValidate>
         <div>
           <Label htmlFor="currentPassword">{t('currentPassword')}</Label>
-          <Input
+          <PasswordInput
             id="currentPassword"
             name="currentPassword"
-            type="password"
             autoComplete="current-password"
             required
             className="mt-1.5"
@@ -74,10 +73,9 @@ export function PasswordCard() {
 
         <div>
           <Label htmlFor="newPassword">{ta('newPassword')}</Label>
-          <Input
+          <PasswordInput
             id="newPassword"
             name="newPassword"
-            type="password"
             autoComplete="new-password"
             required
             className="mt-1.5"

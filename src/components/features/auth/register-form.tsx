@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { FieldError } from '@/components/ui/field-error'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { PasswordInput } from '@/components/ui/password-input'
 import { Link, useRouter } from '@/i18n/navigation'
 import { authClient } from '@/lib/auth-client'
 
@@ -124,13 +125,12 @@ export function RegisterForm({ google }: { google: boolean }) {
         {/* The rule is stated before the field is used, not after it is
             refused — it was only discoverable by submitting and failing. */}
         <Field label={t('password')} error={errors.password} hint={t('passwordHint')} required>
-          <Input name="password" type="password" autoComplete="new-password" className="mt-1.5" />
+          <PasswordInput name="password" autoComplete="new-password" className="mt-1.5" />
         </Field>
 
         <Field label={t('confirmPassword')} error={errors.confirmPassword} required>
-          <Input
+          <PasswordInput
             name="confirmPassword"
-            type="password"
             autoComplete="new-password"
             className="mt-1.5"
           />

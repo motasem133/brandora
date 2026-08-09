@@ -9,6 +9,7 @@ import { GoogleButton } from '@/components/features/auth/google-button'
 import { Button } from '@/components/ui/button'
 import { FieldError } from '@/components/ui/field-error'
 import { Input } from '@/components/ui/input'
+import { PasswordInput } from '@/components/ui/password-input'
 import { Label } from '@/components/ui/label'
 import { Link, useRouter } from '@/i18n/navigation'
 import { authClient } from '@/lib/auth-client'
@@ -107,10 +108,9 @@ export function LoginForm({ google }: { google: boolean }) {
               {t('forgotPassword')}
             </Link>
           </div>
-          <Input
+          <PasswordInput
             id="password"
             name="password"
-            type="password"
             autoComplete="current-password"
             required
             className="mt-1.5"
