@@ -19,6 +19,14 @@ export type EmailTemplate =
   | { kind: 'verify-code'; code: string; name: string; minutes: number }
   | { kind: 'reset-password'; url: string; name: string }
   | { kind: 'org-invite'; url: string; inviter: string; organization: string }
+  /**
+   * The brand a customer waited for, once it exists.
+   *
+   * Carries a goodwill code as well as the link, because this is sent after a
+   * run that failed on our side — the apology and the delivery are one email
+   * rather than two.
+   */
+  | { kind: 'brand-ready'; url: string; name: string; code: string; percent: number }
 
 const COPY = {
   en: {
@@ -53,6 +61,21 @@ const COPY = {
       button: 'Accept invitation',
       footer: 'If you were not expecting this, you can ignore this email.',
     },
+    'brand-ready': {
+      subject: 'Your brand is ready — and your credits are back',
+      heading: 'Your brand is ready',
+      /*
+       * What went wrong is said first and plainly. These customers watched a
+       * spinner and saw their balance drop, so an email that opened with good
+       * news and explained nothing would read as though we had not noticed.
+       */
+      body: (name: string) =>
+        `${name}, your brand kept you waiting, and that was our fault: the run was queued but never actually started, and your credits stayed held while it sat there. It is fixed, and your brand has now been generated in full.`,
+      button: 'View your brand',
+      credits: 'The credits that were held have been returned to your balance — this run cost you nothing.',
+      offer: (percent: number) => `And for the trouble, here is ${percent}% off your first plan:`,
+      footer: 'Thank you for your patience with us early on. Reply to this email if anything is not right.',
+    },
   },
   ar: {
     'verify-email': {
@@ -84,6 +107,16 @@ const COPY = {
         `دعاك ${inviter} للانضمام إلى ${organization} على براندورا.`,
       button: 'قبول الدعوة',
       footer: 'إذا لم تكن تتوقع هذه الرسالة، يمكنك تجاهلها.',
+    },
+    'brand-ready': {
+      subject: 'علامتك جاهزة — وأرصدتك أُعيدت إليك',
+      heading: 'علامتك جاهزة',
+      body: (name: string) =>
+        `${name}، تأخّرت علامتك، والخطأ خطؤنا: انتظرت عملية التوليد في الطابور دون أن تبدأ فعلياً، وبقيت أرصدتك محجوزة طوال ذلك الوقت. تم إصلاح المشكلة، وعلامتك جاهزة الآن بالكامل.`,
+      button: 'اعرض علامتك',
+      credits: 'أُعيدت الأرصدة المحجوزة إلى رصيدك — لم يكلّفك هذا التشغيل شيئاً.',
+      offer: (percent: number) => `واعتذاراً عن الإزعاج، إليك خصم ${percent}% على أول اشتراك لك:`,
+      footer: 'شكراً لصبرك معنا في بداياتنا. إن كان هناك أي خلل، ردّ على هذه الرسالة.',
     },
   },
 } as const
@@ -248,6 +281,52 @@ function codeLayout(params: {
   })
 }
 
+/**
+ * The card, carrying a link and a code.
+ *
+ * The two existing layouts each hold one or the other, and deliberately: an
+ * email with two things to do is an email where neither gets done. This one is
+ * the exception the situation earns — the link is the delivery and the code is
+ * the apology, and splitting them into two emails to a customer we have
+ * already let down would be worse than the crowding.
+ *
+ * The order says which is which. The button is the point; the code sits under
+ * a rule, quieter, so it reads as something extra rather than as the reason we
+ * wrote.
+ */
+function offerLayout(params: {
+  locale: Locale
+  heading: string
+  body: string
+  button: string
+  url: string
+  credits: string
+  offer: string
+  code: string
+  footer: string
+}) {
+  const rtl = params.locale === 'ar'
+
+  return shell({
+    ...params,
+    main: `<a href="${params.url}" style="display:inline-block;background-color:${VIOLET};background-image:linear-gradient(135deg,${VIOLET},${INDIGO} 55%,${DEEP});color:#ffffff;text-decoration:none;padding:13px 24px;border-radius:10px;font-size:15px;font-weight:600;">${escape(params.button)}</a>
+              <p style="margin:20px 0 0;font-size:14px;line-height:1.6;color:#4c5570;">${escape(params.credits)}</p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:24px;border-top:1px solid ${TINT_LINE};">
+                <tr>
+                  <td style="padding-top:20px;">
+                    <p style="margin:0 0 10px;font-size:14px;line-height:1.6;color:#4c5570;">${escape(params.offer)}</p>
+                    <!-- The code is always LTR, for the reason the verification
+                         code is: a grouped string reversed by an RTL context is
+                         a code typed in backwards. -->
+                    <p dir="ltr" style="margin:0;text-align:${rtl ? 'right' : 'left'};">
+                      <span style="display:inline-block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:18px;font-weight:700;letter-spacing:0.16em;text-indent:0.16em;color:${ACCENT};background:${TINT};border:1px solid ${TINT_LINE};border-radius:10px;padding:10px 18px;">${escape(params.code)}</span>
+                    </p>
+                  </td>
+                </tr>
+              </table>`,
+  })
+}
+
 export function renderEmail(template: EmailTemplate, locale: Locale = 'en') {
   const copy = COPY[locale]
 
@@ -305,6 +384,24 @@ export function renderEmail(template: EmailTemplate, locale: Locale = 'en') {
           body: c.body(template.inviter, template.organization),
           button: c.button,
           url: template.url,
+          footer: c.footer,
+        }),
+      }
+    }
+
+    case 'brand-ready': {
+      const c = copy['brand-ready']
+      return {
+        subject: c.subject,
+        html: offerLayout({
+          locale,
+          heading: c.heading,
+          body: c.body(template.name),
+          button: c.button,
+          url: template.url,
+          credits: c.credits,
+          offer: c.offer(template.percent),
+          code: template.code,
           footer: c.footer,
         }),
       }
