@@ -169,12 +169,17 @@ export function Horizon() {
       className={frame}
       style={{ y, opacity: fade }}
     >
-      <motion.div
-        data-reveal
-        className="relative flex justify-center"
-        initial={{ y: 120, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 1.1, ease: EASE, delay: 0.1 }}
+      {/* The arrival is CSS for the same reason the hero's words are: it plays
+          at 0.1s, inside the window the main thread spends hydrating. */}
+      <div
+        className="animate-rise relative flex justify-center"
+        style={
+          {
+            '--rise-y': '120px',
+            '--rise-duration': '1.1s',
+            '--rise-delay': '0.1s',
+          } as React.CSSProperties
+        }
       >
         {/* The bloom the crest throws up into the copy. */}
         {/*
@@ -204,7 +209,7 @@ export function Horizon() {
         >
           {arc}
         </motion.div>
-      </motion.div>
+      </div>
     </motion.div>
   )
 }
@@ -289,7 +294,20 @@ export function SectionArc({ className }: { className?: string }) {
   )
 }
 
-/** The product frame: rises into place, then drifts against the scroll. */
+/**
+ * The product frame: rises into place, then drifts against the scroll.
+ *
+ * The two motions are deliberately on two elements and driven by two different
+ * things. The rise is a one-shot that plays during hydration, so it is CSS and
+ * runs on the compositor — see `animate-rise` in `globals.css` for the frame
+ * measurements behind that. The drift answers the scroll, which only JavaScript
+ * can read, so it stays here.
+ *
+ * No blur on either. This is the largest layer on the page — a full-bleed
+ * screenshot inside a perspective container — and animating a blur across it
+ * re-rasterises the whole thing every frame, on the phone that has just
+ * finished decoding the image.
+ */
 export function ProductFrame({ children }: { children: React.ReactNode }) {
   const ref = React.useRef<HTMLDivElement>(null)
   const reduced = useReducedMotion()
@@ -297,28 +315,19 @@ export function ProductFrame({ children }: { children: React.ReactNode }) {
   const y = useTransform(scrollYProgress, [0, 1], [0, -90])
 
   return (
-    <motion.div
-      data-reveal
+    <div
       ref={ref}
-      style={reduced ? undefined : { y }}
-      /*
-       * No blur on this one.
-       *
-       * It is the largest layer on the page — a full-bleed screenshot inside a
-       * perspective container — and animating a 12px blur across it means the
-       * browser re-rasterises the whole thing every frame, on the phone that
-       * has just finished decoding the image. The rise and the tilt already say
-       * "placed in front of the light"; the blur was the expensive tenth of the
-       * effect. It also used to land at two seconds, which is well past the
-       * point a visitor has started scrolling.
-       */
-      initial={reduced ? false : { opacity: 0, y: 90, rotateX: 9 }}
-      animate={{ opacity: 1, y: 0, rotateX: 0 }}
-      transition={{ duration: 0.8, ease: EASE, delay: 0.4 }}
-      className="[perspective:1200px]"
+      className="animate-rise [perspective:1200px]"
+      style={
+        {
+          '--rise-y': '90px',
+          '--rise-tilt': '9deg',
+          '--rise-delay': '0.4s',
+        } as React.CSSProperties
+      }
     >
-      {children}
-    </motion.div>
+      <motion.div style={reduced ? undefined : { y }}>{children}</motion.div>
+    </div>
   )
 }
 

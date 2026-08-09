@@ -1,65 +1,70 @@
-'use client'
-
-import { motion, useReducedMotion } from 'motion/react'
 import * as React from 'react'
 
 /**
  * The page's authored moment: the light arrives, then the words do.
  *
- * Motion here is on load, not on scroll. The previous version put every
- * entrance behind a scroll trigger, which meant the first viewport — the only
- * one most visitors see — was completely static.
+ * Driven by CSS, not by a JavaScript animation library, and that is the whole
+ * point rather than a style preference.
  *
- * Timed for a phone, which is the harder case and the one that was wrong.
+ * Measured on a throttled phone, every dropped frame in the entrance fell
+ * inside the first 700ms and every one of them sat under a long task — 101ms,
+ * 155ms and 80ms of script evaluation and hydration. After 706ms the animation
+ * held 16.7ms frames indefinitely. So the entrance was never janky; it was
+ * being played by a main thread that was busy starting the page, during the
+ * exact window it runs in. Nothing about the easing or the duration could fix
+ * that, because the timeline itself could not get a turn.
  *
- * The sequence used to run for 2.1 seconds end to end: the last word of the
- * headline landed at 0.9s, the buttons at 1.4s, the product frame at 2.0s.
- * That reads as considered on a desktop that opened the page a second ago and
- * as broken on a phone, where the thumb is already moving and the one control
- * the page exists to offer is still fading in underneath it. Nothing here is
- * removed — the order is the same and every piece still arrives — it is just
- * played at roughly half the length, finishing inside a second.
+ * A CSS animation on opacity and transform is handed to the compositor and
+ * keeps its own time, so it plays through hydration untouched. It also starts
+ * at first paint (~208ms here) rather than whenever the bundle finishes, and it
+ * needs no client component at all — these render on the server now, so the
+ * work that was blocking the animation is itself a little smaller.
+ *
+ * `filter: blur()` is gone from the entrance with the same reasoning: it is the
+ * one property here the compositor cannot animate on its own, so it re-rasters
+ * every word every frame — the cost is real and, at 6px for half a second on a
+ * phone, the effect was not.
+ *
+ * Reduced motion needs no branch: the global rule in `globals.css` collapses
+ * every animation to a single frame.
  */
 
-const EASE = [0.16, 1, 0.3, 1] as const
-
 /**
- * The headline rises a word at a time, unblurring as it lands.
+ * A headline arriving a word at a time.
  *
  * Words rather than characters: character animation on a headline this size
  * reads as a typewriter gimmick, and it breaks Arabic, where letterforms join.
- */
-/**
- * A headline arriving a word at a time.
  *
  * It renders a `<span>`, not the heading itself: the heading is the caller's,
  * because the sentence it belongs to is longer than this clause — and while
  * this owned the `<h1>`, wrapping it in the real one nested a heading inside a
  * heading, which is invalid and cost a hydration error on every load.
+ *
+ * The stagger is `stagger-children`, which the product already uses everywhere
+ * a list arrives in sequence: each child carries its index as `--i` and the
+ * delay falls out of it, capped so a long headline never leaves its last word
+ * waiting.
  */
 export function HeadlineWords({ text, className }: { text: string; className?: string }) {
-  const reduced = useReducedMotion()
   const words = text.split(' ')
 
-  if (reduced) return <span className={className}>{text}</span>
-
   return (
-    <span className={className}>
+    <span className={`stagger-children ${className ?? ''}`}>
       {words.map((word, index) => (
-        <motion.span
-          data-reveal
-          key={`${word}-${index}`}
-          className="inline-block"
-          /* 6px rather than 10px: this is the one blur that runs on several
-             elements at once, and past about 6px on display type the word is
-             unreadable for the first half of its own entrance anyway. */
-          initial={{ opacity: 0, y: '0.5em', filter: 'blur(6px)' }}
-          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-          transition={{ duration: 0.5, ease: EASE, delay: 0.04 * index }}
-        >
-          {word}
-          {index < words.length - 1 && ' '}
-        </motion.span>
+        <React.Fragment key={`${word}-${index}`}>
+          <span className="inline-block" style={{ '--i': index } as React.CSSProperties}>
+            {word}
+          </span>
+          {/*
+            The space is a sibling of the word, not the last thing inside it.
+            A trailing space at the end of an inline-block is collapsed away,
+            which welds the headline into "Yourentirebrand" while still leaving
+            a line-break opportunity — so it wraps in the right places and reads
+            as one long word. Outside the box it is an ordinary text node in the
+            heading's own inline run, and survives.
+          */}
+          {index < words.length - 1 && ' '}
+        </React.Fragment>
       ))}
     </span>
   )
@@ -75,17 +80,12 @@ export function AfterHeadline({
   delay?: number
   className?: string
 }) {
-  const reduced = useReducedMotion()
-
   return (
-    <motion.div
-      data-reveal
-      className={className}
-      initial={reduced ? false : { opacity: 0, y: 20, filter: 'blur(6px)' }}
-      animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-      transition={{ duration: 0.55, ease: EASE, delay: reduced ? 0 : delay }}
+    <div
+      className={`animate-fade-up ${className ?? ''}`}
+      style={{ animationDelay: `${delay}s` }}
     >
       {children}
-    </motion.div>
+    </div>
   )
 }
