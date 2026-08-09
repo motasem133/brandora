@@ -19,7 +19,7 @@ colors:
 typography:
   display:
     fontFamily: "Plus Jakarta Sans, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "clamp(2.6rem, 6.2vw, 4.6rem)"
+    fontSize: "clamp(2.05rem, 6.2vw, 4.6rem)"
     fontWeight: 600
     lineHeight: 1.12
     letterSpacing: "-0.02em"
@@ -235,7 +235,7 @@ letterforms need the room.
 
 ### Hierarchy
 
-- **Display** (600, `clamp(2.6rem, 6.2vw, 4.6rem)`, 1.12, `-0.02em`): Marketing headlines only. Never inside the app. Available as `type-display`.
+- **Display** (600, `clamp(2.05rem, 6.2vw, 4.6rem)`, 1.12, `-0.02em`): Marketing headlines only. Never inside the app. Available as `type-display`. The floor is the phone's size and was 2.6rem, which put a ten-word headline on four lines and 186px of a 390px screen — most of the fold before a single claim had been read. At 2.05rem it is still the only size on that screen, and the deck and both buttons sit above the crease.
 - **Section** (600, `clamp(2rem, 4vw, 3.2rem)`, 1.1, `-0.02em`): The heading that opens a marketing section. Available as `type-section`. It existed as a literal on five headings before it was a step, which is how one of them drifted a size away from the others.
 - **Headline** (600, 2.25rem, 1.1, `-0.02em`): The one page-owning `h1` — a dashboard greeting, a brand's name on its identity plate.
 - **Title** (600, 1.25rem, 1.3, `-0.02em`): Card and section headings.
