@@ -391,6 +391,8 @@
       "corporateDesc": "Trusted, structured, professional"
     },
     "errors": {
+      "nameTooShort": "A name needs at least two letters — or leave it blank and we'll suggest five.",
+      "nameTooLong": "That's longer than a brand name can be. Keep it under {max} characters.",
       "industryRequired": "Please choose or type an industry.",
       "countryRequired": "Please select a country.",
       "styleRequired": "Please choose a brand style.",

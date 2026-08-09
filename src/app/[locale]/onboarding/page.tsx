@@ -79,6 +79,7 @@ export default async function OnboardingPage({
         pricing={pricing}
         balance={org.creditBalance}
         emailVerified={session.user.emailVerified}
+        userEmail={session.user.email}
         carriedOver={
           previous
             ? {

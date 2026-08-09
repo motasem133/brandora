@@ -25,6 +25,22 @@ test.describe('onboarding wizard', () => {
     await expect(headings.nth(1)).toHaveText(/business name/i)
   })
 
+  /*
+   * Step 1 was the one step with no gate on it, so a name the Server Action
+   * would refuse travelled through five more questions before anyone said so —
+   * a rejection raised after the work, about something typed before it.
+   */
+  test('refuses a name that is not one, on the step it was typed', async ({ page }) => {
+    const field = page.getByRole('textbox').first()
+    await expect(field).toHaveAttribute('maxlength', '60')
+
+    await field.fill('a')
+    await page.getByRole('button', { name: 'Next', exact: true }).click()
+
+    await expect(page.getByText(/at least two letters/i)).toBeVisible()
+    await expect(page.getByRole('heading', { name: /business name/i })).toBeVisible()
+  })
+
   test('carries the stable answers over from the last brand', async ({ page }) => {
     const next = page.getByRole('button', { name: 'Next', exact: true })
     await next.click()

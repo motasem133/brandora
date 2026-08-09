@@ -53,7 +53,9 @@ const hexColor = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Must be a hex colour lik
  * one schema on both sides is what keeps client and server in agreement.
  */
 export const createProjectSchema = z.object({
-  businessName: z.string().trim().max(60).optional().or(z.literal('')),
+  /* Optional, but not unchecked: blank means "suggest me five", and anything
+     else has to be a name someone could put on a sign. */
+  businessName: z.string().trim().min(2).max(60).optional().or(z.literal('')),
   industry: z.string().trim().min(2, 'Please choose or type an industry.').max(60),
   country: z.string().trim().min(2, 'Please select a country.').max(60),
   brandBrief: z

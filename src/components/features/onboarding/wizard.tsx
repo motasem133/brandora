@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import { useAction } from 'next-safe-action/hooks'
 import { useEffect, useRef, useState } from 'react'
 
+import { EmailVerification } from '@/components/features/settings/email-verification'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Field } from '@/components/ui/field'
@@ -65,6 +66,10 @@ const MAX_COLORS = 3
 /** The point at which the brief carries enough for the model to work from. */
 const BRIEF_MIN = 20
 
+/** Both ends of the name, matching `createProjectSchema` so the two agree. */
+const NAME_MIN = 2
+const NAME_MAX = 60
+
 type FormState = {
   businessName: string
   industry: string
@@ -107,12 +112,14 @@ export function OnboardingWizard({
   pricing,
   balance,
   emailVerified,
+  userEmail,
   carriedOver,
 }: {
   entitlements: WizardEntitlements
   pricing: WizardPricing
   balance: number
   emailVerified: boolean
+  userEmail: string
   carriedOver: CarriedOver
 }) {
   const t = useTranslations('Onboarding')
@@ -198,6 +205,21 @@ export function OnboardingWizard({
 
   /** Client-side gate only — the same rules run again in the Server Action. */
   function validateStep(current: number): string | undefined {
+    /*
+     * Step 1 was the one step with no gate at all.
+     *
+     * The name stays optional — the question says to leave it blank and be
+     * given five — but "optional" was being read as "unchecked", so a single
+     * letter became a brand, and sixty-one characters got through five more
+     * questions before the Server Action rejected them at the end. That is the
+     * same dead end as the verification one: a failure raised after the work,
+     * about something typed before it.
+     */
+    if (current === 1) {
+      const name = form.businessName.trim()
+      if (name && name.length < NAME_MIN) return t('errors.nameTooShort')
+      if (name.length > NAME_MAX) return t('errors.nameTooLong', { max: NAME_MAX })
+    }
     if (current === 2 && form.industry.trim().length < 2) return t('errors.industryRequired')
     if (current === 3 && !form.country) return t('errors.countryRequired')
     if (current === 4) {
@@ -379,8 +401,12 @@ export function OnboardingWizard({
 
               <div className="mt-6">
                 {step === 1 && (
+                  /* `maxLength` so the ceiling is enforced by the field rather
+                     than reported after it — the check above still runs, for
+                     the paths a browser attribute cannot cover. */
                   <Input
                     autoFocus
+                    maxLength={NAME_MAX}
                     value={form.businessName}
                     onChange={(e) => set('businessName', e.target.value)}
                     placeholder={t('step1Placeholder')}
@@ -589,13 +615,28 @@ export function OnboardingWizard({
               {t('balanceLine', { balance })}
             </p>
 
+            {/*
+              Verification happens here, on the step it is blocking.
+
+              This was a sentence with a link to Settings. Everything in this
+              wizard is React state, so following that link threw away five
+              answered questions — and it was the first thing a brand new
+              account saw, because signing up lands straight on this page. The
+              customer did the whole interview, was told at the end that they
+              could not press the button, and pressing the only thing offered
+              deleted the interview.
+
+              The code component was built for exactly this and already sits in
+              the generation panel: six digits typed into the blocked page,
+              which then refreshes its own server props. `router.refresh()` does
+              not remount client components, so the answers above are still
+              here when the button unlocks.
+            */}
             {!emailVerified && (
-              <p className="text-sm text-warning">
-                {t('verifyFirst')}{' '}
-                <Link href="/dashboard/settings" className="accent-text hover:underline">
-                  {t('verifyCta')}
-                </Link>
-              </p>
+              <div className="space-y-3 border-t border-line pt-4">
+                <p className="text-sm text-warning">{t('verifyFirst')}</p>
+                <EmailVerification email={userEmail} />
+              </div>
             )}
 
             {emailVerified && !affordable && (
