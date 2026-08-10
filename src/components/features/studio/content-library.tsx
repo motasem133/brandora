@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/ui/empty-state'
 import { listContent } from '@/server/db/queries/content'
+import { ContentPending } from './content-pending'
 
 /**
  * What has been made, newest first.
@@ -31,6 +32,10 @@ export async function ContentLibrary({
   const t = await getTranslations('Studio')
   const items = await listContent(organizationId, { projectId, limit })
 
+  /* Mounted here rather than at the two call sites, because this is what knows
+     whether anything is still being made. */
+  const generating = items.filter((item) => item.status === 'generating').length
+
   if (items.length === 0) {
     return (
       <div className="rounded-panel border border-dashed border-line p-10">
@@ -41,6 +46,7 @@ export async function ContentLibrary({
 
   return (
     <div className="overflow-hidden rounded-card border border-line bg-surface/60">
+      <ContentPending projectId={projectId} generating={generating} />
       <ul className="divide-y divide-line">
         {items.map((item) => {
           const body = item.body as
