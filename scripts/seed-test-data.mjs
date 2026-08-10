@@ -218,6 +218,65 @@ async function main() {
               'image/png', 1024, 1024, 1024, ${sql.json({ style: 'wordmark' })})`
   }
 
+  /*
+   * A second brand, which exists so the Studio's brand picker exists.
+   *
+   * `BrandPicker` returns null below two brands — one option is not a choice —
+   * and this account had exactly one, so the control the tabs suite asserts on
+   * was never on the page in CI. It was on the developer's machine, where an
+   * account has several brands, which is the whole shape of that failure.
+   *
+   * It also makes the assertion mean something. The Studio resolves `?brand=`
+   * with `brands.find(...) ?? brands[0]`, so against a single brand the
+   * fallback and the lookup return the same project and the test cannot fail.
+   *
+   * Deliberately bare — branding only, no website, files or content. Two dates
+   * are set by hand, and both matter:
+   *
+   *   created_at is a day earlier, so every list ordered by creation (the
+   *   dashboard, the admin table) still opens on the fixture brand and no
+   *   other suite notices this row.
+   *
+   *   updated_at is now, on every run, because the picker is ordered by it —
+   *   so the fixture brand is never `brands[0]` and the lookup is the only
+   *   thing that can produce it.
+   */
+  const existingSecond = await sql`
+    SELECT id FROM projects
+    WHERE organization_id = ${org.id} AND title = 'E2E Second Brand' AND deleted_at IS NULL
+    LIMIT 1`
+
+  const [second] = existingSecond.length
+    ? existingSecond
+    : await sql`
+        INSERT INTO projects (organization_id, created_by, title, business_name, industry, country,
+                              brand_brief, brand_style, preferred_colors, needs_website,
+                              needs_social_media, language, status, created_at)
+        VALUES (${org.id}, ${userId}, 'E2E Second Brand', 'Second Co', 'Retail',
+                'United Arab Emirates',
+                'A second brand, so that choosing between brands is a thing that can be tested',
+                'modern', ${sql.json(['#f43f5e'])}, false, false, 'en', 'completed',
+                now() - interval '1 day')
+        RETURNING id`
+
+  await sql`
+    INSERT INTO branding_assets (project_id, business_name_ideas, slogan, brand_story,
+                                 color_palette, font_recommendations, brand_values, brand_voice,
+                                 model_used, prompt_version)
+    VALUES (${second.id},
+            ${sql.json([{ name: 'Second Co', rationale: 'It is the second one.' }])},
+            'The other brand.',
+            ${'Second Co exists so that the brand picker has something to pick between.\n\nIt is deliberately thin: nothing else in the suite should notice it.'},
+            ${sql.json({ primary: '#f43f5e', secondary: '#111827', accent: '#f59e0b', background: '#FFFFFF', text: '#1F2937' })},
+            ${sql.json({ heading: 'Syne', body: 'Inter' })},
+            ${sql.json(['Second'])},
+            'Plain.',
+            'fixture', 'fixture@v1')
+    ON CONFLICT (project_id) DO NOTHING`
+
+  // See above: the picker is ordered by updatedAt, and this has to sort first.
+  await sql`UPDATE projects SET updated_at = now() WHERE id = ${second.id}`
+
   const existingThread = await sql`
     SELECT id FROM assistant_threads WHERE project_id = ${projectId} LIMIT 1`
 

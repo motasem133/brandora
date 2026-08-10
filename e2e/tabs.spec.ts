@@ -46,7 +46,25 @@ test.describe('project deliverables', () => {
     await page.getByRole('link', { name: 'Create content' }).click()
 
     await expect(page).toHaveURL(new RegExp(`/dashboard/studio\\?brand=${projectId}`))
-    await expect(page.getByLabel('Brand')).toHaveValue(projectId)
+
+    /*
+     * More than one option, asserted before the value.
+     *
+     * The picker hides itself below two brands — one option is not a choice —
+     * and the fixture account had exactly one, so in CI this control was simply
+     * not on the page while it was on every developer's machine. That is what
+     * kept the suite red for a week.
+     *
+     * It is also what the assertion below needs to mean anything: the Studio
+     * resolves the parameter with `find(...) ?? brands[0]`, so against a single
+     * brand a broken lookup returns the right project anyway. If the fixtures
+     * ever shrink back to one brand, this line says so instead of the next one
+     * failing on a missing element.
+     */
+    const picker = page.getByLabel('Brand')
+    await expect(picker).toBeVisible()
+    expect(await picker.locator('option').count()).toBeGreaterThan(1)
+    await expect(picker).toHaveValue(projectId)
   })
 
   test('the assistant opens onto its own stage', async ({ page }) => {
