@@ -69,36 +69,73 @@ export const websiteSchema = z.object({
 
 export type WebsiteOutput = z.infer<typeof websiteSchema>
 
+/*
+ * Every field below had a maximum and no minimum, which is a contract that
+ * accepts almost anything. A real run proved it: the primary model timed out,
+ * the fallback answered, and what it wrote was stored and shown to a customer —
+ * an empty bio, the literal word "test" as all ten hashtags, an empty ad
+ * headline, and `<br>` through every caption. Each one satisfied
+ * `z.string().max(30)`.
+ *
+ * The point of tightening it is not tidiness. `runModel` walks a chain of
+ * models and only moves on when one *fails*, so a schema that accepts rubbish
+ * is a schema that stops the chain on the first model to produce rubbish. These
+ * rules are what make that fallback happen.
+ */
+
+/** Written to be read as text, so a tag in it is a tag the customer sees. */
+const MARKUP = /<\s*\/?[a-zA-Z][a-zA-Z0-9-]*\s*\/?>/
+
+const plain = (min: number, max: number) =>
+  z
+    .string()
+    .min(min)
+    .max(max)
+    .refine((value) => !MARKUP.test(value), 'Plain text only — no HTML tags.')
+
+/**
+ * A hashtag without its hash: letters and numbers in any script.
+ *
+ * Unicode classes rather than `A-Za-z`, because an Arabic brand's hashtags are
+ * Arabic and an ASCII rule would fail every Arabic run in the product.
+ */
+const hashtag = z.string().min(3).max(30).regex(/^[\p{L}\p{N}_]+$/u)
+
+/** Ten of the same word is not a hashtag set. Case-insensitive, as Instagram is. */
+const distinct = (values: string[]) =>
+  new Set(values.map((value) => value.toLowerCase())).size === values.length
+
 export const socialSchema = z.object({
-  instagramBio: z.string().max(150).describe('Instagram caps bios at 150 characters'),
+  instagramBio: plain(30, 150).describe('Instagram caps bios at 150 characters'),
   instagramPosts: z
     .array(
       z.object({
         type: z
           .string()
+          .min(3)
           .max(30)
           .describe('e.g. introduction, product, testimonial, behind-the-scenes'),
-        caption: z.string().max(600),
-        hashtags: z.array(z.string().max(30)).min(3).max(10),
+        caption: plain(60, 600).describe('Plain text. Line breaks are newlines, never <br>.'),
+        hashtags: z.array(hashtag).min(3).max(10).refine(distinct, 'Hashtags must be distinct.'),
       }),
     )
     .length(9),
   storyTemplates: z
     .array(
       z.object({
-        title: z.string().max(60),
-        body: z.string().max(200),
+        title: plain(3, 60),
+        body: plain(10, 200),
       }),
     )
     .length(3),
   adCopy: z.object({
-    headline: z.string().max(60),
-    body: z.string().max(300),
-    cta: z.string().max(30),
-    facebookAd: z.string().max(400),
-    googleAd: z.string().max(200),
+    headline: plain(10, 60),
+    body: plain(40, 300),
+    cta: plain(2, 30),
+    facebookAd: plain(40, 400),
+    googleAd: plain(20, 200),
   }),
-  hashtags: z.array(z.string().max(30)).length(10),
+  hashtags: z.array(hashtag).length(10).refine(distinct, 'Hashtags must be distinct.'),
 })
 
 export type SocialOutput = z.infer<typeof socialSchema>

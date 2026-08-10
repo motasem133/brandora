@@ -152,8 +152,13 @@ ${languageRule(locale)}
 Hard rules:
 - Captions must earn attention in the first line.
 - Hashtags are lowercase, without the # symbol, and relevant rather than generic spam.
+- Every hashtag in a set is different from the others. Never repeat one, and never use a placeholder like "test".
 - Vary the nine posts across different intents: introduction, product, social proof, education, behind the scenes, offer.
 - Emoji are welcome where they fit the brand style, but never more than a few per caption.
+- Write plain text. This copy is pasted straight into Instagram, which renders no
+  markup — a line break is a newline character, never <br>, and there are no tags
+  of any kind anywhere in the output.
+- Every field is filled with real copy. An empty string is not an answer.
 `.trim()
 }
 
