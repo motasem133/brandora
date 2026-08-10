@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardDescription } from '@/components/ui/card'
 import { SegmentedControl, SegmentedLink } from '@/components/ui/segmented-control'
 import { Table, TBody, TD, TH, THead, TRowHeader } from '@/components/ui/table'
+import { Link } from '@/i18n/navigation'
 import { formatDate } from '@/lib/utils'
 import { listAllProjects } from '@/server/db/queries/admin'
 
@@ -59,7 +60,20 @@ export default async function AdminProjectsPage({
               {projects.map((project) => (
                 <tr key={project.id}>
                   <TRowHeader>
-                    <span className="font-medium">{project.title}</span>
+                    {/*
+                      The whole reason the row is worth reading is what is
+                      behind it, so the title is the door. `unstable_dynamicOnHover`
+                      for the same reason the app's own tabs use it: this page
+                      is dynamic, so without it the press waits on a cold
+                      render.
+                    */}
+                    <Link
+                      href={`/admin/projects/${project.id}`}
+                      unstable_dynamicOnHover
+                      className="font-medium hover:underline"
+                    >
+                      {project.title}
+                    </Link>
                     <span className="mt-0.5 block text-xs text-fg-muted">
                       {project.industry} · {project.language}
                     </span>

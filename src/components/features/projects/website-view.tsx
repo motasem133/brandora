@@ -23,7 +23,21 @@ const PAGE_ORDER = ['home', 'about', 'services', 'contact'] as const
  * is the only question this section is here to answer. Editing stays where
  * editing happens.
  */
-export async function WebsiteView({ website }: { website: WebsiteAsset }) {
+export async function WebsiteView({
+  website,
+  /**
+   * Hides the one control on this section.
+   *
+   * Set by the support screen, which shows a customer's project to somebody who
+   * does not own it: the builder is org-scoped, so the button would be a link
+   * to a 404 — and it should not work even if it could, because looking at
+   * someone's work is not permission to edit it.
+   */
+  readOnly = false,
+}: {
+  website: WebsiteAsset
+  readOnly?: boolean
+}) {
   const t = await getTranslations('Website')
   const pages = website.pages as Record<string, Block[]>
 
@@ -60,12 +74,14 @@ export async function WebsiteView({ website }: { website: WebsiteAsset }) {
           </span>
         )}
 
-        <Link
-          href={`/dashboard/projects/${website.projectId}/builder`}
-          className={buttonVariants({ size: 'sm' })}
-        >
-          {t('edit')}
-        </Link>
+        {!readOnly && (
+          <Link
+            href={`/dashboard/projects/${website.projectId}/builder`}
+            className={buttonVariants({ size: 'sm' })}
+          >
+            {t('edit')}
+          </Link>
+        )}
       </div>
 
       {live ? (

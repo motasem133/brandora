@@ -28,13 +28,31 @@ export async function IdentityPlate({
   slogan,
   logo,
   locale,
+  /**
+   * The brand's name is the page's heading on the customer's own project, and
+   * a section heading on the support view, which titles itself after the
+   * customer. Two `<h1>`s on one page is not a style question — it is a
+   * document with two subjects, and a screen reader says so.
+   */
+  as: Heading = 'h1',
 }: {
-  project: Project
+  /*
+   * The five fields this actually reads, rather than the whole row.
+   *
+   * A full `Project` still satisfies it — structural typing — so the customer's
+   * page passes exactly what it always did. What it buys is the support view,
+   * which assembles its project from a join across four tables and has no whole
+   * row to hand over: with the wide type that had to be cast, and the cast
+   * quietly swallowed a missing `createdAt` until the page crashed in a
+   * browser.
+   */
+  project: Pick<Project, 'businessName' | 'title' | 'language' | 'industry' | 'country' | 'createdAt'>
   palette: BrandPalette
   fonts: BrandFonts
   slogan: string | null
   logo?: GeneratedFile
   locale: string
+  as?: 'h1' | 'h2'
 }) {
   const t = await getTranslations('Projects')
 
@@ -77,14 +95,14 @@ export async function IdentityPlate({
           moment, broken on the device someone shows their brand on.
         */}
         <div className="min-w-0 grow basis-64">
-          <h1
+          <Heading
             lang={project.language}
             dir="auto"
             style={{ fontFamily: fontStack(fonts?.heading), color: 'var(--guest-ink)' }}
             className="text-balance text-3xl font-semibold leading-[1.05] tracking-[-0.035em] sm:text-5xl"
           >
             {name}
-          </h1>
+          </Heading>
 
           {slogan && (
             <p
