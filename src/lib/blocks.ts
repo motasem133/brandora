@@ -9,37 +9,60 @@ import { z } from 'zod'
  * cannot render — so they deliberately cannot.
  */
 
+/**
+ * A tag in a text field is a tag the customer sees.
+ *
+ * Every block below renders through React, which escapes what it is given, so
+ * a `<br>` in a heading is published as the four characters `<br>` in the
+ * middle of a sentence. This is the rule `socialSchema` already carries, moved
+ * somewhere both contracts can share it — the same glm-5.2 that wrote `<br>`
+ * through nine Instagram captions is the primary model for website copy, and
+ * only one of the two contracts had anything to say about it.
+ *
+ * Nothing stored today is affected: every project's blocks check clean. The
+ * exposure was identical, not the damage.
+ */
+export const MARKUP = /<\s*\/?[a-zA-Z][a-zA-Z0-9-]*\s*\/?>/
+export const NO_MARKUP_MESSAGE = 'Plain text only — no HTML tags.'
+
+/** A block's text field: capped, and text rather than markup. */
+const text = (max: number) =>
+  z
+    .string()
+    .max(max)
+    .refine((value) => !MARKUP.test(value), NO_MARKUP_MESSAGE)
+
 export const heroBlock = z.object({
   type: z.literal('hero'),
-  title: z.string().max(90),
-  subtitle: z.string().max(200),
-  cta: z.string().max(30),
+  title: text(90),
+  subtitle: text(200),
+  cta: text(30),
 })
 
 export const featuresBlock = z.object({
   type: z.literal('features'),
-  heading: z.string().max(80),
+  heading: text(80),
   items: z
-    .array(z.object({ title: z.string().max(60), body: z.string().max(220) }))
+    .array(z.object({ title: text(60), body: text(220) }))
     .min(1)
     .max(4),
 })
 
 export const richTextBlock = z.object({
   type: z.literal('richText'),
-  heading: z.string().max(80),
-  body: z.string().max(900),
+  heading: text(80),
+  body: text(900),
 })
 
 export const servicesBlock = z.object({
   type: z.literal('services'),
-  heading: z.string().max(80),
+  heading: text(80),
   services: z
     .array(
       z.object({
-        title: z.string().max(60),
-        body: z.string().max(220),
-        price: z.string().max(30).optional(),
+        title: text(60),
+        body: text(220),
+        price: text(30).optional(),
       }),
     )
     .min(1)
@@ -48,17 +71,17 @@ export const servicesBlock = z.object({
 
 export const ctaBlock = z.object({
   type: z.literal('cta'),
-  heading: z.string().max(80),
-  body: z.string().max(220),
-  cta: z.string().max(30),
+  heading: text(80),
+  body: text(220),
+  cta: text(30),
 })
 
 export const contactBlock = z.object({
   type: z.literal('contact'),
-  heading: z.string().max(80),
-  body: z.string().max(300),
-  email: z.string().max(80),
-  phone: z.string().max(40).optional(),
+  heading: text(80),
+  body: text(300),
+  email: text(80),
+  phone: text(40).optional(),
 })
 
 export const blockSchema = z.discriminatedUnion('type', [

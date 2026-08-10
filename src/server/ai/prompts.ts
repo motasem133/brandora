@@ -112,6 +112,9 @@ Hard rules:
 - Every claim must be plausible for a business of this kind in this market.
 - Headlines are short and concrete. Avoid empty superlatives like "world-class" and "cutting-edge".
 - Use the brand's established name, voice and values consistently on every page.
+- Write plain text. Every field is published as written and rendered as text, so
+  a tag of any kind — <br>, <p>, <strong> — appears on the customer's site as
+  those literal characters. A line break is a newline.
 `.trim()
 }
 
@@ -159,6 +162,9 @@ Hard rules:
   markup — a line break is a newline character, never <br>, and there are no tags
   of any kind anywhere in the output.
 - Every field is filled with real copy. An empty string is not an answer.
+- Every field ends where its sentence ends. Character limits are a ceiling to
+  stay under, not a target to write up to — a headline cut off mid-thought is
+  worse than a shorter one that finishes.
 `.trim()
 }
 
