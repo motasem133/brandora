@@ -295,6 +295,10 @@ export async function listAllProjects(params: { status?: string; limit?: number 
   const rows = await db.execute<{
     id: string
     title: string
+    /* The generated name, which is what the project's own page is headed with.
+       Selected here so a row cannot read as a different project from the one it
+       opens — see the link on the projects list. */
+    business_name: string | null
     status: string
     industry: string
     language: string
@@ -302,7 +306,7 @@ export async function listAllProjects(params: { status?: string; limit?: number 
     org_name: string
     cost: number
   }>(sql`
-    SELECT p.id, p.title, p.status, p.industry, p.language, p.created_at,
+    SELECT p.id, p.title, p.business_name, p.status, p.industry, p.language, p.created_at,
            o.name AS org_name,
            coalesce((SELECT sum(cost_usd) FROM ai_usage a WHERE a.project_id = p.id), 0)::float AS cost
     FROM projects p

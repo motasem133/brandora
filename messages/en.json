@@ -846,6 +846,8 @@
       "kitPosts": "Kit posts",
       "kitPdf": "Brand document",
       "kitZip": "Brand kit ZIP",
+      "contentTitle": "Content Studio",
+      "contentNone": "Nothing generated in the Studio for this brand.",
       "lastRun": "Last run",
       "runSections": "Sections",
       "runCharged": "Charged",
