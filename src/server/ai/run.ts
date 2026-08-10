@@ -201,7 +201,7 @@ export function isNetworkError(error: unknown): boolean {
 }
 
 /** OpenRouter reports real cost in provider metadata; shape is loosely typed. */
-function extractCost(metadata: unknown): number | null {
+export function extractCost(metadata: unknown): number | null {
   if (!metadata || typeof metadata !== 'object') return null
   const openrouterMeta = (metadata as Record<string, unknown>).openrouter
   if (!openrouterMeta || typeof openrouterMeta !== 'object') return null
@@ -216,7 +216,12 @@ function extractCost(metadata: unknown): number | null {
   return typeof direct === 'number' ? direct : null
 }
 
-async function recordUsage(row: {
+/**
+ * Writes one `ai_usage` row. Exported because the assistant streams its own
+ * calls rather than going through `runModel`, and was keeping a second copy of
+ * this insert that wrote its cost as a literal zero.
+ */
+export async function recordUsage(row: {
   organizationId: string
   projectId?: string
   generationJobId?: string

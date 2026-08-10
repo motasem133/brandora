@@ -5,12 +5,12 @@ import { z } from 'zod'
 
 import { env } from '@/lib/env'
 import { assistantSystemPrompt, buildAssistantTools } from '@/server/ai/assistant'
-import { MODELS } from '@/server/ai/models'
+import { MODELS, estimateCost } from '@/server/ai/models'
+import { extractCost, recordUsage } from '@/server/ai/run'
 import { db } from '@/server/db'
 import { getOrgPlan } from '@/server/db/queries/plans'
 import { getProject } from '@/server/db/queries/projects'
 import {
-  aiUsage,
   assistantMessages,
   assistantThreads,
   brandingAssets,
@@ -113,7 +113,7 @@ async function handle(request: Request) {
     stopWhen: stepCountIs(5),
     temperature: 0.7,
 
-    onFinish: async ({ text, usage, toolCalls }) => {
+    onFinish: async ({ text, usage, toolCalls, providerMetadata }) => {
       await db.insert(assistantMessages).values({
         threadId: thread.id,
         role: 'assistant',
@@ -122,23 +122,35 @@ async function handle(request: Request) {
         model,
       })
 
-      try {
-        await db.insert(aiUsage).values({
-          organizationId: org.id,
-          projectId,
-          feature: 'assistant',
-          provider: 'openrouter',
-          model,
-          inputTokens: usage?.inputTokens ?? 0,
-          outputTokens: usage?.outputTokens ?? 0,
-          costUsd: '0',
-          latencyMs: Date.now() - startedAt,
-          status: 'success',
-        })
-      } catch (error) {
-        // Telemetry must never break a reply the user already received.
-        console.error('[assistant] failed to record usage', error)
-      }
+      const inputTokens = usage?.inputTokens ?? 0
+      const outputTokens = usage?.outputTokens ?? 0
+
+      /*
+       * What the reply actually cost.
+       *
+       * This wrote '0' — honest tokens above it and a literal zero beside them,
+       * while `estimateCost` and a price table for this exact model sat two
+       * imports away. It made the assistant free to serve in every margin the
+       * product reports, including the admin screen whose whole job is naming
+       * customers who cost more than they pay: the assistant is plan-gated but
+       * unmetered, so the heaviest user of it read as the cheapest.
+       *
+       * `recordUsage` is the same writer the generation pipeline uses, so the
+       * two cannot drift apart again, and it prefers OpenRouter's own reported
+       * cost over the estimate exactly as `runModel` does.
+       */
+      await recordUsage({
+        organizationId: org.id,
+        projectId,
+        feature: 'assistant',
+        model,
+        inputTokens,
+        outputTokens,
+        cachedTokens: usage?.inputTokenDetails?.cacheReadTokens ?? 0,
+        costUsd: extractCost(providerMetadata) ?? estimateCost(model, inputTokens, outputTokens),
+        latencyMs: Date.now() - startedAt,
+        status: 'success',
+      })
     },
   })
 
