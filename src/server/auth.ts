@@ -48,9 +48,32 @@ export const hasGoogle = Boolean(
  */
 export const OTP_MINUTES = 10;
 
+/**
+ * The hostnames a preview deployment answers on.
+ *
+ * Better Auth refuses a request whose `Origin` is not its `baseURL`, which is
+ * correct and is what stops another site posting a sign-in through someone's
+ * browser. But `BETTER_AUTH_URL` is the production domain in every deployed
+ * environment, so on a preview every sign-in came back `INVALID_ORIGIN` — and
+ * the form, having no shape for that, simply span. No preview build has ever
+ * been possible to log into, which quietly made previews useless for reviewing
+ * any of the product that sits behind a session, i.e. nearly all of it.
+ *
+ * Only on previews, and only the two hostnames Vercel itself assigns this
+ * deployment: the immutable per-deployment URL and the branch alias. Production
+ * gets nothing added, so the check there is exactly as strict as it was.
+ */
+const previewOrigins =
+  process.env.VERCEL_ENV && process.env.VERCEL_ENV !== "production"
+    ? [process.env.VERCEL_URL, process.env.VERCEL_BRANCH_URL]
+        .filter(Boolean)
+        .map((host) => `https://${host}`)
+    : [];
+
 export const auth = betterAuth({
   appName: "Brandora",
   baseURL: env.BETTER_AUTH_URL,
+  trustedOrigins: previewOrigins,
   secret: env.BETTER_AUTH_SECRET,
 
   database: drizzleAdapter(db, {
