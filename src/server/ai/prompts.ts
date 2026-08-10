@@ -20,6 +20,7 @@ export const PROMPT_VERSIONS = {
   /* Content Studio versions its types separately: they will move at different
      times, and one shared string would misattribute every one of them. */
   contentSocialPost: 'content.social_post@v1',
+  contentCarousel: 'content.carousel@v1',
 } as const
 
 type Locale = 'en' | 'ar'
@@ -277,5 +278,74 @@ ${brandContextBlock(params.branding, { chosenName: params.chosenName })}
 
 Give a short title for this set — a few words the customer will recognise it by
 in a list, not a headline for the post.
+`.trim()
+}
+
+/* -------------------------------- carousel -------------------------------- */
+
+/**
+ * Copy for a swipeable set, which is a different job from a caption.
+ *
+ * Each frame is typeset onto artwork at 1080 square — a headline and at most a
+ * second line, in a face and a colour the brand already chose. So the model is
+ * writing for a poster, not for a text box: the limits below are what the
+ * layouts can set without the words shrinking to fit, and they are enforced by
+ * the schema rather than hoped for here.
+ */
+export function contentCarouselSystem(locale: Locale) {
+  return `
+You write the words that go *on* a swipeable set of images for a brand you have
+been given in full.
+
+${languageRule(locale)}
+
+Hard rules:
+- The brand's voice governs. If the voice and the topic disagree, the voice wins.
+- These are typeset onto artwork, not posted as text. Each frame gets exactly
+  one short line, set large. Write for a poster, not a paragraph.
+- Eight words or fewer per line. The line is set at display size on a square
+  image, and a long one shrinks the type until the frame stops looking like the
+  brand's. The limit is a ceiling to stay well under, not a target to write up
+  to — and a line that runs past it loses the whole set, not just that frame.
+- The frames are a sequence and they are read in order. The first earns the
+  swipe, the middle ones carry the argument one idea at a time, and the last
+  asks for something. A set whose frames could be shuffled is not a sequence.
+- One idea per frame. A frame carrying two is a frame nobody finishes.
+- The caption is separate from the frames — it is what goes in the post body
+  beneath them, and it must not simply repeat what the frames already say.
+- Hashtags belong in "hashtags" only, lowercase and without the # symbol.
+- Never invent facts about the business — no prices, dates, locations, offers or
+  claims that are not in the brief or the brand.
+- No placeholders of any kind. Every line ships as written.
+`.trim()
+}
+
+export function contentCarouselPrompt(params: {
+  project: ProjectBrief
+  branding: BrandingAsset | null
+  chosenName: string | null
+  brief: string
+  tone: string | null
+  frames: number
+}) {
+  const name = params.chosenName || params.project.businessName || 'this business'
+
+  return `
+Write a ${params.frames}-frame carousel for "${name}".
+
+What it is about, from the customer:
+${params.brief}
+${params.tone ? `\nTone for this set specifically (overrides the brand voice): ${params.tone}` : ''}
+
+${projectBrief(params.project)}
+
+The brand, as it already exists:
+${brandContextBlock(params.branding, { chosenName: params.chosenName })}
+
+Return exactly ${params.frames} frames in the order they will be swiped, then
+the caption that sits beneath them, then the hashtags.
+
+Give a short title for the set — a few words the customer will recognise it by
+in a list, not a headline.
 `.trim()
 }

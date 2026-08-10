@@ -103,6 +103,19 @@ export function creditsForSections(sections: GenerationSection[]): number {
  */
 export const CONTENT_CREDIT_COSTS = {
   social_post: 1,
+  /*
+   * Three, for five rendered images against a caption's one.
+   *
+   * It is not three times the model work — the copy is one call, much like a
+   * post's. It is three times the deliverable: five finished pictures a
+   * customer can post without opening a design tool, drawn on photography the
+   * kit already paid for, so the upstream cost is about half a cent and the
+   * margin is the highest of anything here.
+   *
+   * Priced on what it is worth rather than what it costs, deliberately, and
+   * the reverse of the mistake the social kit made at four credits.
+   */
+  carousel: 3,
 } as const
 
 export type ContentType = keyof typeof CONTENT_CREDIT_COSTS

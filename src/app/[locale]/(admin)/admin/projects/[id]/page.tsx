@@ -67,7 +67,17 @@ export default async function AdminProjectPage({
   const websiteAsset = website[0] ?? null
   const socialAsset = social[0] ?? null
 
-  const of = (kind: string) => files.filter((file) => file.kind === kind)
+  /*
+   * Kit files only.
+   *
+   * Carousel frames are stored as `social_post` too — they are finished,
+   * ready-to-post images, which is exactly what that kind means — and they
+   * carry the content item they belong to. This checklist is what the *run*
+   * produced, so a customer who made three carousels must not read as having
+   * fifteen kit posts.
+   */
+  const of = (kind: string) =>
+    files.filter((file) => file.kind === kind && !file.metadata?.contentItemId)
   const logoFiles = of('logo_raster')
   const rounds = groupLogoRounds(logoFiles)
   const chosenId = brandingAsset?.primaryLogoFileId ?? null
