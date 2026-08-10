@@ -164,14 +164,19 @@ export function logoPrompt(params: {
 const VECTORIZE_MODEL = 'fal-ai/recraft/vectorize'
 
 /**
- * Left at zero on purpose rather than guessed.
+ * One cent per image, read off fal's own billing rather than guessed.
  *
- * fal's balance had not settled six seconds after a test call, so the real
- * per-call figure could not be measured, and an invented number in the margin
- * column is worse than an absent one. The usage row is still written, so the
- * calls are counted and the first invoice says what belongs here.
+ * This was zero, and deliberately so: fal's balance had not settled six
+ * seconds after a test call, so the figure could not be measured, and an
+ * invented number in the margin column is worse than an absent one. The usage
+ * rows were written the whole time, waiting for exactly this.
+ *
+ * It runs twice per brand — one call per logo concept — so it is two cents on
+ * a run, against about $0.149 of everything else. Small, and it is the last
+ * cost in the product that was recording as free, which means every margin
+ * figure the admin screens show is now a real number rather than a ceiling.
  */
-const COST_PER_VECTORIZE = 0
+const COST_PER_VECTORIZE = 0.01
 
 type FalResponse = {
   images?: { url?: string; content_type?: string }[]
