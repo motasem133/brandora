@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
 import { AppError } from '@/lib/errors'
+import { brandCopyPatch } from '@/lib/validations/brand'
 import { orgAction } from '@/server/actions/safe-action'
 import { db } from '@/server/db'
 import { brandingAssets, generatedFiles, projects } from '@/server/db/schema'
@@ -42,6 +43,45 @@ export const selectBusinessName = orgAction
 
     revalidatePath('/[locale]/dashboard', 'layout')
     return { name: parsedInput.name }
+  })
+
+/**
+ * Edits the brand's own words, by hand.
+ *
+ * Everything here was readable and not writable, on every plan. A customer who
+ * wanted one word changed in their slogan had two routes: ask the Brand
+ * Assistant, which is paid, or spend credits regenerating a whole section to
+ * get a different result they did not ask for. The worst first impression this
+ * product can make is a free user who likes everything except one line.
+ *
+ * No model is called and nothing is charged — this is the customer typing.
+ * `brandCopyPatch` is the assistant's own contract, so a person and a model
+ * editing the same field are held to the same bounds; see `validations/brand`.
+ *
+ * A patch rather than a field-and-value pair, because the row is one row: the
+ * caller sends whichever fields it is changing and the rest are left alone.
+ */
+export const updateBrandCopy = orgAction
+  .metadata({ name: 'update-brand-copy' })
+  .inputSchema(z.object({ projectId: z.uuid(), patch: brandCopyPatch }))
+  .action(async ({ parsedInput, ctx }) => {
+    await assertOwnedProject(parsedInput.projectId, ctx.orgId)
+
+    const [updated] = await db
+      .update(brandingAssets)
+      .set({ ...parsedInput.patch, updatedAt: new Date() })
+      .where(eq(brandingAssets.projectId, parsedInput.projectId))
+      .returning({ id: brandingAssets.id })
+
+    /*
+     * A project with no branding row is not an error the customer caused — the
+     * run has not produced one yet — but it is not a success either, and
+     * reporting one would leave an edit that silently went nowhere.
+     */
+    if (!updated) throw new AppError('NOT_FOUND', 'This project has no branding yet.')
+
+    revalidatePath('/[locale]/dashboard', 'layout')
+    return { fields: Object.keys(parsedInput.patch) }
   })
 
 /**
