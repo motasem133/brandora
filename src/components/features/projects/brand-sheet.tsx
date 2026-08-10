@@ -55,6 +55,22 @@ export async function BrandSheet({
       */}
       <Disclosure
           title={t('story')}
+          /*
+            Open when there is something in it.
+
+            Folded shut, the brand's story, voice and values were invisible
+            unless you knew to click a heading — and a customer reported
+            exactly that: "I couldn't see the brand story or voice." A section
+            that hides the words somebody just paid for is not restraint.
+
+            The cost is that the slogan now appears twice on the page: once on
+            the identity plate in the brand's own type, and once here as a
+            labelled field. That is a brand book's own habit — the line on the
+            cover and the line in the specification — and it is the price of
+            the slogan being editable anywhere at all, since the plate takes no
+            controls.
+          */
+          open={Boolean(branding.brandStory || branding.brandVoice || branding.brandValues.length)}
           meta={
             branding.brandStory ? (
               <CopyButton value={branding.brandStory} label={t('story')} />
