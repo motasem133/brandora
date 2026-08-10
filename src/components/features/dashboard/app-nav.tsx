@@ -79,20 +79,48 @@ export function AppNav({
       */}
       <div className="glass relative">
         <div className="mx-auto flex h-16 max-w-[90rem] items-center gap-4 px-6 lg:px-10">
-          <Link href="/dashboard" className="shrink-0" aria-label={t('overview')}>
-            <Logo className="hidden text-xl sm:inline-flex" markClassName="size-12" />
-            <LogoMark className="size-12 sm:hidden" />
-          </Link>
+          {/*
+            Three columns, the outer two sharing the leftover evenly.
+
+            The centre used to be `absolute left-1/2`, which centres it on the
+            page and takes it out of the layout entirely — so it could not push
+            the cluster on the end, it could only be drawn over it. With the
+            Admin link present the row needed about 1400px, and below that
+            "Admin" was printed on top of the credits pill: at 1280px they
+            overlapped by 62px, at 1024px by 190px. Nothing errored and no
+            breakpoint was crossed, which is why it survived.
+
+            Two `flex-1` rails are the same centring — equal rails put the
+            middle on the page's centre, and it stays symmetric in Arabic
+            without a mirrored rule — except that everything is in flow, so a
+            row that no longer fits gets tight instead of stacking on itself.
+          */}
+          <div className="flex min-w-fit flex-1 items-center">
+            <Link href="/dashboard" className="shrink-0" aria-label={t('overview')}>
+              <Logo className="hidden text-xl sm:inline-flex" markClassName="size-12" />
+              <LogoMark className="size-12 sm:hidden" />
+            </Link>
+          </div>
 
           {/*
-            Centred on the bar rather than laid out after the mark: absolutely
-            positioned so the group's centre is the page's centre no matter how
-            wide the identity cluster on the end grows. Symmetric, so it holds
-            in Arabic without a mirrored rule.
+            `xl`, not `lg` — the breakpoint is now where the row actually fits.
+
+            It appeared from 1024px and needed about 1400px with the Admin link
+            present, which is the whole defect: the bar was shown at widths it
+            had never fitted in. Measured on the real thing, 1280px clears both
+            edges with the sixth item in place, so that is where it starts.
+            Below it the stacked row underneath takes over — which is designed
+            for exactly this, fades at both ends and scrolls the current
+            destination to the centre, none of which a squeezed bar does.
+
+            The overflow rules stay as a floor rather than a plan. Arabic sets
+            these labels longer, and a seventh destination is one commit away;
+            when either happens this gives up space by scrolling instead of
+            printing one label over another.
           */}
           <nav
             aria-label={t('sections')}
-            className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 lg:flex"
+            className="hidden min-w-0 items-center gap-1 overflow-x-auto [mask-image:linear-gradient(to_right,transparent,#000_1rem,#000_calc(100%-1rem),transparent)] [scrollbar-width:none] xl:flex [&::-webkit-scrollbar]:hidden"
           >
             {items.map(({ href, key, icon: Icon }) => (
               <NavItem
@@ -105,7 +133,15 @@ export function AppNav({
             ))}
           </nav>
 
-          <div className="ms-auto flex shrink-0 items-center gap-2">
+          {/*
+            `min-w-fit`, so this rail never shrinks below what is in it.
+
+            With `min-w-0` it shrank happily and its contents overflowed
+            leftward across the nav — the same overlap by a different route.
+            The nav is the only thing here that can give up space gracefully,
+            because it is the only thing that scrolls.
+          */}
+          <div className="flex min-w-fit flex-1 items-center justify-end gap-2">
             {/*
               The balance, where the reference keeps its notifications.
 
@@ -149,7 +185,7 @@ export function AppNav({
         reason to reach for navigation is usually "this isn't what I wanted",
         which happens after you have scrolled.
       */}
-      <nav aria-label={t('sections')} className="glass border-b border-line lg:hidden">
+      <nav aria-label={t('sections')} className="glass border-b border-line xl:hidden">
         {/*
           The row fades out at both ends instead of stopping dead at them.
 
