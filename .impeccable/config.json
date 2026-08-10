@@ -14,6 +14,51 @@
         "value": "var(--ease-spring)",
         "createdAt": "2026-08-03T23:45:56.501Z",
         "reason": "User confirmed var(--ease-spring) is intentional"
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "*",
+        "files": [
+          "src/server/email/templates.ts"
+        ],
+        "createdAt": "2026-08-10T08:39:54.104Z",
+        "reason": "Email HTML cannot reference CSS variables \u2014 no email client resolves var(). The design system is hand-inlined here on purpose, so radius, type ramp, palette and the monospace stack are literals by necessity. Fourteen findings fired on every edit of this file, which is how a real finding gets missed. Scoped to this file only. Confirmed 10 August 2026."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "*",
+        "files": [
+          "src/server/email/templates.ts"
+        ],
+        "createdAt": "2026-08-10T08:39:54.182Z",
+        "reason": "Email HTML cannot reference CSS variables \u2014 no email client resolves var(). The design system is hand-inlined here on purpose, so radius, type ramp, palette and the monospace stack are literals by necessity. Fourteen findings fired on every edit of this file, which is how a real finding gets missed. Scoped to this file only. Confirmed 10 August 2026."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "*",
+        "files": [
+          "src/server/email/templates.ts"
+        ],
+        "createdAt": "2026-08-10T08:39:54.253Z",
+        "reason": "Email HTML cannot reference CSS variables \u2014 no email client resolves var(). The design system is hand-inlined here on purpose, so radius, type ramp, palette and the monospace stack are literals by necessity. Fourteen findings fired on every edit of this file, which is how a real finding gets missed. Scoped to this file only. Confirmed 10 August 2026."
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          "src/server/email/templates.ts"
+        ],
+        "createdAt": "2026-08-10T08:39:54.321Z",
+        "reason": "Email HTML cannot reference CSS variables \u2014 no email client resolves var(). The design system is hand-inlined here on purpose, so radius, type ramp, palette and the monospace stack are literals by necessity. Fourteen findings fired on every edit of this file, which is how a real finding gets missed. Scoped to this file only. Confirmed 10 August 2026."
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "1px)",
+        "files": [
+          "src/app/globals.css"
+        ],
+        "createdAt": "2026-08-10T08:39:54.390Z",
+        "reason": "The inner-radius idiom calc(var(--radius-card) - 1px), which the detector reads as a literal \"1px)\". A nested surface inside a rounded card has to be one pixel tighter or the corners read wrong. Scoped to this file and this value only \u2014 every other radius here is still checked. Confirmed 10 August 2026."
       }
     ]
   }
