@@ -108,6 +108,15 @@ export function GenerationPanel({
    */
   const witnessedRun = useRef(false)
 
+  /**
+   * The last progress payload, for the event fired when the run ends.
+   *
+   * A ref rather than the state above because `subscribe` is memoised and would
+   * read whatever `progress` was when it was built — which, for the run that
+   * matters, is empty.
+   */
+  const latestProgress = useRef<Progress>(initialProgress)
+
   const isRunning = status === 'queued' || status === 'generating' || status === 'running'
 
   /*
@@ -134,6 +143,7 @@ export function GenerationPanel({
       const next: Progress = payload.progress ?? {}
       setProgress(next)
       setStatus(payload.status)
+      latestProgress.current = next
 
       /*
        * Show the brand when it exists, not when the run ends.
@@ -188,6 +198,26 @@ export function GenerationPanel({
       setStatus(payload.status)
       if (typeof payload.creditsCharged === 'number') setCharged(payload.creditsCharged)
       if (payload.status === 'completed' && witnessedRun.current) setJustFinished(true)
+
+      /*
+       * How many runs fail, and at which section.
+       *
+       * Behind `witnessedRun` for the reason the note above gives: `done` is
+       * replayed to everyone who opens a finished project, so without the guard
+       * a brand generated last week is counted again on every visit — and a
+       * failure rate is exactly the number that ruins. The cost is a run that
+       * finishes while nobody is looking, which is counted at neither end.
+       */
+      if (witnessedRun.current) {
+        const failedAt = Object.entries(latestProgress.current).find(
+          ([, step]) => step?.status === 'failed',
+        )?.[0]
+        capture(EVENTS.generationFinished, {
+          status: payload.status,
+          section: failedAt ?? 'none',
+          creditsCharged: payload.creditsCharged ?? 0,
+        })
+      }
 
       /*
        * A run that drew new logos invalidates any round pinned in the URL.
@@ -281,6 +311,19 @@ export function GenerationPanel({
   }, [subscribe, tab])
 
   const canAfford = creditBalance >= creditCost
+
+  /*
+   * The wall, recorded where a customer actually meets it.
+   *
+   * Not on the server's refusal: the button is disabled before the action can
+   * be called, so almost nobody reaches that error. What is worth counting is
+   * being shown the price and not being able to pay it — that is the moment a
+   * free customer either buys credits or leaves, and the whole point of the
+   * event is finding out which.
+   */
+  useEffect(() => {
+    if (!canAfford) capture(EVENTS.creditsExhausted, { where: 'generation', needed: creditCost })
+  }, [canAfford, creditCost])
 
   /*
    * The end of the run, which used to be a component unmounting.

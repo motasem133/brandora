@@ -196,6 +196,16 @@ export function OnboardingWizard({
 
   useEffect(() => {
     headingRef.current?.focus({ preventScroll: true })
+    /*
+     * Which of the eight questions people stop answering.
+     *
+     * Keyed on the step rather than on `next()`, so step 1 counts on arrival —
+     * without an event for opening the wizard the first drop-off, which is
+     * likely the largest, is the one that cannot be seen. Going back re-fires a
+     * step already recorded; a funnel counts the first occurrence per person, so
+     * that costs a row and changes no answer.
+     */
+    capture(EVENTS.onboardingStep, { step })
   }, [step])
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) => {

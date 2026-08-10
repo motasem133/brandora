@@ -11,6 +11,7 @@ import { FieldError } from '@/components/ui/field-error'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { useRouter } from '@/i18n/navigation'
+import { EVENTS, capture } from '@/lib/analytics'
 import { BUILT_CONTENT_TYPES, MAX_BRIEF, MAX_VARIANTS, type BuiltContentType } from '@/lib/content'
 import { generateContent } from '@/server/actions/content'
 
@@ -51,6 +52,11 @@ export function ContentComposer({
   const affordable = balance >= estimate
   const ready = brief.trim().length >= 3 && affordable && !isPending
 
+  /* The same wall as the generation panel's, at the other control that spends. */
+  React.useEffect(() => {
+    if (!affordable) capture(EVENTS.creditsExhausted, { where: 'content', needed: estimate })
+  }, [affordable, estimate])
+
   async function submit(event: React.FormEvent) {
     event.preventDefault()
     if (!ready) return
@@ -72,6 +78,8 @@ export function ContentComposer({
     })
 
     if (outcome?.data) {
+      /* The retention question: a brand is bought once, content is why anyone returns. */
+      capture(EVENTS.contentGenerated, { type, variants })
       setCharged({ cost: outcome.data.creditsCharged, balance: balance - outcome.data.creditsCharged })
       setBrief('')
       router.refresh()

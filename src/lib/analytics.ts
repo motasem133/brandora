@@ -29,14 +29,25 @@ export function isAnalyticsConfigured() {
  *
  * A closed set rather than free strings: a typo in an event name is invisible
  * until someone builds a funnel on it and finds half the data missing.
+ *
+ * They come in pairs on purpose. Every start already recorded here had no
+ * finish, so nothing could be asked about drop-off: the wizard was one black
+ * box between "started" and "project created", checkout recorded the press and
+ * not the payment, and running out of credits — the moment a free customer
+ * either pays or leaves — fired nothing at all.
  */
 export const EVENTS = {
+  onboardingStep: 'onboarding_step',
   projectCreated: 'project_created',
   generationStarted: 'generation_started',
+  generationFinished: 'generation_finished',
   logosRegenerated: 'logos_regenerated',
+  contentGenerated: 'content_generated',
   websitePublished: 'website_published',
   customDomainAttached: 'custom_domain_attached',
   checkoutStarted: 'checkout_started',
+  checkoutCompleted: 'checkout_completed',
+  creditsExhausted: 'credits_exhausted',
 } as const
 
 export type AnalyticsEvent = (typeof EVENTS)[keyof typeof EVENTS]

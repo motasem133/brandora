@@ -6,6 +6,7 @@ import { useAction } from 'next-safe-action/hooks'
 import { useEffect, useRef } from 'react'
 
 import { Button } from '@/components/ui/button'
+import { EVENTS, capture } from '@/lib/analytics'
 import { useRouter } from '@/i18n/navigation'
 import { syncBilling } from '@/server/actions/billing'
 
@@ -27,6 +28,17 @@ export function BillingSync({ auto }: { auto: boolean }) {
   useEffect(() => {
     if (!auto || started.current) return
     started.current = true
+    /*
+     * The other end of `checkout_started`. Polar's own success URL is what puts
+     * `auto` on, so this fires once per completed payment and nowhere else.
+     *
+     * It undercounts by whoever pays and closes the tab before being sent back.
+     * The webhook is the only place that cannot miss them, and reaching it from
+     * the server needs an HTTP capture this app does not have yet — worth
+     * adding when the gap between this number and Polar's is large enough to
+     * argue about.
+     */
+    capture(EVENTS.checkoutCompleted)
     execute({})
   }, [auto, execute])
 
