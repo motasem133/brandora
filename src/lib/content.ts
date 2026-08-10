@@ -33,10 +33,40 @@ export const socialPostBodySchema = z.object({
   items: z.array(socialPostItemSchema).min(1).max(5),
 })
 
-export const contentBodySchema = z.discriminatedUnion('kind', [socialPostBodySchema])
+/**
+ * One frame of a carousel: a rendered image, and the words that were set on it.
+ *
+ * One line, because one line is what the artwork sets — see the note in
+ * `ai/schemas.ts`. The line is kept beside the file id rather than left in the
+ * picture alone.
+ * It is what the library lists, what a screen reader is given for the image,
+ * and what a customer copies when they write the post the carousel goes into —
+ * none of which can be got back out of a PNG.
+ */
+export const carouselFrameSchema = z.object({
+  fileId: z.uuid(),
+  /** Which of the kit's layouts drew it — 'hero', 'statement', and so on. */
+  layout: z.string().min(1).max(40),
+  lead: z.string().min(1).max(120),
+})
+
+export const carouselBodySchema = z.object({
+  kind: z.literal('carousel'),
+  frames: z.array(carouselFrameSchema).min(1).max(10),
+  /** The caption for the post the frames are attached to. */
+  caption: z.string().min(1).max(600),
+  hashtags: z.array(z.string().min(1).max(30)).min(3).max(10),
+})
+
+export const contentBodySchema = z.discriminatedUnion('kind', [
+  socialPostBodySchema,
+  carouselBodySchema,
+])
 
 export type SocialPostItem = z.infer<typeof socialPostItemSchema>
 export type SocialPostBody = z.infer<typeof socialPostBodySchema>
+export type CarouselFrame = z.infer<typeof carouselFrameSchema>
+export type CarouselBody = z.infer<typeof carouselBodySchema>
 export type ContentBody = z.infer<typeof contentBodySchema>
 
 /**
@@ -46,8 +76,32 @@ export type ContentBody = z.infer<typeof contentBodySchema>
  * that are built. The composer reads this, so an unbuilt type cannot be offered
  * by a form control that has nothing behind it.
  */
-export const BUILT_CONTENT_TYPES = ['social_post'] as const
+export const BUILT_CONTENT_TYPES = ['social_post', 'carousel'] as const
 export type BuiltContentType = (typeof BUILT_CONTENT_TYPES)[number]
+
+/**
+ * Types whose output is pictures rather than text, and which therefore cannot
+ * be produced inside the request that asks for them.
+ *
+ * Every frame launches its own Chromium and pays about ten seconds for it —
+ * see `render/browser.ts` for why a reused browser was measured and rejected.
+ * Five frames is most of a minute before the model has written anything, and
+ * a request the platform kills with a credit hold open is the failure the
+ * whole async pipeline exists to prevent.
+ */
+export const RENDERED_CONTENT_TYPES = ['carousel'] as const
+export function isRenderedType(type: BuiltContentType) {
+  return (RENDERED_CONTENT_TYPES as readonly string[]).includes(type)
+}
+
+/**
+ * Frames in a carousel.
+ *
+ * Five is what Instagram shows a swipe hint for and what the layouts can fill
+ * without repeating themselves — there are eight, and three of them need a
+ * photograph the project may not have.
+ */
+export const CAROUSEL_FRAMES = 5
 
 /** How many independent captions one generation may ask for. */
 export const MAX_VARIANTS = 3

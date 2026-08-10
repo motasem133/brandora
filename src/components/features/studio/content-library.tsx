@@ -43,8 +43,19 @@ export async function ContentLibrary({
     <div className="overflow-hidden rounded-card border border-line bg-surface/60">
       <ul className="divide-y divide-line">
         {items.map((item) => {
-          const body = item.body as { kind?: string; items?: { caption: string }[] } | null
-          const preview = body?.items?.[0]?.caption ?? item.brief ?? ''
+          const body = item.body as
+            | {
+                kind?: string
+                items?: { caption: string }[]
+                caption?: string
+                frames?: { fileId: string; lead: string }[]
+              }
+            | null
+
+          /* A carousel's own caption, a caption set's first line, or the brief
+             it was asked for — whichever exists, in that order. */
+          const preview = body?.caption ?? body?.items?.[0]?.caption ?? item.brief ?? ''
+          const frames = body?.kind === 'carousel' ? (body.frames ?? []) : []
 
           return (
             <li key={item.id} className="flex flex-wrap items-start gap-x-4 gap-y-2 px-5 py-4">
@@ -65,6 +76,32 @@ export async function ContentLibrary({
                   <p dir="auto" className="mt-1.5 line-clamp-2 text-sm text-fg-secondary">
                     {preview}
                   </p>
+                )}
+
+                {/*
+                  The frames themselves, small and in order.
+
+                  A carousel is pictures, and a row that describes it in words
+                  is a row that makes you open something to find out what you
+                  made. Served through the access-checked file route rather
+                  than a public URL: these are a customer's unreleased work.
+                */}
+                {frames.length > 0 && (
+                  <ul className="mt-2.5 flex flex-wrap gap-2">
+                    {frames.map((frame, index) => (
+                      <li key={frame.fileId}>
+                        {/* eslint-disable-next-line @next/next/no-img-element -- a
+                            customer asset behind an authorised route; the optimizer
+                            would need it public. */}
+                        <img
+                          src={`/api/files/${frame.fileId}`}
+                          alt={frame.lead || t('frames', { count: index + 1 })}
+                          loading="lazy"
+                          className="size-16 rounded-control border border-line object-cover"
+                        />
+                      </li>
+                    ))}
+                  </ul>
                 )}
               </div>
 

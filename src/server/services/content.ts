@@ -3,12 +3,13 @@ import 'server-only'
 import { and, eq } from 'drizzle-orm'
 
 import { AppError } from '@/lib/errors'
-import { type BuiltContentType, MAX_VARIANTS } from '@/lib/content'
+import { CAROUSEL_FRAMES, type BuiltContentType, MAX_VARIANTS, isRenderedType } from '@/lib/content'
 import { contentSocialPostSchemaFor } from '@/server/ai/schemas'
 import { contentSocialPostPrompt, contentSocialPostSystem, PROMPT_VERSIONS } from '@/server/ai/prompts'
 import { runModel } from '@/server/ai/run'
 import { creditsForContent, reserveForContent, settleForContent } from '@/server/billing/credits'
 import { db } from '@/server/db'
+import { inngest } from '@/server/inngest/client'
 import { brandingAssets, contentItems, projects } from '@/server/db/schema'
 
 /**
@@ -64,7 +65,18 @@ export type GenerateContentParams = {
 }
 
 export async function generateContentItem(params: GenerateContentParams) {
-  const variants = Math.min(Math.max(1, params.variants), MAX_VARIANTS)
+  /*
+   * A rendered type is one piece, whatever the client asked for.
+   *
+   * The composer hides the variants control for a carousel, but the action
+   * takes 1 to 3 for every type and `creditsForContent` charges a credit for
+   * each one past the first. A request made outside the form — the same shape,
+   * `variants: 3` — would have taken five credits and produced one carousel.
+   * The form is not the boundary; this is.
+   */
+  const variants = isRenderedType(params.type)
+    ? 1
+    : Math.min(Math.max(1, params.variants), MAX_VARIANTS)
 
   const [row] = await db
     .select({
@@ -89,6 +101,22 @@ export async function generateContentItem(params: GenerateContentParams) {
      so verification gates spending rather than sign-in. */
   if (!params.emailVerified) {
     throw new AppError('EMAIL_NOT_VERIFIED', 'Verify your email address to generate content.')
+  }
+
+  /*
+   * A drawn type needs a chosen logo, and the check belongs before the money.
+   *
+   * Every frame carries the mark in its corner, so without one the renderer
+   * throws — which it did, after the credits were held and a model had already
+   * been paid to write five lines nobody would ever see. The refund worked and
+   * the customer still got "the carousel could not be made" for something they
+   * could have been told about before they pressed the button.
+   *
+   * The kit gates this in the interface; this gates it at the boundary,
+   * because the interface is not one.
+   */
+  if (isRenderedType(params.type) && !row.branding.primaryLogoFileId) {
+    throw new AppError('NOT_FOUND', 'Choose a logo for this brand before making a carousel.')
   }
 
   const cost = creditsForContent({ type: params.type, variants })
@@ -131,6 +159,33 @@ export async function generateContentItem(params: GenerateContentParams) {
     // No hold, so no row. Same rollback `startGeneration` does.
     await db.delete(contentItems).where(eq(contentItems.id, params.contentItemId))
     throw error
+  }
+
+  /*
+   * A rendered type leaves here as soon as its credits are held.
+   *
+   * Everything below this point happens inside the request, which is right for
+   * a caption and impossible for five pictures: each frame launches its own
+   * browser at about ten seconds. The row is already `generating` and the
+   * library already draws that state, so the customer sees the piece appear
+   * and fill in rather than watching a spinner on a form.
+   *
+   * The hold is taken above, before the event is sent, for the same reason
+   * `startGeneration` does it that way round: a reservation that fails should
+   * tell the customer now, not after a queue has accepted the work.
+   */
+  if (isRenderedType(params.type)) {
+    await inngest.send({
+      name: 'content/carousel.requested',
+      data: {
+        contentItemId: params.contentItemId,
+        projectId: params.projectId,
+        organizationId: params.organizationId,
+        frames: CAROUSEL_FRAMES,
+      },
+    })
+
+    return { id: params.contentItemId, creditsCharged: 0, duplicate: false as const, queued: true as const }
   }
 
   const project = row.project

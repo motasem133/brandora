@@ -102,8 +102,26 @@ const plain = (min: number, max: number) =>
  *
  * Unicode classes rather than `A-Za-z`, because an Arabic brand's hashtags are
  * Arabic and an ASCII rule would fail every Arabic run in the product.
+ *
+ * `refine`, not `regex`, and the difference is not style. A `regex` is
+ * serialised into the JSON schema sent to the provider as a `pattern`, and
+ * Qwen — the primary model for every social task — refuses the request
+ * outright rather than the output:
+ *
+ *   [Alibaba] Format error: 'response_format.json_schema.schema' …
+ *   '^[\p{L}\p{N}_]+$' is not supported
+ *
+ * Which arrives here as "response did not match schema", pointing at the
+ * model's writing when the model never wrote anything. A refinement is not
+ * serialised, so the rule is enforced exactly as before and the provider never
+ * sees a pattern it cannot parse.
  */
-const hashtag = z.string().min(3).max(30).regex(/^[\p{L}\p{N}_]+$/u)
+const HASHTAG = /^[\p{L}\p{N}_]+$/u
+const hashtag = z
+  .string()
+  .min(3)
+  .max(30)
+  .refine((value) => HASHTAG.test(value), 'Letters, numbers and underscores only.')
 
 /** Ten of the same word is not a hashtag set. Case-insensitive, as Instagram is. */
 const distinct = (values: string[]) =>
@@ -188,3 +206,48 @@ export function contentSocialPostSchemaFor(variants: number) {
 }
 
 export type ContentSocialPostOutput = z.infer<typeof contentSocialPostSchema>
+
+/**
+ * A carousel's words, pinned to the number of frames that will be drawn.
+ *
+ * The length is the layout's, not a guess: the line is set at display size over
+ * artwork, so a long one shrinks the type until the frame stops looking like
+ * the brand's. Seventy, not sixty — at sixty every model in the chain failed
+ * the whole set on a brief that wanted slightly longer lines, which is the same
+ * defect the ad headline had: a ceiling set at the length of a good line is one
+ * the model writes up to and overshoots. The prompt now asks for eight words,
+ * and this is the room to miss by a little without losing the carousel.
+ *
+ * `.length(frames)` for the reason the caption schema pins its count: the
+ * number of frames is a thing the customer is charged against, so a model
+ * returning four when five were bought is a schema violation, not a surprise
+ * to notice later.
+ */
+export function contentCarouselSchemaFor(frames: number) {
+  return z.object({
+    title: z.string().min(1).max(80),
+    frames: z
+      .array(
+        z.object({
+          /*
+           * One line, and only one.
+           *
+           * A second line was asked for and then silently dropped: in these
+           * layouts `tail` is the accent-coloured *end of the headline* and
+           * `body` is prose only some of them set, so a supporting sentence
+           * had nowhere reliable to land. It rendered on none of the three
+           * layouts a project without photography gets.
+           *
+           * Charging for words that are not drawn is worse than not offering
+           * them. One line per frame is what the artwork actually sets.
+           */
+          lead: plain(3, 70).describe('The line set large on the frame'),
+        }),
+      )
+      .length(frames),
+    caption: plain(60, 600).describe('The post body beneath the frames'),
+    hashtags: z.array(hashtag).min(3).max(10).refine(distinct, 'Hashtags must be distinct.'),
+  })
+}
+
+export type ContentCarouselOutput = z.infer<ReturnType<typeof contentCarouselSchemaFor>>

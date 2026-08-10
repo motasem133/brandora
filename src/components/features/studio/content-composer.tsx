@@ -12,7 +12,13 @@ import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { useRouter } from '@/i18n/navigation'
 import { EVENTS, capture } from '@/lib/analytics'
-import { BUILT_CONTENT_TYPES, MAX_BRIEF, MAX_VARIANTS, type BuiltContentType } from '@/lib/content'
+import {
+  BUILT_CONTENT_TYPES,
+  MAX_BRIEF,
+  MAX_VARIANTS,
+  isRenderedType,
+  type BuiltContentType,
+} from '@/lib/content'
 import { generateContent } from '@/server/actions/content'
 
 /**
@@ -45,10 +51,16 @@ export function ContentComposer({
   const [tone, setTone] = React.useState('')
   const [variants, setVariants] = React.useState(3)
   const [charged, setCharged] = React.useState<{ cost: number; balance: number } | null>(null)
+  /* A queued piece has not been charged yet and has nothing to show inline, so
+     the form says where it went rather than reporting a cost of zero. */
+  const [queued, setQueued] = React.useState(false)
 
   const { executeAsync, isPending, result } = useAction(generateContent)
 
-  const estimate = costs[type] + (variants - 1) * variantCost
+  /* A rendered type is one piece however many frames it draws, so it is priced
+     flat and the variants control is not shown for it. */
+  const rendered = isRenderedType(type)
+  const estimate = costs[type] + (rendered ? 0 : (variants - 1) * variantCost)
   const affordable = balance >= estimate
   const ready = brief.trim().length >= 3 && affordable && !isPending
 
@@ -62,6 +74,7 @@ export function ContentComposer({
     if (!ready) return
 
     setCharged(null)
+    setQueued(false)
 
     /*
      * The row id is minted here, not on the server. It is the idempotency key
@@ -74,13 +87,14 @@ export function ContentComposer({
       type,
       brief: brief.trim(),
       tone: tone.trim() || null,
-      variants,
+      variants: rendered ? 1 : variants,
     })
 
     if (outcome?.data) {
       /* The retention question: a brand is bought once, content is why anyone returns. */
-      capture(EVENTS.contentGenerated, { type, variants })
-      setCharged({ cost: outcome.data.creditsCharged, balance: balance - outcome.data.creditsCharged })
+      capture(EVENTS.contentGenerated, { type, variants: rendered ? 1 : variants })
+      if ('queued' in outcome.data && outcome.data.queued) setQueued(true)
+      else setCharged({ cost: outcome.data.creditsCharged, balance: balance - outcome.data.creditsCharged })
       setBrief('')
       router.refresh()
     }
@@ -99,15 +113,27 @@ export function ContentComposer({
           </Select>
         </Field>
 
-        <Field label={t('variantsLabel')}>
-          <Select value={String(variants)} onChange={(e) => setVariants(Number(e.target.value))}>
-            {Array.from({ length: MAX_VARIANTS }, (_, i) => i + 1).map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </Select>
-        </Field>
+        {/*
+          Variants are captions, and a carousel does not have them.
+
+          Three captions are three angles on one topic, which is a useful thing
+          to ask for. Three carousels would be three sets of five drawn images
+          from one brief — fifteen renders and three times the price for a
+          choice nobody asked to make. So the control is absent rather than
+          disabled: a disabled control is a promise that something will unlock
+          it, and nothing will.
+        */}
+        {!rendered && (
+          <Field label={t('variantsLabel')}>
+            <Select value={String(variants)} onChange={(e) => setVariants(Number(e.target.value))}>
+              {Array.from({ length: MAX_VARIANTS }, (_, i) => i + 1).map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </Select>
+          </Field>
+        )}
       </div>
 
       {/*
@@ -161,6 +187,8 @@ export function ContentComposer({
       {charged && !isPending && (
         <p className="text-sm text-success">{t('charged', charged)}</p>
       )}
+
+      {queued && !isPending && <p className="text-sm text-fg-secondary">{t('carouselQueued')}</p>}
 
       <FieldError message={result?.serverError} />
     </form>

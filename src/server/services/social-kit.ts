@@ -5,7 +5,7 @@ import { and, eq } from 'drizzle-orm'
 import { generateSceneImage } from '@/server/ai/image'
 import { db } from '@/server/db'
 import { brandingAssets, generatedFiles, projects, socialMediaAssets } from '@/server/db/schema'
-import { buildCopy } from '@/server/render/copy'
+import { buildCopy, type PostCopy } from '@/server/render/copy'
 import { renderToPng } from '@/server/render/browser'
 import { renderKitPdf } from '@/server/render/kit-pdf'
 import { LAYOUTS, renderLayout, type LayoutKind } from '@/server/render/layouts'
@@ -276,6 +276,24 @@ export async function renderKitPosts(params: {
   only?: LayoutKind[]
   /** Only the first slice clears what a previous run left behind. */
   replace?: boolean
+  /*
+   * Words to set, when the caller has some of its own.
+   *
+   * A kit writes itself from what the brand already said — `buildCopy` below
+   * mines the stored captions and story. Content Studio does not: a carousel
+   * is about whatever the customer just typed, and its lines come from a model
+   * call against that brief. Same layouts, same typography, same photographs;
+   * different source for the words.
+   */
+  copy?: Partial<Record<LayoutKind, PostCopy>>
+  /*
+   * Marks these files as one piece of content rather than part of the kit.
+   *
+   * It keeps them out of the kit's own object keys, so a carousel cannot
+   * overwrite `post-hero.png`, and out of the support view's kit-post count,
+   * which is a checklist of what the *run* produced.
+   */
+  contentItemId?: string
 }) {
   const { row, brand } = await loadBrand(params.projectId)
   const marks = await loadMarks(row.primaryLogoFileId)
@@ -289,17 +307,20 @@ export async function renderKitPosts(params: {
 
   const kinds = Object.keys(LAYOUTS) as LayoutKind[]
   const wanted = params.only ?? kinds
-  const copy = buildCopy(
-    {
-      posts: social?.posts ?? [],
-      story: row.story,
-      values: row.values ?? [],
-      voice: row.voice,
-      slogan: row.slogan,
-      name: brand.name,
-    },
-    kinds,
-  )
+  const copy = {
+    ...buildCopy(
+      {
+        posts: social?.posts ?? [],
+        story: row.story,
+        values: row.values ?? [],
+        voice: row.voice,
+        slogan: row.slogan,
+        name: brand.name,
+      },
+      kinds,
+    ),
+    ...(params.copy ?? {}),
+  }
 
   // Replaced, not appended: a rerun means "these instead". Only the first
   // slice clears, or the second would delete what the first just made.
@@ -318,6 +339,9 @@ export async function renderKitPosts(params: {
   }
 
   const made: LayoutKind[] = []
+  /* What was actually drawn, for a caller that has to record it. The kit
+     ignores this; a carousel stores the ids as its frames. */
+  const files: { layout: LayoutKind; fileId: string; copy: PostCopy | null }[] = []
 
   for (const layout of wanted) {
     const meta = LAYOUTS[layout]
@@ -339,9 +363,12 @@ export async function renderKitPosts(params: {
       meta.size,
     )
 
-    const key = objectKey(params.projectId, `post-${layout}.png`)
+    const key = objectKey(
+      params.projectId,
+      params.contentItemId ? `content-${params.contentItemId}-${layout}.png` : `post-${layout}.png`,
+    )
     await uploadObject({ key, body: png, contentType: 'image/png' })
-    await db.insert(generatedFiles).values({
+    const [file] = await db.insert(generatedFiles).values({
       projectId: params.projectId,
       kind: 'social_post',
       r2Key: key,
@@ -349,10 +376,16 @@ export async function renderKitPosts(params: {
       sizeBytes: png.byteLength,
       width: meta.size.width,
       height: meta.size.height,
-      metadata: { layout, label: meta.label, line: copy[layout]?.lead ?? null },
-    })
+      metadata: {
+        layout,
+        label: meta.label,
+        line: copy[layout]?.lead ?? null,
+        ...(params.contentItemId ? { contentItemId: params.contentItemId } : {}),
+      },
+    }).returning({ id: generatedFiles.id })
 
     made.push(layout)
+    files.push({ layout, fileId: file.id, copy: copy[layout] ?? null })
   }
 
   /*
@@ -364,7 +397,7 @@ export async function renderKitPosts(params: {
     throw new Error('No posts could be rendered for this kit.')
   }
 
-  return { layouts: made }
+  return { layouts: made, files }
 }
 
 /* -------------------------------------------------------------------------- */
