@@ -8,6 +8,7 @@ import type { BrandingOutput } from '@/server/ai/schemas'
 import { db } from '@/server/db'
 import { brandingAssets, generatedFiles } from '@/server/db/schema'
 import { objectKey, signedDownloadUrl, uploadObject } from '@/server/storage/r2'
+import { noteLogoConcept } from './generation'
 import { buildBrandKit } from './brand-kit'
 import {
   backdropFill,
@@ -145,6 +146,18 @@ export async function generateLogos(params: {
         .returning()
 
       kitFiles.set(`${slug}.png`, raster)
+
+      /*
+       * Announced here, not at the end of the step.
+       *
+       * The picture exists and is in storage as of the line above; everything
+       * below — vectorising, and then the favicon and avatars derived from a
+       * chosen concept — is work the customer does not have to wait through to
+       * see what was drawn. Before this, the page learned about the logos when
+       * the whole step finished, which was tens of seconds after the first one
+       * was ready to look at.
+       */
+      await noteLogoConcept(params.generationJobId)
 
       // Vectorisation is best-effort: a logo that will not vectorise cleanly is
       // still a usable raster logo, so it must not fail the whole concept.

@@ -143,6 +143,42 @@ export async function getLatestJobForProject(projectId: string) {
 }
 
 /**
+ * Records that one logo concept has reached storage.
+ *
+ * The logo step is the long pole — the image alone is a 98-second median — and
+ * the page was told nothing until the whole step finished, which is not when
+ * the pictures exist. Each concept writes its own row the moment it is
+ * uploaded, and then the customer waited through vectorising and the derived
+ * favicon and avatars before being shown any of it.
+ *
+ * So the count is published as it climbs. The same shallow jsonb merge
+ * `markStep` uses, for the same reason: the concepts run concurrently, and a
+ * read-modify-write would lose one of them.
+ *
+ * A count rather than the file ids. The page re-reads the project when this
+ * moves, so the ids would be a second copy of something it is about to fetch
+ * properly — and one that could disagree with it.
+ */
+export async function noteLogoConcept(jobId: string) {
+  await db
+    .update(generationJobs)
+    .set({
+      progress: sql`
+        coalesce(${generationJobs.progress}, '{}'::jsonb)
+          || jsonb_build_object(
+               'logos',
+               coalesce(${generationJobs.progress} -> 'logos', '{}'::jsonb)
+                 || jsonb_build_object(
+                      'concepts',
+                      coalesce((${generationJobs.progress} -> 'logos' ->> 'concepts')::int, 0) + 1
+                    )
+             )
+      `,
+    })
+    .where(eq(generationJobs.id, jobId))
+}
+
+/**
  * Creates the job row, reserves credits, and emits the Inngest event.
  *
  * Credits are reserved before the event is sent: if the reservation fails the

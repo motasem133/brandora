@@ -16,8 +16,13 @@ import { generateProject } from '@/server/actions/generation'
 
 type StepStatus = 'pending' | 'running' | 'done' | 'failed'
 
-/** Mirrors generation_jobs.progress, whose status is a plain string in JSONB. */
-type Progress = Record<string, { status?: string; error?: string }>
+/**
+ * Mirrors generation_jobs.progress, whose status is a plain string in JSONB.
+ *
+ * `concepts` is written only under `logos`, by `noteLogoConcept`, and climbs as
+ * each drawn concept reaches storage.
+ */
+type Progress = Record<string, { status?: string; error?: string; concepts?: number }>
 
 function stepStatus(value: string | undefined): StepStatus {
   return value === 'running' || value === 'done' || value === 'failed' ? value : 'pending'
@@ -76,6 +81,14 @@ export function GenerationPanel({
   )
   /** One reveal per page, so a run with four sections does not reload four times. */
   const hasRevealed = useRef(false)
+
+  /**
+   * How many logo concepts this page was rendered knowing about.
+   *
+   * Seeded from the server's own view for the same reason `revealed` is:
+   * arriving at a finished run must not treat work done last week as news.
+   */
+  const conceptsSeen = useRef(initialProgress.logos?.concepts ?? 0)
 
   /*
    * True only for a run that finished while somebody was watching.
@@ -167,13 +180,32 @@ export function GenerationPanel({
        * arriving at a finished job reloads nothing. Without that it is the
        * same infinite loop the `done` handler below documents.
        */
-      const landedNow = Object.entries(next).some(
+      const sectionLanded = Object.entries(next).some(
         ([name, step]) => step?.status === 'done' && !revealed.current.has(name),
       )
 
       for (const [name, step] of Object.entries(next)) {
         if (step?.status === 'done') revealed.current.add(name)
       }
+
+      /*
+       * A drawn concept counts as something landing, the same as a section.
+       *
+       * The logo step is the long pole and it announces nothing until it is
+       * completely finished — after both images, both vectorisations and the
+       * derived favicon and avatars. The first concept is in storage and worth
+       * looking at tens of seconds before that, so the page stops waiting for
+       * the paperwork.
+       *
+       * Still one reveal per page, deliberately. Both concepts are drawn
+       * concurrently and land within moments of each other, so reloading for
+       * each would be two jolts for one piece of news; the second arrives with
+       * the reload at the end of the run.
+       */
+      const conceptLanded = (next.logos?.concepts ?? 0) > conceptsSeen.current
+      conceptsSeen.current = Math.max(conceptsSeen.current, next.logos?.concepts ?? 0)
+
+      const landedNow = sectionLanded || conceptLanded
 
       if (landedNow && !hasRevealed.current && witnessedRun.current) {
         hasRevealed.current = true
