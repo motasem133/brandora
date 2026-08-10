@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { blockSchema } from '@/lib/blocks'
+import { MARKUP, NO_MARKUP_MESSAGE, blockSchema } from '@/lib/blocks'
 import { socialPostItemSchema } from '@/lib/content'
 
 /**
@@ -83,15 +83,19 @@ export type WebsiteOutput = z.infer<typeof websiteSchema>
  * rules are what make that fallback happen.
  */
 
-/** Written to be read as text, so a tag in it is a tag the customer sees. */
-const MARKUP = /<\s*\/?[a-zA-Z][a-zA-Z0-9-]*\s*\/?>/
-
+/**
+ * Written to be read as text, so a tag in it is a tag the customer sees.
+ *
+ * The rule itself lives in `lib/blocks`, which is where the website contract
+ * needed it too. One regex, so the two contracts cannot disagree about what
+ * counts as markup.
+ */
 const plain = (min: number, max: number) =>
   z
     .string()
     .min(min)
     .max(max)
-    .refine((value) => !MARKUP.test(value), 'Plain text only — no HTML tags.')
+    .refine((value) => !MARKUP.test(value), NO_MARKUP_MESSAGE)
 
 /**
  * A hashtag without its hash: letters and numbers in any script.
@@ -129,7 +133,17 @@ export const socialSchema = z.object({
     )
     .length(3),
   adCopy: z.object({
-    headline: plain(10, 60),
+    /*
+     * Eighty, because sixty was being treated as the target.
+     *
+     * One project's headline is "Stop eating sad, thin snacks! We are Chunky,
+     * and we are here" — exactly sixty characters, stopping mid-sentence. The
+     * model writes up to the ceiling it is given, so a ceiling set at the
+     * length of a good headline guarantees the occasional bad one. The system
+     * prompt now says limits are a ceiling and not a target; this is the room
+     * to obey it in. Nothing renders this in a fixed box.
+     */
+    headline: plain(10, 80),
     body: plain(40, 300),
     cta: plain(2, 30),
     facebookAd: plain(40, 400),
