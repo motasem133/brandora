@@ -42,6 +42,17 @@ const STALLED_MINUTES = 90
  * `settle` step cannot both refund — whichever runs first wins and the other is
  * a no-op. That makes this safe to call on a failure that happened *after* a
  * successful settle.
+ *
+ * The alarm is raised here rather than at any of the call sites, because there
+ * are five of them and only one used to say anything. The reporting sat in the
+ * scheduled sweep — and then recovery was deliberately moved off the schedule
+ * and onto the progress stream, which left the alert on the path that now fires
+ * least. Every route to a released hold passes through this function, so this
+ * is the one place that cannot be forgotten by the next one added.
+ *
+ * `settleCredits` returning a row is what makes it exactly once: a second
+ * caller for the same job hits the idempotency key, gets null back, and stays
+ * quiet rather than paging twice for one customer's money.
  */
 export async function releaseHold(
   jobId: string,
@@ -52,7 +63,7 @@ export async function releaseHold(
   const [job] = await db.select().from(generationJobs).where(eq(generationJobs.id, jobId)).limit(1)
   if (!job) return
 
-  await settleCredits({
+  const settled = await settleCredits({
     organizationId,
     reserved: job.creditsReserved,
     // Nothing finished, so nothing is charged. A run that got far enough to
@@ -72,6 +83,23 @@ export async function releaseHold(
   // the button again, because `startGeneration` refuses to run over a project
   // that still reads as queued or generating.
   await db.update(projects).set({ status: 'failed' }).where(eq(projects.id, projectId))
+
+  /*
+   * Only when this call is the one that actually gave the credits back. A hold
+   * of nothing — a fixture, a zero-credit retry — is not worth a page either,
+   * and `settleCredits` returns null for that too.
+   */
+  if (settled) {
+    console.warn(`[credits] released ${job.creditsReserved} credits held on job ${jobId}: ${reason}`)
+    reportError(new Error(`Released a hold of ${job.creditsReserved} credits: ${reason}`), {
+      jobId,
+      projectId,
+      organizationId,
+      creditsReserved: job.creditsReserved,
+    })
+  }
+
+  return settled
 }
 
 /**
@@ -146,7 +174,6 @@ export async function sweepStuckHolds() {
         ? 'The run stopped reporting. Credits were returned automatically.'
         : 'The run never started. Credits were returned automatically.',
     )
-    console.warn(`[credits] released a stuck hold on job ${job.id}`)
   }
 
   /*
@@ -160,7 +187,7 @@ export async function sweepStuckHolds() {
   const content = await findStuckContent(15)
 
   for (const item of content) {
-    await settleForContent({
+    const settled = await settleForContent({
       organizationId: item.organizationId,
       reserved: item.creditsReserved,
       used: 0,
@@ -178,23 +205,24 @@ export async function sweepStuckHolds() {
       })
       .where(eq(contentItems.id, item.id))
 
-    console.warn(`[credits] released a stuck hold on content ${item.id}`)
+    // Content has only this one route back, so it reports from here — same
+    // rule as `releaseHold`: speak only when this call is what returned the
+    // money.
+    if (settled) {
+      console.warn(`[credits] released ${item.creditsReserved} credits held on content ${item.id}`)
+      reportError(new Error(`Released a content hold of ${item.creditsReserved} credits`), {
+        contentItemId: item.id,
+        projectId: item.projectId,
+        organizationId: item.organizationId,
+      })
+    }
   }
 
   /*
-   * A released hold is never routine. It means somebody paid for work that did
-   * not happen, and the only reason it was noticed is that a clock came round.
-   * The first time this happened nothing said so, and it was found by reading
-   * customer projects days later — so it is reported rather than merely logged.
+   * No summary report here any more. Each hold now reports itself from
+   * `releaseHold`, which is the only place every route to a refund passes
+   * through — this used to be that place, and stopped being it the moment the
+   * progress stream started releasing holds directly.
    */
-  if (jobs.length || content.length) {
-    reportError(
-      new Error(
-        `Released ${jobs.length} generation and ${content.length} content holds that were never collected`,
-      ),
-      { jobs: jobs.length, content: content.length },
-    )
-  }
-
   return { jobs: jobs.length, content: content.length }
 }

@@ -168,6 +168,49 @@ test.describe('stuck holds', () => {
     expect(after.credit_balance).toBe(opening)
   })
 
+  /*
+   * There are five routes to a released hold now, and more than one can reach
+   * the same job: the stream the customer is watching, and the sweep behind it.
+   * Exactly one refund must land — it is what keeps the balance right, and it
+   * is also what stops the alarm paging twice for one customer's money.
+   */
+  test('two paths reaching the same hold refund it once', async ({ request }) => {
+    const [before] = await sql`
+      SELECT credit_balance FROM organizations WHERE id = ${organizationId}`
+    const opening = before.credit_balance as number
+
+    const [job] = await sql`
+      INSERT INTO generation_jobs (project_id, trigger, sections, progress, status,
+                                   credits_reserved, created_at)
+      VALUES (${projectId}, 'initial', ${sql.json(['branding'])},
+              ${sql.json({ branding: { status: 'pending' } })}, 'queued', ${HELD},
+              now() - interval '20 minutes')
+      RETURNING id`
+    jobId = job.id as string
+
+    await sql`
+      INSERT INTO credit_transactions (organization_id, amount, balance_after, reason,
+                                       project_id, generation_job_id, idempotency_key, metadata)
+      VALUES (${organizationId}, ${-HELD}, ${opening - HELD}, 'generation', ${projectId},
+              ${jobId}, ${'reserve:' + jobId}, ${sql.json({ kind: 'reservation' })})`
+    await sql`
+      UPDATE organizations SET credit_balance = ${opening - HELD} WHERE id = ${organizationId}`
+    await sql`UPDATE projects SET status = 'queued' WHERE id = ${projectId}`
+
+    // The stream gets there first, then the sweep comes round behind it.
+    await request.get(`/api/generate/${projectId}/stream`)
+    await request.get('/api/cron/release-holds')
+
+    const [after] = await sql`
+      SELECT credit_balance FROM organizations WHERE id = ${organizationId}`
+    expect(after.credit_balance).toBe(opening)
+
+    const [{ count }] = await sql`
+      SELECT count(*)::int FROM credit_transactions
+      WHERE generation_job_id = ${jobId} AND reason = 'refund'`
+    expect(count).toBe(1)
+  })
+
   test('a run that is merely young is left alone', async ({ request }) => {
     const [before] = await sql`
       SELECT credit_balance FROM organizations WHERE id = ${organizationId}`
