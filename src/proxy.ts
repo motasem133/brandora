@@ -174,6 +174,13 @@ export const config = {
    * PostHog events to. Left in, locale negotiation redirects them to
    * /en/monitoring and /en/ingest and every client-side report is lost —
    * silently, which is the one failure this kind of tooling must not have.
+   *
+   * /_vercel is the third one, and it was missing — which is why Web Analytics
+   * showed nothing. The script is `/_vercel/insights/script.js` and loads fine,
+   * because the exclusion for file extensions happens to cover it; the beacon
+   * it posts to is `/_vercel/insights/event`, which has no dot in it, so every
+   * pageview was redirected to /en/_vercel/insights/event and dropped. Enabling
+   * the feature in the dashboard could never have fixed it.
    */
-  matcher: ['/((?!api|monitoring|ingest|_next/static|_next/image|favicon.ico|.*\\..*).*)'],
+  matcher: ['/((?!api|monitoring|ingest|_vercel|_next/static|_next/image|favicon.ico|.*\\..*).*)'],
 }

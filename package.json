@@ -22,6 +22,7 @@
     "test:system": "node scripts/system-test.mjs",
     "test:billing": "node scripts/billing-test.mjs",
     "test:contrast": "tsx scripts/contrast-test.ts",
+    "test:proxy": "tsx scripts/proxy-matcher-test.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "db:seed:test": "node scripts/seed-test-data.mjs"
