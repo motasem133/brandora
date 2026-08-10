@@ -26,11 +26,22 @@ export const CREDIT_COSTS = {
   social: 1,
   /*
    * Three generated photographs at $0.0675 each, plus eight renders and a
-   * printed document that cost only time. Priced beside `logos`, which is six
-   * credits for two images — a kit is more machine work and less model work,
-   * so it sits below it.
+   * printed document that cost only time.
+   *
+   * Six, not four. Four was reasoned from the work — a kit is more machine
+   * than model, so it sat below `logos` — and it priced the kit as the least
+   * profitable thing we sell: 47% on Creator and 28% on Studio, against 93–95%
+   * for anything that is only text. Credits are sold at one flat price and do
+   * not cost one flat amount to serve, so the margin on a subscription is
+   * decided by what the customer happens to spend it on. The worst case was
+   * the behaviour we most want: a Studio customer spending their whole 700 on
+   * kits returned 28%, and the same customer spending it on captions returned
+   * 93%.
+   *
+   * At six it is ~52% on Studio, and still the cheapest way to get eight
+   * designed posts anywhere.
    */
-  kit: 4,
+  kit: 6,
 } as const
 
 /**
