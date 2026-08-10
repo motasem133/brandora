@@ -4,6 +4,7 @@ import { tool } from 'ai'
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 
+import { brandCopy } from '@/lib/validations/brand'
 import { db } from '@/server/db'
 import {
   brandingAssets,
@@ -77,7 +78,7 @@ export function buildAssistantTools(context: AssistantContext) {
 
     updateSlogan: tool({
       description: 'Replace the brand slogan or tagline.',
-      inputSchema: z.object({ slogan: z.string().min(3).max(80) }),
+      inputSchema: z.object({ slogan: brandCopy.slogan }),
       execute: async ({ slogan }): Promise<ToolResult> => {
         const ok = await patchBranding(projectId, { slogan })
         return ok
@@ -88,7 +89,7 @@ export function buildAssistantTools(context: AssistantContext) {
 
     updateStory: tool({
       description: 'Rewrite the brand story. Two or three short paragraphs.',
-      inputSchema: z.object({ brandStory: z.string().min(150).max(1500) }),
+      inputSchema: z.object({ brandStory: brandCopy.brandStory }),
       execute: async ({ brandStory }): Promise<ToolResult> => {
         const ok = await patchBranding(projectId, { brandStory })
         return ok
@@ -99,7 +100,7 @@ export function buildAssistantTools(context: AssistantContext) {
 
     updateVoice: tool({
       description: 'Rewrite the description of the brand voice and tone.',
-      inputSchema: z.object({ brandVoice: z.string().min(20).max(400) }),
+      inputSchema: z.object({ brandVoice: brandCopy.brandVoice }),
       execute: async ({ brandVoice }): Promise<ToolResult> => {
         const ok = await patchBranding(projectId, { brandVoice })
         return ok
@@ -110,9 +111,7 @@ export function buildAssistantTools(context: AssistantContext) {
 
     updateValues: tool({
       description: 'Replace the list of brand values.',
-      inputSchema: z.object({
-        brandValues: z.array(z.string().min(2).max(40)).min(3).max(5),
-      }),
+      inputSchema: z.object({ brandValues: brandCopy.brandValues }),
       execute: async ({ brandValues }): Promise<ToolResult> => {
         const ok = await patchBranding(projectId, { brandValues })
         return ok

@@ -3,7 +3,10 @@
 import { Check, Loader2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useAction } from 'next-safe-action/hooks'
+import * as React from 'react'
 
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { useRouter } from '@/i18n/navigation'
 import { cn } from '@/lib/utils'
 import { selectBusinessName } from '@/server/actions/branding'
@@ -24,7 +27,21 @@ export function NamePicker({
     onSuccess: () => router.refresh(),
   })
 
+  /*
+   * A name of their own.
+   *
+   * Five ideas were the only options on offer, and a customer who liked none
+   * of them — or liked one with a letter changed — had no route that did not
+   * cost money: regenerate and hope, or ask the paid assistant. The action
+   * this already calls takes any name between 2 and 60 characters, so the
+   * ability was there and only the field was missing.
+   */
+  const [custom, setCustom] = React.useState('')
+  const trimmed = custom.trim()
+  const usable = trimmed.length >= 2 && trimmed.length <= 60 && trimmed !== selected
+
   return (
+    <>
     <ul className="space-y-3">
       {ideas.map((idea) => {
         const isSelected = selected === idea.name
@@ -61,5 +78,32 @@ export function NamePicker({
         )
       })}
     </ul>
+
+    <div className="mt-4 border-t border-line pt-4">
+      <label htmlFor="custom-name" className="text-xs uppercase tracking-wide text-fg-muted">
+        {t('customName')}
+      </label>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <Input
+          id="custom-name"
+          value={custom}
+          onChange={(event) => setCustom(event.target.value)}
+          maxLength={60}
+          placeholder={t('customNamePlaceholder')}
+          className="w-full sm:w-64"
+        />
+        <Button
+          size="sm"
+          variant="secondary"
+          disabled={!usable || isPending}
+          onClick={() => execute({ projectId, name: trimmed })}
+        >
+          {isPending && input?.name === trimmed && <Loader2 className="size-3.5 animate-spin" />}
+          {t('useThisName')}
+        </Button>
+      </div>
+      <p className="mt-2 text-xs text-fg-muted">{t('customNameHint')}</p>
+    </div>
+    </>
   )
 }

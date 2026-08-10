@@ -24,6 +24,7 @@
     "test:contrast": "tsx scripts/contrast-test.ts",
     "test:proxy": "tsx scripts/proxy-matcher-test.ts",
     "test:copy": "tsx scripts/copy-contract-test.ts",
+    "test:brand-copy": "tsx scripts/brand-copy-test.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "db:seed:test": "node scripts/seed-test-data.mjs"

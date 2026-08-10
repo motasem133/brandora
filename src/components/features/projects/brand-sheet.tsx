@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server'
 import { CopyButton } from '@/components/ui/copy-button'
 import { Disclosure } from '@/components/ui/disclosure'
 import type { BrandingAsset, GeneratedFile } from '@/server/db/schema'
+import { BrandCopy } from './brand-copy'
 import { LogoVariations } from './logo-variations'
 import { NamePicker } from './name-picker'
 
@@ -28,15 +29,9 @@ export async function BrandSheet({
   const t = await getTranslations('Branding')
 
   const hasNames = branding.businessNameIdeas.length > 0
-  const hasStory = Boolean(branding.brandStory || branding.brandVoice || branding.brandValues.length)
 
   return (
     <div className="space-y-4">
-      {/*
-        The slogan is no longer repeated here. It is set in the brand's own
-        accent on the identity plate at the top of the page, which is both where
-        it belongs and the only place it needs to be.
-      */}
       {hasNames && (
         <section className="rounded-panel border border-line p-7">
           <h2 className="text-xs font-semibold uppercase tracking-[0.12em] text-fg-muted">
@@ -53,8 +48,12 @@ export async function BrandSheet({
         </section>
       )}
 
-      {hasStory && (
-        <Disclosure
+      {/*
+        Always rendered, where it used to appear only once a run had written
+        something into it. It is the editor now, and a section that hides
+        itself when a field is empty is a section you cannot use to fill it.
+      */}
+      <Disclosure
           title={t('story')}
           meta={
             branding.brandStory ? (
@@ -62,42 +61,24 @@ export async function BrandSheet({
             ) : undefined
           }
         >
-          <div className="space-y-5">
-            {branding.brandStory && (
-              <div className="space-y-3 text-sm leading-relaxed text-fg-secondary">
-                {branding.brandStory
-                  .split('\n')
-                  .filter(Boolean)
-                  .map((paragraph, index) => (
-                    <p key={index}>{paragraph}</p>
-                  ))}
-              </div>
-            )}
+          {/*
+            The slogan is back in this section, and it is not a repetition.
 
-            {branding.brandVoice && (
-              <div>
-                <h3 className="text-xs uppercase tracking-wide text-fg-muted">{t('voice')}</h3>
-                <p className="mt-1 text-sm leading-relaxed text-fg-secondary">
-                  {branding.brandVoice}
-                </p>
-              </div>
-            )}
-
-            {branding.brandValues.length > 0 && (
-              <div>
-                <h3 className="text-xs uppercase tracking-wide text-fg-muted">{t('values')}</h3>
-                <ul className="mt-2 flex flex-wrap gap-2">
-                  {branding.brandValues.map((value) => (
-                    <li key={value} className="rounded-full bg-elevated px-3 py-1 text-sm">
-                      {value}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        </Disclosure>
-      )}
+            It is set in the brand's own accent on the identity plate at the top
+            of the page, and that plate takes no app controls — a chrome button
+            on a generated ground is the one thing that breaks the illusion it
+            exists for. So the place it is *shown* and the place it is *changed*
+            are deliberately different, and this section folds away by default,
+            which means the page still shows the slogan exactly once.
+          */}
+          <BrandCopy
+            projectId={projectId}
+            slogan={branding.slogan}
+            brandStory={branding.brandStory}
+            brandVoice={branding.brandVoice}
+            brandValues={branding.brandValues}
+          />
+      </Disclosure>
 
       <LogoVariations
         files={files}
