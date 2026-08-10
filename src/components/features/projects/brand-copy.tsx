@@ -38,12 +38,23 @@ export function BrandCopy({
   brandStory,
   brandVoice,
   brandValues,
+  /**
+   * The support view renders the same fields and must not offer to change
+   * them. Support looks; it does not reach in — every control on that screen
+   * would be an `orgAction` scoped to the administrator's own workspace, so
+   * the kindest outcome is a button that errors.
+   *
+   * A flag rather than a second read-only copy of this markup, because the two
+   * would drift, and the one that drifts is the one nobody looks at.
+   */
+  readOnly = false,
 }: {
   projectId: string
   slogan: string | null
   brandStory: string | null
   brandVoice: string | null
   brandValues: string[]
+  readOnly?: boolean
 }) {
   const t = useTranslations('Branding')
   const tc = useTranslations('Common')
@@ -114,7 +125,7 @@ export function BrandCopy({
             <div className="flex items-center justify-between gap-3">
               <h3 className="text-xs uppercase tracking-wide text-fg-muted">{label}</h3>
 
-              {!isOpen && (
+              {!isOpen && !readOnly && (
                 <button
                   type="button"
                   onClick={() => open(field, currentFor(field))}
