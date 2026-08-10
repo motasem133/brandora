@@ -2,16 +2,22 @@ import 'server-only'
 
 import { and, eq } from 'drizzle-orm'
 
-import { CAROUSEL_FRAMES, type CarouselFrame } from '@/lib/content'
-import { contentCarouselPrompt, contentCarouselSystem, PROMPT_VERSIONS } from '@/server/ai/prompts'
-import { contentCarouselSchemaFor } from '@/server/ai/schemas'
+import { CAROUSEL_FRAMES, STORY_LAYOUT, type CarouselFrame } from '@/lib/content'
+import {
+  contentCarouselPrompt,
+  contentCarouselSystem,
+  contentStoryPrompt,
+  contentStorySystem,
+  PROMPT_VERSIONS,
+} from '@/server/ai/prompts'
+import { contentCarouselSchemaFor, contentStorySchema } from '@/server/ai/schemas'
 import { runModel } from '@/server/ai/run'
 import { settleForContent } from '@/server/billing/credits'
 import { db } from '@/server/db'
 import { brandingAssets, contentItems, generatedFiles, projects } from '@/server/db/schema'
 import { LAYOUTS, type LayoutKind } from '@/server/render/layouts'
 import { renderKitPosts, type SceneKeys } from '@/server/services/social-kit'
-import { carouselRequested, inngest } from './client'
+import { renderedContentRequested, inngest } from './client'
 
 /**
  * The order frames are considered in.
@@ -60,10 +66,10 @@ async function availableLayouts(projectId: string) {
   return { scenes: keys, layouts: usable.slice(0, CAROUSEL_FRAMES) }
 }
 
-export const generateCarousel = inngest.createFunction(
+export const generateRenderedContent = inngest.createFunction(
   {
-    id: 'generate-carousel',
-    triggers: [carouselRequested],
+    id: 'generate-rendered-content',
+    triggers: [renderedContentRequested],
     concurrency: [{ key: 'event.data.organizationId', limit: 2 }],
     retries: 1,
     /*
@@ -94,7 +100,7 @@ export const generateCarousel = inngest.createFunction(
         .set({
           status: 'failed',
           creditsCharged: 0,
-          error: 'The carousel could not be made. Nothing was charged.',
+          error: 'It could not be drawn. Nothing was charged.',
           updatedAt: new Date(),
         })
         .where(eq(contentItems.id, contentItemId))
@@ -115,35 +121,69 @@ export const generateCarousel = inngest.createFunction(
 
     const { scenes, layouts } = await step.run('layouts', () => availableLayouts(projectId))
 
+    const brief = {
+      project: {
+        industry: row.project.industry,
+        country: row.project.country,
+        brandBrief: row.project.brandBrief,
+        brandStyle: row.project.brandStyle,
+        businessName: row.project.businessName,
+        preferredColors: row.project.preferredColors,
+        language: row.project.language,
+      },
+      branding: row.branding,
+      chosenName: row.project.businessName,
+      brief: row.item.brief ?? '',
+      tone: row.item.tone,
+    }
+
+    const context = { organizationId, projectId, feature: 'content' as const }
+
     /*
-     * The words first, and only for the frames that can be drawn. Asking for
-     * five and rendering three would charge for a sequence whose argument has
-     * holes in it.
+     * A story is one portrait frame; a carousel is a sequence of square ones.
+     * Same pipeline, because two paths to the same artwork is how the two of
+     * them start disagreeing about what a frame looks like — and because
+     * everything either needs, from the hold to the refund, is identical.
      */
-    const copy = await step.run('copy', async () =>
-      runModel({
-        task: 'social',
-        schema: contentCarouselSchemaFor(layouts.length),
-        system: contentCarouselSystem(row.project.language),
-        prompt: contentCarouselPrompt({
-          project: {
-            industry: row.project.industry,
-            country: row.project.country,
-            brandBrief: row.project.brandBrief,
-            brandStyle: row.project.brandStyle,
-            businessName: row.project.businessName,
-            preferredColors: row.project.preferredColors,
-            language: row.project.language,
-          },
-          branding: row.branding,
-          chosenName: row.project.businessName,
-          brief: row.item.brief ?? '',
-          tone: row.item.tone,
-          frames: layouts.length,
-        }),
-        context: { organizationId, projectId, feature: 'content' },
-      }),
-    )
+    const isStory = event.data.type === 'story'
+
+    /* One shape for both, so the render and finish steps below do not have to
+       know which type produced it. A story simply has no caption. */
+    type Plan = {
+      title: string
+      lines: string[]
+      layouts: string[]
+      caption?: string
+      hashtags?: string[]
+    }
+
+    const plan: Plan = isStory
+      ? await step.run('copy', async () => {
+          const out = await runModel({
+            task: 'social',
+            schema: contentStorySchema,
+            system: contentStorySystem(row.project.language),
+            prompt: contentStoryPrompt(brief),
+            context,
+          })
+          return { title: out.title, lines: [out.lead], layouts: [STORY_LAYOUT] }
+        })
+      : await step.run('copy', async () => {
+          const out = await runModel({
+            task: 'social',
+            schema: contentCarouselSchemaFor(layouts.length),
+            system: contentCarouselSystem(row.project.language),
+            prompt: contentCarouselPrompt({ ...brief, frames: layouts.length }),
+            context,
+          })
+          return {
+            title: out.title,
+            lines: out.frames.map((frame) => frame.lead),
+            layouts,
+            caption: out.caption,
+            hashtags: out.hashtags,
+          }
+        })
 
     /*
      * Rendering reuses the kit's own loop rather than a second copy of it —
@@ -155,22 +195,22 @@ export const generateCarousel = inngest.createFunction(
       renderKitPosts({
         projectId,
         scenes,
-        only: layouts,
+        only: plan.layouts as LayoutKind[],
         replace: false,
         contentItemId,
         copy: Object.fromEntries(
-          layouts.map((layout, index) => [
+          plan.layouts.map((layout, index) => [
             layout,
             /* `tail` is the accent-coloured end of a headline in these
                layouts, not a second line, so nothing is put in it. */
-            { lead: copy.frames[index].lead, tail: null },
+            { lead: plan.lines[index], tail: null },
           ]),
         ),
       }),
     )
 
     if (rendered.files.length === 0) {
-      throw new Error('No frames could be rendered for this carousel.')
+      throw new Error('Nothing could be drawn for this piece.')
     }
 
     const frames: CarouselFrame[] = rendered.files.map((file) => ({
@@ -184,11 +224,20 @@ export const generateCarousel = inngest.createFunction(
         .update(contentItems)
         .set({
           status: 'ready',
-          title: copy.title,
-          body: { kind: 'carousel', frames, caption: copy.caption, hashtags: copy.hashtags },
+          title: plan.title,
+          body: isStory
+            ? { kind: 'story', frames }
+            : {
+                kind: 'carousel',
+                frames,
+                /* Only a story reaches here without them, and a story never
+                   takes this branch — but the column is typed, so say so. */
+                caption: plan.caption ?? '',
+                hashtags: plan.hashtags ?? [],
+              },
           creditsCharged: row.item.creditsReserved,
           modelUsed: 'social',
-          promptVersion: PROMPT_VERSIONS.contentCarousel,
+          promptVersion: isStory ? PROMPT_VERSIONS.contentStory : PROMPT_VERSIONS.contentCarousel,
           updatedAt: new Date(),
         })
         .where(eq(contentItems.id, contentItemId))

@@ -1,7 +1,7 @@
 import { serve } from 'inngest/next'
 
 import { inngest } from '@/server/inngest/client'
-import { generateCarousel } from '@/server/inngest/content'
+import { generateRenderedContent } from '@/server/inngest/content'
 import { generateBrand } from '@/server/inngest/generate'
 
 /**
@@ -20,5 +20,5 @@ export const maxDuration = 300
  */
 export const { GET, POST, PUT } = serve({
   client: inngest,
-  functions: [generateBrand, generateCarousel],
+  functions: [generateBrand, generateRenderedContent],
 })

@@ -251,3 +251,17 @@ export function contentCarouselSchemaFor(frames: number) {
 }
 
 export type ContentCarouselOutput = z.infer<ReturnType<typeof contentCarouselSchemaFor>>
+
+/**
+ * A story's words: a title to find it by, and the one line set on the picture.
+ *
+ * No caption and no hashtags, because a story has nowhere to put them. Asking a
+ * model for copy the product then throws away is how a prompt starts drifting
+ * from what the artwork can hold.
+ */
+export const contentStorySchema = z.object({
+  title: z.string().min(1).max(80),
+  lead: plain(3, 70).describe('The line set large on the story'),
+})
+
+export type ContentStoryOutput = z.infer<typeof contentStorySchema>

@@ -21,6 +21,7 @@ export const PROMPT_VERSIONS = {
      times, and one shared string would misattribute every one of them. */
   contentSocialPost: 'content.social_post@v1',
   contentCarousel: 'content.carousel@v1',
+  contentStory: 'content.story@v1',
 } as const
 
 type Locale = 'en' | 'ar'
@@ -347,5 +348,56 @@ the caption that sits beneath them, then the hashtags.
 
 Give a short title for the set — a few words the customer will recognise it by
 in a list, not a headline.
+`.trim()
+}
+
+/* --------------------------------- story ---------------------------------- */
+
+/**
+ * One line on one portrait picture, seen for a few seconds and then gone.
+ *
+ * That is the whole brief. A story is not a shorter carousel: nobody swipes it,
+ * nobody reads a second sentence on it, and it expires — so the line has to do
+ * its work at a glance or not at all.
+ */
+export function contentStorySystem(locale: Locale) {
+  return `
+You write the single line that goes on a brand's story image.
+
+${languageRule(locale)}
+
+Hard rules:
+- The brand's voice governs. If the voice and the topic disagree, the voice wins.
+- One line. It is typeset large on a tall picture and read in about two seconds.
+- Eight words or fewer. The limit is a ceiling to stay well under, not a target.
+- No hashtags, no call to action written as a caption, no second sentence. There
+  is nowhere on a story for any of them.
+- Never invent facts about the business — no prices, dates, locations, offers or
+  claims that are not in the brief or the brand.
+`.trim()
+}
+
+export function contentStoryPrompt(params: {
+  project: ProjectBrief
+  branding: BrandingAsset | null
+  chosenName: string | null
+  brief: string
+  tone: string | null
+}) {
+  const name = params.chosenName || params.project.businessName || 'this business'
+
+  return `
+Write the line for one story image for "${name}".
+
+What it is about, from the customer:
+${params.brief}
+${params.tone ? `\nTone for this one specifically (overrides the brand voice): ${params.tone}` : ''}
+
+${projectBrief(params.project)}
+
+The brand, as it already exists:
+${brandContextBlock(params.branding, { chosenName: params.chosenName })}
+
+Give a short title to recognise it by in a list, and the line itself.
 `.trim()
 }

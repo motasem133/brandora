@@ -38,7 +38,8 @@ const APP_ID =
     : `brandora-${process.env.VERCEL_ENV ?? 'development'}`
 
 /**
- * A carousel, which is pictures and therefore cannot be made in the request.
+ * Rendered content, which is pictures and therefore cannot be made in the
+ * request that asks for it.
  *
  * Content Studio is otherwise synchronous on purpose — a caption is one model
  * call and a few seconds, and routing that through a queue would make it
@@ -46,12 +47,13 @@ const APP_ID =
  * exception: every frame launches its own Chromium at about ten seconds, so
  * five frames is most of a minute before the model has written a word.
  */
-export const carouselRequested = eventType('content/carousel.requested', {
+export const renderedContentRequested = eventType('content/rendered.requested', {
   schema: staticSchema<{
     contentItemId: string
     projectId: string
     organizationId: string
-    frames: number
+    /** Which rendered type — the pipeline is the same, the artwork is not. */
+    type: 'carousel' | 'story'
   }>(),
 })
 

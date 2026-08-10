@@ -8,8 +8,9 @@ import {
   carouselBodySchema,
   contentBodySchema,
   isRenderedType,
+  storyBodySchema,
 } from '../src/lib/content'
-import { contentCarouselSchemaFor } from '../src/server/ai/schemas'
+import { contentCarouselSchemaFor, contentStorySchema } from '../src/server/ai/schemas'
 
 /**
  * The carousel's contracts: what a frame may say, and what it may cost.
@@ -53,7 +54,9 @@ async function main() {
 
   /* --- the type is offered, and is a rendered one --------------------------- */
   check('carousel is a built type', (BUILT_CONTENT_TYPES as readonly string[]).includes('carousel'))
+  check('story is a built type', (BUILT_CONTENT_TYPES as readonly string[]).includes('story'))
   check('carousel renders', isRenderedType('carousel'))
+  check('story renders', isRenderedType('story'))
   check('a caption set does not', !isRenderedType('social_post'))
 
   /* --- the stored shape ------------------------------------------------------ */
@@ -124,26 +127,56 @@ async function main() {
     !schema.safeParse(output({ hashtags: ['one', 'one', 'two'] })).success,
   )
 
+  /* --- a story: one frame, one line, no caption ------------------------------ */
+  const frame = {
+    fileId: '00000000-0000-4000-8000-000000000001',
+    layout: 'story',
+    lead: 'A line',
+  }
+  check('a story body validates', storyBodySchema.safeParse({ kind: 'story', frames: [frame] }).success)
+  check(
+    'a story with two frames is refused',
+    !storyBodySchema.safeParse({ kind: 'story', frames: [frame, frame] }).success,
+  )
+  check('the union accepts a story', contentBodySchema.safeParse({ kind: 'story', frames: [frame] }).success)
+
+  /*
+   * No caption and no hashtags in the contract at all. A story has nowhere to
+   * put them, and asking a model for copy the product throws away is how a
+   * prompt drifts from what the artwork can hold.
+   */
+  const story = contentStorySchema.safeParse({ title: 'A story', lead: 'Open today.' })
+  check('a story is a title and a line', story.success)
+  check('and nothing else', !('caption' in (story.data ?? {})) && !('hashtags' in (story.data ?? {})))
+  check(
+    'a story line past the ceiling is refused',
+    !contentStorySchema.safeParse({ title: 'A story', lead: 'x'.repeat(71) }).success,
+  )
+
   /* --- the money ------------------------------------------------------------- */
   const { CONTENT_CREDIT_COSTS, CONTENT_VARIANT_COST } = await import('../src/server/billing/credits')
 
   check('a carousel is three credits', CONTENT_CREDIT_COSTS.carousel === 3)
+  check('a story is one', CONTENT_CREDIT_COSTS.story === 1)
 
   /*
    * The rule the service applies: a rendered type is one piece, so variants are
    * pinned to 1 before the price is worked out. Asserted as arithmetic rather
    * than by calling the service, which needs a database and a session.
    */
-  const priceFor = (type: 'social_post' | 'carousel', asked: number) => {
+  const priceFor = (type: 'social_post' | 'carousel' | 'story', asked: number) => {
     const variants = isRenderedType(type) ? 1 : Math.min(Math.max(1, asked), 3)
     return CONTENT_CREDIT_COSTS[type] + (variants - 1) * CONTENT_VARIANT_COST
   }
 
   check('a carousel asked for three times still costs three', priceFor('carousel', 3) === 3)
+  check('a story asked for three times still costs one', priceFor('story', 3) === 1)
   check('three captions still cost three', priceFor('social_post', 3) === 3)
 
   assert.equal(failures, 0, `${failures} carousel case(s) failed`)
-  console.log(`✓ carousel: ${CAROUSEL_FRAMES} frames enforced, lines fit the layout, price cannot be inflated`)
+  console.log(
+    `✓ rendered content: ${CAROUSEL_FRAMES} carousel frames enforced, one for a story, lines fit the layout, price cannot be inflated`,
+  )
 }
 
 main()

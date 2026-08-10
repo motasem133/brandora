@@ -61,7 +61,7 @@ export async function ContentLibrary({
           /* A carousel's own caption, a caption set's first line, or the brief
              it was asked for — whichever exists, in that order. */
           const preview = body?.caption ?? body?.items?.[0]?.caption ?? item.brief ?? ''
-          const frames = body?.kind === 'carousel' ? (body.frames ?? []) : []
+          const frames = body?.kind === 'carousel' || body?.kind === 'story' ? (body.frames ?? []) : []
 
           return (
             <li key={item.id} className="flex flex-wrap items-start gap-x-4 gap-y-2 px-5 py-4">

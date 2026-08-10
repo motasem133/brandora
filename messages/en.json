@@ -280,6 +280,7 @@
     "typeLabel": "Content type",
     "type_social_post": "Instagram captions",
     "type_carousel": "Carousel",
+    "type_story": "Story",
     "carouselQueued": "Being drawn — this takes a minute or two. It appears below when it is ready.",
     "frames": "{count} frames",
     "briefLabel": "Topic",
