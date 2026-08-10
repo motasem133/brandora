@@ -67,12 +67,21 @@ export default async function AdminProjectsPage({
                       is dynamic, so without it the press waits on a cold
                       render.
                     */}
+                    {/*
+                      The same name the page behind it is headed with.
+                      The row showed `title` — the working title from the
+                      wizard — while the project's own page leads with the
+                      generated business name, so a row could look like a
+                      different project from the one it opened. Support
+                      matching a customer's words to a row is the whole job of
+                      this list.
+                    */}
                     <Link
                       href={`/admin/projects/${project.id}`}
                       unstable_dynamicOnHover
                       className="font-medium hover:underline"
                     >
-                      {project.title}
+                      {project.business_name || project.title}
                     </Link>
                     <span className="mt-0.5 block text-xs text-fg-muted">
                       {project.industry} · {project.language}

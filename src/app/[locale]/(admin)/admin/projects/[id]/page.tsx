@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation'
 import { BrandFonts } from '@/components/features/projects/brand-fonts'
 import { IdentityPlate } from '@/components/features/projects/identity-plate'
 import { SocialView } from '@/components/features/projects/social-view'
+import { ContentLibrary } from '@/components/features/studio/content-library'
 import { WebsiteView } from '@/components/features/projects/website-view'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardDescription, CardTitle } from '@/components/ui/card'
@@ -314,6 +315,25 @@ export default async function AdminProjectPage({
 
       {websiteAsset && <WebsiteView website={websiteAsset} readOnly />}
       {socialAsset && <SocialView social={socialAsset} />}
+
+      {/*
+        Content Studio, without which this screen is not everything the
+        customer sees.
+
+        The brand is generated once; the Studio is where they keep coming back,
+        so by the time anyone writes in about their content it is the part with
+        the most in it — and it was the one deliverable missing here. The
+        customer's own component, given the project rather than the workspace,
+        so it lists this brand's pieces and drops the brand name from every row.
+      */}
+      <section className="space-y-3">
+        <CardTitle>{t('contentTitle')}</CardTitle>
+        <ContentLibrary
+          organizationId={project.organization_id}
+          projectId={project.id}
+          emptyBody={t('contentNone')}
+        />
+      </section>
 
       {/* ------------------------------------------------------- what they asked */}
       <Disclosure title={tp('brief')} open={!brandingAsset}>
