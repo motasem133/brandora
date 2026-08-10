@@ -50,6 +50,20 @@ export const carouselFrameSchema = z.object({
   lead: z.string().min(1).max(120),
 })
 
+/**
+ * A story: one frame, portrait, and no caption.
+ *
+ * It reuses the carousel's frame shape because it is the same thing — a
+ * rendered image and the line set on it — and differs only in count and
+ * proportion. What it does not have is a caption or hashtags: a story is
+ * posted as a picture, and words attached to it would be words with nowhere
+ * to go.
+ */
+export const storyBodySchema = z.object({
+  kind: z.literal('story'),
+  frames: z.array(carouselFrameSchema).length(1),
+})
+
 export const carouselBodySchema = z.object({
   kind: z.literal('carousel'),
   frames: z.array(carouselFrameSchema).min(1).max(10),
@@ -61,12 +75,14 @@ export const carouselBodySchema = z.object({
 export const contentBodySchema = z.discriminatedUnion('kind', [
   socialPostBodySchema,
   carouselBodySchema,
+  storyBodySchema,
 ])
 
 export type SocialPostItem = z.infer<typeof socialPostItemSchema>
 export type SocialPostBody = z.infer<typeof socialPostBodySchema>
 export type CarouselFrame = z.infer<typeof carouselFrameSchema>
 export type CarouselBody = z.infer<typeof carouselBodySchema>
+export type StoryBody = z.infer<typeof storyBodySchema>
 export type ContentBody = z.infer<typeof contentBodySchema>
 
 /**
@@ -76,7 +92,7 @@ export type ContentBody = z.infer<typeof contentBodySchema>
  * that are built. The composer reads this, so an unbuilt type cannot be offered
  * by a form control that has nothing behind it.
  */
-export const BUILT_CONTENT_TYPES = ['social_post', 'carousel'] as const
+export const BUILT_CONTENT_TYPES = ['social_post', 'carousel', 'story'] as const
 export type BuiltContentType = (typeof BUILT_CONTENT_TYPES)[number]
 
 /**
@@ -89,7 +105,7 @@ export type BuiltContentType = (typeof BUILT_CONTENT_TYPES)[number]
  * a request the platform kills with a credit hold open is the failure the
  * whole async pipeline exists to prevent.
  */
-export const RENDERED_CONTENT_TYPES = ['carousel'] as const
+export const RENDERED_CONTENT_TYPES = ['carousel', 'story'] as const
 export function isRenderedType(type: BuiltContentType) {
   return (RENDERED_CONTENT_TYPES as readonly string[]).includes(type)
 }
@@ -102,6 +118,16 @@ export function isRenderedType(type: BuiltContentType) {
  * photograph the project may not have.
  */
 export const CAROUSEL_FRAMES = 5
+
+/**
+ * The layout a story is drawn on, and the only portrait one there is.
+ *
+ * 1080×1920, and it needs a photograph — which is the whole shape of a story,
+ * so there is no text-only fallback to offer. A project with no kit is told to
+ * make one rather than sold a story that cannot be drawn.
+ */
+export const STORY_LAYOUT = 'story'
+export const STORY_SCENE = 'hero'
 
 /** How many independent captions one generation may ask for. */
 export const MAX_VARIANTS = 3

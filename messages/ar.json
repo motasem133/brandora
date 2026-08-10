@@ -280,6 +280,7 @@
     "typeLabel": "نوع المحتوى",
     "type_social_post": "نصوص إنستغرام",
     "type_carousel": "دوّار",
+    "type_story": "قصة",
     "carouselQueued": "قيد الرسم — يستغرق دقيقة أو دقيقتين. سيظهر أدناه عندما يجهز.",
     "frames": "{count} إطارات",
     "briefLabel": "الموضوع",

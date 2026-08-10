@@ -3,14 +3,14 @@ import 'server-only'
 import { and, eq } from 'drizzle-orm'
 
 import { AppError } from '@/lib/errors'
-import { CAROUSEL_FRAMES, type BuiltContentType, MAX_VARIANTS, isRenderedType } from '@/lib/content'
+import { type BuiltContentType, MAX_VARIANTS, isRenderedType } from '@/lib/content'
 import { contentSocialPostSchemaFor } from '@/server/ai/schemas'
 import { contentSocialPostPrompt, contentSocialPostSystem, PROMPT_VERSIONS } from '@/server/ai/prompts'
 import { runModel } from '@/server/ai/run'
 import { creditsForContent, reserveForContent, settleForContent } from '@/server/billing/credits'
 import { db } from '@/server/db'
 import { inngest } from '@/server/inngest/client'
-import { brandingAssets, contentItems, projects } from '@/server/db/schema'
+import { brandingAssets, contentItems, generatedFiles, projects } from '@/server/db/schema'
 
 /**
  * Content Studio's generate step.
@@ -116,7 +116,35 @@ export async function generateContentItem(params: GenerateContentParams) {
    * because the interface is not one.
    */
   if (isRenderedType(params.type) && !row.branding.primaryLogoFileId) {
-    throw new AppError('NOT_FOUND', 'Choose a logo for this brand before making a carousel.')
+    throw new AppError('NOT_FOUND', 'Choose a logo for this brand before drawing anything from it.')
+  }
+
+  /*
+   * A story is the one type with no text-only fallback.
+   *
+   * A carousel drops to the three layouts that need no photograph when a
+   * project has no kit. There is exactly one portrait layout and it is built
+   * around a photograph, so a story without one is not a thinner story — it is
+   * nothing. Told before the money, like the logo above it.
+   */
+  if (params.type === 'story') {
+    const [scene] = await db
+      .select({ id: generatedFiles.id })
+      .from(generatedFiles)
+      .where(
+        and(
+          eq(generatedFiles.projectId, params.projectId),
+          eq(generatedFiles.kind, 'social_scene'),
+        ),
+      )
+      .limit(1)
+
+    if (!scene) {
+      throw new AppError(
+        'NOT_FOUND',
+        'A story is built on the photography from your social kit. Generate the kit first.',
+      )
+    }
   }
 
   const cost = creditsForContent({ type: params.type, variants })
@@ -176,12 +204,12 @@ export async function generateContentItem(params: GenerateContentParams) {
    */
   if (isRenderedType(params.type)) {
     await inngest.send({
-      name: 'content/carousel.requested',
+      name: 'content/rendered.requested',
       data: {
         contentItemId: params.contentItemId,
         projectId: params.projectId,
         organizationId: params.organizationId,
-        frames: CAROUSEL_FRAMES,
+        type: params.type as 'carousel' | 'story',
       },
     })
 

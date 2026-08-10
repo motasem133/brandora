@@ -116,6 +116,14 @@ export const CONTENT_CREDIT_COSTS = {
    * the reverse of the mistake the social kit made at four credits.
    */
   carousel: 3,
+  /*
+   * One, like a caption, because it is one picture.
+   *
+   * A carousel is five frames and an argument; a story is a single portrait
+   * image that expires in a day. Pricing them the same would say the sequence
+   * was never worth three.
+   */
+  story: 1,
 } as const
 
 export type ContentType = keyof typeof CONTENT_CREDIT_COSTS
