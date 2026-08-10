@@ -17,10 +17,16 @@ test.describe('admin support view', () => {
     await page.goto('/en/admin/projects')
 
     const firstRow = page.locator('tbody tr').first()
-    const title = await firstRow.locator('a').first().innerText()
+    const href = await firstRow.locator('a').first().getAttribute('href')
     await firstRow.locator('a').first().click()
 
-    await expect(page).toHaveURL(/\/en\/admin\/projects\/[0-9a-f-]{36}/)
+    /*
+     * The id, not the name. The list shows `title` — what the customer called
+     * the project — and the page is headed `business_name || title`, which is
+     * the name the run chose. They are the same often enough to pass locally
+     * and different on the fixture, which is how this assertion first failed.
+     */
+    await expect(page).toHaveURL(new RegExp(`${href}$`))
 
     /*
      * Exactly one `<h1>`: the page is about the customer's brand, and the
@@ -32,7 +38,12 @@ test.describe('admin support view', () => {
     // The checklist this screen exists for, and who it is about.
     await expect(page.getByRole('heading', { name: 'What the run produced' })).toBeVisible()
     await expect(page.getByText('Customer', { exact: true })).toBeVisible()
-    await expect(page.getByText(title, { exact: false }).first()).toBeVisible()
+    /*
+     * Support is always about a person, so the address has to be on the page.
+     * Scoped to `main`: the signed-in admin's own address also sits in the nav
+     * menu, hidden until it is opened, and an unscoped match finds that first.
+     */
+    await expect(page.locator('main').getByText(/@/).first()).toBeVisible()
   })
 
   /*
