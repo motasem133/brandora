@@ -3,8 +3,10 @@ import { ArrowLeft, Check, Minus, X } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 
+import { BrandCopy } from '@/components/features/projects/brand-copy'
 import { BrandFonts } from '@/components/features/projects/brand-fonts'
 import { IdentityPlate } from '@/components/features/projects/identity-plate'
+import { PaletteGrid } from '@/components/features/projects/palette-grid'
 import { SocialView } from '@/components/features/projects/social-view'
 import { ContentLibrary } from '@/components/features/studio/content-library'
 import { WebsiteView } from '@/components/features/projects/website-view'
@@ -47,6 +49,7 @@ export default async function AdminProjectPage({
 
   const t = await getTranslations('Admin.projects')
   const tp = await getTranslations('Projects')
+  const tb = await getTranslations('Branding')
 
   const project = await getProjectForAdmin(id)
   if (!project) notFound()
@@ -261,6 +264,46 @@ export default async function AdminProjectPage({
         logo={primaryLogo}
         locale={locale}
       />
+
+      {/*
+        The written brand, which this screen never showed.
+
+        It listed the branding row as delivered and then never printed a word
+        of it — so the one question support is actually asked, "their story is
+        missing / their colours are wrong", could only be answered by reading
+        the database. Two free-plan brands were checked that way before anyone
+        noticed the screen simply had no place to show it.
+
+        The customer's own component in read-only mode, and the customer's own
+        palette grid: the swatches copy their hex, which is exactly what
+        somebody answering that question wants in their hands. Nothing here
+        writes — see the note at the top of this file.
+      */}
+      {brandingAsset && (
+        <section className="space-y-4">
+          <CardTitle>{t('branding')}</CardTitle>
+
+          <Card className="space-y-6">
+            <BrandCopy
+              readOnly
+              projectId={project.id}
+              slogan={brandingAsset.slogan}
+              brandStory={brandingAsset.brandStory}
+              brandVoice={brandingAsset.brandVoice}
+              brandValues={brandingAsset.brandValues}
+            />
+
+            {brandingAsset.colorPalette && (
+              <div>
+                <h3 className="text-xs uppercase tracking-wide text-fg-muted">{tb('palette')}</h3>
+                <div className="mt-2">
+                  <PaletteGrid palette={brandingAsset.colorPalette} />
+                </div>
+              </div>
+            )}
+          </Card>
+        </section>
+      )}
 
       {logoFiles.length > 0 && (
         <section className="space-y-3">
