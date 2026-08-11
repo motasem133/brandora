@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardTitle } from '@/components/ui/card'
 import { FieldError } from '@/components/ui/field-error'
 import { EmailVerification } from '@/components/features/settings/email-verification'
+import { Link } from '@/i18n/navigation'
 import { cn } from '@/lib/utils'
 import { EVENTS, capture } from '@/lib/analytics'
 import { generateProject } from '@/server/actions/generation'
@@ -514,8 +515,22 @@ export function GenerationPanel({
         </p>
       )}
 
+      {/*
+        The wall with the way past it.
+
+        This is the one a returning customer actually meets — they came back to
+        generate, and the balance is what stops them — and it was the only one of
+        the four that named the problem and offered nothing. The kit, the logo
+        composer and the wizard have all pointed at billing from here; this said
+        "you have 3" and left the customer to find the page themselves.
+      */}
       {!canAfford && !isRunning && (
-        <FieldError message={t('insufficientCredits', { needed: creditCost, balance: creditBalance })} />
+        <p role="alert" className="text-sm text-danger">
+          {t('insufficientCredits', { needed: creditCost, balance: creditBalance })}{' '}
+          <Link href="/dashboard/billing" className="underline underline-offset-2">
+            {t('topUp')}
+          </Link>
+        </p>
       )}
 
       <FieldError message={result?.serverError} />
