@@ -78,17 +78,8 @@ answer on the drawing first.
 
 ## In review
 
-One pull request, held on purpose. **#33 — kit photography told apart from
-social copy**: `ai_usage.feature` had one value for both, so captions costing
-1.7 cents and photographs costing 20 shared a row and every margin figure
-grouped by it was wrong. It is written, tested and waiting on one thing —
-**`pnpm db:migrate` against production**, which Vercel never does. The
-migration replaces the enum type and backfills the old rows in the same
-statement, and it is safe to run before the code ships: the old code writes
-`social`, which stays a valid value.
-
-Also still open from before: **#19**, the social kit reprice, held as a draft on
-purpose — see Improvement 2.
+**#19**, the social kit reprice, held as a draft on purpose — see Improvement 2.
+Nothing else is outstanding.
 
 ---
 
@@ -234,8 +225,7 @@ and a three-scene kit at $0.15 an image loses money on every plan.
    The *faster tier* half was declined; see above.
 8. **An admin screen for credit grants** — `adjustCredits` had been wired to
    nothing, and two grants had been typed against production by hand.
-
-Shipped 12 August, all three from the growth memo:
+Shipped 12 August, all four from the growth memo:
 
 9. **The verification gate moved after the first run** — a new account
    generates once without confirming its address, and the gate falls on the
@@ -252,16 +242,17 @@ Shipped 12 August, all three from the growth memo:
     faces and mark rather than described. The kit's locked line also quoted the
     wrong plan at the wrong price: "Pro and above" for something Creator
     includes.
-9. **The verification gate moved after the first run** — the growth memo's
-   first recommendation, and the one thing it could show a mechanism for: all
-   seven verified accounts ran a generation within eight minutes, and neither
-   unverified one ever spent a credit or was told why. A new account now runs
-   once without confirming; the gate falls on the second. `mustVerifyEmail` is
-   the one place that decides it, for the brand run, Content Studio and every
-   control that has to say so before it is pressed — and a first run that
-   failed and was refunded does not count as the run. See the note above for
-   what it costs.
-
+12. **Kit photography told apart from social copy** — `ai_usage.feature` had
+    one value for both, so captions costing a fraction of a cent and
+    photographs costing seven shared a row. On production it was $1.0125 of
+    photography against $0.0104 of captions, filed as one feature: `social`
+    read as costing a hundred times what it does, and the kit — the second most
+    expensive thing a run makes — had nowhere to appear at all. There is a
+    `kit` value now, backfilled by the migration that adds it, which replaces
+    the enum type rather than extending it because Postgres will not use a
+    value added in the same transaction. The *image share* figure was reading
+    `logo` alone while it was at it — wrong since vectorising shipped — and
+    sums everything that draws now.
 ### Also fixed on the way, not on any list
 
 - **The app bar printed itself over itself** below ~1400px for administrators.

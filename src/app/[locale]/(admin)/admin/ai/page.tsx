@@ -44,8 +44,16 @@ export default async function AdminAiPage({
    * The documented expectation is that images are the overwhelming majority of
    * spend. A drift away from that means prompts have bloated or something is
    * retrying, and it is worth seeing rather than inferring.
+   *
+   * Every feature that draws, not just the logos. This read `logo` alone, which
+   * was already wrong — vectorising and the kit's photography are images too —
+   * and the kit had nowhere to be counted anyway, because until 11 August it
+   * was filed under `social` beside the captions.
    */
-  const imageShare = byFeature.find((row) => row.feature === 'logo')?.share ?? 0
+  const IMAGE_FEATURES = new Set(['logo', 'kit', 'vectorize'])
+  const imageShare = byFeature
+    .filter((row) => IMAGE_FEATURES.has(row.feature))
+    .reduce((share, row) => share + (row.share ?? 0), 0)
 
   return (
     <div className="space-y-8">

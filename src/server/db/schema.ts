@@ -88,7 +88,19 @@ export const jobStatusEnum = pgEnum('job_status', ['queued', 'running', 'complet
 export const aiFeatureEnum = pgEnum('ai_feature', [
   'branding',
   'website',
+  /** Written social copy only. The kit's photography is `kit` — see below. */
   'social',
+  /**
+   * The social kit's photography.
+   *
+   * Split out of `social` on 11 August. One credit of written captions and
+   * three generated photographs at ~$0.0675 each were the same row, so the kit
+   * — the most expensive thing a run produces after the logos — was reported
+   * as the cheapest, and `social` looked like a feature that cost twenty times
+   * what it does. Every margin figure the admin screens draw is per feature,
+   * so all of them were wrong in the same direction.
+   */
+  'kit',
   'logo',
   'assistant',
   'vectorize',
