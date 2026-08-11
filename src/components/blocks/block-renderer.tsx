@@ -1,5 +1,24 @@
 import { checkedSiteColors, type CheckedSiteColors } from '@/lib/brand-theme'
 import type { Block, Theme } from '@/lib/blocks'
+import { ContactForm } from './contact-form'
+
+/**
+ * The words the contact form is built from.
+ *
+ * Passed in rather than read from `next-intl` here: this renderer serves a
+ * customer's own site, which has no locale segment and no app translation
+ * context — and the language it should speak is the brand's, not the visiting
+ * browser's.
+ */
+export type ContactLabels = {
+  name: string
+  email: string
+  message: string
+  send: string
+  sending: string
+  sent: string
+  failed: string
+}
 
 /**
  * The single renderer for website content.
@@ -65,10 +84,13 @@ export function BlockRenderer({
   block,
   theme,
   preview = false,
+  contact,
 }: {
   block: Block
   theme: SiteTheme
   preview?: boolean
+  /** Absent in the builder, where the block is a picture of itself. */
+  contact?: ContactLabels
 }) {
   const HeroHeading = preview ? 'p' : 'h1'
   const heading = { fontFamily: `'${theme.fontHeading}', sans-serif`, color: theme.safe.ink }
@@ -219,6 +241,20 @@ export function BlockRenderer({
               {block.phone}
             </p>
           )}
+
+          {/*
+            The form, on the published site only.
+
+            In the builder this block is a picture of itself — a canvas the
+            customer drags and edits — and a live form there would post a real
+            enquiry from someone editing their own page. The address and the
+            phone number stay above it either way: some visitors would rather
+            ring, and a form is an addition to the ways to reach a business,
+            not a replacement for them.
+          */}
+          {!preview && contact && (
+            <ContactForm colors={theme.safe} labels={contact} font={theme.fontBody} />
+          )}
         </section>
       )
   }
@@ -228,14 +264,16 @@ export function BlockRenderer({
 export function PageRenderer({
   blocks,
   theme,
+  contact,
 }: {
   blocks: Block[]
   theme: SiteTheme
+  contact?: ContactLabels
 }) {
   return (
     <div style={{ backgroundColor: theme.safe.paper }}>
       {blocks.map((block, index) => (
-        <BlockRenderer key={index} block={block} theme={theme} />
+        <BlockRenderer key={index} block={block} theme={theme} contact={contact} />
       ))}
     </div>
   )

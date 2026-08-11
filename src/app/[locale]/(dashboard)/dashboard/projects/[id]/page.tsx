@@ -11,6 +11,7 @@ import { GenerationPanel } from '@/components/features/projects/generation-panel
 import { IdentityPlate } from '@/components/features/projects/identity-plate'
 import { SocialKit } from '@/components/features/projects/social-kit'
 import { SocialView } from '@/components/features/projects/social-view'
+import { SiteMessages } from '@/components/features/projects/site-messages'
 import { WebsiteView } from '@/components/features/projects/website-view'
 import {
   ContentLibrary,
@@ -279,6 +280,9 @@ export default async function ProjectDetailPage({
       )}
 
       {websiteAsset && <WebsiteView website={websiteAsset} />}
+      {/* Directly under the site it came from, and only when there is
+          something to read. */}
+      {websiteAsset && <SiteMessages projectId={project.id} locale={locale} />}
       {socialAsset && <SocialView social={socialAsset} />}
 
       {/*

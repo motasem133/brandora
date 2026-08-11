@@ -6,6 +6,36 @@ import { PAGE_KEYS, type Block, type PageKey, type Theme } from '@/lib/blocks'
 import { getPublishedSite } from '@/server/db/queries/sites'
 import { type BrandingAsset } from '@/server/db/schema'
 
+/**
+ * The contact form's words, in the two languages a brand can be generated in.
+ *
+ * Not `next-intl`. A published site sits outside the `[locale]` segment and has
+ * no translation context — and should not have one: the language belongs to the
+ * brand, not to the browser visiting it. A customer in Dubai whose site is in
+ * Arabic must not get an English form because the visitor's laptop is set to
+ * English.
+ */
+const CONTACT_LABELS = {
+  en: {
+    name: 'Your name',
+    email: 'Your email',
+    message: 'Message',
+    send: 'Send message',
+    sending: 'Sending…',
+    sent: 'Thank you — your message has been sent.',
+    failed: 'That did not send. Please try again.',
+  },
+  ar: {
+    name: 'اسمك',
+    email: 'بريدك الإلكتروني',
+    message: 'الرسالة',
+    send: 'أرسل الرسالة',
+    sending: 'جارٍ الإرسال…',
+    sent: 'شكرًا لك — تم إرسال رسالتك.',
+    failed: 'تعذّر الإرسال. حاول مرة أخرى.',
+  },
+} as const
+
 /** Maps a generated brand palette onto the renderer's theme shape. */
 function themeFromBranding(branding: BrandingAsset | null): Theme {
   const palette = branding?.colorPalette
@@ -118,7 +148,7 @@ export default async function PublishedSite({
           </nav>
         </header>
 
-        <PageRenderer blocks={blocks} theme={theme} />
+        <PageRenderer blocks={blocks} theme={theme} contact={CONTACT_LABELS[site.project.language]} />
 
         <footer
           className="px-8 py-10 text-center text-sm"

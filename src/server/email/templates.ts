@@ -27,6 +27,21 @@ export type EmailTemplate =
    * rather than two.
    */
   | { kind: 'brand-ready'; url: string; name: string; code: string; percent: number }
+  /**
+   * A message somebody sent through a customer's own published site.
+   *
+   * The only email this product sends that is not about Brandora. It is a
+   * customer's business enquiry passing through us, so it says almost nothing
+   * of its own: who wrote, what they wrote, and how to answer. Reply-to is set
+   * to the visitor, so answering is a reply rather than a copy-paste.
+   */
+  | {
+      kind: 'site-message'
+      siteName: string
+      fromName: string
+      fromEmail: string
+      message: string
+    }
 
 const COPY = {
   en: {
@@ -76,6 +91,12 @@ const COPY = {
       offer: (percent: number) => `And for the trouble, here is ${percent}% off your first plan:`,
       footer: 'Thank you for your patience with us early on. Reply to this email if anything is not right.',
     },
+    'site-message': {
+      subject: (site: string) => `New message from your ${site} website`,
+      heading: 'Someone contacted you',
+      body: (name: string, email: string) => `${name} (${email}) sent this through your website:`,
+      footer: 'Reply to this email to answer them directly.',
+    },
   },
   ar: {
     'verify-email': {
@@ -117,6 +138,12 @@ const COPY = {
       credits: 'أُعيدت الأرصدة المحجوزة إلى رصيدك — لم يكلّفك هذا التشغيل شيئاً.',
       offer: (percent: number) => `واعتذاراً عن الإزعاج، إليك خصم ${percent}% على أول اشتراك لك:`,
       footer: 'شكراً لصبرك معنا في بداياتنا. إن كان هناك أي خلل، ردّ على هذه الرسالة.',
+    },
+    'site-message': {
+      subject: (site: string) => `رسالة جديدة من موقع ${site}`,
+      heading: 'وصلتك رسالة',
+      body: (name: string, email: string) => `أرسل ${name} (${email}) هذه الرسالة عبر موقعك:`,
+      footer: 'رُدّ على هذا البريد للتواصل معه مباشرة.',
     },
   },
 } as const
@@ -294,6 +321,30 @@ function codeLayout(params: {
  * a rule, quieter, so it reads as something extra rather than as the reason we
  * wrote.
  */
+/**
+ * The card, carrying somebody else's words.
+ *
+ * No button and no code: there is nothing to click and nothing to type, only
+ * something to read and reply to. The message is set in a quoted block so it
+ * reads as the visitor's writing rather than as ours — this is the one email
+ * where most of the content was not written by this product.
+ *
+ * `white-space: pre-wrap`, because a person typing into a textarea uses line
+ * breaks and an email that collapses them turns their paragraphs into one.
+ */
+function quoteLayout(params: {
+  locale: Locale
+  heading: string
+  body: string
+  quote: string
+  footer: string
+}) {
+  return shell({
+    ...params,
+    main: `<p dir="auto" style="margin:0;white-space:pre-wrap;font-size:15px;line-height:1.65;color:${INK};text-align:start;background:${TINT};border:1px solid ${TINT_LINE};border-radius:14px;padding:18px 20px;">${escape(params.quote)}</p>`,
+  })
+}
+
 function offerLayout(params: {
   locale: Locale
   heading: string
@@ -384,6 +435,20 @@ export function renderEmail(template: EmailTemplate, locale: Locale = 'en') {
           body: c.body(template.inviter, template.organization),
           button: c.button,
           url: template.url,
+          footer: c.footer,
+        }),
+      }
+    }
+
+    case 'site-message': {
+      const c = copy['site-message']
+      return {
+        subject: c.subject(template.siteName),
+        html: quoteLayout({
+          locale,
+          heading: c.heading,
+          body: c.body(template.fromName, template.fromEmail),
+          quote: template.message,
           footer: c.footer,
         }),
       }

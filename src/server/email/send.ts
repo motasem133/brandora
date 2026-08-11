@@ -30,6 +30,14 @@ export async function sendEmail(params: {
   to: string
   template: EmailTemplate
   locale?: 'en' | 'ar'
+  /*
+   * Who a reply should go to, when that is not us.
+   *
+   * Only the site-message template needs it: a customer's business enquiry
+   * passes through our domain, and without this the owner answers Brandora
+   * instead of the person who wrote to them.
+   */
+  replyTo?: string
 }) {
   const { subject, html } = renderEmail(params.template, params.locale ?? 'en')
   const resend = getClient()
@@ -57,6 +65,7 @@ export async function sendEmail(params: {
     const { data, error } = await resend.emails.send({
       from: env.EMAIL_FROM,
       to: params.to,
+      ...(params.replyTo ? { replyTo: params.replyTo } : {}),
       subject,
       html,
     })

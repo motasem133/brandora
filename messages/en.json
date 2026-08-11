@@ -575,7 +575,9 @@
     "edit": "Edit website",
     "liveAt": "Live at",
     "notPublished": "Not published yet",
-    "openSite": "Open the live site"
+    "openSite": "Open the live site",
+    "messagesTitle": "Messages from your site",
+    "messagesSubtitle": "Sent through the contact form. Each one was emailed to you as well."
   },
   "Builder": {
     "pages": {
