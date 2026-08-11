@@ -93,10 +93,17 @@ real deliverability through Resend is the one part untested.
 
 ### A free signup costs about 15 cents
 
-Of model spend, granted the moment an email is confirmed. Confirmation is
-enforced, which stops the laziest abuse and nothing beyond it — a
-disposable-address service defeats it for the price of nothing. Worth watching
-in the ledger before it is worth engineering against.
+Of model spend, granted at sign-up — not on confirmation, which is where this
+file used to say it happened. Since 11 August an unconfirmed address can spend
+that grant on one run and nothing more, so fifteen cents is now what an
+abandoned or fake signup can actually cost rather than a ceiling nobody could
+reach. The grant is written once per organization and only a payment adds to
+it, so the ceiling holds however many times the run is retried.
+
+Confirmation was never much of a defence — a disposable-address service defeats
+it for the price of nothing — and it is worth watching in the ledger before it
+is worth engineering against. What to watch: unverified organizations with a
+delivered run, in the funnel table.
 
 ### The contact endpoint has no rate limit
 
@@ -165,6 +172,15 @@ and a three-scene kit at $0.15 an image loses money on every plan.
    The *faster tier* half was declined; see above.
 8. **An admin screen for credit grants** — `adjustCredits` had been wired to
    nothing, and two grants had been typed against production by hand.
+9. **The verification gate moved after the first run** — the growth memo's
+   first recommendation, and the one thing it could show a mechanism for: all
+   seven verified accounts ran a generation within eight minutes, and neither
+   unverified one ever spent a credit or was told why. A new account now runs
+   once without confirming; the gate falls on the second. `mustVerifyEmail` is
+   the one place that decides it, for the brand run, Content Studio and every
+   control that has to say so before it is pressed — and a first run that
+   failed and was refunded does not count as the run. See the note above for
+   what it costs.
 
 ### Also fixed on the way, not on any list
 

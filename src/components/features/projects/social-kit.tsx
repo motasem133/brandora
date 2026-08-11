@@ -28,7 +28,7 @@ export function SocialKit({
   cost,
   creditBalance,
   isGenerating,
-  emailVerified,
+  mustVerify,
   userEmail,
   unlocked,
 }: {
@@ -39,7 +39,7 @@ export function SocialKit({
   cost: number
   creditBalance: number
   isGenerating: boolean
-  emailVerified: boolean
+  mustVerify: boolean
   userEmail: string
   /** Pro and above. Checked again in the action — this only decides the UI. */
   unlocked: boolean
@@ -59,7 +59,7 @@ export function SocialKit({
   }
 
   const action = (
-    <Button onClick={start} disabled={busy || !affordable || !hasLogo || !emailVerified || !unlocked}>
+    <Button onClick={start} disabled={busy || !affordable || !hasLogo || mustVerify || !unlocked}>
       {busy ? <Loader2 className="animate-spin" /> : <Sparkles />}
       {posts.length ? t('kitRegenerate') : t('kitGenerate')}
     </Button>
@@ -138,7 +138,7 @@ export function SocialKit({
               {t('topUp')}
             </Link>
           </p>
-        ) : !emailVerified ? (
+        ) : mustVerify ? (
           <div className="rounded-control border border-warning/30 bg-warning/[0.07] p-4">
             <div className="flex items-start gap-3">
               <MailWarning className="mt-0.5 size-4 shrink-0 text-warning" />

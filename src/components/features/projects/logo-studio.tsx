@@ -40,7 +40,7 @@ export async function LogoStudio({
   creditBalance,
   isGenerating,
   palette,
-  emailVerified,
+  mustVerify,
   userEmail,
 }: {
   projectId: string
@@ -54,7 +54,7 @@ export async function LogoStudio({
   creditBalance: number
   isGenerating: boolean
   palette: BrandPalette
-  emailVerified: boolean
+  mustVerify: boolean
   userEmail: string
 }) {
   const t = await getTranslations('Branding')
@@ -198,7 +198,7 @@ export async function LogoStudio({
         affordable={affordable}
         creditBalance={creditBalance}
         isRunning={isGenerating}
-        emailVerified={emailVerified}
+        mustVerify={mustVerify}
         userEmail={userEmail}
       />
     </section>

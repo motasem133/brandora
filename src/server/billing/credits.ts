@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { eq, sql } from 'drizzle-orm'
+import { and, eq, inArray, sql } from 'drizzle-orm'
 
 import { AppError } from '@/lib/errors'
 import { db } from '@/server/db'
@@ -356,6 +356,51 @@ export async function settleForContent(params: {
       used: params.used,
     },
   })
+}
+
+/**
+ * Every reason a run can write, including the refund that undoes one.
+ *
+ * The refund is in the list on purpose: a first run that failed is reserved and
+ * then given straight back, and summing the pair to zero is what makes a run
+ * nobody received not count as a run.
+ */
+const RUN_REASONS = ['generation', 'logo_render', 'assistant_message', 'refund'] as const
+
+/**
+ * Whether this organization must confirm its address before it may spend.
+ *
+ * The gate used to be "unverified accounts cannot generate at all", which read
+ * as an anti-abuse measure and worked as a wall: of nine accounts, every
+ * verified one ran a generation within eight minutes and neither unverified one
+ * ever spent a credit, or was told why. Nobody signs up to prove an address —
+ * they sign up to see a brand.
+ *
+ * So the first run is free of it, and verification is asked for at the point it
+ * means something: a second one. What that costs is bounded and known. The free
+ * grant is written once per organization at signup and nothing else adds to it
+ * without a payment, so an unconfirmed address can spend
+ * `FREE_STARTING_CREDITS` — about fifteen cents of model spend — and then not a
+ * credit more.
+ */
+export async function mustVerifyEmail(
+  organizationId: string,
+  emailVerified: boolean,
+): Promise<boolean> {
+  if (emailVerified) return false
+
+  const [row] = await db
+    .select({ net: sql<number>`coalesce(sum(${creditTransactions.amount}), 0)::int` })
+    .from(creditTransactions)
+    .where(
+      and(
+        eq(creditTransactions.organizationId, organizationId),
+        inArray(creditTransactions.reason, [...RUN_REASONS]),
+      ),
+    )
+
+  // Spends are negative, so anything below zero is a run that was delivered.
+  return (row?.net ?? 0) < 0
 }
 
 export async function getBalance(organizationId: string): Promise<number> {

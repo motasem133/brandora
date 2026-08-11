@@ -111,14 +111,14 @@ export function OnboardingWizard({
   entitlements,
   pricing,
   balance,
-  emailVerified,
+  mustVerify,
   userEmail,
   carriedOver,
 }: {
   entitlements: WizardEntitlements
   pricing: WizardPricing
   balance: number
-  emailVerified: boolean
+  mustVerify: boolean
   userEmail: string
   carriedOver: CarriedOver
 }) {
@@ -163,7 +163,7 @@ export function OnboardingWizard({
     (form.needsSocialMedia ? pricing.social : 0)
 
   const affordable = balance >= cost
-  const blocked = !emailVerified || !affordable
+  const blocked = mustVerify || !affordable
 
   const generate = useAction(generateProject)
 
@@ -642,14 +642,14 @@ export function OnboardingWizard({
               not remount client components, so the answers above are still
               here when the button unlocks.
             */}
-            {!emailVerified && (
+            {mustVerify && (
               <div className="space-y-3 border-t border-line pt-4">
                 <p className="text-sm text-warning">{t('verifyFirst')}</p>
                 <EmailVerification email={userEmail} />
               </div>
             )}
 
-            {emailVerified && !affordable && (
+            {!mustVerify && !affordable && (
               <p className="text-sm text-warning">
                 {t('notEnoughCredits', { cost, balance })}{' '}
                 <Link href="/dashboard/billing" className="accent-text hover:underline">

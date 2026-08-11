@@ -7,7 +7,12 @@ import { type BuiltContentType, MAX_VARIANTS, isRenderedType } from '@/lib/conte
 import { contentSocialPostSchemaFor } from '@/server/ai/schemas'
 import { contentSocialPostPrompt, contentSocialPostSystem, PROMPT_VERSIONS } from '@/server/ai/prompts'
 import { runModel } from '@/server/ai/run'
-import { creditsForContent, reserveForContent, settleForContent } from '@/server/billing/credits'
+import {
+  creditsForContent,
+  mustVerifyEmail,
+  reserveForContent,
+  settleForContent,
+} from '@/server/billing/credits'
 import { db } from '@/server/db'
 import { inngest } from '@/server/inngest/client'
 import { brandingAssets, contentItems, generatedFiles, projects } from '@/server/db/schema'
@@ -97,10 +102,13 @@ export async function generateContentItem(params: GenerateContentParams) {
     throw new AppError('NOT_FOUND', 'Generate this brand before writing content for it.')
   }
 
-  /* The same gate `startGeneration` applies. Free credits are the abuse target,
-     so verification gates spending rather than sign-in. */
-  if (!params.emailVerified) {
-    throw new AppError('EMAIL_NOT_VERIFIED', 'Verify your email address to generate content.')
+  /* The same gate `startGeneration` applies, from the same function, so the two
+     cannot disagree about whose first run has been had. */
+  if (await mustVerifyEmail(params.organizationId, params.emailVerified)) {
+    throw new AppError(
+      'EMAIL_NOT_VERIFIED',
+      'Verify your email address to keep generating content.',
+    )
   }
 
   /*

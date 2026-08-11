@@ -37,7 +37,7 @@ export async function BrandingView({
   primaryId,
   chosenId,
   language,
-  emailVerified,
+  mustVerify,
   userEmail,
 }: {
   branding: BrandingAsset
@@ -56,7 +56,7 @@ export async function BrandingView({
   /** The decision itself, null until one is made. */
   chosenId: string | null
   language: string
-  emailVerified: boolean
+  mustVerify: boolean
   userEmail: string
 }) {
   const t = await getTranslations('Branding')
@@ -130,7 +130,7 @@ export async function BrandingView({
             creditBalance={creditBalance}
             isGenerating={isGenerating}
             palette={branding.colorPalette}
-            emailVerified={emailVerified}
+            mustVerify={mustVerify}
             userEmail={userEmail}
           />
         </div>
