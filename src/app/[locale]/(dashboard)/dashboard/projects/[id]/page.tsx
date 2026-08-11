@@ -10,6 +10,7 @@ import { DeleteProjectButton } from '@/components/features/projects/delete-proje
 import { GenerationPanel } from '@/components/features/projects/generation-panel'
 import { IdentityPlate } from '@/components/features/projects/identity-plate'
 import { SocialKit } from '@/components/features/projects/social-kit'
+import { KitMockup, WebsiteMockup } from '@/components/features/projects/brand-mockups'
 import { SocialView } from '@/components/features/projects/social-view'
 import { SiteMessages } from '@/components/features/projects/site-messages'
 import { WebsiteView } from '@/components/features/projects/website-view'
@@ -279,6 +280,16 @@ export default async function ProjectDetailPage({
           mustVerify={mustVerify}
           userEmail={user.email}
           unlocked={Boolean(plan?.socialMediaKit)}
+          lockedPreview={
+            plan?.socialMediaKit ? null : (
+              <KitMockup
+                palette={brandingAsset.colorPalette}
+                fonts={brandingAsset.fontRecommendations}
+                logo={primaryLogo}
+                name={project.businessName || project.title}
+              />
+            )
+          }
         />
       )}
 
@@ -300,6 +311,22 @@ export default async function ProjectDetailPage({
       {!websiteAsset && !plan?.websiteBuilder && (
         <Disclosure title={tb('website')} open>
           <p className="max-w-[68ch] text-sm text-fg-secondary">{tb('websiteHint')}</p>
+
+          {/* Drawn in their own brand, so the section argues rather than
+              describes. Only where there is a brand to draw it in. */}
+          {brandingAsset && (
+            <div className="mt-5">
+              <WebsiteMockup
+                palette={brandingAsset.colorPalette}
+                fonts={brandingAsset.fontRecommendations}
+                logo={primaryLogo}
+                name={project.businessName || project.title}
+                slogan={brandingAsset.slogan}
+                language={project.language}
+              />
+            </div>
+          )}
+
           <p className="mt-4 flex flex-wrap items-center gap-1.5 text-xs text-fg-muted">
             <Lock className="size-3.5" />
             {tb('websiteLocked')}{' '}

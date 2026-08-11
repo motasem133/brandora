@@ -31,6 +31,7 @@ export function SocialKit({
   mustVerify,
   userEmail,
   unlocked,
+  lockedPreview,
 }: {
   projectId: string
   posts: GeneratedFile[]
@@ -41,8 +42,15 @@ export function SocialKit({
   isGenerating: boolean
   mustVerify: boolean
   userEmail: string
-  /** Pro and above. Checked again in the action — this only decides the UI. */
+  /** Creator and above. Checked again in the action — this only decides the UI. */
   unlocked: boolean
+  /**
+   * The kit drawn in this brand, for a plan that cannot make one.
+   *
+   * Passed in rather than rendered here: it is a server component, and naming
+   * what is missing without showing it is the half-measure this replaces.
+   */
+  lockedPreview?: React.ReactNode
 }) {
   const t = useTranslations('Branding')
   const ts = useTranslations('Settings')
@@ -69,7 +77,9 @@ export function SocialKit({
     <Disclosure
       title={t('kit')}
       meta={posts.length ? t('fileCount', { count: posts.length + (pdf ? 1 : 0) }) : undefined}
-      open={posts.length > 0}
+      /* Open when there is something to see — and when there is not, because
+         the plan is the reason: a locked section folded shut teaches nothing. */
+      open={posts.length > 0 || !unlocked}
     >
       <p className="max-w-[68ch] text-sm text-fg-secondary">{t('kitHint')}</p>
 
@@ -131,13 +141,16 @@ export function SocialKit({
            * wrong plan teaches nobody that it exists — and this is the most
            * persuasive thing the product makes.
            */
-          <p className="flex flex-wrap items-center gap-1.5 text-xs text-fg-muted">
-            <Lock className="size-3.5" />
-            {t('kitLocked')}{' '}
-            <Link href="/dashboard/billing" className="accent-text underline underline-offset-2">
-              {t('seePlans')}
-            </Link>
-          </p>
+          <div className="space-y-4">
+            {lockedPreview}
+            <p className="flex flex-wrap items-center gap-1.5 text-xs text-fg-muted">
+              <Lock className="size-3.5" />
+              {t('kitLocked')}{' '}
+              <Link href="/dashboard/billing" className="accent-text underline underline-offset-2">
+                {t('seePlans')}
+              </Link>
+            </p>
+          </div>
         ) : mustVerify ? (
           <div className="rounded-control border border-warning/30 bg-warning/[0.07] p-4">
             <div className="flex items-start gap-3">
