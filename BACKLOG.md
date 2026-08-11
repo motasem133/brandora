@@ -10,7 +10,7 @@ have been built on top of a product that was quietly losing customers' money.
 
 Times are working estimates, not commitments. Where one is uncertain it says so.
 
-*Last true on 11 August 2026.*
+*Last true on 12 August 2026.*
 
 ---
 
@@ -65,36 +65,26 @@ generate nothing. The copy already exists — every social kit writes ad headlin
 and bodies — and there is nowhere to render it, so a customer who paid for a kit
 has ad copy they cannot use as an ad.
 
-### 5. Show a free customer the site and kit, rather than describing them — 1–2 days
+### 5. A real render, not a drawing, of the site a free customer is missing — 1–2 days
 
-The smaller half of this shipped in #34: both are named on the project page with
-the plan they need. Named is not the same as met. The persuasive version shows
-the thing — a real render of the site their brand would produce, blurred or
-watermarked — and it is a design decision before it is code.
+Shipped on 12 August, drawn rather than described: both sections render the
+thing in the customer's own palette, faces and mark. What is left is the step
+past a drawing — a real render of the site their brand would actually produce —
+which is a design decision before it is code, and worth having the funnel's
+answer on the drawing first.
 
 ---
 
 ## In review
 
-Four pull requests, all from the 11 August growth memo, none merged. Listed here
-because a backlog that does not mention four open branches is not a backlog.
-
-- **#31 — the verification gate moves after the first run.** A new account
-  generates once without confirming its address; the gate falls on the second.
-  `mustVerifyEmail` is the single place that decides it. Raises the cost of an
-  abandoned signup from nothing to the free grant — about fifteen cents — which
-  is the trade the memo asked for. See the note below.
-- **#32 — the credits wall gets a route to billing.** Three of the four walls
-  already pointed at billing; the generation panel, the one a returning customer
-  actually meets, named the problem and offered nothing.
-- **#33 — kit photography told apart from social copy.** `ai_usage.feature` had
-  one value for both, so captions costing 1.7 cents and photographs costing 20
-  shared a row and every margin figure grouped by it was wrong. **`pnpm
-  db:migrate` must run against production before this merges** — the migration
-  replaces the enum type and backfills the old rows in the same statement.
-- **#34 — the locked website is named on the project page.** Also corrects the
-  kit's locked line, which quoted the wrong plan at the wrong price: "Pro and
-  above" for something Creator includes.
+One pull request, held on purpose. **#33 — kit photography told apart from
+social copy**: `ai_usage.feature` had one value for both, so captions costing
+1.7 cents and photographs costing 20 shared a row and every margin figure
+grouped by it was wrong. It is written, tested and waiting on one thing —
+**`pnpm db:migrate` against production**, which Vercel never does. The
+migration replaces the enum type and backfills the old rows in the same
+statement, and it is safe to run before the code ships: the old code writes
+`social`, which stays a valid value.
 
 Also still open from before: **#19**, the social kit reprice, held as a draft on
 purpose — see Improvement 2.
@@ -121,9 +111,10 @@ failure and is not. Neon's own cleanup runs slower than a working day's merges,
 so this needs clearing every so often. Deleting the `preview/*` branches of
 merged PRs fixes it immediately.
 
-Six open pull requests hold six branches as of 11 August: #19 and the four in
-review above, plus this one. That is most of the allowance, so the `preview/*`
-branches of merged PRs want deleting as those land rather than after.
+Two open pull requests as of 12 August: #19 and #33. Four merged on 12 August
+with their branches deleted, which frees their preview branches — Neon's own
+cleanup is slower than a working day's merges, so it is worth checking that
+those four are actually gone.
 
 ### After the database move — whenever
 
@@ -204,7 +195,7 @@ and a three-scene kit at $0.15 an image loses money on every plan.
    there.
 9. **Impeccable waivers** — both scoped to their own file, with reasons.
 
-### Improvements, 10–11 August
+### Improvements, 10–12 August
 
 1. **Track the funnel** — five endings for six events that were all beginnings.
    Recording since 10 August.
@@ -224,6 +215,24 @@ and a three-scene kit at $0.15 an image loses money on every plan.
    The *faster tier* half was declined; see above.
 8. **An admin screen for credit grants** — `adjustCredits` had been wired to
    nothing, and two grants had been typed against production by hand.
+
+Shipped 12 August, all three from the growth memo:
+
+9. **The verification gate moved after the first run** — a new account
+   generates once without confirming its address, and the gate falls on the
+   second. `mustVerifyEmail` is the one place that decides it, for the brand
+   run, Content Studio and every control that has to say so before it is
+   pressed; a first run that failed and was refunded does not count as the run.
+   Of nine accounts, all seven that confirmed ran a generation within eight
+   minutes and neither unverified one ever spent a credit or was told why.
+10. **A route to billing on the credits wall** — three of the four walls
+    already pointed at billing. The generation panel, the one a returning
+    customer actually meets, named the problem and offered nothing.
+11. **A free customer is shown the site and kit they did not get** — named on
+    the project page with the plan they need, and drawn in their own palette,
+    faces and mark rather than described. The kit's locked line also quoted the
+    wrong plan at the wrong price: "Pro and above" for something Creator
+    includes.
 9. **The verification gate moved after the first run** — the growth memo's
    first recommendation, and the one thing it could show a mechanism for: all
    seven verified accounts ran a generation within eight minutes, and neither
