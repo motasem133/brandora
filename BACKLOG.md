@@ -16,9 +16,10 @@ Times are working estimates, not commitments. Where one is uncertain it says so.
 
 ## Fixes
 
-**Empty.** All nine are closed — eight shipped, one died when the customer
-deleted the project it was about. What they were, and what they turned out to
-be, is at the end of this file.
+**Empty.** Ten are closed — eight shipped on 10 August, one died when the
+customer deleted the project it was about, and one was found on 12 August while
+testing something else: a save that wrote to the database and painted nothing.
+What they were, and what they turned out to be, is at the end of this file.
 
 ---
 
@@ -194,6 +195,19 @@ and a three-scene kit at $0.15 an image loses money on every plan.
    10 August, after a customer's story and colours turned out to be invisible
    there.
 9. **Impeccable waivers** — both scoped to their own file, with reasons.
+
+### Fixes, 12 August
+
+10. **A saved edit painted nothing** — a customer changed their slogan, the row
+    was written, and all four places the page shows it kept the old words for
+    at least thirty seconds. Two times in three, and it had been live since the
+    content library shipped. `router.refresh()` runs inside a React transition,
+    and a Suspense boundary that re-suspends inside a transition blocks the
+    whole thing from committing — so the correct payload arrived and was never
+    painted. The boundary was buying the wait on one indexed query, measured at
+    1–22ms. Three `window.location.reload()` calls elsewhere in the codebase
+    were written against this same fault without naming it; they can go back to
+    being refreshes now, each on the run that proves it.
 
 ### Improvements, 10–12 August
 

@@ -1,12 +1,8 @@
-import { Suspense } from 'react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { BrandPicker } from '@/components/features/studio/brand-picker'
 import { ContentComposer } from '@/components/features/studio/content-composer'
-import {
-  ContentLibrary,
-  ContentLibrarySkeleton,
-} from '@/components/features/studio/content-library'
+import { ContentLibrary } from '@/components/features/studio/content-library'
 import { buttonVariants } from '@/components/ui/button'
 import { Card, CardTitle } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -106,13 +102,12 @@ export default async function StudioPage({
       <section className="space-y-4">
         <h2 className="font-display text-xl font-semibold">{t('libraryTitle')}</h2>
         {/*
-          Scoped to the list, not a route-level loading.tsx — the projects page
-          comment explains why: a streaming segment answers 200 before it knows
-          whether the row exists.
+          No boundary here either, for the reason written out on the project
+          page: a re-suspending boundary blocks the transition `router.refresh()`
+          runs in, so the composer above could write a piece of content and the
+          list below would not show it until the page was reloaded by hand.
         */}
-        <Suspense fallback={<ContentLibrarySkeleton label={t('libraryLoading')} />}>
-          <ContentLibrary organizationId={org.id} />
-        </Suspense>
+        <ContentLibrary organizationId={org.id} />
       </section>
     </div>
   )
