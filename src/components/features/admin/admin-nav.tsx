@@ -10,6 +10,7 @@ const LINKS = [
   { href: '/admin/ai', key: 'ai' },
   { href: '/admin/users', key: 'users' },
   { href: '/admin/plans', key: 'plans' },
+  { href: '/admin/credits', key: 'credits' },
   { href: '/admin/projects', key: 'projects' },
 ] as const
 

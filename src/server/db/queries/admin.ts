@@ -318,3 +318,75 @@ export async function listAllProjects(params: { status?: string; limit?: number 
   `)
   return rows
 }
+
+/**
+ * Workspaces, their balance, and who to talk to about it.
+ *
+ * The unit is the organization rather than the user, because that is what
+ * holds credits — a workspace with three members has one balance, and a screen
+ * listing people would offer to grant credits to a person who does not have
+ * any.
+ */
+export async function listWorkspaces(params: { search?: string; limit?: number }) {
+  const search = params.search?.trim() ? `%${params.search.trim()}%` : null
+
+  const rows = await db.execute<{
+    id: string
+    name: string
+    credit_balance: number
+    plan_name: string | null
+    owner_email: string | null
+    projects: number
+  }>(sql`
+    SELECT o.id, o.name, o.credit_balance,
+           (SELECT pl.name FROM subscriptions s JOIN plans pl ON pl.id = s.plan_id
+             WHERE s.organization_id = o.id AND s.status IN ('active', 'trialing')
+             ORDER BY s.created_at DESC LIMIT 1) AS plan_name,
+           (SELECT u.email FROM members m JOIN users u ON u.id = m.user_id
+             WHERE m.organization_id = o.id AND m.role = 'owner'
+             ORDER BY m.created_at LIMIT 1) AS owner_email,
+           (SELECT count(*) FROM projects p
+             WHERE p.organization_id = o.id AND p.deleted_at IS NULL)::int AS projects
+    FROM organizations o
+    WHERE ${search}::text IS NULL
+       OR o.name ILIKE ${search}
+       OR EXISTS (SELECT 1 FROM members m JOIN users u ON u.id = m.user_id
+                   WHERE m.organization_id = o.id AND u.email ILIKE ${search})
+    ORDER BY o.credit_balance ASC, o.name
+    LIMIT ${params.limit ?? 50}
+  `)
+
+  return rows
+}
+
+/**
+ * Every grant and correction made by hand, newest first.
+ *
+ * The screen that makes an adjustment shows the ones already made, because a
+ * balance nobody can explain is the thing the ledger exists to prevent — and
+ * "did somebody already refund this customer?" is the question asked right
+ * before a second refund.
+ */
+export async function listCreditAdjustments(limit = 25) {
+  const rows = await db.execute<{
+    id: string
+    amount: number
+    balance_after: number
+    created_at: string
+    org_name: string
+    note: string | null
+    by: string | null
+  }>(sql`
+    SELECT t.id, t.amount, t.balance_after, t.created_at,
+           o.name AS org_name,
+           t.metadata ->> 'note' AS note,
+           t.metadata ->> 'by' AS by
+    FROM credit_transactions t
+    JOIN organizations o ON o.id = t.organization_id
+    WHERE t.reason = 'admin_adjustment'
+    ORDER BY t.created_at DESC
+    LIMIT ${limit}
+  `)
+
+  return rows
+}

@@ -726,7 +726,8 @@
       "ai": "AI cost",
       "users": "Users",
       "plans": "Plans",
-      "projects": "Projects"
+      "projects": "Projects",
+      "credits": "Credits"
     },
     "backToApp": "Back to app",
     "overview": {
@@ -881,6 +882,32 @@
       "usageNone": "No model calls recorded.",
       "notFound": "That project does not exist, or it has been deleted.",
       "runStatus": "Run status"
+    },
+    "credits": {
+      "title": "Credits",
+      "subtitle": "Grant or correct a workspace balance. Every movement goes through the ledger.",
+      "search": "Search workspaces",
+      "searchPlaceholder": "Workspace or owner email",
+      "none": "No workspaces found.",
+      "workspace": "Workspace",
+      "plan": "Plan",
+      "noPlan": "No plan",
+      "balance": "Balance",
+      "adjust": "Adjust",
+      "projects": "{count, plural, one {# project} other {# projects}}",
+      "amount": "Amount",
+      "amountPlaceholder": "e.g. 50",
+      "note": "Note",
+      "notePlaceholder": "Why — this is kept",
+      "after": "Balance becomes {balance}",
+      "confirm": "{direction} {amount} credits for {name}?",
+      "confirmGrant": "Grant",
+      "confirmRemove": "Remove",
+      "historyTitle": "Adjustments made",
+      "historySubtitle": "Every grant and correction, newest first.",
+      "historyNone": "No adjustments have been made.",
+      "by": "By",
+      "when": "When"
     }
   },
   "Pricing": {
