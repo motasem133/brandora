@@ -135,7 +135,7 @@ export function SocialKit({
             <Lock className="size-3.5" />
             {t('kitLocked')}{' '}
             <Link href="/dashboard/billing" className="accent-text underline underline-offset-2">
-              {t('topUp')}
+              {t('seePlans')}
             </Link>
           </p>
         ) : mustVerify ? (
