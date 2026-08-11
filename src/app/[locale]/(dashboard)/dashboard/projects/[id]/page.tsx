@@ -17,7 +17,7 @@ import {
   ContentLibrary,
   ContentLibrarySkeleton,
 } from '@/components/features/studio/content-library'
-import { ArrowLeft, Download, MessageSquare, Palette, PenLine } from 'lucide-react'
+import { ArrowLeft, Download, Lock, MessageSquare, Palette, PenLine } from 'lucide-react'
 
 import { buttonVariants } from '@/components/ui/button'
 import { Disclosure } from '@/components/ui/disclosure'
@@ -283,6 +283,32 @@ export default async function ProjectDetailPage({
       )}
 
       {websiteAsset && <WebsiteView website={websiteAsset} />}
+
+      {/*
+        The website a free customer did not get, named rather than absent.
+
+        The same decision the social kit already made, and the reason is the
+        same: a section that simply is not there teaches nobody that it exists.
+        A free brand is the thin one — no site, no kit — so the customer meets
+        the two things the paid plans are sold on exactly never, and the upgrade
+        is asked for on a pricing page they have no reason to open.
+
+        Only when the plan is what is missing. A customer who could have had a
+        website and said no at the wizard is not locked out of anything, and
+        telling them they are would be a lie with a price attached.
+      */}
+      {!websiteAsset && !plan?.websiteBuilder && (
+        <Disclosure title={tb('website')} open>
+          <p className="max-w-[68ch] text-sm text-fg-secondary">{tb('websiteHint')}</p>
+          <p className="mt-4 flex flex-wrap items-center gap-1.5 text-xs text-fg-muted">
+            <Lock className="size-3.5" />
+            {tb('websiteLocked')}{' '}
+            <Link href="/dashboard/billing" className="accent-text underline underline-offset-2">
+              {tb('seePlans')}
+            </Link>
+          </p>
+        </Disclosure>
+      )}
       {/* Directly under the site it came from, and only when there is
           something to read. */}
       {websiteAsset && <SiteMessages projectId={project.id} locale={locale} />}
