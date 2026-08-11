@@ -726,7 +726,8 @@
       "ai": "تكلفة الذكاء الاصطناعي",
       "users": "المستخدمون",
       "plans": "الباقات",
-      "projects": "المشاريع"
+      "projects": "المشاريع",
+      "credits": "الأرصدة"
     },
     "backToApp": "العودة للتطبيق",
     "overview": {
@@ -881,6 +882,32 @@
       "usageNone": "لا توجد استدعاءات مسجّلة.",
       "notFound": "هذا المشروع غير موجود أو تم حذفه.",
       "runStatus": "حالة التشغيل"
+    },
+    "credits": {
+      "title": "الأرصدة",
+      "subtitle": "امنح رصيدًا أو صحّحه. كل حركة تمر عبر السجل.",
+      "search": "ابحث في مساحات العمل",
+      "searchPlaceholder": "اسم المساحة أو بريد المالك",
+      "none": "لا توجد مساحات عمل.",
+      "workspace": "مساحة العمل",
+      "plan": "الخطة",
+      "noPlan": "بلا خطة",
+      "balance": "الرصيد",
+      "adjust": "تعديل",
+      "projects": "{count, plural, one {مشروع #} other {# مشاريع}}",
+      "amount": "المقدار",
+      "amountPlaceholder": "مثال: 50",
+      "note": "ملاحظة",
+      "notePlaceholder": "السبب — يُحفظ",
+      "after": "سيصبح الرصيد {balance}",
+      "confirm": "{direction} {amount} رصيدًا لـ {name}؟",
+      "confirmGrant": "منح",
+      "confirmRemove": "خصم",
+      "historyTitle": "التعديلات",
+      "historySubtitle": "كل منح وتصحيح، الأحدث أولًا.",
+      "historyNone": "لم تُجرَ أي تعديلات.",
+      "by": "بواسطة",
+      "when": "التاريخ"
     }
   },
   "Pricing": {
