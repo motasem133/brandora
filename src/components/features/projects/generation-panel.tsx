@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardTitle } from '@/components/ui/card'
 import { FieldError } from '@/components/ui/field-error'
 import { EmailVerification } from '@/components/features/settings/email-verification'
-import { Link } from '@/i18n/navigation'
+import { Link, usePathname, useRouter } from '@/i18n/navigation'
 import { cn } from '@/lib/utils'
 import { EVENTS, capture } from '@/lib/analytics'
 import { generateProject } from '@/server/actions/generation'
@@ -55,6 +55,8 @@ export function GenerationPanel({
 }) {
   const t = useTranslations('Generation')
   const ts = useTranslations('Settings')
+  const router = useRouter()
+  const pathname = usePathname()
   /*
    * The tab lives in the URL and this panel does not remount when it changes —
    * it sits above the tabs, so React keeps it in place. Reading the tab makes
@@ -81,8 +83,6 @@ export function GenerationPanel({
         .map(([name]) => name),
     ),
   )
-  /** One reveal per page, so a run with four sections does not reload four times. */
-  const hasRevealed = useRef(false)
 
   /**
    * How many logo concepts this page was rendered knowing about.
@@ -171,16 +171,17 @@ export function GenerationPanel({
        * database for a minute and a half was still watching a spinner — which
        * is most of why a run "takes two minutes".
        *
-       * `router.refresh()` is what this should be and it does not work here.
-       * It was tried: the RSC request goes out on every landing and the DOM
-       * keeps the old output, which is the same fault recorded against the
-       * logo control and at the end of this stream. So this uses the thing
-       * that does work, exactly once, on the first section to land — the rest
-       * arrive with the reload at the end of the run.
+       * `router.refresh()` is what this should be, and it now is. It was tried
+       * before and did not commit — the RSC request went out on every landing
+       * and the DOM kept the old output — because a Suspense boundary further
+       * down this page blocked the transition. With that gone, every section
+       * can paint as it lands instead of one reveal and a reload at the end:
+       * the guard that allowed a single jolt per page went with the jolt.
        *
        * `revealed` is seeded from the progress this page was rendered with, so
-       * arriving at a finished job reloads nothing. Without that it is the
-       * same infinite loop the `done` handler below documents.
+       * arriving at a finished job refreshes nothing. Without that it is the
+       * same loop the `done` handler below documents — and the refs survive a
+       * refresh, which is exactly why a refresh cannot chase its own tail here.
        */
       const sectionLanded = Object.entries(next).some(
         ([name, step]) => step?.status === 'done' && !revealed.current.has(name),
@@ -199,19 +200,19 @@ export function GenerationPanel({
        * looking at tens of seconds before that, so the page stops waiting for
        * the paperwork.
        *
-       * Still one reveal per page, deliberately. Both concepts are drawn
-       * concurrently and land within moments of each other, so reloading for
-       * each would be two jolts for one piece of news; the second arrives with
-       * the reload at the end of the run.
+       * Both concepts are drawn concurrently and land within moments of each
+       * other. That was two jolts for one piece of news while this reloaded;
+       * as a refresh it is two paints, which is what a page doing work should
+       * look like.
        */
       const conceptLanded = (next.logos?.concepts ?? 0) > conceptsSeen.current
       conceptsSeen.current = Math.max(conceptsSeen.current, next.logos?.concepts ?? 0)
 
       const landedNow = sectionLanded || conceptLanded
 
-      if (landedNow && !hasRevealed.current && witnessedRun.current) {
-        hasRevealed.current = true
-        window.location.assign(window.location.pathname)
+      if (landedNow && witnessedRun.current) {
+        if (producesLogos) router.replace(pathname)
+        router.refresh()
       }
     })
 
@@ -267,19 +268,20 @@ export function GenerationPanel({
        * opened.
        */
       /*
-       * A full load, not `router.refresh()`.
+       * A refresh, and — for a run that drew logos — a replace first.
        *
-       * The refresh does not commit here — the same fault the logo control had:
-       * the action completes, the component re-renders with fresh server props,
-       * and the DOM keeps the old output. A finished run therefore left the
-       * page exactly as it was, and the logos it had just drawn only appeared
-       * when the page was reloaded by hand. That is the wrong moment in the
-       * product to look like nothing happened.
+       * This was a full page load, because the refresh did not commit here: the
+       * run finished, the component re-rendered with fresh server props, and
+       * the DOM kept the old output. The cause was a Suspense boundary further
+       * down this page blocking the transition a refresh runs in. It is gone,
+       * so the end of a run no longer throws the page away to show what it
+       * made — which matters most at exactly this moment, the ninety seconds
+       * the product is sold on.
        *
-       * Navigating to the bare pathname does both jobs at once: it drops the
-       * pinned `round` and `concept` from the URL, which a run that drew new
-       * logos has invalidated, and it loads the page fresh. `pathname` already
-       * carries the locale, so nothing has to reconstruct it.
+       * The replace still earns its place for a logo run: it drops the pinned
+       * `round` and `concept`, which that run has invalidated. `pathname` from
+       * next-intl carries no locale prefix and its router puts one back, so
+       * nothing here has to reconstruct it.
        */
       /*
        * Only for a run this page actually watched.
@@ -293,15 +295,22 @@ export function GenerationPanel({
        */
       if (!witnessedRun.current) return
 
-      if (producesLogos) window.location.assign(window.location.pathname)
-      else window.location.reload()
+      if (producesLogos) router.replace(pathname)
+      router.refresh()
     })
 
     source.addEventListener('error', () => {
       source.close()
       sourceRef.current = null
     })
-  }, [projectId, producesLogos])
+    /*
+     * `router` and `pathname` are in here because the callback reads them, and
+     * they are safe to be: next-intl memoises the router per locale and route,
+     * and `pathname` carries no query, so neither identity moves when the
+     * replace above drops a pinned round. A dependency that did move would tear
+     * this stream down and open it again mid-run.
+     */
+  }, [projectId, producesLogos, router, pathname])
 
   /*
    * `executeAsync`, because `onSuccess` is where the tail was started.

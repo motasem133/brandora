@@ -205,9 +205,14 @@ and a three-scene kit at $0.15 an image loses money on every plan.
     and a Suspense boundary that re-suspends inside a transition blocks the
     whole thing from committing — so the correct payload arrived and was never
     painted. The boundary was buying the wait on one indexed query, measured at
-    1–22ms. Three `window.location.reload()` calls elsewhere in the codebase
-    were written against this same fault without naming it; they can go back to
-    being refreshes now, each on the run that proves it.
+    1–22ms. Four `window.location.reload()` calls elsewhere in the codebase had
+    been written against this same fault without naming it — a run landing a
+    section, a run finishing, choosing a logo, and a piece of content finishing
+    in the Studio. All four are refreshes again as of the same day, each proved
+    by a browser test that asserts both what the page shows and that
+    `beforeunload` never fired. The fifth, starting a social kit, is converted
+    on the same reasoning but is the one that could not be exercised: running it
+    for real spends four credits and three generated photographs.
 
 ### Improvements, 10–12 August
 

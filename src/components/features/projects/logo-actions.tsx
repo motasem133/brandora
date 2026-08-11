@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useAction } from 'next-safe-action/hooks'
 
 import { Button } from '@/components/ui/button'
+import { useRouter } from '@/i18n/navigation'
 import { selectPrimaryLogo } from '@/server/actions/branding'
 
 /**
@@ -42,17 +43,21 @@ export function SelectLogoButton({
    * only a manual reload revealed it — which is exactly what people were doing.
    *
    * `executeAsync` returns a promise, so the outcome is known without relying
-   * on either. The reload is deliberate and not a shortcut: choosing a logo
-   * rewrites the favicon, the avatars, the OG card and the brand-kit ZIP, and
-   * those are rendered the length of the page. A soft refresh that re-rendered
-   * the component but did not commit is what produced this bug; a reload cannot
-   * half-succeed.
+   * on either.
+   *
+   * The reload this used to end with is now a refresh. The reason it was a
+   * reload — "a soft refresh re-rendered the component and did not commit" —
+   * was real and had a cause: a Suspense boundary further down the page blocked
+   * the transition the refresh runs in. That boundary is gone, so the soft path
+   * commits, and choosing a logo no longer throws away the page to show that it
+   * worked.
    */
+  const router = useRouter()
   const { executeAsync, isPending } = useAction(selectPrimaryLogo)
 
   async function choose() {
     const outcome = await executeAsync({ projectId, fileId })
-    if (outcome?.data) window.location.reload()
+    if (outcome?.data) router.refresh()
   }
 
   if (isPrimary) {
