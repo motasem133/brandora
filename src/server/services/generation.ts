@@ -4,7 +4,12 @@ import { and, desc, eq, sql } from 'drizzle-orm'
 
 import { env } from '@/lib/env'
 import { AppError } from '@/lib/errors'
-import { creditsForSections, reserveCredits, type GenerationSection } from '@/server/billing/credits'
+import {
+  creditsForSections,
+  mustVerifyEmail,
+  reserveCredits,
+  type GenerationSection,
+} from '@/server/billing/credits'
 import { db } from '@/server/db'
 import {
   brandingAssets,
@@ -229,10 +234,12 @@ export async function startGeneration(params: {
     )
   }
 
-  // Free credits are the obvious abuse target, so verification gates spending
-  // rather than sign-in.
-  if (!params.emailVerified) {
-    throw new AppError('EMAIL_NOT_VERIFIED', 'Please verify your email address to generate.')
+  // Not sign-in, and no longer the first run either: see `mustVerifyEmail`.
+  if (await mustVerifyEmail(params.organizationId, params.emailVerified)) {
+    throw new AppError(
+      'EMAIL_NOT_VERIFIED',
+      'Please verify your email address to generate again.',
+    )
   }
 
   /*

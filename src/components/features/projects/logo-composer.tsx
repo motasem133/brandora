@@ -31,7 +31,7 @@ export function LogoComposer({
   affordable,
   creditBalance,
   isRunning,
-  emailVerified,
+  mustVerify,
   userEmail,
 }: {
   projectId: string
@@ -42,7 +42,7 @@ export function LogoComposer({
   creditBalance: number
   isRunning: boolean
   /** A new round is a generation, so the same gate applies here. */
-  emailVerified: boolean
+  mustVerify: boolean
   userEmail: string
 }) {
   const t = useTranslations('Branding')
@@ -111,7 +111,7 @@ export function LogoComposer({
   })
 
   const busy = isPending || queued || isRunning
-  const disabled = busy || !affordable || !emailVerified
+  const disabled = busy || !affordable || mustVerify
 
   function send() {
     if (disabled) return
@@ -152,7 +152,7 @@ export function LogoComposer({
               send()
             }
           }}
-          disabled={busy || !emailVerified}
+          disabled={busy || mustVerify}
           placeholder={t('directionPlaceholder')}
           /*
            * `text-base` against the app's `text-sm` fields, deliberately. This
@@ -195,7 +195,7 @@ export function LogoComposer({
         route to generation that still let you write a direction, press send,
         and receive a bare "verify your email" with nothing to press.
       */}
-      {emailVerified ? (
+      {!mustVerify ? (
         <p className="px-1 text-xs text-fg-muted">
           {busy ? (
             t('regenerating')

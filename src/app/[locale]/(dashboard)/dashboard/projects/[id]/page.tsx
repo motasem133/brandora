@@ -23,7 +23,7 @@ import { buttonVariants } from '@/components/ui/button'
 import { Disclosure } from '@/components/ui/disclosure'
 import { Link } from '@/i18n/navigation'
 import { groupLogoRounds, resolveConcept, resolveRound } from '@/lib/logo-rounds'
-import { CREDIT_COSTS, creditsForSections } from '@/server/billing/credits'
+import { CREDIT_COSTS, creditsForSections, mustVerifyEmail } from '@/server/billing/credits'
 import { db } from '@/server/db'
 import { getThreadMessages } from '@/server/db/queries/assistant'
 import { getOrgPlan } from '@/server/db/queries/plans'
@@ -80,7 +80,7 @@ export default async function ProjectDetailPage({
    * `getThreadMessages` stays behind, because whether to ask for it at all
    * depends on the plan.
    */
-  const [branding, website, social, files, job, sections, plan] = await Promise.all([
+  const [branding, website, social, files, job, sections, plan, mustVerify] = await Promise.all([
     db.select().from(brandingAssets).where(eq(brandingAssets.projectId, project.id)).limit(1),
     db.select().from(websiteAssets).where(eq(websiteAssets.projectId, project.id)).limit(1),
     db.select().from(socialMediaAssets).where(eq(socialMediaAssets.projectId, project.id)).limit(1),
@@ -91,6 +91,9 @@ export default async function ProjectDetailPage({
        sections, not the whole plan. */
     sectionsToRun(project.id, sectionsForProject(project)),
     getOrgPlan(org.id),
+    /* Not `user.emailVerified`: the first run is allowed unverified, so what
+       every control below has to know is whether this account has had it. */
+    mustVerifyEmail(org.id, user.emailVerified),
   ])
 
   const logoFiles = files.filter((file) => file.kind === 'logo_raster')
@@ -226,7 +229,7 @@ export default async function ProjectDetailPage({
         initialProgress={job?.progress ?? {}}
         creditBalance={org.creditBalance}
         creditCost={creditsForSections(sections)}
-        emailVerified={user.emailVerified}
+        mustVerify={mustVerify}
         userEmail={user.email}
         brandName={project.businessName || project.title}
       />
@@ -259,7 +262,7 @@ export default async function ProjectDetailPage({
           primaryId={primaryId}
           chosenId={chosenId}
           language={project.language}
-          emailVerified={user.emailVerified}
+          mustVerify={mustVerify}
           userEmail={user.email}
         />
       )}
@@ -273,7 +276,7 @@ export default async function ProjectDetailPage({
           cost={CREDIT_COSTS.kit}
           creditBalance={org.creditBalance}
           isGenerating={isJobActive}
-          emailVerified={user.emailVerified}
+          mustVerify={mustVerify}
           userEmail={user.email}
           unlocked={Boolean(plan?.socialMediaKit)}
         />

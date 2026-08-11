@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 
 import { OnboardingWizard } from '@/components/features/onboarding/wizard'
 import { SectionArc } from '@/components/ui/horizon'
-import { CREDIT_COSTS } from '@/server/billing/credits'
+import { CREDIT_COSTS, mustVerifyEmail } from '@/server/billing/credits'
 import { db } from '@/server/db'
 import { getEntitlements } from '@/server/db/queries/plans'
 import { projects } from '@/server/db/schema'
@@ -26,6 +26,14 @@ export default async function OnboardingPage({
   // includes rather than accepting a choice the action would silently drop.
   const { org } = await requireOrg()
   const entitlements = await getEntitlements(org.id)
+
+  /*
+   * The first run is not gated on a confirmed address, and this page is where
+   * almost every first run happens — a new account lands here straight from
+   * sign-up. So the wizard is told whether this account has already had it,
+   * not whether the address is confirmed.
+   */
+  const mustVerify = await mustVerifyEmail(org.id, session.user.emailVerified)
 
   /*
    * The wizard starts the run now, so it has to be able to price it before
@@ -78,7 +86,7 @@ export default async function OnboardingPage({
         entitlements={entitlements}
         pricing={pricing}
         balance={org.creditBalance}
-        emailVerified={session.user.emailVerified}
+        mustVerify={mustVerify}
         userEmail={session.user.email}
         carriedOver={
           previous

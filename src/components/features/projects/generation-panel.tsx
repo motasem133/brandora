@@ -35,7 +35,7 @@ export function GenerationPanel({
   initialProgress,
   creditBalance,
   creditCost,
-  emailVerified,
+  mustVerify,
   userEmail,
   brandName,
 }: {
@@ -45,8 +45,9 @@ export function GenerationPanel({
   initialProgress: Progress
   creditBalance: number
   creditCost: number
-  /** Generation is gated on it, so the panel has to be able to say so. */
-  emailVerified: boolean
+  /** Whether this account still owes a confirmed address before it can run
+      again — the first run is not gated. The panel has to be able to say so. */
+  mustVerify: boolean
   userEmail: string
   /** What to call the brand when the run that made it finishes. */
   brandName: string
@@ -433,7 +434,7 @@ export function GenerationPanel({
         {!isRunning && (
           <Button
             onClick={start}
-            disabled={isPending || !canAfford || !emailVerified}
+            disabled={isPending || !canAfford || mustVerify}
           >
             {isPending ? <Loader2 className="animate-spin" /> : <Sparkles />}
             {status === 'failed' || status === 'partial' ? t('retry') : t('generate')}
@@ -449,7 +450,7 @@ export function GenerationPanel({
         an error naming a step you had no way to take from here. Saying it up
         front — with the control attached — turns a refusal into an instruction.
       */}
-      {!emailVerified && !isRunning && (
+      {mustVerify && !isRunning && (
         <div className="rounded-control border border-warning/30 bg-warning/[0.07] p-4">
           <div className="flex items-start gap-3">
             <MailWarning className="mt-0.5 size-4 shrink-0 text-warning" />

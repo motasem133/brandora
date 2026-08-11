@@ -438,7 +438,7 @@
     },
     "generateCta": "Generate my brand · {credits} credits",
     "starting": "Starting the run…",
-    "verifyFirst": "Verify your email address before generating.",
+    "verifyFirst": "Verify your email address to generate again.",
     "verifyCta": "Verify now",
     "notEnoughCredits": "This run needs {cost} credits and you have {balance}.",
     "topUp": "Top up",
@@ -1034,8 +1034,8 @@
     "codeTooManyAttempts": "Too many attempts. Send a new code.",
     "verificationSent": "New code sent — check your inbox.",
     "verificationFailed": "Could not send it. Please try again shortly.",
-    "unverifiedTitle": "Verify your email to start generating",
-    "unverifiedBody": "We sent a 6-digit code to {email}. Generating a brand spends credits, so it stays locked until the address is confirmed.",
+    "unverifiedTitle": "Verify your email to keep generating",
+    "unverifiedBody": "We sent a 6-digit code to {email}. Your first run went ahead without it — generating again spends more credits, so it stays locked until the address is confirmed.",
     "themeDark": "Dark",
     "themeLight": "Light"
   }
