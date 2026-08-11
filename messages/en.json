@@ -452,6 +452,7 @@
     "generate": "Generate",
     "retry": "Try again",
     "insufficientCredits": "This needs {needed} credits but you have {balance}.",
+    "topUp": "Add credits",
     "steps": {
       "branding": "Brand identity — names, slogan, palette, fonts, story",
       "website": "Website content — four pages of copy",
