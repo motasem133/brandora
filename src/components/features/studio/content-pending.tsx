@@ -3,6 +3,7 @@
 import { useAction } from 'next-safe-action/hooks'
 import * as React from 'react'
 
+import { useRouter } from '@/i18n/navigation'
 import { pendingContentCount } from '@/server/actions/content'
 
 /**
@@ -19,10 +20,11 @@ import { pendingContentCount } from '@/server/actions/content'
  * but "not yet", and a route that holds a connection open to say so is a
  * connection held open to say nothing.
  *
- * `location.reload()` rather than `router.refresh()`, for the reason recorded
- * in the generation panel and against the logo control: the refresh does not
- * commit on these pages. The RSC request goes out and the DOM keeps the old
- * output, so a piece that had finished still read as writing.
+ * `router.refresh()`, which is what this always wanted to be. It was a full
+ * `location.reload()` because the refresh did not commit on these pages — the
+ * RSC request went out and the DOM kept the old output, so a piece that had
+ * finished still read as writing. The cause was a Suspense boundary around the
+ * list this very component sits inside; that boundary is gone.
  */
 export function ContentPending({
   projectId,
@@ -32,6 +34,7 @@ export function ContentPending({
   projectId?: string
   generating: number
 }) {
+  const router = useRouter()
   const { executeAsync } = useAction(pendingContentCount)
 
   React.useEffect(() => {
@@ -49,14 +52,14 @@ export function ContentPending({
       const outcome = await executeAsync({ projectId })
       const now = outcome?.data?.generating
       if (cancelled || typeof now !== 'number') return
-      if (now < generating) window.location.reload()
+      if (now < generating) router.refresh()
     }, 5000)
 
     return () => {
       cancelled = true
       clearInterval(timer)
     }
-  }, [executeAsync, generating, projectId])
+  }, [executeAsync, generating, projectId, router])
 
   return null
 }

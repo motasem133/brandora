@@ -8,7 +8,7 @@ import { EmailVerification } from '@/components/features/settings/email-verifica
 import { Button } from '@/components/ui/button'
 import { Disclosure } from '@/components/ui/disclosure'
 import { FieldError } from '@/components/ui/field-error'
-import { Link } from '@/i18n/navigation'
+import { Link, useRouter } from '@/i18n/navigation'
 import { generateSocialKit } from '@/server/actions/generation'
 import type { GeneratedFile } from '@/server/db/schema'
 
@@ -54,6 +54,7 @@ export function SocialKit({
 }) {
   const t = useTranslations('Branding')
   const ts = useTranslations('Settings')
+  const router = useRouter()
 
   const { executeAsync, isPending, result } = useAction(generateSocialKit)
   const affordable = creditBalance >= cost
@@ -61,9 +62,11 @@ export function SocialKit({
 
   async function start() {
     const outcome = await executeAsync({ projectId })
-    // The kit takes minutes and arrives through the job, not this response —
-    // a reload is what puts the page on the running job's stream.
-    if (outcome?.data) window.location.reload()
+    /* The kit takes minutes and arrives through the job, not this response, so
+       the page has to re-read the project to find it queued and open the run's
+       stream. A refresh does that; it used to be a full reload, because a
+       Suspense boundary on this page stopped soft updates from committing. */
+    if (outcome?.data) router.refresh()
   }
 
   const action = (
