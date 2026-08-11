@@ -416,8 +416,34 @@ async function main() {
   check('repeated sign-ups are rate limited', limited)
 
   /* ------------------------------------------------------------- teardown */
+
+  /*
+   * The workspaces go with the users who own them.
+   *
+   * Signing up creates a personal organization, and an organization has no
+   * foreign key to the person — so deleting the user cascaded the membership
+   * and left the workspace standing. Every run of this file left one behind per
+   * fixture, and the flood test signs up until it is refused: 230 abandoned
+   * workspaces had accumulated by 12 August, each holding a free credit grant
+   * in the ledger the margin screens read.
+   *
+   * The ids are collected through `members` before the users go, because that
+   * is the only row that ties the two together, and it is deleted by the same
+   * cascade.
+   */
+  const strays = await sql`
+    SELECT m.organization_id AS id
+    FROM members m
+    JOIN users u ON u.id = m.user_id
+    WHERE u.email = ${intruderEmail} OR u.email LIKE ${'flood-' + stamp + '%'}`
+
   await sql`DELETE FROM users WHERE email = ${intruderEmail}`
   await sql`DELETE FROM users WHERE email LIKE ${'flood-' + stamp + '%'}`
+
+  if (strays.length) {
+    await sql`DELETE FROM organizations WHERE id = ANY(${strays.map((row) => row.id)})`
+  }
+
   await sql`DELETE FROM rate_limits WHERE key LIKE '%/sign-up/email'`
 
   console.log(`\n\x1b[1mResult\x1b[0m  ${passed} passed, ${failed} failed`)
