@@ -1,7 +1,6 @@
 import { eq } from 'drizzle-orm'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
-import { Suspense } from 'react'
 
 import { AssistantPanel } from '@/components/features/assistant/assistant-panel'
 import { BrandFonts } from '@/components/features/projects/brand-fonts'
@@ -14,10 +13,7 @@ import { KitMockup, WebsiteMockup } from '@/components/features/projects/brand-m
 import { SocialView } from '@/components/features/projects/social-view'
 import { SiteMessages } from '@/components/features/projects/site-messages'
 import { WebsiteView } from '@/components/features/projects/website-view'
-import {
-  ContentLibrary,
-  ContentLibrarySkeleton,
-} from '@/components/features/studio/content-library'
+import { ContentLibrary } from '@/components/features/studio/content-library'
 import { ArrowLeft, Download, Lock, MessageSquare, Palette, PenLine } from 'lucide-react'
 
 import { buttonVariants } from '@/components/ui/button'
@@ -371,14 +367,30 @@ export default async function ProjectDetailPage({
 
           {/* A slice, not the archive. The full list, and the composer, are one
               press away above. */}
-          <Suspense fallback={<ContentLibrarySkeleton label={tst('libraryLoading')} />}>
-            <ContentLibrary
-              organizationId={org.id}
-              projectId={project.id}
-              limit={5}
-              emptyBody={tst('emptyBodyBrand')}
-            />
-          </Suspense>
+          {/*
+            No Suspense boundary, deliberately, and it is not a style choice.
+
+            A boundary that re-suspends inside a React transition blocks the
+            whole transition from committing, and `router.refresh()` is a
+            transition. So every save on this page — a slogan, a brand story, a
+            chosen name — wrote to the database, refreshed, received a correct
+            payload, and painted none of it: the customer edited one word and
+            watched the page tell them nothing had happened. It reproduced two
+            times in three.
+
+            What the boundary bought was the wait on one indexed query, measured
+            at 1–22ms. What it cost was every mutation on the page, and three
+            `window.location.reload()` workarounds elsewhere in this codebase
+            written against the same fault — see `generation-panel`, which
+            records it as "the RSC request goes out and the DOM keeps the old
+            output".
+          */}
+          <ContentLibrary
+            organizationId={org.id}
+            projectId={project.id}
+            limit={5}
+            emptyBody={tst('emptyBodyBrand')}
+          />
         </section>
       )}
         </>

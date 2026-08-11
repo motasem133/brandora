@@ -121,23 +121,3 @@ export async function ContentLibrary({
     </div>
   )
 }
-
-/** Matches the projects page's skeleton in shape; there is no shared primitive. */
-export function ContentLibrarySkeleton({ label }: { label: string }) {
-  return (
-    <div
-      role="status"
-      aria-label={label}
-      className="overflow-hidden rounded-card border border-line bg-surface/60"
-    >
-      <ul className="divide-y divide-line">
-        {[0, 1, 2].map((i) => (
-          <li key={i} className="px-5 py-4">
-            <div className="shimmer-surface h-4 w-40 rounded-control" />
-            <div className="shimmer-surface mt-2 h-3 w-3/4 rounded-control" />
-          </li>
-        ))}
-      </ul>
-    </div>
-  )
-}
