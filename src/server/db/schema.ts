@@ -587,6 +587,45 @@ export const websiteAssets = pgTable(
   (t) => [index('website_assets_subdomain_idx').on(t.subdomain)],
 )
 
+/**
+ * Messages sent from a published customer site's contact form.
+ *
+ * Kept as well as emailed, because email is the delivery and this is the
+ * record. A message that bounces, lands in spam, or arrives while the owner is
+ * changing address is gone otherwise — and "did anybody contact me?" is a
+ * question a small business asks about the week it stopped hearing anything.
+ *
+ * Written by an unauthenticated visitor, which nothing else in this schema is.
+ * So it carries no foreign key to a user, holds only what the form asked for,
+ * and the columns are sized to what a form can send rather than to what a
+ * database can store.
+ */
+export const siteMessages = pgTable(
+  'site_messages',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    projectId: uuid('project_id')
+      .notNull()
+      .references(() => projects.id, { onDelete: 'cascade' }),
+    /* Denormalised from the project so the workspace's messages can be read
+       without a join, and so a deleted project's rows are still attributable
+       while the cascade runs. */
+    organizationId: text('organization_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+
+    name: text('name').notNull(),
+    email: text('email').notNull(),
+    message: text('message').notNull(),
+
+    /** Whether the copy actually reached the owner's inbox. */
+    emailed: boolean('emailed').notNull().default(false),
+
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('site_messages_project_created_idx').on(t.projectId, t.createdAt)],
+)
+
 export const socialMediaAssets = pgTable('social_media_assets', {
   id: uuid('id').primaryKey().defaultRandom(),
   projectId: uuid('project_id')
