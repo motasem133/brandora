@@ -202,6 +202,10 @@ export async function generateLogoImage(params: {
  * prompt and how the result is used, so it is worth its own entry in
  * `ai_usage` rather than being counted as a logo. A kit that cost three
  * "logos" would make the margin figures lie.
+ *
+ * `kit` rather than `social` for the same reason, since 11 August. Three of
+ * these cost about twenty pence; the written captions filed beside them cost a
+ * sixth of a penny, and one row cannot describe both.
  */
 export async function generateSceneImage(params: {
   prompt: string
@@ -209,7 +213,7 @@ export async function generateSceneImage(params: {
   projectId: string
   generationJobId: string
 }): Promise<Buffer> {
-  return generateImage({ ...params, feature: 'social' })
+  return generateImage({ ...params, feature: 'kit' })
 }
 
 /** Generates one image and returns its bytes. */
@@ -218,7 +222,7 @@ async function generateImage(params: {
   organizationId: string
   projectId: string
   generationJobId: string
-  feature: 'logo' | 'social'
+  feature: 'logo' | 'kit'
 }): Promise<Buffer> {
   if (!env.FAL_KEY) {
     throw new AppError('AI_PROVIDER_ERROR', 'FAL_KEY is not configured.')
@@ -337,7 +341,7 @@ async function recordImageUsage(params: {
   model: string
   latencyMs: number
   status: 'success' | 'error'
-  feature?: 'logo' | 'vectorize' | 'social'
+  feature?: 'logo' | 'vectorize' | 'kit'
   cost?: number
 }) {
   const price = params.cost ?? COST_PER_IMAGE
