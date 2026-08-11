@@ -48,6 +48,57 @@ it settles the question either way.
 
 **Needs from you:** the decision, once there is data. It is a public price.
 
+### 3. Finish or delete the Agency plan — a day, or ten minutes
+
+A fourth plan sits in `plans` at $99 with a Polar product already created and
+`is_active = false`, so it can be neither bought nor seen. It is either a plan
+or it is not, and while it is neither it is a row that every plan query has to
+step around and a product in Polar nobody is watching.
+
+**Needs from you:** which one. Deleting it is ten minutes. Making it real is a
+day, and needs to answer what it includes that Studio does not.
+
+### 4. Ads as a Content Studio type — 2–3 days
+
+`ad` is one of the seven declared content types and one of the four that still
+generate nothing. The copy already exists — every social kit writes ad headlines
+and bodies — and there is nowhere to render it, so a customer who paid for a kit
+has ad copy they cannot use as an ad.
+
+### 5. Show a free customer the site and kit, rather than describing them — 1–2 days
+
+The smaller half of this shipped in #34: both are named on the project page with
+the plan they need. Named is not the same as met. The persuasive version shows
+the thing — a real render of the site their brand would produce, blurred or
+watermarked — and it is a design decision before it is code.
+
+---
+
+## In review
+
+Four pull requests, all from the 11 August growth memo, none merged. Listed here
+because a backlog that does not mention four open branches is not a backlog.
+
+- **#31 — the verification gate moves after the first run.** A new account
+  generates once without confirming its address; the gate falls on the second.
+  `mustVerifyEmail` is the single place that decides it. Raises the cost of an
+  abandoned signup from nothing to the free grant — about fifteen cents — which
+  is the trade the memo asked for. See the note below.
+- **#32 — the credits wall gets a route to billing.** Three of the four walls
+  already pointed at billing; the generation panel, the one a returning customer
+  actually meets, named the problem and offered nothing.
+- **#33 — kit photography told apart from social copy.** `ai_usage.feature` had
+  one value for both, so captions costing 1.7 cents and photographs costing 20
+  shared a row and every margin figure grouped by it was wrong. **`pnpm
+  db:migrate` must run against production before this merges** — the migration
+  replaces the enum type and backfills the old rows in the same statement.
+- **#34 — the locked website is named on the project page.** Also corrects the
+  kit's locked line, which quoted the wrong plan at the wrong price: "Pro and
+  above" for something Creator includes.
+
+Also still open from before: **#19**, the social kit reprice, held as a draft on
+purpose — see Improvement 2.
+
 ---
 
 ## Yours, not code
@@ -70,8 +121,9 @@ failure and is not. Neon's own cleanup runs slower than a working day's merges,
 so this needs clearing every so often. Deleting the `preview/*` branches of
 merged PRs fixes it immediately.
 
-Two long-open PRs each hold a branch permanently. #3 has been closed for this
-reason among others; #10 is this file.
+Six open pull requests hold six branches as of 11 August: #19 and the four in
+review above, plus this one. That is most of the allowance, so the `preview/*`
+branches of merged PRs want deleting as those land rather than after.
 
 ### After the database move — whenever
 
@@ -94,7 +146,7 @@ real deliverability through Resend is the one part untested.
 ### A free signup costs about 15 cents
 
 Of model spend, granted at sign-up — not on confirmation, which is where this
-file used to say it happened. Since 11 August an unconfirmed address can spend
+file used to say it happened. Since 12 August an unconfirmed address can spend
 that grant on one run and nothing more, so fifteen cents is now what an
 abandoned or fake signup can actually cost rather than a ceiling nobody could
 reach. The grant is written once per organization and only a payment adds to
