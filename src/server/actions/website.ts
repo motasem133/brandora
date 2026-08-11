@@ -10,7 +10,7 @@ import { AppError } from '@/lib/errors'
 import { orgAction, orgAdminAction } from '@/server/actions/safe-action'
 import { db } from '@/server/db'
 import { getOrgPlan } from '@/server/db/queries/plans'
-import { countCustomDomains } from '@/server/db/queries/sites'
+import { countCustomDomains, siteTag } from '@/server/db/queries/sites'
 import { projects, websiteAssets } from '@/server/db/schema'
 import { attachDomain, detachDomain, domainStatus } from '@/server/services/domains'
 
@@ -67,6 +67,20 @@ async function assertOwnedProject(projectId: string, orgId: string) {
   return project
 }
 
+/**
+ * Drops every address a site answers on.
+ *
+ * A published site is cached per host, and it has up to two: the Brandora
+ * subdomain and a domain the customer attached. Purging only the subdomain
+ * left the customer's own domain — the one they actually give people — serving
+ * the previous version until the window expired.
+ */
+function purgeSite(site: { subdomain: string | null; customDomain: string | null }) {
+  for (const host of [site.subdomain, site.customDomain]) {
+    if (host) updateTag(siteTag(host))
+  }
+}
+
 export const updateWebsiteContent = orgAction
   .metadata({ name: 'update-website-content' })
   .inputSchema(
@@ -94,9 +108,7 @@ export const updateWebsiteContent = orgAction
     // updateTag rather than revalidateTag: this runs inside a Server Action, so
     // the caller should immediately read its own write. Only a published site is
     // cached, so only then is there anything to purge.
-    if (updated.isPublished && updated.subdomain) {
-      updateTag(`site:${updated.subdomain}`)
-    }
+    if (updated.isPublished) purgeSite(updated)
 
     return { savedAt: new Date().toISOString() }
   })
@@ -144,7 +156,7 @@ export const publishWebsite = orgAdminAction
 
     if (!published) throw new AppError('NOT_FOUND', 'This project has no website yet.')
 
-    updateTag(`site:${parsedInput.subdomain}`)
+    purgeSite(published)
 
     return { subdomain: parsedInput.subdomain, url: `/sites/${parsedInput.subdomain}` }
   })
@@ -227,6 +239,11 @@ export const attachCustomDomain = orgAdminAction
       .set({ customDomain: parsedInput.domain, updatedAt: new Date() })
       .where(eq(websiteAssets.projectId, parsedInput.projectId))
 
+    /* The new host has never been cached, but the old pair may have been —
+       and a domain that has just started answering must not serve whatever a
+       previous tenant of that entry left behind. */
+    purgeSite({ subdomain: site.subdomain, customDomain: parsedInput.domain })
+
     return status
   })
 
@@ -255,7 +272,7 @@ export const removeCustomDomain = orgAdminAction
     await assertOwnedProject(parsedInput.projectId, ctx.orgId)
 
     const [site] = await db
-      .select({ customDomain: websiteAssets.customDomain })
+      .select({ customDomain: websiteAssets.customDomain, subdomain: websiteAssets.subdomain })
       .from(websiteAssets)
       .where(eq(websiteAssets.projectId, parsedInput.projectId))
       .limit(1)
@@ -278,6 +295,10 @@ export const removeCustomDomain = orgAdminAction
       .set({ customDomain: null, updatedAt: new Date() })
       .where(eq(websiteAssets.projectId, parsedInput.projectId))
 
+    /* Including the domain being detached: it stops resolving here, and a
+       cached copy of the site under it would outlive the connection. */
+    purgeSite({ subdomain: site.subdomain, customDomain: site.customDomain })
+
     return { success: true }
   })
 
@@ -293,7 +314,7 @@ export const unpublishWebsite = orgAdminAction
       .where(eq(websiteAssets.projectId, parsedInput.projectId))
       .returning()
 
-    if (updated?.subdomain) updateTag(`site:${updated.subdomain}`)
+    if (updated) purgeSite(updated)
 
     return { success: true }
   })
