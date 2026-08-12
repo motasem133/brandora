@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 import { MARKUP, NO_MARKUP_MESSAGE, blockSchema } from '@/lib/blocks'
-import { socialPostItemSchema } from '@/lib/content'
+import { adItemSchema, socialPostItemSchema } from '@/lib/content'
 
 /**
  * Structured output contracts.
@@ -206,6 +206,24 @@ export function contentSocialPostSchemaFor(variants: number) {
 }
 
 export type ContentSocialPostOutput = z.infer<typeof contentSocialPostSchema>
+
+/**
+ * One generation's worth of ads, pinned to the count that was priced.
+ *
+ * Same reasoning as the captions above: the number is a control the customer
+ * set and the quote was made against it, so a miscount is a schema violation
+ * and a retry rather than a surprise on the invoice.
+ *
+ * The item shape comes from `lib/content.ts` for the same reason too — the
+ * model writes it, the column stores it and the library reads it back, and
+ * three declarations of one shape drift.
+ */
+export function contentAdSchemaFor(variants: number) {
+  return z.object({
+    title: z.string().min(1).max(80),
+    items: z.array(adItemSchema).length(variants),
+  })
+}
 
 /**
  * A carousel's words, pinned to the number of frames that will be drawn.

@@ -124,6 +124,18 @@ export const CONTENT_CREDIT_COSTS = {
    * was never worth three.
    */
   story: 1,
+  /*
+   * One, like a caption, because it is the same work: one call on the `social`
+   * chain, a brand block and a brief in, four short strings out.
+   *
+   * Not priced on what it is worth, deliberately, and that is the opposite of
+   * the carousel's reasoning above. A carousel is five finished pictures a
+   * customer would otherwise open a design tool for. An ad is words they still
+   * have to buy placement for — the value is realised by their media budget,
+   * not by us, and charging as if we had delivered a campaign would be charging
+   * for somebody else's work.
+   */
+  ad: 1,
 } as const
 
 export type ContentType = keyof typeof CONTENT_CREDIT_COSTS

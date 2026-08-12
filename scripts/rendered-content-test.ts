@@ -164,7 +164,7 @@ async function main() {
    * pinned to 1 before the price is worked out. Asserted as arithmetic rather
    * than by calling the service, which needs a database and a session.
    */
-  const priceFor = (type: 'social_post' | 'carousel' | 'story', asked: number) => {
+  const priceFor = (type: 'social_post' | 'carousel' | 'story' | 'ad', asked: number) => {
     const variants = isRenderedType(type) ? 1 : Math.min(Math.max(1, asked), 3)
     return CONTENT_CREDIT_COSTS[type] + (variants - 1) * CONTENT_VARIANT_COST
   }
@@ -173,9 +173,55 @@ async function main() {
   check('a story asked for three times still costs one', priceFor('story', 3) === 1)
   check('three captions still cost three', priceFor('social_post', 3) === 3)
 
+  /* --- ad copy ---------------------------------------------------------------- */
+
+  /*
+   * The written type that is not a caption.
+   *
+   * Its four fields go into four different boxes in an ad manager, so what is
+   * checked here is that they stay four — a shape that collapses into one blob
+   * is the state the kit's ad copy is already in, and the reason this type
+   * exists. The headline ceiling is checked at eighty rather than sixty for the
+   * reason recorded against the kit: a ceiling set at the length of a good
+   * headline is read by the model as a target.
+   */
+  const { adBodySchema } = await import('../src/lib/content')
+  const { contentAdSchemaFor } = await import('../src/server/ai/schemas')
+
+  const ad = (over: Record<string, unknown> = {}) => ({
+    intent: 'problem-led',
+    headline: 'Coffee that survives the school run',
+    body: 'Roasted the week you drink it, ground the morning it ships.',
+    cta: 'Shop the roast',
+    ...over,
+  })
+
+  check('a complete ad is accepted', adBodySchema.safeParse({ kind: 'ad', items: [ad()] }).success)
+  check(
+    'an eighty-character headline fits',
+    adBodySchema.safeParse({ kind: 'ad', items: [ad({ headline: 'x'.repeat(80) })] }).success,
+  )
+  check(
+    'eighty-one does not',
+    !adBodySchema.safeParse({ kind: 'ad', items: [ad({ headline: 'x'.repeat(81) })] }).success,
+  )
+  for (const field of ['headline', 'body', 'cta', 'intent']) {
+    check(
+      `an ad without a ${field} is refused`,
+      !adBodySchema.safeParse({ kind: 'ad', items: [ad({ [field]: '' })] }).success,
+    )
+  }
+  check(
+    'asked for two, three is a schema violation rather than a surprise',
+    !contentAdSchemaFor(2).safeParse({ title: 'Launch', items: [ad(), ad(), ad()] }).success,
+  )
+  check('asked for two, two is accepted', contentAdSchemaFor(2).safeParse({ title: 'Launch', items: [ad(), ad()] }).success)
+  check('an ad is one credit', CONTENT_CREDIT_COSTS.ad === 1)
+  check('three ads cost three', priceFor('ad', 3) === 3)
+
   assert.equal(failures, 0, `${failures} carousel case(s) failed`)
   console.log(
-    `✓ rendered content: ${CAROUSEL_FRAMES} carousel frames enforced, one for a story, lines fit the layout, price cannot be inflated`,
+    `✓ content contracts: ${CAROUSEL_FRAMES} carousel frames enforced, one for a story, lines fit the layout, an ad keeps its four parts, price cannot be inflated`,
   )
 }
 
