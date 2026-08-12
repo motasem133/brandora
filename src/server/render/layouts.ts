@@ -90,7 +90,19 @@ function photo(src: string, u: (n: number) => number, box: { top: number; height
       <img src="${src}" width="${width}" height="${u(box.height)}" style="object-fit:cover"/></div>`
 }
 
-/** The name, under a rule, the way every post in the reference signs off. */
+/**
+ * The name, under a rule, the way every post in the reference signs off.
+ *
+ * One brand mention per post, which is why this and `chip` are never both
+ * drawn. They were: the logo plate sat in the corner reading "Brandora" and
+ * this printed "BRANDORA" across the foot of the same square, so every post in
+ * every kit said the name twice — the tell of a template rather than a design.
+ *
+ * Which one a layout gets follows the layout. A photograph wants the real
+ * lockup held in a corner, out of the picture's way; a flat field has room for
+ * the sign-off and nothing to hold it away from. So: chip on the photographic
+ * layouts, signature on the flat ones.
+ */
 function signature(p: Parts, u: (n: number) => number, bottom: number, colour: string) {
   return `<div style="display:flex;flex-direction:column;position:absolute;bottom:${u(bottom)}px;left:0;
       width:${p.width}px;align-items:center">
@@ -167,7 +179,7 @@ export function renderLayout(kind: LayoutKind, p: Parts) {
             tailColour: c.primary, align: 'center', rtl })}
         </div>
       </div>
-      ${signature(p, u, kind === 'story' ? 130 : 74, c.background)}`
+`
   }
 
   if (kind === 'feature') {
@@ -190,8 +202,7 @@ export function renderLayout(kind: LayoutKind, p: Parts) {
       <div style="display:flex;flex-direction:column;position:absolute;left:${pad}px;right:${pad}px;top:${u(700)}px">
         ${headline(p, u, { size: 78, lead, tail, colour: c.text, tailColour: c.primary,
           align: 'center', rtl })}
-      </div>
-      ${signature(p, u, 74, c.primary)}`
+      </div>`
   }
 
   if (kind === 'statement') {
@@ -201,7 +212,6 @@ export function renderLayout(kind: LayoutKind, p: Parts) {
       <div style="display:flex;position:absolute;top:0;left:0;width:${p.width}px;height:${u(300)}px;overflow:hidden">
         <img src="${p.mark}" width="${u(620)}" height="${u(620)}" style="position:absolute;top:${u(-190)}px;
           ${rtl ? 'left' : 'right'}:${u(-120)}px;object-fit:contain;opacity:0.12"/></div>
-      ${chip(p, u, rtl)}
       <div style="display:flex;position:absolute;left:0;top:${u(300)}px;width:${p.width}px;height:${u(470)}px">
         ${device(p, u, 0, 470, c.background)}
         <div style="display:flex;flex-direction:column;position:absolute;top:0;left:0;width:${p.width}px;
@@ -263,7 +273,7 @@ export function renderLayout(kind: LayoutKind, p: Parts) {
         <div style="display:flex;font-size:${u(30)}px;line-height:1.62;color:${c.primary};
           opacity:0.86;text-align:center">${escape(p.copy?.body ?? '')}</div>
       </div>
-      ${signature(p, u, 74, c.background)}`
+`
   }
 
   if (kind === 'palette') {
@@ -291,7 +301,6 @@ export function renderLayout(kind: LayoutKind, p: Parts) {
 
     body = `
       <div style="display:flex;position:absolute;inset:0;background:${c.background}"></div>
-      ${chip(p, u, rtl, true)}
       <div style="display:flex;flex-direction:column;position:absolute;left:${u(88)}px;right:${u(88)}px;
         top:${u(250)}px">
         <div style="display:flex;gap:${u(24)}px;width:100%">${chips}</div>
