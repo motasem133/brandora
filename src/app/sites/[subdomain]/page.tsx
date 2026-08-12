@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { headers } from 'next/headers'
 import { notFound } from 'next/navigation'
 
 import { PageRenderer, resolveTheme } from '@/components/blocks/block-renderer'
@@ -36,6 +37,9 @@ const CONTACT_LABELS = {
   },
 } as const
 
+/** Where a public image is served from — see `/api/site-image`. */
+const imageUrl = (id: string) => `/api/site-image/${id}`
+
 /** Maps a generated brand palette onto the renderer's theme shape. */
 function themeFromBranding(branding: BrandingAsset | null): Theme {
   const palette = branding?.colorPalette
@@ -70,11 +74,36 @@ export async function generateMetadata({
   if (!site) return { title: 'Not found' }
 
   const name = site.project.businessName || site.project.title
+  const description = site.branding?.slogan ?? undefined
+
+  /*
+   * The brand's own favicon and share card, which have existed in storage since
+   * the day the logo was chosen and have never been on the site they belong to.
+   * Absolute URLs, from the host actually being served — a share card is fetched
+   * by Slack or WhatsApp, not by the browser, so a relative path is nothing.
+   */
+  const host = (await headers()).get('host')
+  const origin = host ? `https://${host}` : undefined
+  const image = origin && site.images.og ? `${origin}${imageUrl(site.images.og)}` : undefined
 
   return {
     title: name,
-    description: site.branding?.slogan ?? undefined,
+    description,
     robots: { index: true, follow: true },
+    icons: site.images.favicon ? { icon: imageUrl(site.images.favicon) } : undefined,
+    openGraph: {
+      title: name,
+      description,
+      siteName: name,
+      type: 'website',
+      images: image ? [image] : undefined,
+    },
+    twitter: {
+      card: image ? 'summary_large_image' : 'summary',
+      title: name,
+      description,
+      images: image ? [image] : undefined,
+    },
   }
 }
 
@@ -114,14 +143,25 @@ export default async function PublishedSite({
           className="flex flex-wrap items-center justify-between gap-4 px-8 py-5"
           style={{ borderBottom: `1px solid ${theme.safe.line}` }}
         >
-          <span
-            className="text-lg font-bold"
-            /* The brand's own colour when it can be read on the brand's own
-               ground, deepened when it cannot — this is the site's name. */
-            style={{ fontFamily: `'${theme.fontHeading}', sans-serif`, color: theme.safe.accent }}
-          >
-            {name}
-          </span>
+          {/* The logo when there is one, the name when there is not — never both,
+              and never a name-shaped gap while an image loads. */}
+          {site.images.logo ? (
+            <img
+              src={imageUrl(site.images.logo)}
+              alt={name}
+              className="w-auto"
+              style={{ height: 'clamp(1.75rem, 3vw, 2.5rem)' }}
+            />
+          ) : (
+            <span
+              className="text-lg font-bold"
+              /* The brand's own colour when it can be read on the brand's own
+                 ground, deepened when it cannot — this is the site's name. */
+              style={{ fontFamily: `'${theme.fontHeading}', sans-serif`, color: theme.safe.accent }}
+            >
+              {name}
+            </span>
+          )}
 
           <nav className="flex gap-5">
             {nav.map((key) => (
@@ -148,7 +188,12 @@ export default async function PublishedSite({
           </nav>
         </header>
 
-        <PageRenderer blocks={blocks} theme={theme} contact={CONTACT_LABELS[site.project.language]} />
+        <PageRenderer
+          blocks={blocks}
+          theme={theme}
+          images={site.images}
+          contact={CONTACT_LABELS[site.project.language]}
+        />
 
         <footer
           className="px-8 py-10 text-center text-sm"

@@ -103,19 +103,22 @@ function Action({
   label,
   href,
   theme,
+  onDark = false,
 }: {
   label: string
   /** Not in the schema yet — see the plan's Stage 4. Defaults to contact. */
   href?: string
   theme: SiteTheme
+  /** On a photograph, where the brand's primary is already the scrim. */
+  onDark?: boolean
 }) {
   return (
     <a
       href={href || '?page=contact'}
       className="mt-9 inline-block px-7 py-3.5 text-sm font-medium no-underline"
       style={{
-        backgroundColor: theme.safe.primary,
-        color: theme.safe.onPrimary,
+        backgroundColor: onDark ? theme.safe.onPrimary : theme.safe.primary,
+        color: onDark ? theme.safe.primary : theme.safe.onPrimary,
         fontFamily: `'${theme.fontBody}', sans-serif`,
         borderRadius: 'var(--site-radius)',
       }}
@@ -156,10 +159,35 @@ function Section({
   )
 }
 
+/**
+ * The images a published site may show, resolved by kind.
+ *
+ * Blocks do not store image ids. A site generated months before its owner buys
+ * a kit has no photography to point at, and pointing at it later would mean
+ * rewriting stored blocks. Resolving here means the day the kit lands, the live
+ * site becomes image-led on the next cache purge — no regeneration, no edit, no
+ * credits.
+ */
+export type SiteImages = {
+  scenes: Partial<Record<'hero' | 'people' | 'detail', string>>
+  logo?: string
+}
+
+/**
+ * Served through the public route, which authorises by the published join.
+ *
+ * A plain `<img>` rather than `next/image`, which lint will mention: the URL
+ * behind this one is a signed R2 link that expires in five minutes, so the
+ * optimizer would cache an address rather than an image, and the pages using it
+ * are served from customer-owned domains the optimizer is not configured for.
+ */
+const imageUrl = (id: string) => `/api/site-image/${id}`
+
 export function BlockRenderer({
   block,
   theme,
   index = 0,
+  images,
   preview = false,
   contact,
 }: {
@@ -167,6 +195,7 @@ export function BlockRenderer({
   theme: SiteTheme
   /** Where it sits on the page, so grounds can alternate. */
   index?: number
+  images?: SiteImages
   preview?: boolean
   /** Absent in the builder, where the block is a picture of itself. */
   contact?: ContactLabels
@@ -183,7 +212,71 @@ export function BlockRenderer({
 
 
   switch (block.type) {
-    case 'hero':
+    case 'hero': {
+      const photo = images?.scenes.hero
+
+      /*
+       * With a photograph the hero is the photograph: full bleed, a scrim, the
+       * words on it. Without one it is type and space, which is not a fallback
+       * so much as the other half of the design — most sites will never have a
+       * kit, and a hero with a hole where a picture should be is worse than a
+       * hero that never promised one.
+       */
+      if (photo) {
+        return (
+          <section className="relative" style={{ minHeight: 'min(78vh, 44rem)' }}>
+            <img
+              src={imageUrl(photo)}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `linear-gradient(to top, ${theme.safe.primary}e6 0%, ${theme.safe.primary}66 45%, ${theme.safe.primary}1a 100%)`,
+              }}
+            />
+            <div
+              className="relative flex min-h-[inherit] flex-col justify-end"
+              style={{
+                paddingBlock: 'var(--site-section)',
+                paddingInline: 'var(--site-gutter)',
+                minHeight: 'min(78vh, 44rem)',
+              }}
+            >
+              <div style={{ maxWidth: 'var(--site-container)', marginInline: 'auto', width: '100%' }}>
+                <HeroHeading
+                  className="font-bold leading-[1.05] tracking-[-0.02em]"
+                  style={{
+                    ...heading,
+                    color: theme.safe.onPrimary,
+                    fontSize: 'var(--site-h1)',
+                    maxWidth: '18ch',
+                  }}
+                >
+                  {block.title}
+                </HeroHeading>
+                {block.subtitle && (
+                  <p
+                    className="mt-6"
+                    style={{
+                      ...body,
+                      color: theme.safe.onPrimary,
+                      opacity: 0.92,
+                      fontSize: 'var(--site-lead)',
+                      maxWidth: '46ch',
+                    }}
+                  >
+                    {block.subtitle}
+                  </p>
+                )}
+                {block.cta && <Action label={block.cta} theme={theme} onDark />}
+              </div>
+            </div>
+          </section>
+        )
+      }
+
       return (
         <Section theme={theme} wide>
           <HeroHeading
@@ -203,6 +296,7 @@ export function BlockRenderer({
           {block.cta && <Action label={block.cta} theme={theme} />}
         </Section>
       )
+    }
 
     case 'features':
       return (
@@ -241,31 +335,73 @@ export function BlockRenderer({
         </Section>
       )
 
-    case 'richText':
+    case 'richText': {
+      const portrait = images?.scenes.people
+
+      const prose = (
+        <div>
+          <h2 className="font-bold" style={{ ...heading, fontSize: 'var(--site-h2)' }}>
+            {block.heading}
+          </h2>
+          <div
+            className="mt-6 space-y-5"
+            style={{ ...muted, fontSize: 'var(--site-body)', lineHeight: 1.7 }}
+          >
+            {block.body
+              .split('\n')
+              .filter(Boolean)
+              .map((paragraph, index) => (
+                <p key={index}>{paragraph}</p>
+              ))}
+          </div>
+        </div>
+      )
+
+      /* The people photograph belongs against the words about the people — the
+         About page's story block — and `auto-fit` is what makes it stack on a
+         phone without a second breakpoint. */
+      if (!portrait) {
+        return (
+          <Section theme={theme} band={index % 2 === 1}>
+            {prose}
+          </Section>
+        )
+      }
+
       return (
-        <Section theme={theme} band={index % 2 === 1}>
-          <div>
-            <h2 className="font-bold" style={{ ...heading, fontSize: 'var(--site-h2)' }}>
-              {block.heading}
-            </h2>
-            <div
-              className="mt-6 space-y-5"
-              style={{ ...muted, fontSize: 'var(--site-body)', lineHeight: 1.7 }}
-            >
-              {block.body
-                .split('\n')
-                .filter(Boolean)
-                .map((paragraph, index) => (
-                  <p key={index}>{paragraph}</p>
-                ))}
-            </div>
+        <Section theme={theme} band={index % 2 === 1} wide>
+          <div
+            className="grid items-center"
+            style={{
+              gap: 'clamp(2rem, 5vw, 4rem)',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 22rem), 1fr))',
+            }}
+          >
+            {prose}
+            <img
+              src={imageUrl(portrait)}
+              alt=""
+              className="w-full object-cover"
+              style={{ aspectRatio: '4 / 5', borderRadius: 'var(--site-radius)' }}
+            />
           </div>
         </Section>
       )
+    }
 
     case 'services':
       return (
         <Section theme={theme} band={index % 2 === 1} wide>
+          {/* The detail shot as a band above the list — the one place a close-up
+              of the work says more than any of the cards under it. */}
+          {images?.scenes.detail && (
+            <img
+              src={imageUrl(images.scenes.detail)}
+              alt=""
+              className="mb-12 w-full object-cover"
+              style={{ aspectRatio: '21 / 9', borderRadius: 'var(--site-radius)' }}
+            />
+          )}
           <h2 className="font-bold" style={{ ...heading, fontSize: 'var(--site-h2)' }}>
             {block.heading}
           </h2>
@@ -398,16 +534,48 @@ export function BlockRenderer({
 export function PageRenderer({
   blocks,
   theme,
+  images,
   contact,
 }: {
   blocks: Block[]
   theme: SiteTheme
+  images?: SiteImages
   contact?: ContactLabels
 }) {
+  /*
+   * Each photograph is used once on a page.
+   *
+   * A home page is often three `richText` blocks in a row; handing every one of
+   * them the same portrait would print the same picture three times, which is
+   * the single most obvious way a generated site announces itself as generated.
+   * The first block that can carry a given scene takes it, and the ones after it
+   * fall back to the type-and-space design.
+   */
+  const unused = { ...(images?.scenes ?? {}) }
+  const claim = (block: Block): SiteImages | undefined => {
+    if (!images) return undefined
+
+    const wants =
+      block.type === 'hero' ? 'hero' : block.type === 'richText' ? 'people' : block.type === 'services' ? 'detail' : null
+
+    if (!wants || !unused[wants]) return { ...images, scenes: {} }
+
+    const scene = { [wants]: unused[wants] }
+    delete unused[wants]
+    return { ...images, scenes: scene }
+  }
+
   return (
     <div style={{ backgroundColor: theme.safe.paper }}>
       {blocks.map((block, index) => (
-        <BlockRenderer key={index} block={block} index={index} theme={theme} contact={contact} />
+        <BlockRenderer
+          key={index}
+          block={block}
+          index={index}
+          theme={theme}
+          images={claim(block)}
+          contact={contact}
+        />
       ))}
     </div>
   )
