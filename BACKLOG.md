@@ -136,9 +136,13 @@ are worth knowing before anyone debugs this again:
   can sign in and everyone else is blocked. Publishing is instant for the
   `openid`/`email`/`profile` scopes this asks for — no Google review.
 
-**Yours:** the client secret passed through a chat transcript on the way in, so
-it is worth rotating from the same console page. Same reasoning as the database
-password below.
+**Rotated 12 August**, and the reason is worth keeping: the first secret passed
+through a chat transcript on the way in. So did the second, which is the part
+that matters — a rotation is only a rotation if the new value never travels the
+way the old one did. Google lets a client hold two secrets at once, so the
+durable version is to add one in the console, paste it straight into Vercel's
+own settings, redeploy, and then delete the old one. Nothing needs to see it in
+between. Same reasoning as the database password below.
 
 ### The contact form, once — 2 minutes
 
