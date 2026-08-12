@@ -1,7 +1,7 @@
 import 'server-only'
 
 import { contrast } from '@/lib/brand-theme'
-import { splitHeadline, type PostBrand } from './post-template'
+import { deviceFor, registerFor, SHAPE_DEVICES, splitHeadline, type PostBrand } from './post-template'
 
 /**
  * The layouts a kit is made of.
@@ -69,12 +69,22 @@ const scaler = (width: number) => (n: number) => Math.round((n / 1080) * width)
  *
  * On a light ground the lockup stands in its own colour with nothing behind it.
  */
-function lockup(p: Parts, u: (n: number) => number, rtl: boolean, onLight = false) {
+function lockup(p: Parts, u: (n: number) => number, rtl: boolean, ground: string) {
   const place = `position:absolute;top:${u(70)}px;${rtl ? `right:${u(88)}px` : `left:${u(88)}px`}`
-  const invert = onLight ? '' : ';filter:brightness(0) invert(1)'
+
+  /*
+   * Reversed or not is read off the ground rather than passed in by the caller.
+   *
+   * It was a boolean each layout set by hand, and it was wrong the moment a
+   * register changed a field's colour underneath it: a white lockup on a brand
+   * whose second colour is near-white is an invisible logo, which is what four
+   * brands rendered side by side showed immediately. The ground is the only
+   * thing that knows.
+   */
+  const invert = contrast('#ffffff', ground) >= contrast('#000000', ground)
   return `<div style="display:flex;${place};align-items:center">
       <img src="${p.wordmark}" width="${u(210)}" height="${u(80)}"
-        style="object-fit:contain${invert}"/></div>`
+        style="object-fit:contain${invert ? ';filter:brightness(0) invert(1)' : ''}"/></div>`
 }
 
 /**
@@ -92,9 +102,25 @@ function field(
   u: (n: number) => number,
   box: { top: number; height: number },
   fill: string,
+  r = registerFor(p.brand.style, p.brand.industry),
 ) {
-  return `<div style="display:flex;position:absolute;left:0;top:${u(box.top)}px;
-      width:${p.width}px;height:${u(box.height)}px;background:${fill}"></div>`
+  const radius = r.radius ? `;border-radius:${u(r.radius)}px ${u(r.radius)}px 0 0` : ''
+
+  /*
+   * An organic register keeps the brand's own curve, as the edge of the field
+   * rather than as a silhouette floating on the picture. The paths are bands —
+   * they touch both sides and shape only what lies between — so stretched to
+   * the canvas they read as a cut, which is what they were drawn for.
+   */
+  const cut =
+    r.edge === 'curve'
+      ? `<svg width="${p.width}" height="${u(120)}" viewBox="0 0 100 100" preserveAspectRatio="none"
+          style="position:absolute;left:0;top:${u(box.top - 118)}px">
+          <path d="${SHAPE_DEVICES[deviceFor(p.brand.style, p.brand.industry)]}" fill="${fill}"/></svg>`
+      : ''
+
+  return `${cut}<div style="display:flex;position:absolute;left:0;top:${u(box.top)}px;
+      width:${p.width}px;height:${u(box.height)}px;background:${fill}${radius}"></div>`
 }
 
 
@@ -111,6 +137,24 @@ function photo(src: string, u: (n: number) => number, box: { top: number; height
       <img src="${src}" width="${width}" height="${u(box.height)}" style="object-fit:cover"/></div>`
 }
 
+
+/**
+ * The size a line can be set at and still fit its block.
+ *
+ * The kit's copy is generated, so its length is not a design decision anybody
+ * made: one brand's statement is four words and another's is a sentence about
+ * jasmine and stone fruit. Set at one size the long ones overflowed their field
+ * and were cut off mid-word — which four brands rendered side by side showed at
+ * once, and a single brand never would.
+ *
+ * A ceiling rather than a fit: it steps the size down as the line grows and
+ * stops, because type that shrinks without limit is a different failure.
+ */
+function fitted(size: number, text: string, limit = 46) {
+  if (text.length <= limit) return size
+  const shrink = Math.min(0.34, (text.length - limit) / 200)
+  return Math.round(size * (1 - shrink))
+}
 
 function headline(p: Parts, u: (n: number) => number, opts: {
   size: number
@@ -144,6 +188,11 @@ export function renderLayout(kind: LayoutKind, p: Parts) {
    */
   const tail = p.copy ? p.copy.tail : fallback.tail
   const rtl = hasArabic(lead)
+  /* How this brand is set — margin, ranging, scale, corners, how much colour
+     runs as field. Same layouts, different bearing per brand. */
+  const r = registerFor(p.brand.style, p.brand.industry)
+  const m = u(r.margin)
+  const ranged = r.align === 'center' ? 'center' : rtl ? 'flex-end' : 'flex-start'
 
   let body = ''
 
@@ -169,14 +218,14 @@ export function renderLayout(kind: LayoutKind, p: Parts) {
       ${p.photo ? photo(p.photo, u, { top: 0, height: fieldTop + u(2) }, p.width) : `<div style="display:flex;position:absolute;inset:0;background:${c.primary}"></div>`}
       <div style="display:flex;position:absolute;left:0;top:0;width:${p.width}px;height:${u(360)}px;
         background:linear-gradient(to bottom, rgba(0,0,0,.45) 0%, rgba(0,0,0,0) 100%)"></div>
-      ${lockup(p, u, rtl)}
-      ${field(p, u, { top: fieldTop, height: fieldTall }, c.background)}
-      <div style="display:flex;flex-direction:column;position:absolute;left:${u(88)}px;
-        right:${u(88)}px;top:${u(fieldTop + 78)}px;align-items:${rtl ? 'flex-end' : 'flex-start'}">
+      ${lockup(p, u, rtl, c.primary)}
+      ${field(p, u, { top: fieldTop, height: fieldTall }, c.background, r)}
+      <div style="display:flex;flex-direction:column;position:absolute;left:${m}px;
+        right:${m}px;top:${u(fieldTop + 78)}px;align-items:${ranged}">
         ${bar(p, u, c.secondary)}
         <div style="display:flex;margin-top:${u(34)}px;width:100%">
-          ${headline(p, u, { size: kind === 'story' ? 100 : 86, lead, tail, colour: c.text,
-            tailColour: c.primary, align: 'start', rtl })}
+          ${headline(p, u, { size: Math.round((kind === 'story' ? 100 : 86) * r.scale), lead, tail, colour: c.text,
+            tailColour: c.primary, align: r.align, rtl })}
         </div>
       </div>`
   }
@@ -193,19 +242,22 @@ export function renderLayout(kind: LayoutKind, p: Parts) {
      */
     body = `
       <div style="display:flex;position:absolute;inset:0;background:${c.background}"></div>
-      ${p.photo ? photo(p.photo, u, { top: 470, height: 610 }, p.width) : ''}
-      ${lockup(p, u, rtl, true)}
-      <div style="display:flex;flex-direction:column;position:absolute;left:${u(88)}px;
-        right:${u(88)}px;top:${u(216)}px;align-items:${rtl ? 'flex-end' : 'flex-start'}">
+      ${p.photo ? photo(p.photo, u, { top: 580, height: 500 }, p.width) : ''}
+      ${lockup(p, u, rtl, c.background)}
+      <div style="display:flex;flex-direction:column;position:absolute;left:${m}px;
+        right:${m}px;top:${u(216)}px;align-items:${ranged}">
         ${bar(p, u, c.secondary)}
         <div style="display:flex;margin-top:${u(30)}px;width:100%">
-          ${headline(p, u, { size: 76, lead, tail, colour: c.text, tailColour: c.primary,
-            align: 'start', rtl })}
+          ${headline(p, u, { size: fitted(Math.round(72 * r.scale), lead, 34), lead, tail, colour: c.text,
+            tailColour: c.primary, align: r.align, rtl })}
         </div>
       </div>`
   }
 
   if (kind === 'statement') {
+    /* Which colour the whole square takes, named once so the lockup can be
+       checked against the same value the ground is painted with. */
+    const statementField = r.colour === 'full' ? c.primary : c.secondary
     /*
      * Colour, type, and nothing else.
      *
@@ -217,16 +269,16 @@ export function renderLayout(kind: LayoutKind, p: Parts) {
      * proves a brand can be recognised by colour and type alone.
      */
     body = `
-      <div style="display:flex;position:absolute;inset:0;background:${c.secondary}"></div>
-      ${lockup(p, u, rtl)}
-      <div style="display:flex;flex-direction:column;position:absolute;left:${u(88)}px;
-        right:${u(88)}px;top:${u(300)}px;bottom:${u(200)}px;background:${c.background};
+      <div style="display:flex;position:absolute;inset:0;background:${statementField}"></div>
+      ${lockup(p, u, rtl, statementField)}
+      <div style="display:flex;flex-direction:column;position:absolute;left:${m}px;
+        right:${m}px;top:${u(300)}px;bottom:${u(200)}px;background:${c.background};
         padding:${u(84)}px ${u(76)}px;justify-content:center;
-        align-items:${rtl ? 'flex-end' : 'flex-start'}">
+        align-items:${ranged}">
         ${bar(p, u, c.secondary)}
         <div style="display:flex;margin-top:${u(38)}px;width:100%">
-          ${headline(p, u, { size: 92, lead, tail, colour: c.text, tailColour: c.primary,
-            align: 'start', rtl })}
+          ${headline(p, u, { size: fitted(Math.round(92 * r.scale), lead), lead, tail, colour: c.text, tailColour: c.primary,
+            align: r.align, rtl })}
         </div>
       </div>
 `
@@ -252,11 +304,11 @@ export function renderLayout(kind: LayoutKind, p: Parts) {
         ${p.photo ? `<img src="${p.photo}" width="${u(820)}" height="${u(520)}" style="object-fit:cover"/>`
           : `<div style="display:flex;width:100%;height:100%;background:${c.primary}"></div>`}
       </div>
-      ${lockup(p, u, rtl, true)}
+      ${lockup(p, u, rtl, c.background)}
       <div style="display:flex;flex-direction:column;position:absolute;left:${u(110)}px;
-        right:${u(110)}px;top:${u(830)}px;align-items:${rtl ? 'flex-end' : 'flex-start'}">
-        ${headline(p, u, { size: 62, lead, tail, colour: c.text, tailColour: c.primary,
-          align: 'start', rtl })}
+        right:${u(110)}px;top:${u(830)}px;align-items:${ranged}">
+        ${headline(p, u, { size: fitted(Math.round(62 * r.scale), lead), lead, tail, colour: c.text, tailColour: c.primary,
+          align: r.align, rtl })}
       </div>`
   }
 
@@ -275,9 +327,9 @@ export function renderLayout(kind: LayoutKind, p: Parts) {
       ${p.photo ? photo(p.photo, u, { top: 0, height: 360 }, p.width) : ''}
       <div style="display:flex;position:absolute;left:0;top:0;width:${p.width}px;height:${u(300)}px;
         background:linear-gradient(to bottom, rgba(0,0,0,.45) 0%, rgba(0,0,0,0) 100%)"></div>
-      ${lockup(p, u, rtl)}
-      <div style="display:flex;flex-direction:column;position:absolute;left:${u(88)}px;
-        right:${u(88)}px;top:${u(440)}px;align-items:${rtl ? 'flex-end' : 'flex-start'}">
+      ${lockup(p, u, rtl, c.primary)}
+      <div style="display:flex;flex-direction:column;position:absolute;left:${m}px;
+        right:${m}px;top:${u(440)}px;align-items:${ranged}">
         ${bar(p, u, c.secondary)}
         <div style="display:flex;margin-top:${u(30)}px;font-family:'${p.brand.fonts.heading}';
           font-size:${u(52)}px;line-height:1.18;color:${c.text};${rtl ? 'direction:rtl' : ''}"
@@ -333,7 +385,7 @@ export function renderLayout(kind: LayoutKind, p: Parts) {
       <div style="display:flex;position:absolute;inset:0;background:${c.background}"></div>
       <div style="display:flex;position:absolute;left:0;top:0;width:${p.width}px;
         height:${u(560)}px">${chips}</div>
-      <div style="display:flex;flex-direction:column;position:absolute;left:${u(88)}px;right:${u(88)}px;
+      <div style="display:flex;flex-direction:column;position:absolute;left:${m}px;right:${m}px;
         top:${u(660)}px">
         <div style="display:flex;justify-content:space-between;width:100%">
           <div style="display:flex;flex-direction:column">
@@ -351,7 +403,7 @@ export function renderLayout(kind: LayoutKind, p: Parts) {
         </div>
       </div>
       ${/* Reversed: the corner it sits in is the primary swatch, not paper. */ ''}
-      ${lockup(p, u, rtl)}`
+      ${lockup(p, u, rtl, c.primary)}`
   }
 
   if (kind === 'identity') {
