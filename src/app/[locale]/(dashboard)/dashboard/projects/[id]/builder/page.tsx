@@ -40,7 +40,7 @@ export default async function BuilderPage({
   const { locale, id } = await params
   setRequestLocale(locale)
 
-  const { org } = await requireOrg()
+  const { org, orgRole } = await requireOrg()
   const project = await getProject(org.id, id)
   if (!project) notFound()
 
@@ -95,7 +95,16 @@ export default async function BuilderPage({
       initialSubdomain={website.subdomain}
       initialCustomDomain={website.customDomain}
       isPublished={website.isPublished}
-      canPublish={plan?.websiteBuilder ?? false}
+      /*
+       * Both halves of the real rule.
+       *
+       * `publishWebsite` is an `orgAdminAction`, and this only ever asked the
+       * plan — so a member on a paying account saw the Publish button, filled
+       * in a subdomain, confirmed, and got "Insufficient permissions." at the
+       * end of it. The two reasons are different and the panel says which.
+       */
+      canPublish={(plan?.websiteBuilder ?? false) && orgRole !== 'member'}
+      planAllowsPublish={plan?.websiteBuilder ?? false}
       /* Both must hold: the plan sells the feature, and this deployment has
          Vercel credentials to attach a domain with. */
       canUseCustomDomain={(plan?.customDomain ?? false) && isDomainsConfigured()}

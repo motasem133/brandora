@@ -37,6 +37,7 @@ export function PublishPanel({
   initialCustomDomain,
   isPublished,
   canPublish,
+  planAllowsPublish,
   canUseCustomDomain,
   atDomainLimit,
 }: {
@@ -45,6 +46,7 @@ export function PublishPanel({
   initialCustomDomain: string | null
   isPublished: boolean
   canPublish: boolean
+  planAllowsPublish: boolean
   canUseCustomDomain: boolean
   /** Plan allows domains, but every one it includes is already attached. */
   atDomainLimit: boolean
@@ -108,9 +110,15 @@ export function PublishPanel({
   })
 
   if (!canPublish) {
+    /* Two different problems: an account that has not bought the feature, and a
+       member who cannot use it on an account that has. Telling someone to
+       upgrade a plan their organization already pays for sends them to billing
+       to fix nothing. */
+    const reason = planAllowsPublish ? t('publishNeedsAdmin') : t('publishLocked')
+
     return (
-      <span className="text-xs text-fg-muted" title={t('publishLocked')}>
-        {t('publishLocked')}
+      <span className="text-xs text-fg-muted" title={reason}>
+        {reason}
       </span>
     )
   }
@@ -149,7 +157,10 @@ export function PublishPanel({
         be, or the screen it has, minus the page's own gutters.
       */}
       {open && (
-        <div className="absolute end-0 top-full z-20 mt-2 w-[min(20rem,calc(100vw-3rem))] rounded-card border border-line bg-surface p-4 shadow-lg">
+        <div
+          data-testid="publish-panel"
+          className="absolute end-0 top-full z-20 mt-2 w-[min(20rem,calc(100vw-3rem))] rounded-card border border-line bg-surface p-4 shadow-lg"
+        >
           <Field
             label={t('address')}
             hint={`${t('willBeLiveAt')} /sites/${subdomain || 'my-brand'}`}

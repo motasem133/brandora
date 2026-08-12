@@ -107,6 +107,7 @@ export function Builder({
   initialCustomDomain,
   isPublished,
   canPublish,
+  planAllowsPublish,
   canUseCustomDomain,
   atDomainLimit,
 }: {
@@ -122,7 +123,10 @@ export function Builder({
   initialSubdomain: string | null
   initialCustomDomain: string | null
   isPublished: boolean
+  /** The plan sells it *and* this member may do it. */
   canPublish: boolean
+  /** Which of the two is missing, so the panel can say which. */
+  planAllowsPublish: boolean
   canUseCustomDomain: boolean
   atDomainLimit: boolean
 }) {
@@ -147,8 +151,29 @@ export function Builder({
   const blocks = useMemo(() => pages[page] ?? [], [pages, page])
   const selectedBlock = selected !== null ? blocks[selected] : undefined
 
+  /*
+   * A failed save used to say nothing at all.
+   *
+   * `useAction` had no `onError`, so a rejected write left "Unsaved changes" in
+   * the header for as long as the customer kept working — the same words as a
+   * pending save — and the autosave loop does not retry on its own. A field one
+   * character over its limit, a session that expired, a member editing a
+   * project they no longer belong to: all of them looked exactly like a save
+   * that had not happened yet, and the work was lost on the next reload with
+   * the beforeunload warning as the only clue.
+   */
+  const [saveError, setSaveError] = useState<string | null>(null)
+
   const { execute: save, isPending: saving } = useAction(updateWebsiteContent, {
-    onSuccess: () => setDirty(false),
+    onSuccess: () => {
+      setDirty(false)
+      setSaveError(null)
+    },
+    /* The server's own words when it has any — `handleServerError` returns the
+       message of an expected failure, which is written for a person — and the
+       generic line only when the failure was a validation one, where the
+       details name Zod paths nobody outside this file can read. */
+    onError: ({ error }) => setSaveError(error.serverError ?? t('saveFailed')),
   })
 
   const commit = useCallback(
@@ -331,12 +356,25 @@ export function Builder({
             <span
               role="status"
               aria-live="polite"
-              className="text-xs text-fg-muted"
+              className={cn('text-xs', saveError ? 'text-danger' : 'text-fg-muted')}
               data-testid="save-status"
-              data-state={saving ? 'saving' : dirty ? 'dirty' : 'saved'}
+              data-state={saveError ? 'error' : saving ? 'saving' : dirty ? 'dirty' : 'saved'}
             >
-              {saving ? t('saving') : dirty ? t('unsaved') : t('saved')}
+              {saveError ?? (saving ? t('saving') : dirty ? t('unsaved') : t('saved'))}
             </span>
+
+            {/* Retrying is the customer's call, not a loop's: a save that failed
+                on a field that is too long will fail again every 1.5 seconds
+                until the field is fixed. */}
+            {saveError && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => save({ projectId, pages, theme: initialTheme })}
+              >
+                {t('retry')}
+              </Button>
+            )}
 
             <PublishPanel
               projectId={projectId}
@@ -344,6 +382,7 @@ export function Builder({
               initialCustomDomain={initialCustomDomain}
               isPublished={isPublished}
               canPublish={canPublish}
+              planAllowsPublish={planAllowsPublish}
               canUseCustomDomain={canUseCustomDomain}
               atDomainLimit={atDomainLimit}
             />
@@ -625,6 +664,23 @@ function Inspector({
   const set = (key: string, value: unknown) => onChange({ ...block, [key]: value } as Block)
 
   const listKey = 'items' in block ? 'items' : 'services' in block ? 'services' : null
+
+  /*
+   * How many items this block may hold.
+   *
+   * A customer could edit the three items a block arrived with and nothing
+   * else: no way to add a fourth service, no way to remove one they did not
+   * offer. The ceilings are the ones `lib/blocks` enforces — offering a fourth
+   * where the schema allows three would fail autosave, which until today failed
+   * silently.
+   */
+  const MAX_ITEMS: Partial<Record<Block['type'], number>> = {
+    features: 4,
+    services: 4,
+    faq: 8,
+    hours: 7,
+  }
+  const max = MAX_ITEMS[block.type] ?? 4
   const list = (listKey ? (block as unknown as Record<string, unknown>)[listKey] : null) as
     | { title: string; body: string; price?: string }[]
     | null
@@ -726,10 +782,11 @@ function Inspector({
                   }
                 />
               </Field>
-              {item.price !== undefined && (
+              {'price' in (list[0] ?? {}) && (
                 <Field label={t('fields.price')}>
                   <Input
-                    value={item.price}
+                    value={item.price ?? ''}
+                    placeholder={t('hints.price')}
                     onChange={(event) =>
                       set(
                         listKey,
@@ -741,8 +798,33 @@ function Inspector({
                   />
                 </Field>
               )}
+
+              {/* The last item stays: a features block with no features is a
+                  heading with nothing under it, and the schema refuses it. */}
+              {list.length > 1 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => set(listKey, list.filter((_, i) => i !== itemIndex))}
+                >
+                  <Trash2 className="size-3.5" />
+                  {t('removeItem')}
+                </Button>
+              )}
             </div>
           ))}
+
+          {list.length < max && (
+            <Button
+              variant="secondary"
+              size="sm"
+              className="w-full"
+              onClick={() => set(listKey, [...list, { title: '', body: '' }])}
+            >
+              <Plus className="size-4" />
+              {t('addItem')}
+            </Button>
+          )}
         </div>
       )}
     </div>
