@@ -115,6 +115,31 @@ once nobody wants it. The database password has been through a chat transcript
 and is worth rotating. The Neon–Vercel integration still points at the old
 project, so preview branches are made in the wrong place.
 
+### The Google sign-in client — done, but write it down
+
+Created 12 August, and the button on the sign-in and sign-up screens depends on
+it entirely: `hasGoogle` in `server/auth.ts` is true only when both
+`GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are set, and the forms hide the
+control when it is false — a button offering a provider that is not registered
+is a control that fails when it is pressed. Both variables were empty
+everywhere, including `.env.deploy`, which is why the button had never appeared
+on any environment.
+
+They are now set in Vercel for production, preview and development. Two things
+are worth knowing before anyone debugs this again:
+
+- **The redirect URI is fixed by where Better Auth is mounted** —
+  `https://brandora.enigmitic.com/api/auth/callback/google`, plus
+  `http://localhost:3000/api/auth/callback/google` for local work. One wrong
+  character produces a button that renders perfectly and dies at Google.
+- **The consent screen must be published.** In *Testing* only listed test users
+  can sign in and everyone else is blocked. Publishing is instant for the
+  `openid`/`email`/`profile` scopes this asks for — no Google review.
+
+**Yours:** the client secret passed through a chat transcript on the way in, so
+it is worth rotating from the same console page. Same reasoning as the database
+password below.
+
 ### The contact form, once — 2 minutes
 
 Send a message through a real published site and check two things: the email
