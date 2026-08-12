@@ -1,4 +1,8 @@
 @import 'tailwindcss';
+/* The customer-site scale. The builder's canvas renders the site's own blocks,
+   which read these tokens — without them the canvas has no rhythm and no type
+   scale at all. Namespaced `--site-*`, so nothing in the app is affected. */
+@import './site-tokens.css';
 
 /*
  * Brandora design tokens.

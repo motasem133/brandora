@@ -1,5 +1,7 @@
 import 'server-only'
 
+import { registerFor as classify, type RegisterName } from '@/lib/register'
+
 /**
  * One social post, drawn from what a brand already stores.
  *
@@ -111,17 +113,27 @@ const REGISTERS = {
   organic: { margin: 96, align: 'start', scale: 1, radius: 26, edge: 'curve', colour: 'full', formal: false, photo: 'duotone' },
 } as const satisfies Record<string, Register>
 
+/**
+ * The kit's values for a brand's register.
+ *
+ * The judgement — which of the four this brand is — moved to `lib/register.ts`
+ * so the website can make the same call; this holds what that judgement means
+ * in 1080-space, which is the kit's business and nobody else's.
+ */
 export function registerFor(
   style: string | null,
   industry: string | null,
-  forced?: keyof typeof REGISTERS,
+  forced?: RegisterName,
 ): Register {
-  if (forced && REGISTERS[forced]) return REGISTERS[forced]
-  if (style === 'luxury' || style === 'arabic' || style === 'elegant') return REGISTERS.refined
-  if (style === 'bold' || style === 'playful') return REGISTERS.loud
-  if (/food|beverage|coffee|craft|beauty|wellness|floris|bakery/i.test(industry ?? '')) return REGISTERS.organic
-  if (style === 'minimal') return { ...REGISTERS.editorial, margin: 132, scale: 0.94 }
-  return REGISTERS.editorial
+  const name = forced ?? classify(style, industry)
+
+  /* Minimal is editorial with more air. Not a fifth register: it wants the same
+     arrangement, held further apart. */
+  if (name === 'editorial' && style === 'minimal') {
+    return { ...REGISTERS.editorial, margin: 132, scale: 0.94 }
+  }
+
+  return REGISTERS[name]
 }
 
 /** Which gesture belongs to which brand, from fields the project already has. */

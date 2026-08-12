@@ -2,8 +2,9 @@ import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import { notFound, redirect } from 'next/navigation'
 
-import { PageRenderer, resolveTheme } from '@/components/blocks/block-renderer'
+import { PageRenderer, SITE_REGISTERS, registerStyle, resolveTheme } from '@/components/blocks/block-renderer'
 import { PAGE_KEYS, type Block, type PageKey, type Theme } from '@/lib/blocks'
+import { asRegister, registerFor } from '@/lib/register'
 import { getPublishedSite } from '@/server/db/queries/sites'
 import { type BrandingAsset } from '@/server/db/schema'
 
@@ -164,10 +165,12 @@ export default async function PublishedSite({
   searchParams,
 }: {
   params: Promise<{ subdomain: string; page?: string[] }>
-  searchParams: Promise<{ page?: string }>
+  searchParams: Promise<{ page?: string; register?: string }>
 }) {
   const { subdomain, page } = await params
-  const { page: queryPage } = await searchParams
+  /* `register` is honoured outside production only: it is how the preview
+     harness puts four registers side by side without four brands. */
+  const { page: queryPage, register: forcedRegister } = await searchParams
 
   const host = (await headers()).get('host')
   const base = basePath(host, subdomain)
@@ -197,6 +200,18 @@ export default async function PublishedSite({
   const pages = (site.website.pages ?? {}) as Record<string, Block[]>
 
   const blocks = pages[active] ?? []
+
+  /*
+   * The brand's bearing, from what it already told us at the wizard.
+   *
+   * Two sites for two different businesses were the same site with two palettes
+   * — same rhythm, same scale, same corners, same everything a person reads
+   * before they read a word. This is the same judgement the kit makes, from the
+   * same two fields, so a customer's site and their posts agree with each other.
+   */
+  const register =
+    (process.env.NODE_ENV !== 'production' ? asRegister(forcedRegister) : undefined) ??
+    registerFor(site.project.brandStyle, site.project.industry)
   const nav = PAGE_KEYS.filter((key) => pages[key]?.length)
 
   const name = site.project.businessName || site.project.title
@@ -204,7 +219,7 @@ export default async function PublishedSite({
   // Fonts are linked from the layout's <head>, where React can resolve their
   // precedence without being told.
   return (
-    <div style={{ backgroundColor: theme.safe.paper, minHeight: '100dvh' }}>
+    <div style={{ ...registerStyle(register), backgroundColor: theme.safe.paper, minHeight: '100dvh' }}>
         <header
           className="flex flex-wrap items-center justify-between gap-4 px-8 py-5"
           style={{ borderBottom: `1px solid ${theme.safe.line}` }}
@@ -235,7 +250,9 @@ export default async function PublishedSite({
                 key={key}
                 href={key === 'home' ? `${base}/` : `${base}/${key}`}
                 aria-current={key === active ? 'page' : undefined}
-                className="text-sm hover:underline"
+                className={`text-sm hover:underline${
+                  SITE_REGISTERS[register].formal ? ' uppercase tracking-[0.14em]' : ''
+                }`}
                 /* The inactive state is a checked softer ink rather than an
                    opacity multiplier, which cannot reach the contrast floor. */
                 style={{
@@ -253,6 +270,7 @@ export default async function PublishedSite({
           blocks={blocks}
           theme={theme}
           images={site.images}
+          register={register}
           base={base}
           contact={CONTACT_LABELS[site.project.language]}
         />

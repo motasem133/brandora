@@ -1,5 +1,6 @@
 import { checkedSiteColors, type CheckedSiteColors } from '@/lib/brand-theme'
-import type { Block, Theme } from '@/lib/blocks'
+import { isBlank, type Block, type Theme } from '@/lib/blocks'
+import type { RegisterName } from '@/lib/register'
 import { ContactForm } from './contact-form'
 
 /**
@@ -156,7 +157,7 @@ function Section({
            purpose and safe by construction: it is a ground, never a text
            colour — the same rule `checkedSiteColors.line` already follows. */
         backgroundColor: band
-          ? `color-mix(in srgb, ${theme.safe.primary} 5%, ${theme.safe.paper})`
+          ? `color-mix(in srgb, ${theme.safe.primary} var(--site-band, 5%), ${theme.safe.paper})`
           : undefined,
       }}
     >
@@ -165,6 +166,127 @@ function Section({
       </div>
     </section>
   )
+}
+
+/**
+ * What a register means on a website.
+ *
+ * The same four names the kit uses, in CSS lengths rather than 1080-space
+ * pixels — see `lib/register.ts` for why the values are not shared. Every one
+ * of these is a decision a designer would make about a business before writing
+ * a line of copy: how much air it stands in, how loud its headings are, whether
+ * its corners are cut square, and whether a photograph stays a photograph or
+ * becomes the brand's own two colours.
+ *
+ * They are applied as custom properties on the site's root, so a block never
+ * asks which register it is in — it reads `var(--site-section)` exactly as it
+ * did before this existed.
+ */
+type SiteRegister = {
+  /** Multiplier on every type token. */
+  scale: number
+  /** The vertical rhythm between sections. */
+  section: string
+  /** Corner radius on cards, buttons and framed pictures. */
+  radius: string
+  /** How wide the prose runs. Quiet registers hold a narrower measure. */
+  measure: string
+  /** Where a hero's words range. */
+  align: 'start' | 'center'
+  /** How much of the brand's primary tints an alternating band, in percent. */
+  band: number
+  /** Small caps and tracking on the nav — formality, cheaply. */
+  formal: boolean
+  /** How a photograph is treated. See `photoStyle`. */
+  photo: 'plain' | 'duotone' | 'tint'
+}
+
+export const SITE_REGISTERS = {
+  /** Sharp, ranged left, generous. Technology, corporate, consultancy. */
+  editorial: {
+    scale: 1,
+    section: 'clamp(3.5rem, 8vw, 7rem)',
+    radius: '0.125rem',
+    measure: '68ch',
+    align: 'start',
+    band: 5,
+    formal: false,
+    photo: 'plain',
+  },
+  /** Big type, colour as field, tight rhythm. Bold, playful, retail, sport. */
+  loud: {
+    scale: 1.18,
+    section: 'clamp(3rem, 6.5vw, 5.5rem)',
+    radius: '0.625rem',
+    measure: '60ch',
+    align: 'start',
+    band: 10,
+    formal: false,
+    photo: 'duotone',
+  },
+  /** Centred, quiet, a lot of air. Luxury, jewellery, hospitality, Arabic. */
+  refined: {
+    scale: 0.94,
+    section: 'clamp(4.5rem, 11vw, 9rem)',
+    radius: '0rem',
+    measure: '58ch',
+    align: 'center',
+    band: 4,
+    formal: true,
+    photo: 'tint',
+  },
+  /** Soft edges, warm fields. Food, beauty, wellness, craft. */
+  organic: {
+    scale: 1,
+    section: 'clamp(3.75rem, 8.5vw, 7.5rem)',
+    radius: '1.5rem',
+    measure: '64ch',
+    align: 'start',
+    band: 9,
+    formal: false,
+    photo: 'plain',
+  },
+} as const satisfies Record<RegisterName, SiteRegister>
+
+/**
+ * The custom properties a register sets on the site's root.
+ *
+ * Returned rather than written, because the same values have to reach both the
+ * published page and the builder's canvas — and the canvas has been showing a
+ * different design from production for its whole life.
+ */
+export function registerStyle(name: RegisterName): React.CSSProperties {
+  const register = SITE_REGISTERS[name]
+
+  return {
+    '--site-scale': String(register.scale),
+    '--site-section': register.section,
+    '--site-radius': register.radius,
+    '--site-measure': register.measure,
+    '--site-band': `${register.band}%`,
+  } as React.CSSProperties
+}
+
+/**
+ * A photograph in the brand's own colours, or left alone.
+ *
+ * `luminosity` over a ground of the brand's primary is the whole duotone: the
+ * picture keeps its light and shade and takes the brand's hue, which is what
+ * makes a generated stock frame read as this brand's photography rather than as
+ * a stock frame. No SVG filter, no second request, and it degrades to the plain
+ * photograph anywhere `mix-blend-mode` is not understood.
+ */
+function photoStyle(name: RegisterName, theme: SiteTheme) {
+  const treatment = SITE_REGISTERS[name].photo
+  if (treatment === 'plain') return { wrap: undefined, image: undefined }
+
+  return {
+    wrap: { backgroundColor: theme.safe.primary },
+    image: {
+      mixBlendMode: 'luminosity' as const,
+      opacity: treatment === 'duotone' ? 0.92 : 0.8,
+    },
+  }
 }
 
 /**
@@ -196,6 +318,7 @@ export function BlockRenderer({
   theme,
   index = 0,
   images,
+  register = 'editorial',
   base = '',
   preview = false,
   contact,
@@ -205,12 +328,17 @@ export function BlockRenderer({
   /** Where it sits on the page, so grounds can alternate. */
   index?: number
   images?: SiteImages
+  /** The brand's bearing — see `lib/register.ts`. */
+  register?: RegisterName
   /** What this site's own paths are prefixed with — see `basePath`. */
   base?: string
   preview?: boolean
   /** Absent in the builder, where the block is a picture of itself. */
   contact?: ContactLabels
 }) {
+  // A block with nothing in it is not published. See `isBlank`.
+  if (!preview && isBlank(block)) return null
+
   const HeroHeading = preview ? 'p' : 'h1'
   const heading = { fontFamily: `'${theme.fontHeading}', sans-serif`, color: theme.safe.ink }
   const body = { fontFamily: `'${theme.fontBody}', sans-serif`, color: theme.safe.ink }
@@ -225,6 +353,7 @@ export function BlockRenderer({
   switch (block.type) {
     case 'hero': {
       const photo = images?.scenes.hero
+      const centred = SITE_REGISTERS[register].align === 'center'
 
       /*
        * With a photograph the hero is the photograph: full bleed, a scrim, the
@@ -236,11 +365,14 @@ export function BlockRenderer({
       if (photo) {
         return (
           <section className="relative" style={{ minHeight: 'min(78vh, 44rem)' }}>
-            <img
-              src={imageUrl(photo)}
-              alt=""
-              className="absolute inset-0 h-full w-full object-cover"
-            />
+            <div className="absolute inset-0" style={photoStyle(register, theme).wrap}>
+              <img
+                src={imageUrl(photo)}
+                alt=""
+                className="h-full w-full object-cover"
+                style={photoStyle(register, theme).image}
+              />
+            </div>
             <div
               className="absolute inset-0"
               style={{
@@ -255,7 +387,14 @@ export function BlockRenderer({
                 minHeight: 'min(78vh, 44rem)',
               }}
             >
-              <div style={{ maxWidth: 'var(--site-container)', marginInline: 'auto', width: '100%' }}>
+              <div
+                style={{
+                  maxWidth: 'var(--site-container)',
+                  marginInline: 'auto',
+                  width: '100%',
+                  textAlign: centred ? 'center' : undefined,
+                }}
+              >
                 <HeroHeading
                   className="font-bold leading-[1.05] tracking-[-0.02em]"
                   style={{
@@ -263,6 +402,7 @@ export function BlockRenderer({
                     color: theme.safe.onPrimary,
                     fontSize: 'var(--site-h1)',
                     maxWidth: '18ch',
+                    marginInline: centred ? 'auto' : undefined,
                   }}
                 >
                   {block.title}
@@ -276,6 +416,7 @@ export function BlockRenderer({
                       opacity: 0.92,
                       fontSize: 'var(--site-lead)',
                       maxWidth: '46ch',
+                      marginInline: centred ? 'auto' : undefined,
                     }}
                   >
                     {block.subtitle}
@@ -299,23 +440,36 @@ export function BlockRenderer({
 
       return (
         <Section theme={theme} wide>
-          <HeroHeading
-            className="font-bold leading-[1.05] tracking-[-0.02em]"
-            style={{ ...heading, fontSize: 'var(--site-h1)', maxWidth: '18ch' }}
-          >
-            {block.title}
-          </HeroHeading>
-          {block.subtitle && (
-            <p
-              className="mt-6"
-              style={{ ...muted, fontSize: 'var(--site-lead)', maxWidth: '46ch', lineHeight: 1.5 }}
+          <div style={{ textAlign: centred ? 'center' : undefined }}>
+            <HeroHeading
+              className="font-bold leading-[1.05] tracking-[-0.02em]"
+              style={{
+                ...heading,
+                fontSize: 'var(--site-h1)',
+                maxWidth: '18ch',
+                marginInline: centred ? 'auto' : undefined,
+              }}
             >
-              {block.subtitle}
-            </p>
-          )}
-          {block.cta && (
-            <Action label={block.cta} href={block.ctaHref} base={base} theme={theme} preview={preview} />
-          )}
+              {block.title}
+            </HeroHeading>
+            {block.subtitle && (
+              <p
+                className="mt-6"
+                style={{
+                  ...muted,
+                  fontSize: 'var(--site-lead)',
+                  maxWidth: '46ch',
+                  lineHeight: 1.5,
+                  marginInline: centred ? 'auto' : undefined,
+                }}
+              >
+                {block.subtitle}
+              </p>
+            )}
+            {block.cta && (
+              <Action label={block.cta} href={block.ctaHref} base={base} theme={theme} preview={preview} />
+            )}
+          </div>
         </Section>
       )
     }
@@ -400,12 +554,17 @@ export function BlockRenderer({
             }}
           >
             {prose}
-            <img
-              src={imageUrl(portrait)}
-              alt=""
-              className="w-full object-cover"
-              style={{ aspectRatio: '4 / 5', borderRadius: 'var(--site-radius)' }}
-            />
+            <div
+              className="overflow-hidden"
+              style={{ ...photoStyle(register, theme).wrap, borderRadius: 'var(--site-radius)' }}
+            >
+              <img
+                src={imageUrl(portrait)}
+                alt=""
+                className="w-full object-cover"
+                style={{ aspectRatio: '4 / 5', ...photoStyle(register, theme).image }}
+              />
+            </div>
           </div>
         </Section>
       )
@@ -417,12 +576,17 @@ export function BlockRenderer({
           {/* The detail shot as a band above the list — the one place a close-up
               of the work says more than any of the cards under it. */}
           {images?.scenes.detail && (
-            <img
-              src={imageUrl(images.scenes.detail)}
-              alt=""
-              className="mb-12 w-full object-cover"
-              style={{ aspectRatio: '21 / 9', borderRadius: 'var(--site-radius)' }}
-            />
+            <div
+              className="mb-12 overflow-hidden"
+              style={{ ...photoStyle(register, theme).wrap, borderRadius: 'var(--site-radius)' }}
+            >
+              <img
+                src={imageUrl(images.scenes.detail)}
+                alt=""
+                className="w-full object-cover"
+                style={{ aspectRatio: '21 / 9', ...photoStyle(register, theme).image }}
+              />
+            </div>
           )}
           <h2 className="font-bold" style={{ ...heading, fontSize: 'var(--site-h2)' }}>
             {block.heading}
@@ -641,12 +805,15 @@ export function PageRenderer({
   blocks,
   theme,
   images,
+  register = 'editorial',
   base = '',
   contact,
 }: {
   blocks: Block[]
   theme: SiteTheme
   images?: SiteImages
+  /** The brand's bearing — see `lib/register.ts`. */
+  register?: RegisterName
   /** What this site's own paths are prefixed with — see `basePath`. */
   base?: string
   contact?: ContactLabels
@@ -683,6 +850,7 @@ export function PageRenderer({
           index={index}
           theme={theme}
           images={claim(block)}
+          register={register}
           base={base}
           contact={contact}
         />

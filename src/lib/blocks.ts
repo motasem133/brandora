@@ -237,6 +237,31 @@ export function createBlock(type: BlockType): Block {
 }
 
 /**
+ * Whether a block has anything to say.
+ *
+ * The other half of empty-by-default. A block arrives blank now, and a customer
+ * who adds one, does not fill it in and publishes anyway would otherwise get a
+ * band of empty space on their live site — which is worse than the sample copy
+ * this replaced. The builder still shows it, because a section you cannot see
+ * is a section you cannot select or delete; the published site simply does not
+ * print it.
+ */
+export function isBlank(block: Block): boolean {
+  return Object.entries(block).every(([key, value]) => {
+    if (key === 'type') return true
+    if (typeof value === 'string') return value.trim() === ''
+    if (Array.isArray(value)) {
+      return value.every((item) =>
+        Object.values(item as Record<string, unknown>).every(
+          (field) => typeof field !== 'string' || field.trim() === '',
+        ),
+      )
+    }
+    return true
+  })
+}
+
+/**
  * A stable identity for a block within its page.
  *
  * Blocks are stored as a plain ordered array with no ids — that is what the AI

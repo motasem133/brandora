@@ -35,7 +35,8 @@ import { useTranslations } from 'next-intl'
 import { useAction } from 'next-safe-action/hooks'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-import { BlockRenderer, resolveTheme } from '@/components/blocks/block-renderer'
+import { BlockRenderer, registerStyle, resolveTheme } from '@/components/blocks/block-renderer'
+import type { RegisterName } from '@/lib/register'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
@@ -100,6 +101,8 @@ export function Builder({
   projectName,
   initialPages,
   initialTheme,
+  brandTheme,
+  register,
   initialSubdomain,
   initialCustomDomain,
   isPublished,
@@ -110,7 +113,12 @@ export function Builder({
   projectId: string
   projectName: string
   initialPages: Pages
+  /** Overrides only — and what autosave writes back. */
   initialTheme: Theme
+  /** The generated identity the published site is set in. */
+  brandTheme: Theme
+  /** The brand's bearing, the same one the published site resolves. */
+  register: RegisterName
   initialSubdomain: string | null
   initialCustomDomain: string | null
   isPublished: boolean
@@ -132,7 +140,8 @@ export function Builder({
   const past = useRef<Pages[]>([])
   const future = useRef<Pages[]>([])
 
-  const theme = resolveTheme(initialTheme)
+  // Overrides win over the generated identity, exactly as the site resolves it.
+  const theme = resolveTheme({ ...brandTheme, ...initialTheme })
   const blocks = pages[page]
   const selectedBlock = selected !== null ? blocks[selected] : undefined
 
@@ -383,8 +392,10 @@ export function Builder({
             from production was true of the blocks and false of what sits behind
             them.
           */}
+          {/* The register's scale, rhythm and corners, so the canvas is set the
+              way the published page is rather than in the renderer's defaults. */}
           <div
-            style={{ backgroundColor: theme.safe.paper }}
+            style={{ ...registerStyle(register), backgroundColor: theme.safe.paper }}
             className={cn(
               'mx-auto overflow-hidden rounded-card border border-line transition-all',
               device === 'mobile' ? 'max-w-sm' : 'max-w-4xl',
@@ -422,7 +433,7 @@ export function Builder({
                         setSelected(null)
                       }}
                     >
-                      <BlockRenderer block={block} theme={theme} preview />
+                      <BlockRenderer block={block} theme={theme} register={register} preview />
                     </SortableBlock>
                   ))}
                 </SortableContext>
