@@ -256,22 +256,31 @@ export function renderLayout(kind: LayoutKind, p: Parts) {
      * behind it as a ground rather than beside it, because a column of text
      * and a picture competing at the same size is a magazine spread, not a
      * post.
+     *
+     * On the band, not on a rounded card. The card was this layout's own
+     * private shape, and seen beside the other seven it was the one post that
+     * did not belong to the set — the repetition of the gesture is what makes
+     * eight pictures a kit. The band also runs edge to edge, which buys the
+     * measure enough width to come up a size: this was the only post asking to
+     * be read and it was set the smallest.
      */
     body = `
       <div style="display:flex;position:absolute;inset:0;background:${c.primary}"></div>
       ${p.photo ? `<div style="display:flex;position:absolute;inset:0;overflow:hidden;opacity:0.22">
         <img src="${p.photo}" width="${p.width}" height="${u(1080)}" style="object-fit:cover"/></div>` : ''}
       ${chip(p, u, rtl)}
-      <div style="display:flex;flex-direction:column;position:absolute;left:${u(90)}px;right:${u(90)}px;
-        top:${u(250)}px;bottom:${u(210)}px;background:${c.background};border-radius:${u(28)}px;
-        padding:${u(64)}px ${u(58)}px;align-items:center;justify-content:center">
-        <div style="display:flex;font-family:'${p.brand.fonts.heading}';font-size:${u(54)}px;
-          line-height:1.2;color:${c.text};text-align:center;${rtl ? 'direction:rtl' : ''}"
-          >${escape(lead)}</div>
-        <div style="display:flex;width:${u(90)}px;height:${u(4)}px;background:${c.secondary};
-          margin:${u(28)}px 0"></div>
-        <div style="display:flex;font-size:${u(30)}px;line-height:1.62;color:${c.primary};
-          opacity:0.86;text-align:center">${escape(p.copy?.body ?? '')}</div>
+      <div style="display:flex;position:absolute;left:0;top:${u(300)}px;width:${p.width}px;height:${u(780)}px">
+        ${device(p, u, 0, 780, c.background)}
+        <div style="display:flex;flex-direction:column;position:absolute;top:0;left:0;width:${p.width}px;
+          height:${u(780)}px;align-items:center;justify-content:center;padding:${u(120)}px ${u(120)}px ${u(90)}px">
+          <div style="display:flex;font-family:'${p.brand.fonts.heading}';font-size:${u(58)}px;
+            line-height:1.2;color:${c.text};text-align:center;${rtl ? 'direction:rtl' : ''}"
+            >${escape(lead)}</div>
+          <div style="display:flex;width:${u(90)}px;height:${u(4)}px;background:${c.secondary};
+            margin:${u(30)}px 0"></div>
+          <div style="display:flex;font-size:${u(34)}px;line-height:1.6;color:${c.primary};
+            opacity:0.86;text-align:center">${escape(p.copy?.body ?? '')}</div>
+        </div>
       </div>
 `
   }
@@ -332,6 +341,12 @@ export function renderLayout(kind: LayoutKind, p: Parts) {
      * that shows it — full lockup on the brand's own ground, with the symbol
      * alone beside it, which is exactly the pair the kit now produces as
      * transparent files.
+     *
+     * No caption under it. The name is already set twice here in artwork — once
+     * reversed on the ground, once in colour on the band — and a third in
+     * letter-spaced capitals underneath was the post explaining what a reader
+     * is plainly looking at. The subject of this one is the mark; it does not
+     * need a label.
      */
     body = `
       <div style="display:flex;position:absolute;inset:0;background:${c.primary}"></div>
@@ -345,9 +360,7 @@ export function renderLayout(kind: LayoutKind, p: Parts) {
         height:${u(230)}px;align-items:center;justify-content:center">
         <img src="${p.mark}" width="${u(230)}" height="${u(230)}" style="object-fit:contain"/>
       </div>
-      <div style="display:flex;position:absolute;left:0;bottom:${u(74)}px;width:${p.width}px;
-        justify-content:center;font-size:${u(24)}px;letter-spacing:${u(5)}px;color:${c.primary};
-        opacity:.6">${escape(p.brand.name.toUpperCase())}</div>`
+`
   }
 
   return `<!doctype html><html><head><meta charset="utf-8"><style>
