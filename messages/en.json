@@ -604,6 +604,9 @@
       "features": "Features",
       "richText": "Text section",
       "services": "Services",
+      "quote": "Quote",
+      "faq": "Questions",
+      "hours": "Opening hours",
       "cta": "Call to action",
       "contact": "Contact"
     },
@@ -653,11 +656,29 @@
       "cta": "Button label",
       "email": "Email address",
       "phone": "Phone number",
-      "price": "Price"
+      "price": "Price",
+      "quote": "The line",
+      "attribution": "Who said it",
+      "note": "Note",
+      "ctaHref": "Button link"
     },
     "confirmTitle": "Publish this site?",
     "confirmBody": "Anyone with the address will be able to see it, and search engines can find it. You can unpublish at any time.",
-    "notYet": "Not yet"
+    "notYet": "Not yet",
+    "hints": {
+      "title": "A short, concrete headline",
+      "subtitle": "One sentence that earns the next scroll",
+      "heading": "What this section is about",
+      "quote": "A line the business would actually stand behind",
+      "attribution": "Who said it — a person, or the business itself",
+      "body": "Say something specific rather than impressive",
+      "cta": "What the button says, e.g. Book a table",
+      "ctaHref": "https://… , mailto:… , tel:… or /contact",
+      "email": "hello@yourbusiness.com",
+      "phone": "+971 …",
+      "price": "From AED 45",
+      "note": "Anything that qualifies the above"
+    }
   },
   "Billing": {
     "title": "Billing",

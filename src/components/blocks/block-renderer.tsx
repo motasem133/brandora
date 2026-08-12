@@ -102,19 +102,27 @@ export function resolveTheme(theme?: Theme): SiteTheme {
 function Action({
   label,
   href,
+  base = '',
   theme,
   onDark = false,
+  preview = false,
 }: {
   label: string
-  /** Not in the schema yet — see the plan's Stage 4. Defaults to contact. */
+  /** The customer's own link when they set one; the contact page when not. */
   href?: string
+  /** What this site's own paths are prefixed with — see `basePath`. */
+  base?: string
   theme: SiteTheme
   /** On a photograph, where the brand's primary is already the scrim. */
   onDark?: boolean
+  /** In the builder the button is a picture of a button, and must not navigate. */
+  preview?: boolean
 }) {
+  const Tag = preview ? 'span' : 'a'
+
   return (
-    <a
-      href={href || '?page=contact'}
+    <Tag
+      href={preview ? undefined : href || `${base}/contact`}
       className="mt-9 inline-block px-7 py-3.5 text-sm font-medium no-underline"
       style={{
         backgroundColor: onDark ? theme.safe.onPrimary : theme.safe.primary,
@@ -124,7 +132,7 @@ function Action({
       }}
     >
       {label}
-    </a>
+    </Tag>
   )
 }
 
@@ -188,6 +196,7 @@ export function BlockRenderer({
   theme,
   index = 0,
   images,
+  base = '',
   preview = false,
   contact,
 }: {
@@ -196,6 +205,8 @@ export function BlockRenderer({
   /** Where it sits on the page, so grounds can alternate. */
   index?: number
   images?: SiteImages
+  /** What this site's own paths are prefixed with — see `basePath`. */
+  base?: string
   preview?: boolean
   /** Absent in the builder, where the block is a picture of itself. */
   contact?: ContactLabels
@@ -270,7 +281,16 @@ export function BlockRenderer({
                     {block.subtitle}
                   </p>
                 )}
-                {block.cta && <Action label={block.cta} theme={theme} onDark />}
+                {block.cta && (
+                  <Action
+                    label={block.cta}
+                    href={block.ctaHref}
+                    base={base}
+                    theme={theme}
+                    preview={preview}
+                    onDark
+                  />
+                )}
               </div>
             </div>
           </section>
@@ -293,7 +313,9 @@ export function BlockRenderer({
               {block.subtitle}
             </p>
           )}
-          {block.cta && <Action label={block.cta} theme={theme} />}
+          {block.cta && (
+            <Action label={block.cta} href={block.ctaHref} base={base} theme={theme} preview={preview} />
+          )}
         </Section>
       )
     }
@@ -477,21 +499,105 @@ export function BlockRenderer({
               </p>
             )}
             {block.cta && (
-              <a
-                href="?page=contact"
-                className="mt-9 inline-block px-7 py-3.5 text-sm font-medium no-underline"
-                style={{
-                  backgroundColor: theme.safe.onPrimary,
-                  color: theme.safe.primary,
-                  fontFamily: `'${theme.fontBody}', sans-serif`,
-                  borderRadius: 'var(--site-radius)',
-                }}
-              >
-                {block.cta}
-              </a>
+              <Action
+                    label={block.cta}
+                    href={block.ctaHref}
+                    base={base}
+                    theme={theme}
+                    preview={preview}
+                    onDark
+                  />
             )}
           </div>
         </section>
+      )
+
+    case 'quote':
+      /* Set as a statement, not as a card. The brand's own primary carries it
+         and the mark of quotation is the size, not a decorative glyph. */
+      return (
+        <Section theme={theme} band={index % 2 === 1}>
+          <blockquote>
+            <p
+              className="font-medium leading-[1.25]"
+              style={{ ...heading, color: theme.safe.accent, fontSize: 'var(--site-h2)' }}
+            >
+              {block.quote}
+            </p>
+            {block.attribution && (
+              <footer className="mt-6 text-sm" style={muted}>
+                {block.attribution}
+              </footer>
+            )}
+          </blockquote>
+        </Section>
+      )
+
+    case 'faq':
+      /* Native `<details>`: open/close with no JavaScript, and a visitor's
+         browser search finds the answers inside closed ones. */
+      return (
+        <Section theme={theme} band={index % 2 === 1}>
+          <h2 className="font-bold" style={{ ...heading, fontSize: 'var(--site-h2)' }}>
+            {block.heading}
+          </h2>
+          <div className="mt-8">
+            {block.items.map((item, itemIndex) => (
+              <details
+                key={itemIndex}
+                className="group py-5"
+                style={{ borderTop: `1px solid ${theme.safe.line}` }}
+              >
+                <summary
+                  className="flex cursor-pointer list-none items-baseline justify-between gap-6 font-semibold marker:content-none"
+                  style={{ ...heading, fontSize: 'var(--site-h3)' }}
+                >
+                  {item.title}
+                  {/* Something to press. A closed `<details>` with no marker is
+                      a heading as far as a visitor is concerned. */}
+                  <span
+                    aria-hidden
+                    className="shrink-0 text-xl leading-none transition-transform group-open:rotate-45"
+                    style={{ color: theme.safe.accent }}
+                  >
+                    +
+                  </span>
+                </summary>
+                <p className="mt-3 leading-relaxed" style={{ ...muted, fontSize: 'var(--site-body)' }}>
+                  {item.body}
+                </p>
+              </details>
+            ))}
+          </div>
+        </Section>
+      )
+
+    case 'hours':
+      return (
+        <Section theme={theme} band={index % 2 === 1}>
+          <h2 className="font-bold" style={{ ...heading, fontSize: 'var(--site-h2)' }}>
+            {block.heading}
+          </h2>
+          <dl className="mt-8">
+            {block.items.map((item, itemIndex) => (
+              <div
+                key={itemIndex}
+                className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 py-3.5"
+                style={{ borderTop: `1px solid ${theme.safe.line}` }}
+              >
+                <dt className="font-medium" style={{ ...body, fontSize: 'var(--site-body)' }}>
+                  {item.title}
+                </dt>
+                <dd style={{ ...muted, fontSize: 'var(--site-body)' }}>{item.body}</dd>
+              </div>
+            ))}
+          </dl>
+          {block.note && (
+            <p className="mt-5 text-sm" style={muted}>
+              {block.note}
+            </p>
+          )}
+        </Section>
       )
 
     case 'contact':
@@ -535,11 +641,14 @@ export function PageRenderer({
   blocks,
   theme,
   images,
+  base = '',
   contact,
 }: {
   blocks: Block[]
   theme: SiteTheme
   images?: SiteImages
+  /** What this site's own paths are prefixed with — see `basePath`. */
+  base?: string
   contact?: ContactLabels
 }) {
   /*
@@ -574,6 +683,7 @@ export function PageRenderer({
           index={index}
           theme={theme}
           images={claim(block)}
+          base={base}
           contact={contact}
         />
       ))}

@@ -66,7 +66,19 @@ const MAX_HISTORY = 50
  * generator happened to write — which put "Body text" above "Heading" on a text
  * section. Fields are shown in the order somebody reads them on the page.
  */
-const FIELD_ORDER = ['title', 'subtitle', 'heading', 'body', 'cta', 'email', 'phone']
+const FIELD_ORDER = [
+  'title',
+  'subtitle',
+  'heading',
+  'quote',
+  'attribution',
+  'body',
+  'cta',
+  'ctaHref',
+  'email',
+  'phone',
+  'note',
+]
 
 /**
  * The website editor.
@@ -646,10 +658,20 @@ function Inspector({
         .sort(([a], [b]) => FIELD_ORDER.indexOf(a) - FIELD_ORDER.indexOf(b))
         .map(([key, value]) => (
           <Field key={key} label={t(`fields.${key}`)}>
+            {/* The guidance that used to be typed into the canvas as content.
+                A placeholder cannot be published by being left alone. */}
             {typeof value === 'string' && value.length > 90 ? (
-              <Textarea value={value} onChange={(event) => set(key, event.target.value)} />
+              <Textarea
+                value={value}
+                placeholder={t(`hints.${key}`)}
+                onChange={(event) => set(key, event.target.value)}
+              />
             ) : (
-              <Input value={String(value ?? '')} onChange={(event) => set(key, event.target.value)} />
+              <Input
+                value={String(value ?? '')}
+                placeholder={t(`hints.${key}`)}
+                onChange={(event) => set(key, event.target.value)}
+              />
             )}
           </Field>
         ))}
@@ -664,6 +686,7 @@ function Inspector({
               <Field label={t('fields.title')}>
                 <Input
                   value={item.title}
+                  placeholder={t('hints.title')}
                   onChange={(event) =>
                     set(
                       listKey,
@@ -677,6 +700,7 @@ function Inspector({
               <Field label={t('fields.body')}>
                 <Textarea
                   value={item.body}
+                  placeholder={t('hints.body')}
                   className="min-h-20"
                   onChange={(event) =>
                     set(

@@ -81,18 +81,25 @@ async function request(path, { cookies, method = 'GET', body, redirect = 'manual
 }
 
 /** Raw HTTP so the Host header can be controlled, which fetch forbids. */
-function rawRequest(path, host) {
+function rawRequest(path, host, { method = 'GET', headers = {}, body } = {}) {
   return new Promise((resolve, reject) => {
     const url = new URL(BASE)
     const req = http.request(
-      { hostname: url.hostname, port: url.port, path, method: 'GET', headers: { Host: host } },
+      {
+        hostname: url.hostname,
+        port: url.port,
+        path,
+        method,
+        headers: { Host: host, ...headers },
+      },
       (res) => {
-        let body = ''
-        res.on('data', (chunk) => (body += chunk))
-        res.on('end', () => resolve({ status: res.statusCode, body }))
+        let received = ''
+        res.on('data', (chunk) => (received += chunk))
+        res.on('end', () => resolve({ status: res.statusCode, body: received }))
       },
     )
     req.on('error', reject)
+    if (body) req.write(body)
     req.end()
   })
 }
@@ -293,6 +300,41 @@ async function main() {
 
     const unattached = await rawRequest('/', 'not-attached-anywhere.example')
     check('unattached domain 404s', unattached.status === 404, `got ${unattached.status}`)
+
+    /*
+     * Every page used to live at `?page=`, so `/about` 404d and search saw one
+     * page. These four checks are the whole contract of the change: the paths
+     * resolve, a page that does not exist still 404s, and the query form people
+     * have already shared redirects rather than breaking.
+     */
+    const about = await request(`/sites/${published.subdomain}/about`)
+    check('a page has its own URL', about.status === 200, `got ${about.status}`)
+
+    const deep = await request(`/sites/${published.subdomain}/about/deeper`)
+    check('a path that is not a page 404s', deep.status === 404, `got ${deep.status}`)
+
+    const legacy = await request(`/sites/${published.subdomain}?page=about`, { redirect: 'manual' })
+    check(
+      'the old ?page= form redirects to the path',
+      legacy.status === 307 && (legacy.headers.get('location') ?? '').endsWith('/about'),
+      `got ${legacy.status} → ${legacy.headers.get('location')}`,
+    )
+
+    // The form endpoint moved out of the way of the contact *page*.
+    const submit = await rawRequest(
+      '/contact/submit',
+      `${published.subdomain}.localhost`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          name: 'System test',
+          email: 'system-test@example.com',
+          message: 'Checking the contact endpoint from the system test.',
+        }),
+      },
+    )
+    check('the contact form still reaches its endpoint', submit.status === 200, `got ${submit.status}`)
   } else {
     check('a published site exists to test', false, 'none found')
   }

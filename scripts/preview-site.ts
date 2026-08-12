@@ -70,10 +70,7 @@ async function main() {
       const page = await browser.newPage({ viewport: { width, height: 900 } })
 
       for (const name of PAGES) {
-        /* `?page=` is how the site navigates today. When path routes land this
-           is the line that changes, and the screenshots either side of that
-           change are the proof it kept working. */
-        const url = `${BASE}/sites/${site.subdomain}${name === 'home' ? '' : `?page=${name}`}`
+        const url = `${BASE}/sites/${site.subdomain}${name === 'home' ? '' : `/${name}`}`
         const response = await page.goto(url, { waitUntil: 'networkidle' })
 
         const file = `${OUT}/${site.subdomain}-${name}-${width}.png`

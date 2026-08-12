@@ -36,11 +36,10 @@ const SITE_TTL_SECONDS = 300
  * every visit to a published site read the database, which is the most public
  * surface this product has and was also the only one with no caching at all.
  *
- * The data rather than the page, because the page cannot be cached: it reads
- * `?page=` to decide which of the four to render, and a route that reads search
- * params is dynamic whatever `revalidate` says. Caching the query gets what
- * matters — the cross-region round trip on every visit — without turning the
- * page's navigation into four routes.
+ * The data rather than the page: the four pages are one route reading a path
+ * segment, and caching the query gets what matters — the cross-region round
+ * trip on every visit — without four separate cache entries holding four copies
+ * of the same row.
  */
 export const getPublishedSite = cache(async (host: string) => {
   const read = unstable_cache(

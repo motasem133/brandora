@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 
 import { PageRenderer, resolveTheme } from '@/components/blocks/block-renderer'
 import { PAGE_KEYS, type Block, type PageKey, type Theme } from '@/lib/blocks'
@@ -40,6 +40,48 @@ const CONTACT_LABELS = {
 /** Where a public image is served from — see `/api/site-image`. */
 const imageUrl = (id: string) => `/api/site-image/${id}`
 
+/**
+ * What this site's own links have to look like from where the visitor is
+ * standing.
+ *
+ * A published site has two real addresses and they need different hrefs. On the
+ * customer's own host — `theircompany.com` or `acme.brandora.enigmitic.com` —
+ * the proxy rewrites `/about` onto `/sites/{host}/about`, so the page a visitor
+ * asked for is `/about` and a link to `/sites/acme/about` would be rewritten a
+ * second time and 404. Reached inside the app at `/sites/acme`, the same link
+ * has to carry that prefix.
+ *
+ * The host is what knows which world this is: a rewritten request always
+ * arrives with the site's own hostname, so the segment matches either the whole
+ * hostname (a custom domain) or its first label (a subdomain).
+ */
+function basePath(host: string | null, segment: string) {
+  const hostname = (host ?? '').split(':')[0]
+  const rewritten = hostname === segment || hostname.split('.')[0] === segment
+  return rewritten ? '' : `/sites/${segment}`
+}
+
+/**
+ * What each page is called, in the two languages a brand can be generated in.
+ *
+ * The nav printed the page keys — `home`, `about` — capitalised by CSS, which
+ * is English structure showing through on an Arabic site. Same argument as the
+ * contact form's labels above: the language belongs to the brand.
+ */
+const TITLES = {
+  en: { home: 'Home', about: 'About', services: 'Services', contact: 'Contact' },
+  ar: { home: 'الرئيسية', about: 'من نحن', services: 'خدماتنا', contact: 'اتصل بنا' },
+} as const satisfies Record<string, Record<PageKey, string>>
+
+/** The page a path asks for, defaulting to home; anything deeper is not a page. */
+function pageKey(segments: string[] | undefined): PageKey {
+  const [first, ...rest] = segments ?? []
+  if (rest.length) notFound()
+  if (!first) return 'home'
+  if (!PAGE_KEYS.includes(first as PageKey)) notFound()
+  return first as PageKey
+}
+
 /** Maps a generated brand palette onto the renderer's theme shape. */
 function themeFromBranding(branding: BrandingAsset | null): Theme {
   const palette = branding?.colorPalette
@@ -67,14 +109,18 @@ function themeFromBranding(branding: BrandingAsset | null): Theme {
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ subdomain: string }>
+  params: Promise<{ subdomain: string; page?: string[] }>
 }): Promise<Metadata> {
-  const { subdomain } = await params
+  const { subdomain, page } = await params
   const site = await getPublishedSite(subdomain)
   if (!site) return { title: 'Not found' }
 
+  const active = pageKey(page)
   const name = site.project.businessName || site.project.title
   const description = site.branding?.slogan ?? undefined
+
+  /* Four pages shared one title for as long as they shared one URL. */
+  const title = active === 'home' ? name : `${TITLES[site.project.language][active]} — ${name}`
 
   /*
    * The brand's own favicon and share card, which have existed in storage since
@@ -85,22 +131,28 @@ export async function generateMetadata({
   const host = (await headers()).get('host')
   const origin = host ? `https://${host}` : undefined
   const image = origin && site.images.og ? `${origin}${imageUrl(site.images.og)}` : undefined
+  const base = basePath(host, subdomain)
+  const path = active === 'home' ? `${base}/` : `${base}/${active}`
 
   return {
-    title: name,
+    title,
     description,
     robots: { index: true, follow: true },
     icons: site.images.favicon ? { icon: imageUrl(site.images.favicon) } : undefined,
+    /* The path form is the address, so the `?page=` links people have already
+       shared do not compete with it for the same page. */
+    alternates: { canonical: origin ? `${origin}${path}` : path },
     openGraph: {
-      title: name,
+      title,
       description,
       siteName: name,
       type: 'website',
+      url: origin ? `${origin}${path}` : undefined,
       images: image ? [image] : undefined,
     },
     twitter: {
       card: image ? 'summary_large_image' : 'summary',
-      title: name,
+      title,
       description,
       images: image ? [image] : undefined,
     },
@@ -111,11 +163,26 @@ export default async function PublishedSite({
   params,
   searchParams,
 }: {
-  params: Promise<{ subdomain: string }>
+  params: Promise<{ subdomain: string; page?: string[] }>
   searchParams: Promise<{ page?: string }>
 }) {
-  const { subdomain } = await params
-  const { page } = await searchParams
+  const { subdomain, page } = await params
+  const { page: queryPage } = await searchParams
+
+  const host = (await headers()).get('host')
+  const base = basePath(host, subdomain)
+
+  /*
+   * `?page=about` was how this site navigated for its whole life, so those
+   * links exist — in people's messages, in a customer's own printed material,
+   * in whatever a search engine indexed. They keep working by becoming the
+   * address they should always have had.
+   */
+  if (queryPage && PAGE_KEYS.includes(queryPage as PageKey)) {
+    redirect(queryPage === 'home' ? `${base}/` : `${base}/${queryPage}`)
+  }
+
+  const active = pageKey(page)
 
   const site = await getPublishedSite(subdomain)
   if (!site) notFound()
@@ -129,7 +196,6 @@ export default async function PublishedSite({
   const theme = resolveTheme({ ...themeFromBranding(site.branding), ...(site.website.customStyles as Theme) })
   const pages = (site.website.pages ?? {}) as Record<string, Block[]>
 
-  const active: PageKey = PAGE_KEYS.includes(page as PageKey) ? (page as PageKey) : 'home'
   const blocks = pages[active] ?? []
   const nav = PAGE_KEYS.filter((key) => pages[key]?.length)
 
@@ -163,18 +229,13 @@ export default async function PublishedSite({
             </span>
           )}
 
-          <nav className="flex gap-5">
+          <nav aria-label={TITLES[site.project.language].home} className="flex gap-5">
             {nav.map((key) => (
               <a
                 key={key}
-                /*
-                 * Query-only hrefs resolve against the current URL, so the same
-                 * markup works at /sites/acme and at acme.brandora.enigmitic.com.
-                 * An absolute /sites/... link would be rewritten a second time on
-                 * a subdomain host and 404.
-                 */
-                href={`?page=${key}`}
-                className="text-sm capitalize hover:underline"
+                href={key === 'home' ? `${base}/` : `${base}/${key}`}
+                aria-current={key === active ? 'page' : undefined}
+                className="text-sm hover:underline"
                 /* The inactive state is a checked softer ink rather than an
                    opacity multiplier, which cannot reach the contrast floor. */
                 style={{
@@ -182,7 +243,7 @@ export default async function PublishedSite({
                   color: key === active ? theme.safe.ink : theme.safe.muted,
                 }}
               >
-                {key}
+                {TITLES[site.project.language][key]}
               </a>
             ))}
           </nav>
@@ -192,6 +253,7 @@ export default async function PublishedSite({
           blocks={blocks}
           theme={theme}
           images={site.images}
+          base={base}
           contact={CONTACT_LABELS[site.project.language]}
         />
 
