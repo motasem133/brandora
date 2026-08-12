@@ -617,6 +617,15 @@ export default async function HorizonDirection({
                 {tn('signIn')}
               </Link>
             )}
+            {/* Reachable from the page a visitor is on when they decide whether
+                to trust the product with a card — and from the only page Google
+                checks when it verifies the consent screen. */}
+            <Link href="/privacy" className="text-fg-secondary transition-colors hover:text-white">
+              {tn('privacy')}
+            </Link>
+            <Link href="/terms" className="text-fg-secondary transition-colors hover:text-white">
+              {tn('terms')}
+            </Link>
           </nav>
         </div>
       </footer>
