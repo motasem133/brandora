@@ -22,6 +22,23 @@ import { buildCopy } from './copy'
  */
 const fontCache = new Map<string, Buffer | null>()
 
+/**
+ * Whether a face paints its own colour and ignores `color` entirely.
+ *
+ * Every layout in this kit sets its headline on a light plate because one font
+ * does — Reem Kufi Ink, a COLR face, which rendered red on whatever ground it
+ * was given. The rule was then applied to all of them, so a constraint that
+ * belongs to a handful of decorative Arabic and emoji faces has been deciding
+ * the composition of every post for every brand.
+ *
+ * It is a table in the file. Reading it costs nothing and hands the other
+ * ninety-odd percent of brands their photograph back.
+ */
+function paintsItsOwnColour(font: Buffer) {
+  const tables = font.subarray(12, 12 + 16 * font.readUInt16BE(4))
+  return tables.includes('COLR')
+}
+
 async function loadFont(family: string): Promise<Buffer | null> {
   if (fontCache.has(family)) return fontCache.get(family) ?? null
 
@@ -62,7 +79,13 @@ async function readFile(key: string): Promise<Buffer> {
  */
 export async function renderSocialPost(
   projectId: string,
-  options: { layout?: LayoutKind; size?: number; photos?: Partial<Record<'hero' | 'people' | 'detail', string>> } = {},
+  options: {
+    layout?: LayoutKind
+    size?: number
+    photos?: Partial<Record<'hero' | 'people' | 'detail', string>>
+    /** Overrides the brand's own register — for comparing directions locally. */
+    register?: 'editorial' | 'loud' | 'refined' | 'organic'
+  } = {},
 ) {
   const layout = options.layout ?? 'statement'
   const canvas = LAYOUTS[layout].size
@@ -126,6 +149,8 @@ export async function renderSocialPost(
 
   const families = [...new Set([brand.fonts.heading, brand.fonts.body])]
   const loaded = await Promise.all(families.map(async (f) => [f, await loadFont(f)] as const))
+  const headingFile = loaded.find(([family]) => family === brand.fonts.heading)?.[1]
+  const colrHeading = headingFile ? paintsItsOwnColour(headingFile) : false
   const faces = loaded
     .filter((entry): entry is [string, Buffer] => entry[1] !== null)
     .map(([family, file]) => fontFace(family, file))
@@ -160,6 +185,8 @@ export async function renderSocialPost(
   const needs = LAYOUTS[layout].needs
 
   const html = renderLayout(layout, {
+    register: options.register,
+    colrHeading,
     brand,
     faces,
     width: size,

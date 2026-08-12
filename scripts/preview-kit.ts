@@ -30,6 +30,7 @@ import { liftBackground, splitLockup, trim } from '../src/server/services/logo-p
  *   pnpm preview:kit                 — every layout and the PDF, best project
  *   pnpm preview:kit --project=<id>  — a specific one
  *   pnpm preview:kit --layout=hero   — one layout, for a tight loop
+ *   pnpm preview:kit --register=loud — force a register, to compare directions
  *
  * Output lands in `.preview/` (git-ignored), one file per layout.
  */
@@ -134,7 +135,7 @@ async function main() {
     }
 
     const started = Date.now()
-    const png = await renderSocialPost(project.id, { layout, photos })
+    const png = await renderSocialPost(project.id, { layout, photos, register: args.register as never })
     const path = `${OUT}/post-${layout}.png`
     await writeFile(path, png)
     console.log(`  ${layout.padEnd(10)} ${path}  ${Date.now() - started}ms`)

@@ -51,6 +51,17 @@ type Parts = {
   height: number
   /** What this particular post says. Falls back to the slogan when absent. */
   copy?: { lead: string; tail: string | null; body?: string }
+  /** Forces a register instead of deriving one — local comparison only. */
+  register?: 'editorial' | 'loud' | 'refined' | 'organic'
+  /**
+   * Whether the heading face paints its own colour.
+   *
+   * True for a COLR font, which ignores `color` and therefore has to be set on
+   * a light ground. False for almost every brand, which means the headline can
+   * go on the photograph — and that is the difference between eight
+   * compositions and one composition eight times.
+   */
+  colrHeading?: boolean
 }
 
 /** Scales the 1080-wide design to whatever canvas is asked for. */
@@ -256,7 +267,7 @@ export function renderLayout(kind: LayoutKind, p: Parts) {
   const rtl = hasArabic(lead)
   /* How this brand is set — margin, ranging, scale, corners, how much colour
      runs as field. Same layouts, different bearing per brand. */
-  const r = registerFor(p.brand.style, p.brand.industry)
+  const r = registerFor(p.brand.style, p.brand.industry, p.register)
   const m = u(r.margin)
   const ranged = r.align === 'center' ? 'center' : rtl ? 'flex-end' : 'flex-start'
   /* Shadows take the brand's ground, highlights its paper. */
@@ -266,49 +277,81 @@ export function renderLayout(kind: LayoutKind, p: Parts) {
 
   if (kind === 'hero' || kind === 'story') {
     const tall = kind === 'story' ? 1920 : 1080
-    const fieldTop = kind === 'story' ? 1240 : 640
-    const fieldTall = tall - fieldTop
 
     /*
-     * Photograph above, a block of the brand's ground below, type ranged left.
+     * Where the words go is the register's decision now, not the font's.
      *
-     * The words cannot sit on the picture — the heading face may be COLR and
-     * paint its own colour whatever `color` says, which is the constraint every
-     * version of this layout has been built around. What changed is the shape
-     * that carries them: a straight-edged field anchored to the bottom edge
-     * rather than a wave floating across the middle of the photograph, and the
-     * type ranged left against a margin instead of centred in the band.
+     * Every version of this layout put the headline on a light field because a
+     * COLR face paints its own colour and ignores `color`. That is true of Reem
+     * Kufi Ink and almost nothing else a brand is given — so the face is asked,
+     * and a brand whose heading is an ordinary outline font gets its photograph
+     * whole, with the type on it.
      *
-     * The scrim stays, and now earns itself twice: it lifts the reversed lockup
-     * off the top of the picture, which is what let the white plate go.
+     * Photography-led wherever there is a photograph and the face allows it:
+     * full bleed, a scrim, the type at the foot. The field remains for the two
+     * cases that need it — a COLR heading, and a layout with no picture at all —
+     * rather than as the house style for everything.
      */
-    body = `
+    const onPicture = !p.colrHeading && Boolean(p.photo)
+    const fieldTop = kind === 'story' ? 1240 : 640
+
+    body = onPicture
+      ? `
+      ${photo(p.photo!, u, { top: 0, height: tall }, p.width, treatment)}
+      <div style="display:flex;position:absolute;left:0;top:0;width:${p.width}px;height:${u(tall)}px;
+        background:linear-gradient(to bottom, rgba(0,0,0,.42) 0%, rgba(0,0,0,0) 26%,
+          rgba(0,0,0,.10) 46%, rgba(0,0,0,.80) 100%)"></div>
+      ${lockup(p, u, rtl, c.primary)}
+      <div style="display:flex;flex-direction:column;position:absolute;left:${m}px;right:${m}px;
+        bottom:${u(r.formal ? 150 : 110)}px;align-items:${ranged}">
+        ${bar(p, u, c.secondary)}
+        <div style="display:flex;margin-top:${u(30)}px;width:100%">
+          ${headline(p, u, { size: fitted(Math.round((kind === 'story' ? 104 : 92) * r.scale), lead),
+            lead, tail, colour: c.background, tailColour: c.background, align: r.align, rtl })}
+        </div>
+      </div>`
+      : `
       ${p.photo ? photo(p.photo, u, { top: 0, height: fieldTop + u(2) }, p.width, treatment) : `<div style="display:flex;position:absolute;inset:0;background:${c.primary}"></div>`}
       <div style="display:flex;position:absolute;left:0;top:0;width:${p.width}px;height:${u(360)}px;
         background:linear-gradient(to bottom, rgba(0,0,0,.45) 0%, rgba(0,0,0,0) 100%)"></div>
       ${lockup(p, u, rtl, c.primary)}
-      ${field(p, u, { top: fieldTop, height: fieldTall }, c.background, r)}
+      ${field(p, u, { top: fieldTop, height: tall - fieldTop }, c.background, r)}
       <div style="display:flex;flex-direction:column;position:absolute;left:${m}px;
         right:${m}px;top:${u(fieldTop + 78)}px;align-items:${ranged}">
         ${bar(p, u, c.secondary)}
         <div style="display:flex;margin-top:${u(34)}px;width:100%">
-          ${headline(p, u, { size: Math.round((kind === 'story' ? 100 : 86) * r.scale), lead, tail, colour: c.text,
-            tailColour: c.primary, align: r.align, rtl })}
+          ${headline(p, u, { size: fitted(Math.round((kind === 'story' ? 100 : 86) * r.scale), lead),
+            lead, tail, colour: c.text, tailColour: c.primary, align: r.align, rtl })}
         </div>
       </div>`
   }
 
   if (kind === 'feature') {
     /*
-     * Hero, upside down: the words at the top on light, the photograph filling
-     * the bottom two thirds.
+     * Hero inverted: the type at the head of the picture rather than its foot.
      *
-     * Both layouts are a picture and a field, and built the same way round they
-     * were the same post twice in one kit. The inversion is the variety, and it
-     * costs nothing — the headline still lands on light, which is the rule the
-     * COLR heading face imposes on every layout in this file.
+     * Both are photography-led, and the difference is where the weight sits —
+     * which is a composition rather than a different set of parts. The field
+     * version below is what a COLR brand or a photographless project falls back
+     * to, and it keeps the words above the picture for the same reason.
      */
-    body = `
+    const onPicture = !p.colrHeading && Boolean(p.photo)
+
+    body = onPicture
+      ? `
+      ${photo(p.photo!, u, { top: 0, height: 1080 }, p.width, treatment)}
+      <div style="display:flex;position:absolute;left:0;top:0;width:${p.width}px;height:${u(700)}px;
+        background:linear-gradient(to bottom, rgba(0,0,0,.78) 0%, rgba(0,0,0,.34) 52%, rgba(0,0,0,0) 100%)"></div>
+      ${lockup(p, u, rtl, c.primary)}
+      <div style="display:flex;flex-direction:column;position:absolute;left:${m}px;right:${m}px;
+        top:${u(232)}px;align-items:${ranged}">
+        ${bar(p, u, c.secondary)}
+        <div style="display:flex;margin-top:${u(30)}px;width:100%">
+          ${headline(p, u, { size: fitted(Math.round(80 * r.scale), lead, 38), lead, tail,
+            colour: c.background, tailColour: c.background, align: r.align, rtl })}
+        </div>
+      </div>`
+      : `
       <div style="display:flex;position:absolute;inset:0;background:${c.background}"></div>
       ${p.photo ? photo(p.photo, u, { top: 580, height: 500 }, p.width, treatment) : ''}
       ${lockup(p, u, rtl, c.background)}

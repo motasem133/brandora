@@ -111,7 +111,12 @@ const REGISTERS = {
   organic: { margin: 96, align: 'start', scale: 1, radius: 26, edge: 'curve', colour: 'full', formal: false, photo: 'duotone' },
 } as const satisfies Record<string, Register>
 
-export function registerFor(style: string | null, industry: string | null): Register {
+export function registerFor(
+  style: string | null,
+  industry: string | null,
+  forced?: keyof typeof REGISTERS,
+): Register {
+  if (forced && REGISTERS[forced]) return REGISTERS[forced]
   if (style === 'luxury' || style === 'arabic' || style === 'elegant') return REGISTERS.refined
   if (style === 'bold' || style === 'playful') return REGISTERS.loud
   if (/food|beverage|coffee|craft|beauty|wellness|floris|bakery/i.test(industry ?? '')) return REGISTERS.organic
