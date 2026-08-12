@@ -62,3 +62,6 @@ Screenshot*.png
 .claude/skills/
 .github/copilot-instructions/
 skills-lock.json
+
+# Local render previews — see scripts/preview-kit.ts
+.preview/

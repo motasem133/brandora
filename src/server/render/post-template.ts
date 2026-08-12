@@ -35,9 +35,22 @@ export const SHAPE_DEVICES = {
   wedge: 'M0,0 L100,10 L100,90 L0,100 Z',
   /** A pointed arch — the register an "arabic" brand style asks for. */
   arch: 'M0,100 L0,42 C0,20 22,0 50,0 C78,0 100,20 100,42 L100,100 Z',
-  /** A soft blob — playful, youthful, retail. */
-  blob:
-    'M4,22 C18,4 44,0 62,6 C82,12 100,26 98,48 C96,72 78,96 52,98 C26,100 6,84 2,60 C0,44 0,32 4,22 Z',
+  /**
+   * A soft organic band — playful, youthful, retail.
+   *
+   * An edge, not an island, and that is the whole correction. This was a closed
+   * blob starting at x=4 and closing at x=2, which is a fine shape at 1:1 and
+   * becomes a sticker the moment it is stretched: `device()` draws these full
+   * width with `preserveAspectRatio="none"`, so a silhouette that curves in at
+   * both ends renders as a flattened white oval floating over the photograph,
+   * cropping whoever is in it at the waist. Every playful brand's kit shipped
+   * that way.
+   *
+   * The other three read correctly because they are bands — they touch x=0 and
+   * x=100 and only shape the edge between. This one now does too: an uneven top
+   * edge, a flat bottom, full bleed both sides.
+   */
+  blob: 'M0,30 C16,6 34,32 52,18 C70,4 86,26 100,14 L100,100 L0,100 Z',
 } as const
 
 export type ShapeDevice = keyof typeof SHAPE_DEVICES

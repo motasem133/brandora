@@ -125,8 +125,22 @@ function marks(c: KitContent, a: KitAssets) {
       <figure><div class="hold" style="background:${p.primary}">
         <img src="${a.wordmark}" style="filter:brightness(0) invert(1)"/></div>
         <figcaption style="color:${p.primary}">Reversed</figcaption></figure>
-      <figure><div class="hold" style="background:${p.background};border:1px solid rgba(0,0,0,.10)">
-        <img src="${a.mark}"/></div><figcaption style="color:${p.primary}">Symbol alone</figcaption></figure>
+      ${
+        /*
+         * Only when there is a symbol to show alone.
+         *
+         * `mark` and `wordmark` are the two halves of a split lockup, and a
+         * logo that will not split hands back the same trimmed image for both —
+         * so this panel captioned "Symbol alone" printed the whole lockup again,
+         * identical to the first panel two columns to its left. A page of brand
+         * guidance that labels a thing as what it is not is worse than a page
+         * with three panels on it.
+         */
+        a.mark && a.mark !== a.wordmark
+          ? `<figure><div class="hold" style="background:${p.background};border:1px solid rgba(0,0,0,.10)">
+        <img src="${a.mark}"/></div><figcaption style="color:${p.primary}">Symbol alone</figcaption></figure>`
+          : ''
+      }
       <figure><div class="hold" style="background:${p.secondary}">
         <img src="${a.wordmark}"/></div><figcaption style="color:${p.primary}">On secondary</figcaption></figure>
     </div>
