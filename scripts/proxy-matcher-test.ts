@@ -25,7 +25,9 @@ import { config } from '../src/proxy'
  * Usage: pnpm test:proxy
  */
 
-const matcher = new RegExp(`^${config.matcher[0]}$`)
+/** Any pattern matching means the proxy runs, which is how Next reads it. */
+const matches = (path: string) =>
+  config.matcher.some((pattern) => new RegExp(`^${pattern}$`).test(path))
 
 /**
  * Must never reach locale negotiation.
@@ -51,21 +53,43 @@ const TELEMETRY = [
 /** Must still reach it — these are pages, and a page needs its locale. */
 const PAGES = ['/', '/en/dashboard', '/dashboard/projects', '/pricing', '/ar/login']
 
+/**
+ * Must run through the proxy despite having a dot in them.
+ *
+ * These two are the exception to the file-extension rule. A crawler on a
+ * customer's own domain asks for `/sitemap.xml`, and if the proxy does not run
+ * the request is never rewritten onto that customer's site — the answer is
+ * whatever the app has at that path, which is Brandora's own file served under
+ * someone else's domain. The proxy passes both through untouched on the app's
+ * host, so being matched costs nothing there.
+ */
+const CRAWLERS = ['/sitemap.xml', '/robots.txt']
+
 let failures = 0
 
 for (const path of TELEMETRY) {
-  if (matcher.test(path)) {
+  if (matches(path)) {
     console.error(`✗ ${path} runs through the proxy — locale negotiation will redirect it`)
     failures++
   }
 }
 
 for (const path of PAGES) {
-  if (!matcher.test(path)) {
+  if (!matches(path)) {
     console.error(`✗ ${path} skips the proxy — it will not be locale-negotiated or guarded`)
     failures++
   }
 }
 
+for (const path of CRAWLERS) {
+  if (!matches(path)) {
+    console.error(`✗ ${path} skips the proxy — a customer's domain will serve the app's own file`)
+    failures++
+  }
+}
+
 assert.equal(failures, 0, `${failures} path(s) matched the wrong way`)
-console.log(`✓ ${TELEMETRY.length} telemetry paths excluded, ${PAGES.length} pages negotiated`)
+console.log(
+  `✓ ${TELEMETRY.length} telemetry paths excluded, ${PAGES.length} pages negotiated, ` +
+    `${CRAWLERS.length} crawler paths rewritten`,
+)

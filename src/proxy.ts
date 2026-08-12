@@ -144,6 +144,16 @@ export default function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
+  /*
+   * On the app's own host these two are not pages and must not be negotiated:
+   * /sitemap.xml would become /en/sitemap.xml, which is not an address any
+   * crawler asks for. They are in the matcher only so that the rewrites above
+   * can catch them on a customer's host — see the note there.
+   */
+  if (pathname === '/sitemap.xml' || pathname === '/robots.txt') {
+    return NextResponse.next()
+  }
+
   // Strip the locale prefix so route matching is locale-agnostic.
   const segments = pathname.split('/')
   const maybeLocale = segments[1]
@@ -181,6 +191,18 @@ export const config = {
    * it posts to is `/_vercel/insights/event`, which has no dot in it, so every
    * pageview was redirected to /en/_vercel/insights/event and dropped. Enabling
    * the feature in the dashboard could never have fixed it.
+   *
+   * The two named paths are the exception to the file-extension rule, and they
+   * are here for the rewrites rather than for negotiation. A crawler on a
+   * customer's own domain asks for `/sitemap.xml`; without this the proxy never
+   * runs, the request is not rewritten onto that customer's site, and the
+   * answer is whatever the app itself has at that path — Brandora's sitemap on
+   * someone else's domain. The proxy hands both straight through on the app's
+   * own host; see the note beside that check.
    */
-  matcher: ['/((?!api|monitoring|ingest|_vercel|_next/static|_next/image|favicon.ico|.*\\..*).*)'],
+  matcher: [
+    '/sitemap.xml',
+    '/robots.txt',
+    '/((?!api|monitoring|ingest|_vercel|_next/static|_next/image|favicon.ico|.*\\..*).*)',
+  ],
 }

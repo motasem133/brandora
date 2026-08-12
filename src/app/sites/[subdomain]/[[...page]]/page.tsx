@@ -5,6 +5,7 @@ import { notFound, redirect } from 'next/navigation'
 import { PageRenderer, SITE_REGISTERS, registerStyle, resolveTheme } from '@/components/blocks/block-renderer'
 import { PAGE_KEYS, type Block, type PageKey, type Theme } from '@/lib/blocks'
 import { asRegister, registerFor } from '@/lib/register'
+import { absoluteUrl, basePath } from '@/lib/site-url'
 import { getPublishedSite } from '@/server/db/queries/sites'
 import { type BrandingAsset } from '@/server/db/schema'
 
@@ -40,27 +41,6 @@ const CONTACT_LABELS = {
 
 /** Where a public image is served from — see `/api/site-image`. */
 const imageUrl = (id: string) => `/api/site-image/${id}`
-
-/**
- * What this site's own links have to look like from where the visitor is
- * standing.
- *
- * A published site has two real addresses and they need different hrefs. On the
- * customer's own host — `theircompany.com` or `acme.brandora.enigmitic.com` —
- * the proxy rewrites `/about` onto `/sites/{host}/about`, so the page a visitor
- * asked for is `/about` and a link to `/sites/acme/about` would be rewritten a
- * second time and 404. Reached inside the app at `/sites/acme`, the same link
- * has to carry that prefix.
- *
- * The host is what knows which world this is: a rewritten request always
- * arrives with the site's own hostname, so the segment matches either the whole
- * hostname (a custom domain) or its first label (a subdomain).
- */
-function basePath(host: string | null, segment: string) {
-  const hostname = (host ?? '').split(':')[0]
-  const rewritten = hostname === segment || hostname.split('.')[0] === segment
-  return rewritten ? '' : `/sites/${segment}`
-}
 
 /**
  * What each page is called, in the two languages a brand can be generated in.
@@ -154,8 +134,7 @@ export async function generateMetadata({
   const host = (await headers()).get('host')
   const origin = host ? `https://${host}` : undefined
   const image = origin && site.images.og ? `${origin}${imageUrl(site.images.og)}` : undefined
-  const base = basePath(host, subdomain)
-  const path = active === 'home' ? `${base}/` : `${base}/${active}`
+  const canonical = absoluteUrl(host, subdomain, active)
 
   return {
     title,
@@ -164,13 +143,13 @@ export async function generateMetadata({
     icons: site.images.favicon ? { icon: imageUrl(site.images.favicon) } : undefined,
     /* The path form is the address, so the `?page=` links people have already
        shared do not compete with it for the same page. */
-    alternates: { canonical: origin ? `${origin}${path}` : path },
+    alternates: { canonical },
     openGraph: {
       title,
       description,
       siteName: name,
       type: 'website',
-      url: origin ? `${origin}${path}` : undefined,
+      url: canonical,
       images: image ? [image] : undefined,
     },
     twitter: {

@@ -320,6 +320,35 @@ async function main() {
       `got ${legacy.status} → ${legacy.headers.get('location')}`,
     )
 
+    /*
+     * What a crawler asks for, on the host it asks on.
+     *
+     * Both files are the exception to the proxy's file-extension rule, and the
+     * failure they guard against is silent in the worst way: unmatched, the
+     * request is never rewritten onto the customer's site and the app answers
+     * with its own file under someone else's domain.
+     */
+    const sitemap = await rawRequest('/sitemap.xml', `${published.subdomain}.localhost`)
+    check('a published site has a sitemap', sitemap.status === 200, `got ${sitemap.status}`)
+    check(
+      'the sitemap lists the site\'s own pages',
+      sitemap.body.includes(`${published.subdomain}.localhost/about`),
+      sitemap.body.slice(0, 120),
+    )
+
+    const robots = await rawRequest('/robots.txt', `${published.subdomain}.localhost`)
+    check('a published site has a robots.txt', robots.status === 200, `got ${robots.status}`)
+    check('robots.txt points at the sitemap', robots.body.includes('Sitemap: '), robots.body)
+
+    // On the app's own host neither is a page, and neither may be negotiated
+    // into /en/… — which is not an address any crawler asks for.
+    const appSitemap = await request('/sitemap.xml', { redirect: 'manual' })
+    check(
+      'the app does not locale-redirect /sitemap.xml',
+      appSitemap.status !== 307 && appSitemap.status !== 308,
+      `got ${appSitemap.status} → ${appSitemap.headers.get('location')}`,
+    )
+
     // The form endpoint moved out of the way of the contact *page*.
     const submit = await rawRequest(
       '/contact/submit',
