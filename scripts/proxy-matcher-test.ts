@@ -27,7 +27,16 @@ import { config } from '../src/proxy'
 
 const matcher = new RegExp(`^${config.matcher[0]}$`)
 
-/** Must never reach locale negotiation. */
+/**
+ * Must never reach locale negotiation.
+ *
+ * The Google verification file is in here for the same reason the beacon is:
+ * a proof-of-ownership file has to answer on the bare path Google asks for.
+ * Locale-redirected to /en/google….html it would 404, and the verification
+ * would fail with nothing on the page to explain why. It survives today by the
+ * file-extension rule rather than by an explicit exemption, which is exactly
+ * the kind of accident worth pinning down before somebody tightens the regex.
+ */
 const TELEMETRY = [
   '/_vercel/insights/event',
   '/_vercel/insights/script.js',
@@ -36,6 +45,7 @@ const TELEMETRY = [
   '/ingest/static/array.js',
   '/monitoring',
   '/api/webhooks/polar',
+  '/googlea59464b81181ee2d.html',
 ]
 
 /** Must still reach it — these are pages, and a page needs its locale. */
