@@ -124,7 +124,9 @@ export function ContentComposer({
           it, and nothing will.
         */}
         {!rendered && (
-          <Field label={t('variantsLabel')}>
+          /* "How many captions" is wrong on the type that makes ads, and the
+             count is the one control here whose unit the customer is buying. */
+          <Field label={t(type === 'ad' ? 'variantsLabelAd' : 'variantsLabel')}>
             <Select value={String(variants)} onChange={(e) => setVariants(Number(e.target.value))}>
               {Array.from({ length: MAX_VARIANTS }, (_, i) => i + 1).map((n) => (
                 <option key={n} value={n}>

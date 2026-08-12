@@ -72,12 +72,42 @@ export const carouselBodySchema = z.object({
   hashtags: z.array(z.string().min(1).max(30)).min(3).max(10),
 })
 
+/**
+ * One ad: an angle, a headline, the body, and what the button says.
+ *
+ * Four fields rather than a caption, because that is what every paid placement
+ * asks for — Meta wants primary text and a headline separately, Google wants a
+ * headline and a description, and both want the call to action as its own
+ * string. A blob of caption text has to be pulled apart by hand before it can
+ * be pasted anywhere, which is precisely the state a kit's ad copy is in today.
+ *
+ * The headline ceiling is eighty and not sixty, and the reason is written into
+ * `ai/schemas.ts` beside the kit's: a ceiling set at the length of a good
+ * headline is a target, and the model writes up to it and stops mid-sentence.
+ */
+export const adItemSchema = z.object({
+  /** The angle — "problem-led", "social proof". A label, not a sentence. */
+  intent: z.string().min(1).max(60),
+  headline: z.string().min(1).max(80),
+  body: z.string().min(1).max(300),
+  /** What the button says. "Shop now", not "Click here to shop now!". */
+  cta: z.string().min(1).max(30),
+})
+
+export const adBodySchema = z.object({
+  kind: z.literal('ad'),
+  items: z.array(adItemSchema).min(1).max(3),
+})
+
 export const contentBodySchema = z.discriminatedUnion('kind', [
   socialPostBodySchema,
   carouselBodySchema,
   storyBodySchema,
+  adBodySchema,
 ])
 
+export type AdItem = z.infer<typeof adItemSchema>
+export type AdBody = z.infer<typeof adBodySchema>
 export type SocialPostItem = z.infer<typeof socialPostItemSchema>
 export type SocialPostBody = z.infer<typeof socialPostBodySchema>
 export type CarouselFrame = z.infer<typeof carouselFrameSchema>
@@ -91,8 +121,13 @@ export type ContentBody = z.infer<typeof contentBodySchema>
  * The database enum carries every type the roadmap names; this carries the ones
  * that are built. The composer reads this, so an unbuilt type cannot be offered
  * by a form control that has nothing behind it.
+ *
+ * `ad` is here because the copy already existed and had nowhere to go: every
+ * social kit writes a headline, a body and a call to action, once, at the
+ * moment the brand is generated — and a customer who wants a second one for a
+ * different campaign has no way to ask.
  */
-export const BUILT_CONTENT_TYPES = ['social_post', 'carousel', 'story'] as const
+export const BUILT_CONTENT_TYPES = ['social_post', 'carousel', 'story', 'ad'] as const
 export type BuiltContentType = (typeof BUILT_CONTENT_TYPES)[number]
 
 /**

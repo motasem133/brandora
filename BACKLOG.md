@@ -59,14 +59,7 @@ step around and a product in Polar nobody is watching.
 **Needs from you:** which one. Deleting it is ten minutes. Making it real is a
 day, and needs to answer what it includes that Studio does not.
 
-### 4. Ads as a Content Studio type — 2–3 days
-
-`ad` is one of the seven declared content types and one of the four that still
-generate nothing. The copy already exists — every social kit writes ad headlines
-and bodies — and there is nowhere to render it, so a customer who paid for a kit
-has ad copy they cannot use as an ad.
-
-### 5. A real render, not a drawing, of the site a free customer is missing — 1–2 days
+### 4. A real render, not a drawing, of the site a free customer is missing — 1–2 days
 
 Shipped on 12 August, drawn rather than described: both sections render the
 thing in the customer's own palette, faces and mark. What is left is the step
@@ -271,7 +264,16 @@ Shipped 12 August, all four from the growth memo:
     faces and mark rather than described. The kit's locked line also quoted the
     wrong plan at the wrong price: "Pro and above" for something Creator
     includes.
-12. **Kit photography told apart from social copy** — `ai_usage.feature` had
+12. **Ad copy in Content Studio** — `ad` was one of four declared types that
+    generated nothing, while every social kit wrote a headline and a body once,
+    at brand-generation time, with no way to ask for another. It generates now,
+    at one credit, in the customer's brand voice. Four fields rather than a
+    caption, because that is what an ad manager asks for and a blob has to be
+    pulled apart by hand. The written types also open in the library with a copy
+    control on every part — a caption set used to show two clamped lines and no
+    way to reach the rest, which made the copy technically generated and
+    practically undelivered.
+13. **Kit photography told apart from social copy** — `ai_usage.feature` had
     one value for both, so captions costing a fraction of a cent and
     photographs costing seven shared a row. On production it was $1.0125 of
     photography against $0.0104 of captions, filed as one feature: `social`

@@ -1,9 +1,11 @@
+import { ChevronDown } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/ui/empty-state'
 import { listContent } from '@/server/db/queries/content'
 import { ContentPending } from './content-pending'
+import { ContentText } from './content-text'
 
 /**
  * What has been made, newest first.
@@ -52,16 +54,21 @@ export async function ContentLibrary({
           const body = item.body as
             | {
                 kind?: string
-                items?: { caption: string }[]
+                items?: ({ caption?: string; headline?: string } & Record<string, unknown>)[]
                 caption?: string
                 frames?: { fileId: string; lead: string }[]
               }
             | null
 
-          /* A carousel's own caption, a caption set's first line, or the brief
-             it was asked for — whichever exists, in that order. */
-          const preview = body?.caption ?? body?.items?.[0]?.caption ?? item.brief ?? ''
+          /* A carousel's own caption, the first caption or headline of a
+             written set, or the brief it was asked for — in that order. */
+          const first = body?.items?.[0]
+          const preview =
+            body?.caption ?? first?.caption ?? first?.headline ?? item.brief ?? ''
           const frames = body?.kind === 'carousel' || body?.kind === 'story' ? (body.frames ?? []) : []
+          /* The written types open; the drawn ones show their frames instead. */
+          const written =
+            body?.kind === 'social_post' || body?.kind === 'ad' ? body.kind : null
 
           return (
             <li key={item.id} className="flex flex-wrap items-start gap-x-4 gap-y-2 px-5 py-4">
@@ -78,10 +85,32 @@ export async function ContentLibrary({
                   <p className="truncate text-sm font-medium text-fg">{item.title ?? item.brief}</p>
                 </div>
 
-                {preview && (
+                {preview && !written && (
                   <p dir="auto" className="mt-1.5 line-clamp-2 text-sm text-fg-secondary">
                     {preview}
                   </p>
+                )}
+
+                {/*
+                  Words open where they are listed.
+
+                  Native `<details>`, so it costs no JavaScript, survives
+                  find-in-page and closes the list back up. The summary keeps
+                  the clamped preview, so nothing is lost by leaving it shut.
+                */}
+                {written && (
+                  <details className="group mt-1.5">
+                    <summary className="flex cursor-pointer list-none items-center gap-1.5 [&::-webkit-details-marker]:hidden">
+                      <ChevronDown className="size-3.5 shrink-0 text-fg-muted transition-transform group-open:rotate-180" />
+                      <span dir="auto" className="line-clamp-1 text-sm text-fg-secondary">
+                        {preview}
+                      </span>
+                    </summary>
+                    <ContentText
+                      kind={written}
+                      items={(body?.items ?? []) as never}
+                    />
+                  </details>
                 )}
 
                 {/*

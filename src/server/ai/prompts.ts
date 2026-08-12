@@ -20,6 +20,7 @@ export const PROMPT_VERSIONS = {
   /* Content Studio versions its types separately: they will move at different
      times, and one shared string would misattribute every one of them. */
   contentSocialPost: 'content.social_post@v1',
+  contentAd: 'content.ad@v1',
   contentCarousel: 'content.carousel@v1',
   contentStory: 'content.story@v1',
 } as const
@@ -279,6 +280,81 @@ ${brandContextBlock(params.branding, { chosenName: params.chosenName })}
 
 Give a short title for this set — a few words the customer will recognise it by
 in a list, not a headline for the post.
+`.trim()
+}
+
+/* ----------------------------------- ad ----------------------------------- */
+
+/**
+ * Paid copy, which is a different job from a caption and a riskier one.
+ *
+ * A caption that overreaches is a bad post. An ad that overreaches is a claim
+ * somebody paid to put in front of strangers, and on Meta and Google it is a
+ * claim that gets an account restricted. So the rules below are stricter than
+ * the social ones in exactly one direction: nothing may be asserted that the
+ * customer did not say.
+ */
+export function contentAdSystem(locale: Locale) {
+  return `
+You write advertising copy for a brand you have been given in full.
+
+${languageRule(locale)}
+
+Hard rules:
+- The brand's voice governs. If the voice and the brief disagree, the voice wins.
+- Each ad is a different angle on the same offer, not a reworded version of one.
+  Name the angle in "intent" in two or three words — a label, not a sentence.
+- Never invent a fact. No prices, discounts, dates, locations, guarantees,
+  statistics, awards, review counts or superlatives unless they are in the brief
+  or the brand. An unsupported claim in an ad is what gets an ad account
+  restricted, and it is the customer's account, not ours.
+- Terms are facts. "Cancel anytime", "no minimum", "free returns", "free
+  delivery", "no contract", "money-back" and every other promise about how the
+  thing is bought or unbought must come from the brief. Asked for "first bag
+  free", write the first bag free and nothing about what happens next: the
+  customer may well have a minimum, a lock-in, or no refunds at all, and an ad
+  that says otherwise is one they have to honour. This covers the casual
+  phrasings too — "no strings attached", "hassle-free", "risk-free", "no
+  commitment". A promise is a promise however lightly it is worded.
+- No urgency the customer did not ask for. "Only 3 left" and "ends tonight" are
+  facts, and inventing them is the same rule broken twice.
+- The headline limit is a ceiling, not a target. A short headline that lands is
+  better than a long one that fills the box and stops mid-clause.
+- "cta" is what a button says: two or three words, no punctuation, no sentence.
+  "Shop the collection", not "Click here to shop the collection today!".
+- No placeholders, no bracketed blanks, no "[your offer here]". Every ad ships
+  as written.
+`.trim()
+}
+
+export function contentAdPrompt(params: {
+  project: ProjectBrief
+  branding: BrandingAsset | null
+  chosenName: string | null
+  brief: string
+  tone: string | null
+  variants: number
+}) {
+  const name = params.chosenName || params.project.businessName || 'this business'
+
+  return `
+Write ${params.variants} ad${params.variants === 1 ? '' : 's'} for "${name}".
+
+What is being advertised, from the customer:
+${params.brief}
+${params.tone ? `\nTone for these specifically (overrides the brand voice): ${params.tone}` : ''}
+
+${projectBrief(params.project)}
+
+The brand, as it already exists:
+${brandContextBlock(params.branding, { chosenName: params.chosenName })}
+
+Each ad needs a headline, the body that follows it, and what the button says.
+Write for paid placement — somebody who has not asked to see this and owes you
+no attention.
+
+Give a short title for this set — a few words the customer will recognise it by
+in a list, not a headline for the ads.
 `.trim()
 }
 

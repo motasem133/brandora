@@ -3,9 +3,20 @@ import 'server-only'
 import { and, eq } from 'drizzle-orm'
 
 import { AppError } from '@/lib/errors'
-import { type BuiltContentType, MAX_VARIANTS, isRenderedType } from '@/lib/content'
-import { contentSocialPostSchemaFor } from '@/server/ai/schemas'
-import { contentSocialPostPrompt, contentSocialPostSystem, PROMPT_VERSIONS } from '@/server/ai/prompts'
+import {
+  type BuiltContentType,
+  MAX_VARIANTS,
+  contentBodySchema,
+  isRenderedType,
+} from '@/lib/content'
+import { contentAdSchemaFor, contentSocialPostSchemaFor } from '@/server/ai/schemas'
+import {
+  contentAdPrompt,
+  contentAdSystem,
+  contentSocialPostPrompt,
+  contentSocialPostSystem,
+  PROMPT_VERSIONS,
+} from '@/server/ai/prompts'
 import { runModel } from '@/server/ai/run'
 import {
   creditsForContent,
@@ -227,28 +238,56 @@ export async function generateContentItem(params: GenerateContentParams) {
   const project = row.project
   const chosenName = project.businessName
 
+  /*
+   * Which contract this type is written against.
+   *
+   * The three arguments travel together on purpose — a schema pinned to a
+   * count, the rules that produce it and the prompt that asks for it are one
+   * decision, and splitting them across three switches is how a type ends up
+   * validated against another type's shape. Adding the fourth text type means
+   * adding a case here and nothing else in this function.
+   */
+  const brief = {
+    project: {
+      industry: project.industry,
+      country: project.country,
+      brandBrief: project.brandBrief,
+      brandStyle: project.brandStyle,
+      businessName: project.businessName,
+      preferredColors: project.preferredColors,
+      language: project.language,
+    },
+    branding: row.branding,
+    chosenName,
+    brief: params.brief,
+    tone: params.tone,
+    variants,
+  }
+
+  const written =
+    params.type === 'ad'
+      ? {
+          kind: 'ad' as const,
+          schema: contentAdSchemaFor(variants),
+          system: contentAdSystem(project.language),
+          prompt: contentAdPrompt(brief),
+          promptVersion: PROMPT_VERSIONS.contentAd,
+        }
+      : {
+          kind: 'social_post' as const,
+          schema: contentSocialPostSchemaFor(variants),
+          system: contentSocialPostSystem(project.language),
+          prompt: contentSocialPostPrompt(brief),
+          promptVersion: PROMPT_VERSIONS.contentSocialPost,
+        }
+
   try {
     const output = await withTimeout(
       runModel({
         task: 'social',
-        schema: contentSocialPostSchemaFor(variants),
-        system: contentSocialPostSystem(project.language),
-        prompt: contentSocialPostPrompt({
-          project: {
-            industry: project.industry,
-            country: project.country,
-            brandBrief: project.brandBrief,
-            brandStyle: project.brandStyle,
-            businessName: project.businessName,
-            preferredColors: project.preferredColors,
-            language: project.language,
-          },
-          branding: row.branding,
-          chosenName,
-          brief: params.brief,
-          tone: params.tone,
-          variants,
-        }),
+        schema: written.schema,
+        system: written.system,
+        prompt: written.prompt,
         context: {
           organizationId: params.organizationId,
           projectId: params.projectId,
@@ -263,10 +302,18 @@ export async function generateContentItem(params: GenerateContentParams) {
       .set({
         status: 'ready',
         title: output.title,
-        body: { kind: 'social_post', items: output.items },
+        /*
+         * Parsed through the union rather than assembled from two halves.
+         *
+         * `{ kind, items }` built from independently-narrowed variables type-
+         * checks against neither member — which is the compiler catching the
+         * exact drift this file warns about, an ad's items filed under a
+         * caption's kind. Parsing pairs them or throws.
+         */
+        body: contentBodySchema.parse({ kind: written.kind, items: output.items }),
         creditsCharged: cost,
         modelUsed: 'social',
-        promptVersion: PROMPT_VERSIONS.contentSocialPost,
+        promptVersion: written.promptVersion,
         updatedAt: new Date(),
       })
       .where(eq(contentItems.id, params.contentItemId))
