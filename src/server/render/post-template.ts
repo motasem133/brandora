@@ -87,17 +87,28 @@ export type Register = {
   colour: 'restrained' | 'full'
   /** Small caps and tracking on the standing details. */
   formal: boolean
+  /**
+   * How a photograph is treated.
+   *
+   * `plain` leaves it alone, which is the honest editorial choice and the right
+   * one for a brand whose credibility is the picture. `duotone` maps it onto the
+   * brand's own two colours, which is what makes a generated stock frame read as
+   * this brand's photography rather than as a stock frame. `tint` is the same
+   * idea at a whisper, for a register that would rather the picture stayed a
+   * picture.
+   */
+  photo: 'plain' | 'duotone' | 'tint'
 }
 
 const REGISTERS = {
   /** Sharp, ranged left, plenty of room. Technology, corporate, consultancy. */
-  editorial: { margin: 88, align: 'start', scale: 1, radius: 0, edge: 'straight', colour: 'restrained', formal: false },
+  editorial: { margin: 88, align: 'start', scale: 1, radius: 0, edge: 'straight', colour: 'restrained', formal: false, photo: 'plain' },
   /** Big type, colour as field, tight margins. Bold, playful, retail, sport. */
-  loud: { margin: 72, align: 'start', scale: 1.16, radius: 10, edge: 'straight', colour: 'full', formal: false },
+  loud: { margin: 72, align: 'start', scale: 1.16, radius: 10, edge: 'straight', colour: 'full', formal: false, photo: 'duotone' },
   /** Centred, generous, quiet. Luxury, jewellery, hospitality, an Arabic register. */
-  refined: { margin: 132, align: 'center', scale: 0.92, radius: 0, edge: 'straight', colour: 'restrained', formal: true },
+  refined: { margin: 132, align: 'center', scale: 0.92, radius: 0, edge: 'straight', colour: 'restrained', formal: true, photo: 'tint' },
   /** Soft edges and warm fields. Food, beauty, wellness, craft. */
-  organic: { margin: 96, align: 'start', scale: 1, radius: 26, edge: 'curve', colour: 'full', formal: false },
+  organic: { margin: 96, align: 'start', scale: 1, radius: 26, edge: 'curve', colour: 'full', formal: false, photo: 'duotone' },
 } as const satisfies Record<string, Register>
 
 export function registerFor(style: string | null, industry: string | null): Register {

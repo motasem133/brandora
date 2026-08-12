@@ -131,10 +131,76 @@ function bar(p: Parts, u: (n: number) => number, colour: string, width = 96) {
   return `<div style="display:flex;width:${u(width)}px;height:${u(8)}px;background:${colour}"></div>`
 }
 
-function photo(src: string, u: (n: number) => number, box: { top: number; height: number }, width: number) {
-  return `<div style="display:flex;position:absolute;top:${u(box.top)}px;left:0;width:${width}px;
+/** A hex to the 0-1 channel values an SVG transfer function wants. */
+function channels(hex: string): [number, number, number] | null {
+  const value = hex.trim().replace(/^#/, '')
+  const full = value.length === 3 ? value.split('').map((ch) => ch + ch).join('') : value
+  if (!/^[0-9a-f]{6}$/i.test(full)) return null
+  return [
+    parseInt(full.slice(0, 2), 16) / 255,
+    parseInt(full.slice(2, 4), 16) / 255,
+    parseInt(full.slice(4, 6), 16) / 255,
+  ]
+}
+
+/**
+ * The brand's own two colours mapped onto a photograph.
+ *
+ * Generated photography is the part of a kit that looks bought rather than
+ * made: three frames from a model that has never heard of this brand, dropped
+ * into a layout that has. A duotone is the cheapest honest answer — the picture
+ * keeps its composition and its light, and every tone in it lands between two
+ * colours the brand already owns.
+ *
+ * A transfer function rather than blend modes stacked over the image: two
+ * tables map luminance straight onto the ramp, which is one filter and no
+ * layers to get out of order.
+ *
+ * It refuses rather than degrades. A shadow colour that is not clearly darker
+ * than its highlight produces a negative, and a generated palette will hand
+ * over exactly that pairing — so a brand whose primary is pale keeps its
+ * photograph untouched instead of inverted.
+ */
+function duotone(id: string, shadow: string, highlight: string, strength = 1) {
+  const dark = channels(shadow)
+  const light = channels(highlight)
+  if (!dark || !light) return null
+
+  const luma = (ch: [number, number, number]) => 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2]
+  if (luma(dark) >= luma(light) - 0.25) return null
+
+  const table = (i: number) => `${dark[i].toFixed(3)} ${light[i].toFixed(3)}`
+  return `<svg width="0" height="0" style="position:absolute"><defs>
+      <filter id="${id}" color-interpolation-filters="sRGB">
+        <feColorMatrix type="matrix" values=".2126 .7152 .0722 0 0 .2126 .7152 .0722 0 0 .2126 .7152 .0722 0 0 0 0 0 1 0"/>
+        <feComponentTransfer result="duo">
+          <feFuncR type="table" tableValues="${table(0)}"/>
+          <feFuncG type="table" tableValues="${table(1)}"/>
+          <feFuncB type="table" tableValues="${table(2)}"/>
+        </feComponentTransfer>
+        ${strength < 1
+          ? `<feComposite in="duo" in2="SourceGraphic" operator="arithmetic" k2="${strength}" k3="${(1 - strength).toFixed(2)}"/>`
+          : ''}
+      </filter></defs></svg>`
+}
+
+/** A photograph, filling its box, treated as the brand's register asks. */
+function photo(
+  src: string,
+  u: (n: number) => number,
+  box: { top: number; height: number },
+  width: number,
+  treatment?: { mode: 'plain' | 'duotone' | 'tint'; shadow: string; highlight: string },
+) {
+  const filter =
+    treatment && treatment.mode !== 'plain'
+      ? duotone('duo', treatment.shadow, treatment.highlight, treatment.mode === 'tint' ? 0.6 : 1)
+      : null
+
+  return `${filter ?? ''}<div style="display:flex;position:absolute;top:${u(box.top)}px;left:0;width:${width}px;
       height:${u(box.height)}px;overflow:hidden">
-      <img src="${src}" width="${width}" height="${u(box.height)}" style="object-fit:cover"/></div>`
+      <img src="${src}" width="${width}" height="${u(box.height)}"
+        style="object-fit:cover${filter ? ';filter:url(#duo)' : ''}"/></div>`
 }
 
 
@@ -193,6 +259,8 @@ export function renderLayout(kind: LayoutKind, p: Parts) {
   const r = registerFor(p.brand.style, p.brand.industry)
   const m = u(r.margin)
   const ranged = r.align === 'center' ? 'center' : rtl ? 'flex-end' : 'flex-start'
+  /* Shadows take the brand's ground, highlights its paper. */
+  const treatment = { mode: r.photo, shadow: c.primary, highlight: c.background } as const
 
   let body = ''
 
@@ -215,7 +283,7 @@ export function renderLayout(kind: LayoutKind, p: Parts) {
      * off the top of the picture, which is what let the white plate go.
      */
     body = `
-      ${p.photo ? photo(p.photo, u, { top: 0, height: fieldTop + u(2) }, p.width) : `<div style="display:flex;position:absolute;inset:0;background:${c.primary}"></div>`}
+      ${p.photo ? photo(p.photo, u, { top: 0, height: fieldTop + u(2) }, p.width, treatment) : `<div style="display:flex;position:absolute;inset:0;background:${c.primary}"></div>`}
       <div style="display:flex;position:absolute;left:0;top:0;width:${p.width}px;height:${u(360)}px;
         background:linear-gradient(to bottom, rgba(0,0,0,.45) 0%, rgba(0,0,0,0) 100%)"></div>
       ${lockup(p, u, rtl, c.primary)}
@@ -242,7 +310,7 @@ export function renderLayout(kind: LayoutKind, p: Parts) {
      */
     body = `
       <div style="display:flex;position:absolute;inset:0;background:${c.background}"></div>
-      ${p.photo ? photo(p.photo, u, { top: 580, height: 500 }, p.width) : ''}
+      ${p.photo ? photo(p.photo, u, { top: 580, height: 500 }, p.width, treatment) : ''}
       ${lockup(p, u, rtl, c.background)}
       <div style="display:flex;flex-direction:column;position:absolute;left:${m}px;
         right:${m}px;top:${u(216)}px;align-items:${ranged}">
@@ -324,7 +392,7 @@ export function renderLayout(kind: LayoutKind, p: Parts) {
      */
     body = `
       <div style="display:flex;position:absolute;inset:0;background:${c.background}"></div>
-      ${p.photo ? photo(p.photo, u, { top: 0, height: 360 }, p.width) : ''}
+      ${p.photo ? photo(p.photo, u, { top: 0, height: 360 }, p.width, treatment) : ''}
       <div style="display:flex;position:absolute;left:0;top:0;width:${p.width}px;height:${u(300)}px;
         background:linear-gradient(to bottom, rgba(0,0,0,.45) 0%, rgba(0,0,0,0) 100%)"></div>
       ${lockup(p, u, rtl, c.primary)}
