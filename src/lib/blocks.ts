@@ -165,15 +165,47 @@ export const blockSchema = z.discriminatedUnion('type', [
 export type Block = z.infer<typeof blockSchema>
 export type BlockType = Block['type']
 
-export const PAGE_KEYS = ['home', 'about', 'services', 'contact'] as const
+/**
+ * Every page a site may have, in the order a nav should list them.
+ *
+ * Four pages were hardcoded for every business ever generated: home, about,
+ * services, contact. A café has a menu and no services; a studio has a
+ * portfolio; a consultancy's most-visited page is its pricing. They each got
+ * "Services" instead, because that is what the schema had a slot for.
+ *
+ * No `portfolio` yet, deliberately: a portfolio page is a page of pictures, and
+ * there is no block that carries a set of images. It belongs here the day a
+ * gallery block exists, and until then it would be a services list with a
+ * different heading.
+ *
+ * A vocabulary rather than a fixed set. Which of these a site actually has is
+ * per site — chosen at generation for the business, and stored as the keys of
+ * `pages` — so the shape of the site is part of what is generated rather than a
+ * constant it has to fit into. `home` is the only one every site must have.
+ */
+export const PAGE_KEYS = [
+  'home',
+  'about',
+  'services',
+  'menu',
+  'pricing',
+  'faq',
+  'contact',
+] as const
 export type PageKey = (typeof PAGE_KEYS)[number]
 
-export const pagesSchema = z.object({
-  home: z.array(blockSchema),
-  about: z.array(blockSchema),
-  services: z.array(blockSchema),
-  contact: z.array(blockSchema),
-})
+/** The four every site had before pages could vary. Still the default shape. */
+export const CORE_PAGES = ['home', 'about', 'services', 'contact'] as const
+
+/**
+ * Lenient by design — see the note on `href` above.
+ *
+ * A page map from before this vocabulary existed parses unchanged, and a page
+ * the customer emptied in the builder stays an empty array rather than failing
+ * autosave. Generation is where the contract is strict; see
+ * `server/ai/schemas.ts`.
+ */
+export const pagesSchema = z.partialRecord(z.enum(PAGE_KEYS), z.array(blockSchema))
 
 export type Pages = z.infer<typeof pagesSchema>
 

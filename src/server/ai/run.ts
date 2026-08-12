@@ -61,8 +61,17 @@ export async function runModel<T extends z.ZodType>(options: RunOptions<T>): Pro
   const chain = modelChain(options.task)
   let lastError: unknown
 
-  /** How long one model gets before the chain moves on. See the call below. */
-  const ATTEMPT_TIMEOUT_MS = 60_000
+  /*
+   * How long one model gets before the chain moves on.
+   *
+   * A minute is right for a caption set and wrong for a whole website: the site
+   * is four or five pages of real copy in one response, and a model that is
+   * writing steadily at fifty seconds is not stuck. Raised for that task alone,
+   * and no higher — three attempts have to finish inside the Inngest route's
+   * 300-second ceiling, or the function is killed with the work half done and
+   * the customer's credits already held.
+   */
+  const ATTEMPT_TIMEOUT_MS = options.task === 'website' ? 90_000 : 60_000
 
   /*
    * The chain answers "this model is having a bad day" by trying another one.
@@ -163,9 +172,23 @@ export async function runModel<T extends z.ZodType>(options: RunOptions<T>): Pro
         status: 'error',
       })
 
+      /*
+       * "response did not match schema" on its own cannot be acted on.
+       *
+       * It is the most common way a model fails here and the message says
+       * nothing about which field, so diagnosing one meant re-running the call
+       * by hand with a debugger attached. The AI SDK carries the validation
+       * error underneath; a few lines of it name the field, which is usually
+       * the whole diagnosis.
+       */
+      const cause = error instanceof Error ? (error.cause as Error | undefined) : undefined
+
       console.warn(
         `[ai] ${options.task} failed on ${model} (attempt ${attempt + 1}/${chain.length})`,
         error instanceof Error ? error.message : error,
+        /* The tail, not the head: the SDK prints the whole rejected value
+           first and the reason it was rejected last. */
+        cause?.message ? `— ${cause.message.slice(-500)}` : '',
       )
     }
   }

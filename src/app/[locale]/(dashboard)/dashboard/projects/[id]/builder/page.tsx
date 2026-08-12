@@ -18,12 +18,18 @@ import { requireOrg } from '@/server/session'
  *
  * Rows written before a block type existed, or by an older generation, may be
  * missing pages entirely — the builder should open on those rather than crash.
+ * Only the pages a site actually has are kept: which pages exist is per site
+ * now, and inventing four empty ones would put a "Menu" tab on a consultancy.
+ * `home` is the exception, because a site without one has no front door.
  */
 function normalisePages(raw: unknown): Pages {
   const source = (raw ?? {}) as Record<string, unknown>
-  return Object.fromEntries(
-    PAGE_KEYS.map((key) => [key, Array.isArray(source[key]) ? source[key] : []]),
+
+  const pages = Object.fromEntries(
+    PAGE_KEYS.filter((key) => Array.isArray(source[key])).map((key) => [key, source[key]]),
   ) as Pages
+
+  return { home: [], ...pages }
 }
 
 export default async function BuilderPage({

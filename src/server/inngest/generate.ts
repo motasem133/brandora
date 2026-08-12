@@ -286,7 +286,6 @@ export const generateBrand = inngest.createFunction(
               .insert(websiteAssets)
               .values({
                 projectId,
-                template: 'modern',
                 pages: output,
                 // customStyles is deliberately left empty: it holds only explicit
                 // builder overrides. Copying the palette here would freeze the

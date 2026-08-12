@@ -33,7 +33,7 @@ import {
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useAction } from 'next-safe-action/hooks'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { BlockRenderer, registerStyle, resolveTheme } from '@/components/blocks/block-renderer'
 import type { RegisterName } from '@/lib/register'
@@ -142,7 +142,9 @@ export function Builder({
 
   // Overrides win over the generated identity, exactly as the site resolves it.
   const theme = resolveTheme({ ...brandTheme, ...initialTheme })
-  const blocks = pages[page]
+  /* Memoised because it is a new array whenever the page has no blocks, and
+     every callback below depends on it. */
+  const blocks = useMemo(() => pages[page] ?? [], [pages, page])
   const selectedBlock = selected !== null ? blocks[selected] : undefined
 
   const { execute: save, isPending: saving } = useAction(updateWebsiteContent, {
@@ -352,7 +354,8 @@ export function Builder({
           aria-label={t('pagesLabel')}
           data-testid="page-tabs"
           className="flex gap-1 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {PAGE_KEYS.map((key) => (
+          {/* The pages this site actually has, in the vocabulary's order. */}
+          {PAGE_KEYS.filter((key) => pages[key]).map((key) => (
             <button
               key={key}
               onClick={() => {

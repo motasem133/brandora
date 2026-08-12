@@ -70,16 +70,38 @@ function basePath(host: string | null, segment: string) {
  * contact form's labels above: the language belongs to the brand.
  */
 const TITLES = {
-  en: { home: 'Home', about: 'About', services: 'Services', contact: 'Contact' },
-  ar: { home: 'الرئيسية', about: 'من نحن', services: 'خدماتنا', contact: 'اتصل بنا' },
+  en: {
+    home: 'Home',
+    about: 'About',
+    services: 'Services',
+    menu: 'Menu',
+    pricing: 'Pricing',
+    faq: 'FAQ',
+    contact: 'Contact',
+  },
+  ar: {
+    home: 'الرئيسية',
+    about: 'من نحن',
+    services: 'خدماتنا',
+    menu: 'القائمة',
+    pricing: 'الأسعار',
+    faq: 'أسئلة شائعة',
+    contact: 'اتصل بنا',
+  },
 } as const satisfies Record<string, Record<PageKey, string>>
 
-/** The page a path asks for, defaulting to home; anything deeper is not a page. */
-function pageKey(segments: string[] | undefined): PageKey {
+/**
+ * The page a path asks for, defaulting to home; anything deeper is not a page.
+ *
+ * Checked against the pages this site actually has rather than against the
+ * vocabulary: a consultancy has no menu, and `/menu` on its site is a 404, not
+ * an empty page with a heading and nothing under it.
+ */
+function pageKey(segments: string[] | undefined, pages: Record<string, unknown>): PageKey {
   const [first, ...rest] = segments ?? []
   if (rest.length) notFound()
   if (!first) return 'home'
-  if (!PAGE_KEYS.includes(first as PageKey)) notFound()
+  if (!PAGE_KEYS.includes(first as PageKey) || !pages[first]) notFound()
   return first as PageKey
 }
 
@@ -116,7 +138,7 @@ export async function generateMetadata({
   const site = await getPublishedSite(subdomain)
   if (!site) return { title: 'Not found' }
 
-  const active = pageKey(page)
+  const active = pageKey(page, (site.website.pages ?? {}) as Record<string, unknown>)
   const name = site.project.businessName || site.project.title
   const description = site.branding?.slogan ?? undefined
 
@@ -185,8 +207,6 @@ export default async function PublishedSite({
     redirect(queryPage === 'home' ? `${base}/` : `${base}/${queryPage}`)
   }
 
-  const active = pageKey(page)
-
   const site = await getPublishedSite(subdomain)
   if (!site) notFound()
 
@@ -199,6 +219,7 @@ export default async function PublishedSite({
   const theme = resolveTheme({ ...themeFromBranding(site.branding), ...(site.website.customStyles as Theme) })
   const pages = (site.website.pages ?? {}) as Record<string, Block[]>
 
+  const active = pageKey(page, pages)
   const blocks = pages[active] ?? []
 
   /*
