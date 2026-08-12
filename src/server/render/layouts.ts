@@ -1,7 +1,7 @@
 import 'server-only'
 
 import { contrast } from '@/lib/brand-theme'
-import { deviceFor, SHAPE_DEVICES, splitHeadline, type PostBrand } from './post-template'
+import { splitHeadline, type PostBrand } from './post-template'
 
 /**
  * The layouts a kit is made of.
@@ -57,78 +57,60 @@ type Parts = {
 const scaler = (width: number) => (n: number) => Math.round((n / 1080) * width)
 
 /** The logo, on its own plate, in the corner it always occupies. */
-function chip(p: Parts, u: (n: number) => number, rtl: boolean, onLight = false) {
-  const inner = `<img src="${p.wordmark}" width="${u(190)}" height="${u(74)}" style="object-fit:contain"/>`
-  const place = `position:absolute;top:${u(54)}px;${rtl ? `right:${u(54)}px` : `left:${u(54)}px`}`
-
-  /*
-   * On a light ground the plate is dropped and the wordmark stands on its own.
-   *
-   * The plate existed to lift a dark mark off a dark field. Kept on a light
-   * layout it inverted to the brand colour and swallowed the mark whole — a
-   * dark wordmark on a dark plate, invisible, which is exactly how it shipped
-   * into the first full kit.
-   */
-  if (onLight) return `<div style="display:flex;${place};align-items:center">${inner}</div>`
-
-  return `<div style="display:flex;${place};align-items:center;justify-content:center;
-      background:${p.brand.palette.background};border-radius:${u(20)}px;
-      padding:${u(18)}px ${u(26)}px">${inner}</div>`
+/**
+ * The mark, set on the picture rather than on a plate.
+ *
+ * The plate was a white rounded rectangle behind the logo, and it read as a
+ * sticker pasted onto the photograph — the single most template-looking element
+ * in the kit. It existed for a real reason: a dark mark on a dark picture
+ * disappears. The reason is answered here by the scrim the photographic layouts
+ * already draw, and by using the reversed lockup on it, which is a file the kit
+ * produces anyway.
+ *
+ * On a light ground the lockup stands in its own colour with nothing behind it.
+ */
+function lockup(p: Parts, u: (n: number) => number, rtl: boolean, onLight = false) {
+  const place = `position:absolute;top:${u(70)}px;${rtl ? `right:${u(88)}px` : `left:${u(88)}px`}`
+  const invert = onLight ? '' : ';filter:brightness(0) invert(1)'
+  return `<div style="display:flex;${place};align-items:center">
+      <img src="${p.wordmark}" width="${u(210)}" height="${u(80)}"
+        style="object-fit:contain${invert}"/></div>`
 }
 
-/** The brand's gesture, as a band that can be flipped to cut either way. */
-function device(p: Parts, u: (n: number) => number, top: number, tall: number, fill: string, flip = false) {
-  const path = SHAPE_DEVICES[deviceFor(p.brand.style, p.brand.industry)]
-  return `<svg width="${p.width}" height="${u(tall)}" viewBox="0 0 100 100" preserveAspectRatio="none"
-      style="position:absolute;top:${u(top)}px;left:0${flip ? ';transform:scaleY(-1)' : ''}">
-      <path d="${path}" fill="${fill}"/></svg>`
+/**
+ * A field of colour with a straight edge, which is what the wave replaces.
+ *
+ * The band was a silhouette stretched across the canvas: fixed at 1080 it read
+ * as a wave, and a wave under every headline in a kit is a decoration doing the
+ * work that composition should. A rectangle anchored to an edge, with a real
+ * margin and one accent bar, is the same structural job — the headline still
+ * lands on light, which the COLR heading face requires — without a gesture
+ * asking to be noticed.
+ */
+function field(
+  p: Parts,
+  u: (n: number) => number,
+  box: { top: number; height: number },
+  fill: string,
+) {
+  return `<div style="display:flex;position:absolute;left:0;top:${u(box.top)}px;
+      width:${p.width}px;height:${u(box.height)}px;background:${fill}"></div>`
 }
+
+
 
 /** A photograph, filling its box, with the focal point kept off the edges. */
+/** The accent, as a bar with a length rather than a rule with a colour. */
+function bar(p: Parts, u: (n: number) => number, colour: string, width = 96) {
+  return `<div style="display:flex;width:${u(width)}px;height:${u(8)}px;background:${colour}"></div>`
+}
+
 function photo(src: string, u: (n: number) => number, box: { top: number; height: number }, width: number) {
   return `<div style="display:flex;position:absolute;top:${u(box.top)}px;left:0;width:${width}px;
       height:${u(box.height)}px;overflow:hidden">
       <img src="${src}" width="${width}" height="${u(box.height)}" style="object-fit:cover"/></div>`
 }
 
-/**
- * The name, under a rule, the way every post in the reference signs off.
- *
- * One brand mention per post, which is why this and `chip` are never both
- * drawn. They were: the logo plate sat in the corner reading "Brandora" and
- * this printed "BRANDORA" across the foot of the same square, so every post in
- * every kit said the name twice — the tell of a template rather than a design.
- *
- * Which one a layout gets follows the layout. A photograph wants the real
- * lockup held in a corner, out of the picture's way; a flat field has room for
- * the sign-off and nothing to hold it away from. So: chip on the photographic
- * layouts, signature on the flat ones.
- */
-function signature(
-  p: Parts,
-  u: (n: number) => number,
-  bottom: number,
-  colour: string,
-  /** The ground it is sitting on, so the rule can be checked against it. */
-  ground: string,
-) {
-  /*
-   * The rule is the brand's second colour unless that is the ground it is on.
-   *
-   * Drawn blind it vanished the moment a layout took the secondary as its
-   * field — a five-pixel purple line on purple, present in the markup and
-   * invisible in the picture. Checked instead of assumed, and it falls back to
-   * the same colour the name is set in, which is legible there by construction.
-   */
-  const rule =
-    contrast(p.brand.palette.secondary, ground) >= 1.6 ? p.brand.palette.secondary : colour
-
-  return `<div style="display:flex;flex-direction:column;position:absolute;bottom:${u(bottom)}px;left:0;
-      width:${p.width}px;align-items:center">
-      <div style="display:flex;width:${u(120)}px;height:${u(5)}px;background:${rule}"></div>
-      <div style="display:flex;margin-top:${u(30)}px;font-size:${u(46)}px;color:${colour};
-        letter-spacing:${u(6)}px">${escape(p.brand.name.toUpperCase())}</div></div>`
-}
 
 function headline(p: Parts, u: (n: number) => number, opts: {
   size: number
@@ -162,128 +144,119 @@ export function renderLayout(kind: LayoutKind, p: Parts) {
    */
   const tail = p.copy ? p.copy.tail : fallback.tail
   const rtl = hasArabic(lead)
-  const pad = u(88)
 
   let body = ''
 
   if (kind === 'hero' || kind === 'story') {
     const tall = kind === 'story' ? 1920 : 1080
-    const plateTop = kind === 'story' ? 1090 : 520
-    const plateTall = kind === 'story' ? 470 : 370
+    const fieldTop = kind === 'story' ? 1240 : 640
+    const fieldTall = tall - fieldTop
 
     /*
-     * Photograph, scrim, then the words on a plate — not on the photograph.
+     * Photograph above, a block of the brand's ground below, type ranged left.
      *
-     * Setting the headline straight onto the image failed for a reason no
-     * amount of scrim fixes: the brand's heading face is a COLR font, so it
-     * paints its own red and ignores `color` entirely. Light type on a dark
-     * picture was never available. The reference solves the same problem the
-     * same way on every one of its posts — a shape in the brand's gesture,
-     * light, with the headline inside it — so the constraint and the reference
-     * agree.
+     * The words cannot sit on the picture — the heading face may be COLR and
+     * paint its own colour whatever `color` says, which is the constraint every
+     * version of this layout has been built around. What changed is the shape
+     * that carries them: a straight-edged field anchored to the bottom edge
+     * rather than a wave floating across the middle of the photograph, and the
+     * type ranged left against a margin instead of centred in the band.
      *
-     * The scrim stays, for the chip and the signature, and because a generated
-     * photograph can come back bright exactly where they sit.
+     * The scrim stays, and now earns itself twice: it lifts the reversed lockup
+     * off the top of the picture, which is what let the white plate go.
      */
     body = `
-      ${p.photo ? photo(p.photo, u, { top: 0, height: tall }, p.width) : `<div style="display:flex;position:absolute;inset:0;background:${c.primary}"></div>`}
-      <div style="display:flex;position:absolute;left:0;top:0;width:${p.width}px;height:${u(tall)}px;
-        background:linear-gradient(to bottom, rgba(0,0,0,.42) 0%, rgba(0,0,0,.04) 34%, rgba(0,0,0,.30) 62%, ${c.primary} 94%)"></div>
-      ${chip(p, u, rtl)}
-      <div style="display:flex;position:absolute;left:0;top:${u(plateTop)}px;width:${p.width}px;height:${u(plateTall)}px">
-        ${device(p, u, 0, plateTall, c.background)}
-        <div style="display:flex;flex-direction:column;position:absolute;top:0;left:0;width:${p.width}px;
-          height:${u(plateTall)}px;align-items:center;justify-content:center;padding:0 ${u(110)}px">
-          ${headline(p, u, { size: kind === 'story' ? 104 : 88, lead, tail, colour: c.text,
-            tailColour: c.primary, align: 'center', rtl })}
+      ${p.photo ? photo(p.photo, u, { top: 0, height: fieldTop + u(2) }, p.width) : `<div style="display:flex;position:absolute;inset:0;background:${c.primary}"></div>`}
+      <div style="display:flex;position:absolute;left:0;top:0;width:${p.width}px;height:${u(360)}px;
+        background:linear-gradient(to bottom, rgba(0,0,0,.45) 0%, rgba(0,0,0,0) 100%)"></div>
+      ${lockup(p, u, rtl)}
+      ${field(p, u, { top: fieldTop, height: fieldTall }, c.background)}
+      <div style="display:flex;flex-direction:column;position:absolute;left:${u(88)}px;
+        right:${u(88)}px;top:${u(fieldTop + 78)}px;align-items:${rtl ? 'flex-end' : 'flex-start'}">
+        ${bar(p, u, c.secondary)}
+        <div style="display:flex;margin-top:${u(34)}px;width:100%">
+          ${headline(p, u, { size: kind === 'story' ? 100 : 86, lead, tail, colour: c.text,
+            tailColour: c.primary, align: 'start', rtl })}
         </div>
-      </div>
-`
+      </div>`
   }
 
   if (kind === 'feature') {
     /*
-     * Photograph above, the brand's gesture cutting into it, words below on
-     * light.
+     * Hero, upside down: the words at the top on light, the photograph filling
+     * the bottom two thirds.
      *
-     * The panel was the brand's dark colour first, and the headline on it was
-     * unreadable for the third time in this file: a COLR heading face paints
-     * its own red whatever `color` says, so red landed on dark teal. That is
-     * now a rule rather than three separate patches — the headline always sits
-     * on light, and the layouts differ in where the light is, not in whether
-     * it is there.
+     * Both layouts are a picture and a field, and built the same way round they
+     * were the same post twice in one kit. The inversion is the variety, and it
+     * costs nothing — the headline still lands on light, which is the rule the
+     * COLR heading face imposes on every layout in this file.
      */
     body = `
       <div style="display:flex;position:absolute;inset:0;background:${c.background}"></div>
-      ${p.photo ? photo(p.photo, u, { top: 0, height: 620 }, p.width) : ''}
-      ${device(p, u, 468, 200, c.background)}
-      ${chip(p, u, rtl)}
-      <div style="display:flex;flex-direction:column;position:absolute;left:${pad}px;right:${pad}px;top:${u(700)}px">
-        ${headline(p, u, { size: 78, lead, tail, colour: c.text, tailColour: c.primary,
-          align: 'center', rtl })}
+      ${p.photo ? photo(p.photo, u, { top: 470, height: 610 }, p.width) : ''}
+      ${lockup(p, u, rtl, true)}
+      <div style="display:flex;flex-direction:column;position:absolute;left:${u(88)}px;
+        right:${u(88)}px;top:${u(216)}px;align-items:${rtl ? 'flex-end' : 'flex-start'}">
+        ${bar(p, u, c.secondary)}
+        <div style="display:flex;margin-top:${u(30)}px;width:100%">
+          ${headline(p, u, { size: 76, lead, tail, colour: c.text, tailColour: c.primary,
+            align: 'start', rtl })}
+        </div>
       </div>`
   }
 
   if (kind === 'statement') {
     /*
-     * No photograph at all: the mark, oversized and faint, is the picture.
+     * Colour, type, and nothing else.
      *
-     * On the brand's second colour rather than a fifth navy ground. Laid out as
-     * a set, every post in the kit was primary-and-white with a four-pixel rule
-     * of secondary somewhere near the bottom — a palette post advertising
-     * colours the kit itself never used. This is the one layout with nothing in
-     * it but a line of type, so it is where a colour can be the whole idea.
-     *
-     * The headline still sits on the light plate: the heading face may be COLR
-     * and paint its own colour whatever `color` says, which is the constraint
-     * three earlier attempts in this file were broken by. Only the field
-     * changes.
+     * The mark used to be here at 620px and 12% opacity with a ghost wordmark
+     * behind it — a watermark doing the job of a composition, and the thing
+     * that made the post look like a template with the logo turned down. The
+     * field is the brand's second colour, the type sits on a white block that
+     * stops short of three edges, and the mark is absent: this is the post that
+     * proves a brand can be recognised by colour and type alone.
      */
     body = `
       <div style="display:flex;position:absolute;inset:0;background:${c.secondary}"></div>
-      <div style="display:flex;position:absolute;top:0;left:0;width:${p.width}px;height:${u(300)}px;overflow:hidden">
-        <img src="${p.mark}" width="${u(620)}" height="${u(620)}" style="position:absolute;top:${u(-190)}px;
-          ${rtl ? 'left' : 'right'}:${u(-120)}px;object-fit:contain;opacity:0.12"/></div>
-      <div style="display:flex;position:absolute;left:0;top:${u(300)}px;width:${p.width}px;height:${u(470)}px">
-        ${device(p, u, 0, 470, c.background)}
-        <div style="display:flex;flex-direction:column;position:absolute;top:0;left:0;width:${p.width}px;
-          height:${u(470)}px;align-items:center;justify-content:center;padding:0 ${u(110)}px">
-          ${headline(p, u, { size: 104, lead, tail, colour: c.text, tailColour: c.primary, align: 'center', rtl })}
-        </div></div>
-      ${signature(p, u, 74, c.background, c.secondary)}`
+      ${lockup(p, u, rtl)}
+      <div style="display:flex;flex-direction:column;position:absolute;left:${u(88)}px;
+        right:${u(88)}px;top:${u(300)}px;bottom:${u(200)}px;background:${c.background};
+        padding:${u(84)}px ${u(76)}px;justify-content:center;
+        align-items:${rtl ? 'flex-end' : 'flex-start'}">
+        ${bar(p, u, c.secondary)}
+        <div style="display:flex;margin-top:${u(38)}px;width:100%">
+          ${headline(p, u, { size: 92, lead, tail, colour: c.text, tailColour: c.primary,
+            align: 'start', rtl })}
+        </div>
+      </div>
+`
   }
 
   if (kind === 'detail') {
     /*
-     * The photograph held inside the brand's own gesture.
+     * The photograph framed rather than cut out.
      *
-     * This is the post that proves the shape is an identity and not a divider:
-     * the same path that cuts the headline plate elsewhere is the window the
-     * picture is seen through here.
-     *
-     * Ranged left, and deliberately the only one. Every headline in the kit was
-     * centred, which is the arrangement that reads as a template however good
-     * the parts are — eight posts, one axis. One asymmetric composition in a set
-     * of eight is enough to say the centring elsewhere was a choice. The accent
-     * colour marks it, since that colour appeared nowhere in the kit at all.
+     * It used to be clipped to the brand's gesture — the same silhouette that
+     * carried every headline, used here as a window. With the gesture gone the
+     * window went with it, and what holds the picture now is an offset block of
+     * the accent colour: the frame is a margin and a shadow of colour, which is
+     * the same idea an art director reaches for and does not need a custom path
+     * to say.
      */
-    const path = SHAPE_DEVICES[deviceFor(p.brand.style, p.brand.industry)]
     body = `
       <div style="display:flex;position:absolute;inset:0;background:${c.background}"></div>
-      <svg width="0" height="0" style="position:absolute"><defs>
-        <clipPath id="window" clipPathUnits="objectBoundingBox">
-          <path d="${path}" transform="scale(0.01)"/></clipPath></defs></svg>
-      <div style="display:flex;position:absolute;top:${u(210)}px;left:${u(120)}px;width:${u(840)}px;
-        height:${u(560)}px;overflow:hidden;clip-path:url(#window)">
-        ${p.photo ? `<img src="${p.photo}" width="${u(840)}" height="${u(560)}" style="object-fit:cover"/>`
+      <div style="display:flex;position:absolute;left:${u(150)}px;top:${u(240)}px;
+        width:${u(820)}px;height:${u(520)}px;background:${c.accent}"></div>
+      <div style="display:flex;position:absolute;left:${u(110)}px;top:${u(200)}px;
+        width:${u(820)}px;height:${u(520)}px;overflow:hidden">
+        ${p.photo ? `<img src="${p.photo}" width="${u(820)}" height="${u(520)}" style="object-fit:cover"/>`
           : `<div style="display:flex;width:100%;height:100%;background:${c.primary}"></div>`}
       </div>
-      ${chip(p, u, rtl, true)}
-      <div style="display:flex;flex-direction:column;position:absolute;left:${u(120)}px;right:${u(120)}px;
-        top:${u(820)}px;align-items:${rtl ? 'flex-end' : 'flex-start'}">
-        <div style="display:flex;width:${u(72)}px;height:${u(6)}px;background:${c.accent};
-          margin-bottom:${u(26)}px"></div>
-        ${headline(p, u, { size: 64, lead, tail, colour: c.text, tailColour: c.primary, align: 'start', rtl })}
+      ${lockup(p, u, rtl, true)}
+      <div style="display:flex;flex-direction:column;position:absolute;left:${u(110)}px;
+        right:${u(110)}px;top:${u(830)}px;align-items:${rtl ? 'flex-end' : 'flex-start'}">
+        ${headline(p, u, { size: 62, lead, tail, colour: c.text, tailColour: c.primary,
+          align: 'start', rtl })}
       </div>`
   }
 
@@ -291,39 +264,28 @@ export function renderLayout(kind: LayoutKind, p: Parts) {
     /*
      * The one post meant to be read rather than seen.
      *
-     * The brand story is prose the branding step already wrote, and it is the
-     * only content here long enough to need a measure — so it gets one, at a
-     * body size, on the light plate the rule requires. The photograph sits
-     * behind it as a ground rather than beside it, because a column of text
-     * and a picture competing at the same size is a magazine spread, not a
-     * post.
-     *
-     * On the band, not on a rounded card. The card was this layout's own
-     * private shape, and seen beside the other seven it was the one post that
-     * did not belong to the set — the repetition of the gesture is what makes
-     * eight pictures a kit. The band also runs edge to edge, which buys the
-     * measure enough width to come up a size: this was the only post asking to
-     * be read and it was set the smallest.
+     * The brand story is the only content long enough to need a measure, so it
+     * gets one: ranged left against the margin, at a size that survives a phone,
+     * on a field that starts under a band of the photograph rather than a card
+     * floating in the middle of it. The picture is a header, not a backdrop —
+     * behind text at 22% it was neither.
      */
     body = `
-      <div style="display:flex;position:absolute;inset:0;background:${c.primary}"></div>
-      ${p.photo ? `<div style="display:flex;position:absolute;inset:0;overflow:hidden;opacity:0.22">
-        <img src="${p.photo}" width="${p.width}" height="${u(1080)}" style="object-fit:cover"/></div>` : ''}
-      ${chip(p, u, rtl)}
-      <div style="display:flex;position:absolute;left:0;top:${u(300)}px;width:${p.width}px;height:${u(780)}px">
-        ${device(p, u, 0, 780, c.background)}
-        <div style="display:flex;flex-direction:column;position:absolute;top:0;left:0;width:${p.width}px;
-          height:${u(780)}px;align-items:center;justify-content:center;padding:${u(120)}px ${u(120)}px ${u(90)}px">
-          <div style="display:flex;font-family:'${p.brand.fonts.heading}';font-size:${u(58)}px;
-            line-height:1.2;color:${c.text};text-align:center;${rtl ? 'direction:rtl' : ''}"
-            >${escape(lead)}</div>
-          <div style="display:flex;width:${u(90)}px;height:${u(4)}px;background:${c.secondary};
-            margin:${u(30)}px 0"></div>
-          <div style="display:flex;font-size:${u(34)}px;line-height:1.6;color:${c.primary};
-            opacity:0.86;text-align:center">${escape(p.copy?.body ?? '')}</div>
-        </div>
-      </div>
-`
+      <div style="display:flex;position:absolute;inset:0;background:${c.background}"></div>
+      ${p.photo ? photo(p.photo, u, { top: 0, height: 360 }, p.width) : ''}
+      <div style="display:flex;position:absolute;left:0;top:0;width:${p.width}px;height:${u(300)}px;
+        background:linear-gradient(to bottom, rgba(0,0,0,.45) 0%, rgba(0,0,0,0) 100%)"></div>
+      ${lockup(p, u, rtl)}
+      <div style="display:flex;flex-direction:column;position:absolute;left:${u(88)}px;
+        right:${u(88)}px;top:${u(440)}px;align-items:${rtl ? 'flex-end' : 'flex-start'}">
+        ${bar(p, u, c.secondary)}
+        <div style="display:flex;margin-top:${u(30)}px;font-family:'${p.brand.fonts.heading}';
+          font-size:${u(52)}px;line-height:1.18;color:${c.text};${rtl ? 'direction:rtl' : ''}"
+          >${escape(lead)}</div>
+        <div style="display:flex;margin-top:${u(26)}px;font-size:${u(32)}px;line-height:1.6;
+          color:${c.primary};opacity:.86;${rtl ? 'direction:rtl' : ''}"
+          >${escape(p.copy?.body ?? '')}</div>
+      </div>`
   }
 
   if (kind === 'palette') {
@@ -388,37 +350,34 @@ export function renderLayout(kind: LayoutKind, p: Parts) {
           </div>
         </div>
       </div>
-      ${signature(p, u, 74, c.primary, c.background)}`
+      ${/* Reversed: the corner it sits in is the primary swatch, not paper. */ ''}
+      ${lockup(p, u, rtl)}`
   }
 
   if (kind === 'identity') {
     /*
      * The logo, presented rather than applied.
      *
-     * Every other post uses the mark at chip size in a corner. This is the one
-     * that shows it — full lockup on the brand's own ground, with the symbol
-     * alone beside it, which is exactly the pair the kit now produces as
-     * transparent files.
+     * A split field: the brand's ground above the fold, its second colour
+     * below, the lockup centred in the upper field and clear of the join. It
+     * sat across the join first, and the fold cut through the middle of the
+     * wordmark — a composition and an accident look identical at that size. The wave that
+     * used to hold the mark at the foot has gone with the rest of them, and so
+     * has the caption under it — the subject of this post is the mark, and a
+     * post that labels its own subject is a post that does not trust it.
      *
-     * No caption under it. The name is already set twice here in artwork — once
-     * reversed on the ground, once in colour on the band — and a third in
-     * letter-spaced capitals underneath was the post explaining what a reader
-     * is plainly looking at. The subject of this one is the mark; it does not
-     * need a label.
+     * The reversed lockup, because both fields are dark; that is a file the kit
+     * already produces and the reason it produces it.
      */
     body = `
       <div style="display:flex;position:absolute;inset:0;background:${c.primary}"></div>
-      ${device(p, u, 620, 460, c.background)}
-      <div style="display:flex;position:absolute;left:0;top:${u(180)}px;width:${p.width}px;
-        height:${u(360)}px;align-items:center;justify-content:center;padding:0 ${u(140)}px">
-        <img src="${p.wordmark}" width="${u(800)}" height="${u(300)}"
+      <div style="display:flex;position:absolute;left:0;top:${u(760)}px;width:${p.width}px;
+        height:${u(320)}px;background:${c.secondary}"></div>
+      <div style="display:flex;position:absolute;left:0;top:${u(140)}px;width:${p.width}px;
+        height:${u(560)}px;align-items:center;justify-content:center;padding:0 ${u(150)}px">
+        <img src="${p.wordmark}" width="${u(780)}" height="${u(300)}"
           style="object-fit:contain;filter:brightness(0) invert(1)"/>
-      </div>
-      <div style="display:flex;position:absolute;left:0;top:${u(700)}px;width:${p.width}px;
-        height:${u(230)}px;align-items:center;justify-content:center">
-        <img src="${p.mark}" width="${u(230)}" height="${u(230)}" style="object-fit:contain"/>
-      </div>
-`
+      </div>`
   }
 
   return `<!doctype html><html><head><meta charset="utf-8"><style>
