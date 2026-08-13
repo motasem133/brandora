@@ -1,5 +1,6 @@
 import 'server-only'
 
+import { contrast } from '@/lib/brand-theme'
 import { deviceFor, SHAPE_DEVICES, splitHeadline, type PostBrand } from './post-template'
 
 /**
@@ -103,10 +104,28 @@ function photo(src: string, u: (n: number) => number, box: { top: number; height
  * the sign-off and nothing to hold it away from. So: chip on the photographic
  * layouts, signature on the flat ones.
  */
-function signature(p: Parts, u: (n: number) => number, bottom: number, colour: string) {
+function signature(
+  p: Parts,
+  u: (n: number) => number,
+  bottom: number,
+  colour: string,
+  /** The ground it is sitting on, so the rule can be checked against it. */
+  ground: string,
+) {
+  /*
+   * The rule is the brand's second colour unless that is the ground it is on.
+   *
+   * Drawn blind it vanished the moment a layout took the secondary as its
+   * field — a five-pixel purple line on purple, present in the markup and
+   * invisible in the picture. Checked instead of assumed, and it falls back to
+   * the same colour the name is set in, which is legible there by construction.
+   */
+  const rule =
+    contrast(p.brand.palette.secondary, ground) >= 1.6 ? p.brand.palette.secondary : colour
+
   return `<div style="display:flex;flex-direction:column;position:absolute;bottom:${u(bottom)}px;left:0;
       width:${p.width}px;align-items:center">
-      <div style="display:flex;width:${u(120)}px;height:${u(5)}px;background:${p.brand.palette.secondary}"></div>
+      <div style="display:flex;width:${u(120)}px;height:${u(5)}px;background:${rule}"></div>
       <div style="display:flex;margin-top:${u(30)}px;font-size:${u(46)}px;color:${colour};
         letter-spacing:${u(6)}px">${escape(p.brand.name.toUpperCase())}</div></div>`
 }
@@ -206,9 +225,22 @@ export function renderLayout(kind: LayoutKind, p: Parts) {
   }
 
   if (kind === 'statement') {
-    // No photograph at all: the mark, oversized and faint, is the picture.
+    /*
+     * No photograph at all: the mark, oversized and faint, is the picture.
+     *
+     * On the brand's second colour rather than a fifth navy ground. Laid out as
+     * a set, every post in the kit was primary-and-white with a four-pixel rule
+     * of secondary somewhere near the bottom — a palette post advertising
+     * colours the kit itself never used. This is the one layout with nothing in
+     * it but a line of type, so it is where a colour can be the whole idea.
+     *
+     * The headline still sits on the light plate: the heading face may be COLR
+     * and paint its own colour whatever `color` says, which is the constraint
+     * three earlier attempts in this file were broken by. Only the field
+     * changes.
+     */
     body = `
-      <div style="display:flex;position:absolute;inset:0;background:${c.primary}"></div>
+      <div style="display:flex;position:absolute;inset:0;background:${c.secondary}"></div>
       <div style="display:flex;position:absolute;top:0;left:0;width:${p.width}px;height:${u(300)}px;overflow:hidden">
         <img src="${p.mark}" width="${u(620)}" height="${u(620)}" style="position:absolute;top:${u(-190)}px;
           ${rtl ? 'left' : 'right'}:${u(-120)}px;object-fit:contain;opacity:0.12"/></div>
@@ -218,7 +250,7 @@ export function renderLayout(kind: LayoutKind, p: Parts) {
           height:${u(470)}px;align-items:center;justify-content:center;padding:0 ${u(110)}px">
           ${headline(p, u, { size: 104, lead, tail, colour: c.text, tailColour: c.primary, align: 'center', rtl })}
         </div></div>
-      ${signature(p, u, 74, c.background)}`
+      ${signature(p, u, 74, c.background, c.secondary)}`
   }
 
   if (kind === 'detail') {
@@ -228,6 +260,12 @@ export function renderLayout(kind: LayoutKind, p: Parts) {
      * This is the post that proves the shape is an identity and not a divider:
      * the same path that cuts the headline plate elsewhere is the window the
      * picture is seen through here.
+     *
+     * Ranged left, and deliberately the only one. Every headline in the kit was
+     * centred, which is the arrangement that reads as a template however good
+     * the parts are — eight posts, one axis. One asymmetric composition in a set
+     * of eight is enough to say the centring elsewhere was a choice. The accent
+     * colour marks it, since that colour appeared nowhere in the kit at all.
      */
     const path = SHAPE_DEVICES[deviceFor(p.brand.style, p.brand.industry)]
     body = `
@@ -241,8 +279,11 @@ export function renderLayout(kind: LayoutKind, p: Parts) {
           : `<div style="display:flex;width:100%;height:100%;background:${c.primary}"></div>`}
       </div>
       ${chip(p, u, rtl, true)}
-      <div style="display:flex;flex-direction:column;position:absolute;left:${pad}px;right:${pad}px;top:${u(820)}px">
-        ${headline(p, u, { size: 64, lead, tail, colour: c.text, tailColour: c.primary, align: 'center', rtl })}
+      <div style="display:flex;flex-direction:column;position:absolute;left:${u(120)}px;right:${u(120)}px;
+        top:${u(820)}px;align-items:${rtl ? 'flex-end' : 'flex-start'}">
+        <div style="display:flex;width:${u(72)}px;height:${u(6)}px;background:${c.accent};
+          margin-bottom:${u(26)}px"></div>
+        ${headline(p, u, { size: 64, lead, tail, colour: c.text, tailColour: c.primary, align: 'start', rtl })}
       </div>`
   }
 
@@ -299,22 +340,39 @@ export function renderLayout(kind: LayoutKind, p: Parts) {
       ['accent', c.accent], ['background', c.background],
     ] as const
 
-    const chips = swatches.map(([label, hex]) => `
-      <div style="display:flex;flex-direction:column;flex:1;align-items:center">
-        <div style="display:flex;width:100%;height:${u(230)}px;background:${hex};
-          border-radius:${u(18)}px;border:1px solid rgba(0,0,0,.08)"></div>
-        <div style="display:flex;font-family:'${p.brand.fonts.body}';font-size:${u(22)}px;
-          margin-top:${u(18)}px;color:${c.primary};letter-spacing:${u(1)}px">${hex.toUpperCase()}</div>
-        <div style="display:flex;font-size:${u(19)}px;color:${c.primary};opacity:.55">${label}</div>
-      </div>`).join('')
+    /*
+     * The colours at full height, with their values set on them.
+     *
+     * They were four small rounded chips floating in the middle of a white
+     * square with their labels underneath — a specification of the palette
+     * rather than a demonstration of it, and the palest post in a kit whose
+     * whole subject is colour. Full-bleed columns make the post the thing it is
+     * about.
+     *
+     * Each label is checked against the colour it is written on rather than set
+     * to one ink and hoped for: a #FFFFFF background swatch and a #1E293B
+     * primary cannot share a label colour, and a generated palette will hand
+     * over both.
+     */
+    const chips = swatches.map(([label, hex]) => {
+      const ink = contrast('#ffffff', hex) >= contrast(c.text, hex) ? '#ffffff' : c.text
+      const hairline = contrast('#ffffff', hex) < 1.3 ? `;box-shadow:inset 0 0 0 1px rgba(0,0,0,.10)` : ''
+      return `
+      <div style="display:flex;flex-direction:column;flex:1;justify-content:flex-end;
+        background:${hex};padding:${u(34)}px ${u(30)}px${hairline}">
+        <div style="display:flex;font-family:'${p.brand.fonts.body}';font-size:${u(26)}px;
+          color:${ink};letter-spacing:${u(1)}px">${hex.toUpperCase()}</div>
+        <div style="display:flex;font-size:${u(20)}px;color:${ink};opacity:.7;
+          margin-top:${u(4)}px">${label}</div>
+      </div>`
+    }).join('')
 
     body = `
       <div style="display:flex;position:absolute;inset:0;background:${c.background}"></div>
+      <div style="display:flex;position:absolute;left:0;top:0;width:${p.width}px;
+        height:${u(560)}px">${chips}</div>
       <div style="display:flex;flex-direction:column;position:absolute;left:${u(88)}px;right:${u(88)}px;
-        top:${u(250)}px">
-        <div style="display:flex;gap:${u(24)}px;width:100%">${chips}</div>
-        <div style="display:flex;width:100%;height:${u(1)}px;background:${c.primary};
-          opacity:.15;margin:${u(64)}px 0 ${u(46)}px"></div>
+        top:${u(660)}px">
         <div style="display:flex;justify-content:space-between;width:100%">
           <div style="display:flex;flex-direction:column">
             <div style="display:flex;font-size:${u(18)}px;letter-spacing:${u(3)}px;color:${c.primary};
@@ -330,7 +388,7 @@ export function renderLayout(kind: LayoutKind, p: Parts) {
           </div>
         </div>
       </div>
-      ${signature(p, u, 74, c.primary)}`
+      ${signature(p, u, 74, c.primary, c.background)}`
   }
 
   if (kind === 'identity') {
