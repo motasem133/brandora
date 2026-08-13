@@ -64,7 +64,6 @@ export const projectStatusEnum = pgEnum('project_status', [
   'partial',
 ])
 
-export const websiteTemplateEnum = pgEnum('website_template', ['modern', 'minimal', 'luxury'])
 
 export const fileKindEnum = pgEnum('file_kind', [
   'logo_raster',
@@ -583,7 +582,6 @@ export const websiteAssets = pgTable(
       .unique()
       .references(() => projects.id, { onDelete: 'cascade' }),
 
-    template: websiteTemplateEnum('template').notNull().default('modern'),
     /** Record<pageKey, Block[]> — see the Block union in §5. */
     pages: jsonb('pages').$type<Record<string, unknown[]>>().notNull().default({}),
     customStyles: jsonb('custom_styles').$type<Record<string, string>>().notNull().default({}),

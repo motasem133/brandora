@@ -1,6 +1,20 @@
 import { z } from 'zod'
 
-import { MARKUP, NO_MARKUP_MESSAGE, blockSchema } from '@/lib/blocks'
+import {
+  MARKUP,
+  NO_MARKUP_MESSAGE,
+  PAGE_KEYS,
+  type Block,
+  contactBlock,
+  ctaBlock,
+  faqBlock,
+  featuresBlock,
+  heroBlock,
+  hoursBlock,
+  quoteBlock,
+  richTextBlock,
+  servicesBlock,
+} from '@/lib/blocks'
 import { adItemSchema, socialPostItemSchema } from '@/lib/content'
 
 /**
@@ -47,25 +61,237 @@ export const brandingSchema = z.object({
 export type BrandingOutput = z.infer<typeof brandingSchema>
 
 /**
- * Website content reuses the shared block contract from `@/lib/blocks`, so the
- * AI, the builder and the published renderer cannot drift apart.
+ * Website content, strictly.
  *
- * A page may not repeat a block type. Without this, a model can satisfy
- * `.min(3)` by emitting the same hero three times — which is exactly what
- * GLM-5.2 did on the first real run. Enforcing it here turns that into a
- * validation failure and a retry rather than duplicates reaching the database.
+ * The shapes come from `@/lib/blocks`, so the AI, the builder and the published
+ * renderer cannot drift apart — but the *contract* is tightened here and only
+ * here. That split is deliberate: a minimum length in `lib/blocks` would apply
+ * to the builder's autosave too, and a customer whose About page is shorter
+ * than the model's floor would silently stop being able to save. Strict at
+ * generation, lenient at storage.
+ *
+ * Website copy had no minimums and no descriptions at all: an empty hero
+ * subtitle validated and published. `socialSchema` was tightened after exactly
+ * this class of incident; this follows it.
  */
-const distinctBlocks = (blocks: { type: string }[]) =>
-  new Set(blocks.map((block) => block.type)).size === blocks.length
+const filled = (min: number, max: number, description: string) =>
+  z
+    .string()
+    .min(min)
+    .max(max)
+    .refine((value) => !MARKUP.test(value), NO_MARKUP_MESSAGE)
+    .describe(description)
 
-const DISTINCT_MESSAGE = 'Each block type may appear at most once per page'
+const strictBlock = z.discriminatedUnion('type', [
+  heroBlock.extend({
+    title: filled(12, 90, 'The one line that says what this business is'),
+    subtitle: filled(30, 200, 'One sentence that earns the next scroll'),
+    cta: filled(2, 30, 'What the button says, in the imperative'),
+  }),
+  featuresBlock.extend({
+    heading: filled(6, 80, 'What this section is about'),
+    items: z
+      .array(
+        z.object({
+          title: filled(3, 60, 'The benefit, named'),
+          body: filled(20, 220, 'Something concrete rather than impressive'),
+        }),
+      )
+      .min(2)
+      .max(4),
+  }),
+  richTextBlock.extend({
+    heading: filled(6, 80, 'What this section is about'),
+    body: filled(80, 900, 'Two or three short paragraphs, separated by newlines'),
+  }),
+  servicesBlock.extend({
+    heading: filled(6, 80, 'What this section is about'),
+    services: z
+      .array(
+        z.object({
+          title: filled(3, 60, 'What the service is called'),
+          body: filled(20, 220, 'What it is and who it is for'),
+          price: filled(2, 30, 'Only when a real price can be named').optional(),
+        }),
+      )
+      .min(2)
+      .max(4),
+  }),
+  ctaBlock.extend({
+    heading: filled(6, 80, 'The ask, in a few words'),
+    body: filled(20, 220, 'One sentence on why now'),
+    cta: filled(2, 30, 'What the button says, in the imperative'),
+  }),
+  contactBlock.extend({
+    heading: filled(6, 80, 'The invitation to get in touch'),
+    body: filled(20, 300, 'How and when they will hear back'),
+    /* Free text until now, so "email us" and "info at example dot com" both
+       validated and both published as the address. */
+    email: z.email().max(80).describe('A working email address, nothing else'),
+    phone: filled(6, 40, 'In the local format, with country code').optional(),
+  }),
+  quoteBlock.extend({
+    quote: filled(20, 240, "The brand's own line. Never a customer testimonial"),
+    attribution: filled(2, 80, 'The business itself, or a named founder').optional(),
+  }),
+  faqBlock.extend({
+    heading: filled(6, 80, 'What this section is about'),
+    items: z
+      .array(
+        z.object({
+          title: filled(10, 120, 'A question this business is actually asked'),
+          body: filled(20, 400, 'The answer, plainly'),
+        }),
+      )
+      .min(2)
+      .max(6),
+  }),
+  hoursBlock.extend({
+    heading: filled(4, 80, 'Usually "Opening hours"'),
+    items: z
+      .array(
+        z.object({
+          title: filled(3, 60, 'A day or a range of days'),
+          body: filled(3, 60, 'The hours, or "Closed"'),
+        }),
+      )
+      .min(1)
+      .max(7),
+    note: filled(10, 160, 'Anything that qualifies the hours').optional(),
+  }),
+])
 
-export const websiteSchema = z.object({
-  home: z.array(blockSchema).min(3).max(5).refine(distinctBlocks, DISTINCT_MESSAGE),
-  about: z.array(blockSchema).min(1).max(3).refine(distinctBlocks, DISTINCT_MESSAGE),
-  services: z.array(blockSchema).min(1).max(3).refine(distinctBlocks, DISTINCT_MESSAGE),
-  contact: z.array(blockSchema).min(1).max(2).refine(distinctBlocks, DISTINCT_MESSAGE),
+/**
+ * Arrangement is corrected, not refused.
+ *
+ * Every structural rule here started as a `.refine()`, and every one of them
+ * cost a whole generation when a model missed it: three models in a row failed
+ * one run on "two sections next to each other may not be the same block type",
+ * which is a thing this code can simply fix. The AI SDK does not feed
+ * validation errors back for a repair pass, so a refusal is not a correction —
+ * it is a retry from scratch and a bill for the attempt that failed.
+ *
+ * So the schema stays strict about *content*, where only the model can help —
+ * every field filled, real lengths, a working email address, no markup — and
+ * the arrangement is put right afterwards, deterministically:
+ *
+ * - the home page opens on its hero, wherever the model put it
+ * - a call to action closes the page rather than interrupting it
+ * - two list sections of the same kind side by side become one
+ *
+ * That last one is not hypothetical either: a café's menu page came back as
+ * four consecutive `services` blocks, which renders as four headings with two
+ * dishes under each. Merging is what a person would do with them. Moving them
+ * apart — which is what this did first — achieves nothing when the whole tail
+ * of the page is the same type.
+ *
+ * The rule this replaces was one block type per page, written to stop a model
+ * emitting three identical heroes. The field minimums do that job now, without
+ * banning an opening and a closing call to action on the same page.
+ */
+const LIST_FIELD = { features: 'items', services: 'services', faq: 'items', hours: 'items' } as const
+const LIST_MAX = { features: 4, services: 4, faq: 6, hours: 7 } as const
+
+function mergeable(block: Block): block is Block & { type: keyof typeof LIST_FIELD } {
+  return block.type in LIST_FIELD
+}
+
+function tidy(blocks: Block[], isHome: boolean): Block[] {
+  const ordered = [...blocks]
+
+  if (isHome) {
+    const hero = ordered.findIndex((block) => block.type === 'hero')
+    if (hero > 0) ordered.unshift(...ordered.splice(hero, 1))
+  }
+
+  /* A call to action is a closing move. A model put one at the top of a home
+     page and made another page out of nothing but a button; sorting them to
+     the end is the whole fix, and it keeps their order among themselves. */
+  const asks = ordered.filter((block) => block.type === 'cta')
+  const rest = ordered.filter((block) => block.type !== 'cta')
+  ordered.splice(0, ordered.length, ...(rest.length ? [...rest, ...asks] : asks))
+
+  return ordered.reduce<Block[]>((kept, block) => {
+    const previous = kept[kept.length - 1]
+
+    if (previous && previous.type === block.type && mergeable(block) && mergeable(previous)) {
+      const field = LIST_FIELD[block.type]
+      const merged = [
+        ...(previous as unknown as Record<string, unknown[]>)[field],
+        ...(block as unknown as Record<string, unknown[]>)[field],
+      ].slice(0, LIST_MAX[block.type])
+
+      kept[kept.length - 1] = { ...previous, [field]: merged } as Block
+      return kept
+    }
+
+    kept.push(block)
+    return kept
+  }, [])
+}
+
+/**
+ * Which pages a site has is generated, not assumed.
+ *
+ * Every business got home/about/services/contact, so a café's coffee was listed
+ * on a "Services" page and a consultancy had nowhere to put its rates. The
+ * model picks from the vocabulary in `lib/blocks`.
+ *
+ * A list rather than an object with optional keys, and that is not a stylistic
+ * choice: asked for pages as optional fields, GLM-5.2 returned home and contact
+ * and nothing else on run after run, because omitting an optional field is free.
+ * "Four items in this array" is a constraint a model actually holds on to. The
+ * record the rest of the system stores is built from it below.
+ */
+const pageEntry = z.object({
+  key: z.enum(PAGE_KEYS).describe('Which page this is'),
+  blocks: z.array(strictBlock).min(1).max(5).describe('The sections on this page, in order'),
 })
+
+export const websiteSchema = z
+  .object({
+    /* Sized against the clock, not against ambition. Four pages of real copy is
+       around two thousand tokens; a model writing at thirty a second is at
+       seventy before it stops, and the attempt ceiling is ninety. Asking for six
+       pages is how a run times out three times and the website section fails
+       over nothing. */
+    pages: z.array(pageEntry).min(3).max(5),
+  })
+  .refine(
+    ({ pages }) => pages.some((p) => p.key === 'home') && pages.some((p) => p.key === 'contact'),
+    'Every site needs a home page and a contact page',
+  )
+  .refine(
+    ({ pages }) => new Set(pages.map((p) => p.key)).size === pages.length,
+    'Each page appears once',
+  )
+  /*
+   * A page has to carry what its name promises.
+   *
+   * A café's menu page came back as an FAQ and a set of opening hours — real
+   * copy, on a page called Menu, with no menu on it. This is the one structural
+   * rule that cannot be fixed in code: only the model can write the list, and
+   * dropping the page would throw away what it did write.
+   */
+  .refine(
+    ({ pages }) =>
+      pages.every(
+        (p) =>
+          !['menu', 'services', 'pricing'].includes(p.key) ||
+          p.blocks.some((block) => block.type === 'services'),
+      ),
+    'A menu, services or pricing page must include a services block — the list is what the page is for',
+  )
+  .transform(({ pages }) =>
+    Object.fromEntries(
+      /* Stored in the vocabulary's order rather than the order the model
+         happened to emit, because that order is the nav. */
+      PAGE_KEYS.flatMap((key) => {
+        const found = pages.find((p) => p.key === key)
+        return found ? [[key, tidy(found.blocks, key === 'home')] as const] : []
+      }),
+    ),
+  )
 
 export type WebsiteOutput = z.infer<typeof websiteSchema>
 

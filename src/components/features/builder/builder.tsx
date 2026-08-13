@@ -33,9 +33,10 @@ import {
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useAction } from 'next-safe-action/hooks'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-import { BlockRenderer, resolveTheme } from '@/components/blocks/block-renderer'
+import { BlockRenderer, registerStyle, resolveTheme } from '@/components/blocks/block-renderer'
+import type { RegisterName } from '@/lib/register'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
@@ -66,7 +67,19 @@ const MAX_HISTORY = 50
  * generator happened to write — which put "Body text" above "Heading" on a text
  * section. Fields are shown in the order somebody reads them on the page.
  */
-const FIELD_ORDER = ['title', 'subtitle', 'heading', 'body', 'cta', 'email', 'phone']
+const FIELD_ORDER = [
+  'title',
+  'subtitle',
+  'heading',
+  'quote',
+  'attribution',
+  'body',
+  'cta',
+  'ctaHref',
+  'email',
+  'phone',
+  'note',
+]
 
 /**
  * The website editor.
@@ -88,21 +101,32 @@ export function Builder({
   projectName,
   initialPages,
   initialTheme,
+  brandTheme,
+  register,
   initialSubdomain,
   initialCustomDomain,
   isPublished,
   canPublish,
+  planAllowsPublish,
   canUseCustomDomain,
   atDomainLimit,
 }: {
   projectId: string
   projectName: string
   initialPages: Pages
+  /** Overrides only — and what autosave writes back. */
   initialTheme: Theme
+  /** The generated identity the published site is set in. */
+  brandTheme: Theme
+  /** The brand's bearing, the same one the published site resolves. */
+  register: RegisterName
   initialSubdomain: string | null
   initialCustomDomain: string | null
   isPublished: boolean
+  /** The plan sells it *and* this member may do it. */
   canPublish: boolean
+  /** Which of the two is missing, so the panel can say which. */
+  planAllowsPublish: boolean
   canUseCustomDomain: boolean
   atDomainLimit: boolean
 }) {
@@ -120,12 +144,36 @@ export function Builder({
   const past = useRef<Pages[]>([])
   const future = useRef<Pages[]>([])
 
-  const theme = resolveTheme(initialTheme)
-  const blocks = pages[page]
+  // Overrides win over the generated identity, exactly as the site resolves it.
+  const theme = resolveTheme({ ...brandTheme, ...initialTheme })
+  /* Memoised because it is a new array whenever the page has no blocks, and
+     every callback below depends on it. */
+  const blocks = useMemo(() => pages[page] ?? [], [pages, page])
   const selectedBlock = selected !== null ? blocks[selected] : undefined
 
+  /*
+   * A failed save used to say nothing at all.
+   *
+   * `useAction` had no `onError`, so a rejected write left "Unsaved changes" in
+   * the header for as long as the customer kept working — the same words as a
+   * pending save — and the autosave loop does not retry on its own. A field one
+   * character over its limit, a session that expired, a member editing a
+   * project they no longer belong to: all of them looked exactly like a save
+   * that had not happened yet, and the work was lost on the next reload with
+   * the beforeunload warning as the only clue.
+   */
+  const [saveError, setSaveError] = useState<string | null>(null)
+
   const { execute: save, isPending: saving } = useAction(updateWebsiteContent, {
-    onSuccess: () => setDirty(false),
+    onSuccess: () => {
+      setDirty(false)
+      setSaveError(null)
+    },
+    /* The server's own words when it has any — `handleServerError` returns the
+       message of an expected failure, which is written for a person — and the
+       generic line only when the failure was a validation one, where the
+       details name Zod paths nobody outside this file can read. */
+    onError: ({ error }) => setSaveError(error.serverError ?? t('saveFailed')),
   })
 
   const commit = useCallback(
@@ -308,12 +356,25 @@ export function Builder({
             <span
               role="status"
               aria-live="polite"
-              className="text-xs text-fg-muted"
+              className={cn('text-xs', saveError ? 'text-danger' : 'text-fg-muted')}
               data-testid="save-status"
-              data-state={saving ? 'saving' : dirty ? 'dirty' : 'saved'}
+              data-state={saveError ? 'error' : saving ? 'saving' : dirty ? 'dirty' : 'saved'}
             >
-              {saving ? t('saving') : dirty ? t('unsaved') : t('saved')}
+              {saveError ?? (saving ? t('saving') : dirty ? t('unsaved') : t('saved'))}
             </span>
+
+            {/* Retrying is the customer's call, not a loop's: a save that failed
+                on a field that is too long will fail again every 1.5 seconds
+                until the field is fixed. */}
+            {saveError && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => save({ projectId, pages, theme: initialTheme })}
+              >
+                {t('retry')}
+              </Button>
+            )}
 
             <PublishPanel
               projectId={projectId}
@@ -321,6 +382,7 @@ export function Builder({
               initialCustomDomain={initialCustomDomain}
               isPublished={isPublished}
               canPublish={canPublish}
+              planAllowsPublish={planAllowsPublish}
               canUseCustomDomain={canUseCustomDomain}
               atDomainLimit={atDomainLimit}
             />
@@ -331,7 +393,8 @@ export function Builder({
           aria-label={t('pagesLabel')}
           data-testid="page-tabs"
           className="flex gap-1 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {PAGE_KEYS.map((key) => (
+          {/* The pages this site actually has, in the vocabulary's order. */}
+          {PAGE_KEYS.filter((key) => pages[key]).map((key) => (
             <button
               key={key}
               onClick={() => {
@@ -371,8 +434,10 @@ export function Builder({
             from production was true of the blocks and false of what sits behind
             them.
           */}
+          {/* The register's scale, rhythm and corners, so the canvas is set the
+              way the published page is rather than in the renderer's defaults. */}
           <div
-            style={{ backgroundColor: theme.safe.paper }}
+            style={{ ...registerStyle(register), backgroundColor: theme.safe.paper }}
             className={cn(
               'mx-auto overflow-hidden rounded-card border border-line transition-all',
               device === 'mobile' ? 'max-w-sm' : 'max-w-4xl',
@@ -410,7 +475,7 @@ export function Builder({
                         setSelected(null)
                       }}
                     >
-                      <BlockRenderer block={block} theme={theme} preview />
+                      <BlockRenderer block={block} theme={theme} register={register} preview />
                     </SortableBlock>
                   ))}
                 </SortableContext>
@@ -599,6 +664,23 @@ function Inspector({
   const set = (key: string, value: unknown) => onChange({ ...block, [key]: value } as Block)
 
   const listKey = 'items' in block ? 'items' : 'services' in block ? 'services' : null
+
+  /*
+   * How many items this block may hold.
+   *
+   * A customer could edit the three items a block arrived with and nothing
+   * else: no way to add a fourth service, no way to remove one they did not
+   * offer. The ceilings are the ones `lib/blocks` enforces — offering a fourth
+   * where the schema allows three would fail autosave, which until today failed
+   * silently.
+   */
+  const MAX_ITEMS: Partial<Record<Block['type'], number>> = {
+    features: 4,
+    services: 4,
+    faq: 8,
+    hours: 7,
+  }
+  const max = MAX_ITEMS[block.type] ?? 4
   const list = (listKey ? (block as unknown as Record<string, unknown>)[listKey] : null) as
     | { title: string; body: string; price?: string }[]
     | null
@@ -646,10 +728,20 @@ function Inspector({
         .sort(([a], [b]) => FIELD_ORDER.indexOf(a) - FIELD_ORDER.indexOf(b))
         .map(([key, value]) => (
           <Field key={key} label={t(`fields.${key}`)}>
+            {/* The guidance that used to be typed into the canvas as content.
+                A placeholder cannot be published by being left alone. */}
             {typeof value === 'string' && value.length > 90 ? (
-              <Textarea value={value} onChange={(event) => set(key, event.target.value)} />
+              <Textarea
+                value={value}
+                placeholder={t(`hints.${key}`)}
+                onChange={(event) => set(key, event.target.value)}
+              />
             ) : (
-              <Input value={String(value ?? '')} onChange={(event) => set(key, event.target.value)} />
+              <Input
+                value={String(value ?? '')}
+                placeholder={t(`hints.${key}`)}
+                onChange={(event) => set(key, event.target.value)}
+              />
             )}
           </Field>
         ))}
@@ -664,6 +756,7 @@ function Inspector({
               <Field label={t('fields.title')}>
                 <Input
                   value={item.title}
+                  placeholder={t('hints.title')}
                   onChange={(event) =>
                     set(
                       listKey,
@@ -677,6 +770,7 @@ function Inspector({
               <Field label={t('fields.body')}>
                 <Textarea
                   value={item.body}
+                  placeholder={t('hints.body')}
                   className="min-h-20"
                   onChange={(event) =>
                     set(
@@ -688,10 +782,11 @@ function Inspector({
                   }
                 />
               </Field>
-              {item.price !== undefined && (
+              {'price' in (list[0] ?? {}) && (
                 <Field label={t('fields.price')}>
                   <Input
-                    value={item.price}
+                    value={item.price ?? ''}
+                    placeholder={t('hints.price')}
                     onChange={(event) =>
                       set(
                         listKey,
@@ -703,8 +798,33 @@ function Inspector({
                   />
                 </Field>
               )}
+
+              {/* The last item stays: a features block with no features is a
+                  heading with nothing under it, and the schema refuses it. */}
+              {list.length > 1 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => set(listKey, list.filter((_, i) => i !== itemIndex))}
+                >
+                  <Trash2 className="size-3.5" />
+                  {t('removeItem')}
+                </Button>
+              )}
             </div>
           ))}
+
+          {list.length < max && (
+            <Button
+              variant="secondary"
+              size="sm"
+              className="w-full"
+              onClick={() => set(listKey, [...list, { title: '', body: '' }])}
+            >
+              <Plus className="size-4" />
+              {t('addItem')}
+            </Button>
+          )}
         </div>
       )}
     </div>

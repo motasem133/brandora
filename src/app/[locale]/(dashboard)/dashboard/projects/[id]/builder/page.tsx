@@ -4,11 +4,12 @@ import { notFound } from 'next/navigation'
 
 import { Builder } from '@/components/features/builder/builder'
 import { PAGE_KEYS, type Pages, type Theme } from '@/lib/blocks'
+import { registerFor } from '@/lib/register'
 import { db } from '@/server/db'
 import { getOrgPlan } from '@/server/db/queries/plans'
 import { countCustomDomains } from '@/server/db/queries/sites'
 import { getProject } from '@/server/db/queries/projects'
-import { websiteAssets } from '@/server/db/schema'
+import { brandingAssets, websiteAssets } from '@/server/db/schema'
 import { isDomainsConfigured } from '@/server/services/domains'
 import { requireOrg } from '@/server/session'
 
@@ -17,12 +18,18 @@ import { requireOrg } from '@/server/session'
  *
  * Rows written before a block type existed, or by an older generation, may be
  * missing pages entirely — the builder should open on those rather than crash.
+ * Only the pages a site actually has are kept: which pages exist is per site
+ * now, and inventing four empty ones would put a "Menu" tab on a consultancy.
+ * `home` is the exception, because a site without one has no front door.
  */
 function normalisePages(raw: unknown): Pages {
   const source = (raw ?? {}) as Record<string, unknown>
-  return Object.fromEntries(
-    PAGE_KEYS.map((key) => [key, Array.isArray(source[key]) ? source[key] : []]),
+
+  const pages = Object.fromEntries(
+    PAGE_KEYS.filter((key) => Array.isArray(source[key])).map((key) => [key, source[key]]),
   ) as Pages
+
+  return { home: [], ...pages }
 }
 
 export default async function BuilderPage({
@@ -33,7 +40,7 @@ export default async function BuilderPage({
   const { locale, id } = await params
   setRequestLocale(locale)
 
-  const { org } = await requireOrg()
+  const { org, orgRole } = await requireOrg()
   const project = await getProject(org.id, id)
   if (!project) notFound()
 
@@ -45,6 +52,15 @@ export default async function BuilderPage({
 
   if (!website) notFound()
 
+  const [branding] = await db
+    .select({
+      palette: brandingAssets.colorPalette,
+      fonts: brandingAssets.fontRecommendations,
+    })
+    .from(brandingAssets)
+    .where(eq(brandingAssets.projectId, project.id))
+    .limit(1)
+
   const plan = await getOrgPlan(org.id)
 
   return (
@@ -55,10 +71,40 @@ export default async function BuilderPage({
       projectName={project.businessName || project.title}
       initialPages={normalisePages(website.pages)}
       initialTheme={(website.customStyles ?? {}) as Theme}
+      /*
+       * What the published site is actually set in.
+       *
+       * The canvas rendered from `customStyles` alone — which is `{}` for every
+       * project that has not overridden anything, i.e. all of them — so the
+       * builder showed the fallback purple and Syne while production showed the
+       * brand's own palette. Passed separately rather than merged into
+       * `initialTheme` on purpose: `initialTheme` is what autosave writes back,
+       * and folding the palette into it would freeze today's colours into
+       * `custom_styles` and leave the site stale the next time the identity is
+       * regenerated.
+       */
+      brandTheme={{
+        primaryColor: branding?.palette?.primary,
+        secondaryColor: branding?.palette?.secondary,
+        backgroundColor: branding?.palette?.background,
+        textColor: branding?.palette?.text,
+        fontHeading: branding?.fonts?.heading,
+        fontBody: branding?.fonts?.body,
+      }}
+      register={registerFor(project.brandStyle, project.industry)}
       initialSubdomain={website.subdomain}
       initialCustomDomain={website.customDomain}
       isPublished={website.isPublished}
-      canPublish={plan?.websiteBuilder ?? false}
+      /*
+       * Both halves of the real rule.
+       *
+       * `publishWebsite` is an `orgAdminAction`, and this only ever asked the
+       * plan — so a member on a paying account saw the Publish button, filled
+       * in a subdomain, confirmed, and got "Insufficient permissions." at the
+       * end of it. The two reasons are different and the panel says which.
+       */
+      canPublish={(plan?.websiteBuilder ?? false) && orgRole !== 'member'}
+      planAllowsPublish={plan?.websiteBuilder ?? false}
       /* Both must hold: the plan sells the feature, and this deployment has
          Vercel credentials to attach a domain with. */
       canUseCustomDomain={(plan?.customDomain ?? false) && isDomainsConfigured()}

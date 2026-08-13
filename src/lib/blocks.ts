@@ -25,6 +25,23 @@ import { z } from 'zod'
 export const MARKUP = /<\s*\/?[a-zA-Z][a-zA-Z0-9-]*\s*\/?>/
 export const NO_MARKUP_MESSAGE = 'Plain text only — no HTML tags.'
 
+/**
+ * Where a button goes.
+ *
+ * Optional, and validated rather than trusted: an `href` is the one field on a
+ * customer's site that a browser *executes* if it is allowed to, so
+ * `javascript:` and `data:` are refused here rather than at the renderer. Only
+ * the four forms a small business site has any use for — an external link, a
+ * mail or phone link, or a path on its own site.
+ *
+ * Absent on every block stored today, and that stays fine: the button falls
+ * back to the contact page, which is where it went before this field existed.
+ */
+export const LINK = /^(https?:\/\/|mailto:|tel:|\/)/
+export const LINK_MESSAGE = 'Use a full https:// address, a mailto:/tel: link, or a path beginning with /.'
+
+const href = z.string().max(300).regex(LINK, LINK_MESSAGE).optional()
+
 /** A block's text field: capped, and text rather than markup. */
 const text = (max: number) =>
   z
@@ -37,6 +54,7 @@ export const heroBlock = z.object({
   title: text(90),
   subtitle: text(200),
   cta: text(30),
+  ctaHref: href,
 })
 
 export const featuresBlock = z.object({
@@ -74,6 +92,7 @@ export const ctaBlock = z.object({
   heading: text(80),
   body: text(220),
   cta: text(30),
+  ctaHref: href,
 })
 
 export const contactBlock = z.object({
@@ -84,6 +103,53 @@ export const contactBlock = z.object({
   phone: text(40).optional(),
 })
 
+/**
+ * The brand's own line, set as a line.
+ *
+ * Deliberately not a testimonial. A model asked for what a customer's customers
+ * say will write one, and a fabricated quote from a person who does not exist is
+ * a lie printed on a real business's website. This block carries the brand's own
+ * promise — the slogan, the founding sentence — and the builder is where a
+ * customer types a real testimonial once they have one.
+ */
+export const quoteBlock = z.object({
+  type: z.literal('quote'),
+  quote: text(240),
+  attribution: text(80).optional(),
+})
+
+/**
+ * Questions, in the shape every list block here already uses.
+ *
+ * `items` with `title`/`body` rather than `question`/`answer` on purpose: the
+ * builder's inspector edits list blocks generically off that shape, so this
+ * arrives editable without a bespoke editor. It is also what a FAQ structured
+ * data block will read from later.
+ */
+export const faqBlock = z.object({
+  type: z.literal('faq'),
+  heading: text(80),
+  items: z
+    .array(z.object({ title: text(120), body: text(400) }))
+    .min(1)
+    .max(8),
+})
+
+/**
+ * When the doors are open — the single most-looked-for fact on the site of a
+ * business with a door, and one this product had no way to say.
+ */
+export const hoursBlock = z.object({
+  type: z.literal('hours'),
+  heading: text(80),
+  /** `title` is the day or range, `body` the hours. Same shape as `faq`. */
+  items: z
+    .array(z.object({ title: text(60), body: text(60) }))
+    .min(1)
+    .max(7),
+  note: text(160).optional(),
+})
+
 export const blockSchema = z.discriminatedUnion('type', [
   heroBlock,
   featuresBlock,
@@ -91,20 +157,55 @@ export const blockSchema = z.discriminatedUnion('type', [
   servicesBlock,
   ctaBlock,
   contactBlock,
+  quoteBlock,
+  faqBlock,
+  hoursBlock,
 ])
 
 export type Block = z.infer<typeof blockSchema>
 export type BlockType = Block['type']
 
-export const PAGE_KEYS = ['home', 'about', 'services', 'contact'] as const
+/**
+ * Every page a site may have, in the order a nav should list them.
+ *
+ * Four pages were hardcoded for every business ever generated: home, about,
+ * services, contact. A café has a menu and no services; a studio has a
+ * portfolio; a consultancy's most-visited page is its pricing. They each got
+ * "Services" instead, because that is what the schema had a slot for.
+ *
+ * No `portfolio` yet, deliberately: a portfolio page is a page of pictures, and
+ * there is no block that carries a set of images. It belongs here the day a
+ * gallery block exists, and until then it would be a services list with a
+ * different heading.
+ *
+ * A vocabulary rather than a fixed set. Which of these a site actually has is
+ * per site — chosen at generation for the business, and stored as the keys of
+ * `pages` — so the shape of the site is part of what is generated rather than a
+ * constant it has to fit into. `home` is the only one every site must have.
+ */
+export const PAGE_KEYS = [
+  'home',
+  'about',
+  'services',
+  'menu',
+  'pricing',
+  'faq',
+  'contact',
+] as const
 export type PageKey = (typeof PAGE_KEYS)[number]
 
-export const pagesSchema = z.object({
-  home: z.array(blockSchema),
-  about: z.array(blockSchema),
-  services: z.array(blockSchema),
-  contact: z.array(blockSchema),
-})
+/** The four every site had before pages could vary. Still the default shape. */
+export const CORE_PAGES = ['home', 'about', 'services', 'contact'] as const
+
+/**
+ * Lenient by design — see the note on `href` above.
+ *
+ * A page map from before this vocabulary existed parses unchanged, and a page
+ * the customer emptied in the builder stays an empty array rather than failing
+ * autosave. Generation is where the contract is strict; see
+ * `server/ai/schemas.ts`.
+ */
+export const pagesSchema = z.partialRecord(z.enum(PAGE_KEYS), z.array(blockSchema))
 
 export type Pages = z.infer<typeof pagesSchema>
 
@@ -124,41 +225,72 @@ export const BLOCK_TYPES: BlockType[] = [
   'features',
   'richText',
   'services',
+  'quote',
+  'faq',
+  'hours',
   'cta',
   'contact',
 ]
 
-/** Starting content when a block is dragged in from the library. */
+/**
+ * A new block, empty.
+ *
+ * It used to arrive holding sample copy — "Tell the story in a few short
+ * paragraphs", "One clear next step" — and those exact sentences are live on a
+ * customer's published website today. Nobody ignored a warning: the canvas
+ * showed prose in the right typeface in the right place, which is what a
+ * finished section looks like, and the builder never said otherwise.
+ *
+ * Empty cannot be mistaken for finished. What the sample copy was trying to
+ * teach now lives in the inspector as field placeholders, where it is guidance
+ * rather than content, and where it cannot be published by not being read.
+ */
 export function createBlock(type: BlockType): Block {
   switch (type) {
     case 'hero':
-      return { type, title: 'Your headline here', subtitle: 'A sentence that earns the next scroll.', cta: 'Get started' }
+      return { type, title: '', subtitle: '', cta: '' }
     case 'features':
-      return {
-        type,
-        heading: 'What you get',
-        items: [
-          { title: 'First benefit', body: 'Say something concrete rather than impressive.' },
-          { title: 'Second benefit', body: 'Say something concrete rather than impressive.' },
-          { title: 'Third benefit', body: 'Say something concrete rather than impressive.' },
-        ],
-      }
+      return { type, heading: '', items: [{ title: '', body: '' }] }
     case 'richText':
-      return { type, heading: 'About us', body: 'Tell the story in a few short paragraphs.' }
+      return { type, heading: '', body: '' }
     case 'services':
-      return {
-        type,
-        heading: 'Services',
-        services: [
-          { title: 'First service', body: 'What it is and who it is for.' },
-          { title: 'Second service', body: 'What it is and who it is for.' },
-        ],
-      }
+      return { type, heading: '', services: [{ title: '', body: '' }] }
     case 'cta':
-      return { type, heading: 'Ready to start?', body: 'One clear next step.', cta: 'Contact us' }
+      return { type, heading: '', body: '', cta: '' }
     case 'contact':
-      return { type, heading: 'Get in touch', body: 'We reply within one working day.', email: 'hello@example.com' }
+      return { type, heading: '', body: '', email: '' }
+    case 'quote':
+      return { type, quote: '', attribution: '' }
+    case 'faq':
+      return { type, heading: '', items: [{ title: '', body: '' }] }
+    case 'hours':
+      return { type, heading: '', items: [{ title: '', body: '' }] }
   }
+}
+
+/**
+ * Whether a block has anything to say.
+ *
+ * The other half of empty-by-default. A block arrives blank now, and a customer
+ * who adds one, does not fill it in and publishes anyway would otherwise get a
+ * band of empty space on their live site — which is worse than the sample copy
+ * this replaced. The builder still shows it, because a section you cannot see
+ * is a section you cannot select or delete; the published site simply does not
+ * print it.
+ */
+export function isBlank(block: Block): boolean {
+  return Object.entries(block).every(([key, value]) => {
+    if (key === 'type') return true
+    if (typeof value === 'string') return value.trim() === ''
+    if (Array.isArray(value)) {
+      return value.every((item) =>
+        Object.values(item as Record<string, unknown>).every(
+          (field) => typeof field !== 'string' || field.trim() === '',
+        ),
+      )
+    }
+    return true
+  })
 }
 
 /**

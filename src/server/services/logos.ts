@@ -313,7 +313,7 @@ async function derivePrimaryAssets(params: {
 }) {
   const icon = params.icon ?? params.primary
 
-  await addPlaceableVariants(params)
+  const transparent = await addPlaceableVariants(params)
 
   const derived: {
     name: string
@@ -323,6 +323,27 @@ async function derivePrimaryAssets(params: {
     variant: string
     source: 'logo' | 'icon'
   }[] = []
+
+  /*
+   * The backdrop-free logo, stored and not only zipped.
+   *
+   * It has existed since placeable variants shipped, but only inside the brand
+   * kit — so the one place that most needs it, the header of the customer's own
+   * published website, had nothing to put there and printed the business name
+   * instead. A row here makes it addressable, and `social_avatar` rather than
+   * `logo_raster` deliberately: derived assets are deleted and rebuilt whenever
+   * the chosen logo changes, and a transparent copy of a logo the customer has
+   * replaced is exactly the kind of thing that should not survive that.
+   */
+  if (transparent) {
+    derived.push({
+      name: 'logo-transparent.png',
+      buffer: transparent,
+      kind: 'social_avatar',
+      variant: 'transparent',
+      source: 'logo',
+    })
+  }
 
   for (const size of [512, 256, 128]) {
     derived.push({
@@ -410,9 +431,12 @@ async function addPlaceableVariants(params: {
   primarySvg?: string
   kitFiles: Map<string, Buffer>
 }) {
+  let placeable: Buffer | null = null
+
   try {
     const transparent = await liftBackground(params.primary)
     params.kitFiles.set('logo-transparent.png', transparent)
+    placeable = transparent
 
     if (params.primarySvg) {
       params.kitFiles.set('logo-transparent.svg', Buffer.from(stripSvgBackground(params.primarySvg)))
@@ -425,7 +449,7 @@ async function addPlaceableVariants(params: {
      * carry these two, which is what "if there is an icon with the text" means.
      */
     const parts = await splitLockup(transparent)
-    if (!parts) return
+    if (!parts) return placeable
 
     params.kitFiles.set('text-only.png', parts.text.buffer)
     params.kitFiles.set('icon-only.png', parts.icon.buffer)
@@ -446,6 +470,8 @@ async function addPlaceableVariants(params: {
     // and the kit that are built after it.
     console.warn('[logos] placeable variants failed; the rest of the kit is unaffected', error)
   }
+
+  return placeable
 }
 
 async function readObject(key: string): Promise<Buffer> {

@@ -1,11 +1,11 @@
 import 'server-only'
 
-import { and, count, eq, isNotNull, ne } from 'drizzle-orm'
+import { and, count, eq, inArray, isNotNull, ne } from 'drizzle-orm'
 import { unstable_cache } from 'next/cache'
 import { cache } from 'react'
 
 import { db } from '@/server/db'
-import { brandingAssets, projects, websiteAssets } from '@/server/db/schema'
+import { brandingAssets, generatedFiles, projects, websiteAssets } from '@/server/db/schema'
 
 /** The cache tag for one site, so publishing can drop exactly its own entry. */
 export function siteTag(host: string) {
@@ -36,11 +36,10 @@ const SITE_TTL_SECONDS = 300
  * every visit to a published site read the database, which is the most public
  * surface this product has and was also the only one with no caching at all.
  *
- * The data rather than the page, because the page cannot be cached: it reads
- * `?page=` to decide which of the four to render, and a route that reads search
- * params is dynamic whatever `revalidate` says. Caching the query gets what
- * matters — the cross-region round trip on every visit — without turning the
- * page's navigation into four routes.
+ * The data rather than the page: the four pages are one route reading a path
+ * segment, and caching the query gets what matters — the cross-region round
+ * trip on every visit — without four separate cache entries holding four copies
+ * of the same row.
  */
 export const getPublishedSite = cache(async (host: string) => {
   const read = unstable_cache(
@@ -57,7 +56,49 @@ export const getPublishedSite = cache(async (host: string) => {
         .where(and(identifier, eq(websiteAssets.isPublished, true)))
         .limit(1)
 
-      return row ?? null
+      if (!row) return null
+
+      /*
+       * The images this site is allowed to show, read in the same cached entry.
+       *
+       * A separate query per image would put a cross-region round trip in the
+       * path of every visitor — the thing caching this at all was meant to
+       * remove. Resolved by kind rather than stored on the blocks, which is what
+       * makes photography appear on a live site the day its owner buys a kit,
+       * with no regeneration and no edit.
+       */
+      const files = await db
+        .select({
+          id: generatedFiles.id,
+          kind: generatedFiles.kind,
+          metadata: generatedFiles.metadata,
+        })
+        .from(generatedFiles)
+        .where(
+          and(
+            eq(generatedFiles.projectId, row.website.projectId),
+            inArray(generatedFiles.kind, ['social_scene', 'favicon', 'social_avatar']),
+          ),
+        )
+
+      const variant = (name: string) =>
+        files.find((file) => file.kind === 'social_avatar' && file.metadata?.variant === name)?.id
+
+      const scenes: Partial<Record<'hero' | 'people' | 'detail', string>> = {}
+      for (const file of files) {
+        const scene = file.kind === 'social_scene' ? file.metadata?.scene : undefined
+        if (scene === 'hero' || scene === 'people' || scene === 'detail') scenes[scene] = file.id
+      }
+
+      return {
+        ...row,
+        images: {
+          scenes,
+          logo: variant('transparent'),
+          favicon: files.find((file) => file.kind === 'favicon')?.id,
+          og: variant('og'),
+        },
+      }
     },
     ['published-site', host],
     { tags: [siteTag(host)], revalidate: SITE_TTL_SECONDS },

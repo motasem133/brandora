@@ -38,9 +38,12 @@ import type { CheckedSiteColors } from '@/lib/brand-theme'
  */
 function endpoint() {
   const segments = window.location.pathname.split('/').filter(Boolean)
+  /* `/contact` is now a page a visitor can be standing on, so the form posts to
+     `/contact/submit` — a static segment, which takes precedence over the
+     catch-all that serves the pages. */
   return segments[0] === 'sites' && segments[1]
-    ? `/sites/${segments[1]}/contact`
-    : '/contact'
+    ? `/sites/${segments[1]}/contact/submit`
+    : '/contact/submit'
 }
 
 export function ContactForm({

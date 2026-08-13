@@ -168,9 +168,9 @@ async function main() {
     ON CONFLICT (project_id) DO NOTHING`
 
   await sql`
-    INSERT INTO website_assets (project_id, template, pages, custom_styles, is_published,
+    INSERT INTO website_assets (project_id, pages, custom_styles, is_published,
                                 subdomain, published_at)
-    VALUES (${projectId}, 'modern',
+    VALUES (${projectId},
             ${sql.json({
               home: [
                 { type: 'hero', title: 'Built to be understood', subtitle: 'Clarity for teams who have run out of patience.', cta: 'Get started' },

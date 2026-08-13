@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import '../site-tokens.css';
 
 /*
  * Stylesheet for published customer sites.
@@ -6,38 +7,12 @@
  * Deliberately separate from the app's globals.css: a customer's site must not
  * inherit Brandora's dark theme tokens or fonts. Only Tailwind's utilities and
  * a neutral baseline, with all colour coming from the brand's own palette.
- */
-/*
- * The scale a customer's site is set on.
  *
- * Held in `clamp()` rather than in breakpoints. The renderer had exactly one
- * breakpoint — `sm:` — for its whole life, so every site was a phone layout or
- * a desktop one and nothing in between was ever considered. A fluid scale sizes
- * for the viewport it is actually on, and leaves `sm:`/`lg:` to do the one thing
- * a clamp cannot: change how many columns a grid has.
- *
- * Colour is deliberately absent. It arrives per brand as `--site-*` variables
- * on the page's root element, from `checkedSiteColors`, which is the only thing
- * allowed to decide what is readable on what.
+ * The scale itself lives in `site-tokens.css`, which the app's stylesheet also
+ * imports — the builder's canvas renders these same blocks and needs the same
+ * tokens to render them the same way.
  */
 @layer base {
-  :root {
-    --site-container: 68rem;
-    --site-measure: 68ch;
-
-    --site-gutter: clamp(1.25rem, 5vw, 4rem);
-    --site-section: clamp(3.5rem, 8vw, 7rem);
-    --site-gap: clamp(1.5rem, 3vw, 2.5rem);
-
-    --site-h1: clamp(2.25rem, 5.5vw, 4rem);
-    --site-h2: clamp(1.75rem, 3.4vw, 2.6rem);
-    --site-h3: clamp(1.05rem, 1.4vw, 1.25rem);
-    --site-lead: clamp(1.05rem, 1.7vw, 1.35rem);
-    --site-body: clamp(1rem, 1.15vw, 1.075rem);
-
-    --site-radius: 0.75rem;
-  }
-
   body {
     margin: 0;
     background-color: #ffffff;

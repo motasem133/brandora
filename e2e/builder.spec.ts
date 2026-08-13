@@ -12,10 +12,22 @@ import { firstGeneratedProjectId, sql } from './fixtures/db'
 test.describe('website builder', () => {
   let projectId: string
 
+  /** The fixture's own publish state, put back after the tests that change it. */
+  let site: { subdomain: string | null; is_published: boolean }
+
   test.beforeAll(async () => {
     projectId = await firstGeneratedProjectId()
-    const [website] = await sql`SELECT id FROM website_assets WHERE project_id = ${projectId}`
+    const [website] = await sql`
+      SELECT id, subdomain, is_published FROM website_assets WHERE project_id = ${projectId}`
     if (!website) throw new Error('The fixture project has no website.')
+    site = { subdomain: website.subdomain, is_published: website.is_published }
+  })
+
+  test.afterAll(async () => {
+    await sql`
+      UPDATE website_assets
+      SET subdomain = ${site.subdomain}, is_published = ${site.is_published}
+      WHERE project_id = ${projectId}`
   })
 
   test.beforeEach(async ({ page }) => {
@@ -118,4 +130,102 @@ test.describe('website builder', () => {
       timeout: 20_000,
     })
   })
+
+  /*
+   * Publishing is what the builder is for, and none of it was covered.
+   *
+   * Not the address rules, not the confirmation, not unpublishing — the one
+   * action in this product that puts a customer's work on the open internet
+   * under their client's name. These run against the fixture's own site and put
+   * it back the way they found it.
+   */
+  test('an address under three characters cannot be published', async ({ page }) => {
+    await page.getByRole('button', { name: /^(Publish|Published)$/ }).click()
+
+    const address = page.getByPlaceholder('my-brand')
+    await address.fill('ab')
+
+    await expect(
+      page.getByTestId('publish-panel').getByRole('button', { name: /^(Publish|Update)$/ }),
+    ).toBeDisabled()
+  })
+
+  test('the address is slugified as it is typed', async ({ page }) => {
+    await page.getByRole('button', { name: /^(Publish|Published)$/ }).click()
+
+    const address = page.getByPlaceholder('my-brand')
+    await address.fill('My Brand & Co!')
+
+    await expect(address).toHaveValue('my-brand-co')
+  })
+
+  test('publishing asks first, then puts the site online', async ({ page }) => {
+    const subdomain = `e2e-publish-${Date.now().toString(36)}`
+
+    await sql`UPDATE website_assets SET is_published = false, subdomain = NULL WHERE project_id = ${projectId}`
+    await page.reload()
+
+    await page.getByRole('button', { name: /^Publish$/ }).click()
+    await page.getByPlaceholder('my-brand').fill(subdomain)
+    await page.getByTestId('publish-panel').getByRole('button', { name: /^Publish$/ }).click()
+
+    // The confirmation is the friction: publishing is public and irreversible
+    // in the sense that matters — someone may already have seen it.
+    const dialog = page.getByRole('dialog')
+    await expect(dialog).toContainText(subdomain)
+    await dialog.getByRole('button', { name: /^Publish$/ }).click()
+
+    await expect(page.getByRole('button', { name: /^Published$/ })).toBeVisible()
+
+    const [row] = await sql`
+      SELECT is_published, subdomain FROM website_assets WHERE project_id = ${projectId}`
+    expect(row.is_published).toBe(true)
+    expect(row.subdomain).toBe(subdomain)
+
+    // And the site itself answers, without a session.
+    const response = await page.request.get(`/sites/${subdomain}`)
+    expect(response.status()).toBe(200)
+  })
+
+  test('unpublishing takes it offline again', async ({ page }) => {
+    const subdomain = `e2e-unpublish-${Date.now().toString(36)}`
+    await sql`
+      UPDATE website_assets SET is_published = true, subdomain = ${subdomain}
+      WHERE project_id = ${projectId}`
+    await page.reload()
+
+    await page.getByRole('button', { name: /^Published$/ }).click()
+    await page.getByTestId('publish-panel').getByRole('button', { name: /^Unpublish$/ }).click()
+
+    // The control itself is the readout: it says Publish again.
+    await expect(page.getByRole('button', { name: /^Publish$/ }).first()).toBeVisible()
+
+    const [row] = await sql`SELECT is_published FROM website_assets WHERE project_id = ${projectId}`
+    expect(row.is_published).toBe(false)
+
+    const response = await page.request.get(`/sites/${subdomain}`)
+    expect(response.status()).toBe(404)
+  })
+
+  test('a failed save says so, rather than sitting on "Unsaved changes"', async ({ page }) => {
+    /* The failure a customer actually hits is a field over its limit, but the
+       point of the test is the *reporting* — so the write is refused at the
+       network edge, which is the same path any server refusal takes. */
+    await page.route('**/dashboard/projects/**/builder', async (route) => {
+      if (route.request().method() === 'POST') {
+        await route.fulfill({ status: 500, body: 'no' })
+        return
+      }
+      await route.continue()
+    })
+
+    await page.getByTestId('canvas').getByRole('button').first().click()
+    const field = page.getByRole('textbox').first()
+    await field.fill('An edit that will not reach the database')
+
+    await expect(page.getByTestId('save-status')).toHaveAttribute('data-state', 'error', {
+      timeout: 10_000,
+    })
+  })
 })
+
