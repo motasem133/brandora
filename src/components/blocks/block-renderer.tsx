@@ -80,14 +80,93 @@ export function resolveTheme(theme?: Theme): SiteTheme {
  * The tag changes; nothing about the look does. A visitor to the published site
  * sees exactly what the customer arranged, and so does the customer.
  */
+/**
+ * The rhythm every block sits in.
+ *
+ * One shell rather than `px-8 py-16` repeated at six call sites with three
+ * different values between them, which is what a site with no design system
+ * looks like from the inside. The `band` argument alternates the ground so a
+ * page reads as sections rather than as one scroll of paper — the cheapest
+ * "designed" signal there is, and the only one available to a site with no
+ * photography at all.
+ */
+/**
+ * The button, which was a `<span>` on every published site ever generated.
+ *
+ * No `href` existed in the schema, so the primary conversion element on every
+ * page could not be clicked — the customer's site asked a visitor to act and
+ * gave them nothing to press. It defaults to the contact page rather than
+ * waiting for the schema: every generated site has one, and a button that goes
+ * somewhere sensible beats a button that goes nowhere.
+ */
+function Action({
+  label,
+  href,
+  theme,
+}: {
+  label: string
+  /** Not in the schema yet — see the plan's Stage 4. Defaults to contact. */
+  href?: string
+  theme: SiteTheme
+}) {
+  return (
+    <a
+      href={href || '?page=contact'}
+      className="mt-9 inline-block px-7 py-3.5 text-sm font-medium no-underline"
+      style={{
+        backgroundColor: theme.safe.primary,
+        color: theme.safe.onPrimary,
+        fontFamily: `'${theme.fontBody}', sans-serif`,
+        borderRadius: 'var(--site-radius)',
+      }}
+    >
+      {label}
+    </a>
+  )
+}
+
+function Section({
+  children,
+  theme,
+  band = false,
+  wide = false,
+}: {
+  children: React.ReactNode
+  theme: SiteTheme
+  band?: boolean
+  wide?: boolean
+}) {
+  return (
+    <section
+      style={{
+        paddingBlock: 'var(--site-section)',
+        paddingInline: 'var(--site-gutter)',
+        /* A tint of the brand's own primary, never a grey. Unchecked on
+           purpose and safe by construction: it is a ground, never a text
+           colour — the same rule `checkedSiteColors.line` already follows. */
+        backgroundColor: band
+          ? `color-mix(in srgb, ${theme.safe.primary} 5%, ${theme.safe.paper})`
+          : undefined,
+      }}
+    >
+      <div style={{ maxWidth: wide ? 'var(--site-container)' : 'var(--site-measure)', marginInline: 'auto' }}>
+        {children}
+      </div>
+    </section>
+  )
+}
+
 export function BlockRenderer({
   block,
   theme,
+  index = 0,
   preview = false,
   contact,
 }: {
   block: Block
   theme: SiteTheme
+  /** Where it sits on the page, so grounds can alternate. */
+  index?: number
   preview?: boolean
   /** Absent in the builder, where the block is a picture of itself. */
   contact?: ContactLabels
@@ -102,48 +181,55 @@ export function BlockRenderer({
      for a price, an email address, anything set in the brand's own colour. */
   const accent = { ...body, color: theme.safe.accent }
 
-  const button = {
-    backgroundColor: theme.safe.primary,
-    color: theme.safe.onPrimary,
-    fontFamily: `'${theme.fontBody}', sans-serif`,
-  }
 
   switch (block.type) {
     case 'hero':
       return (
-        <section className="px-8 py-20 text-center sm:py-28">
+        <Section theme={theme} wide>
           <HeroHeading
-            className="mx-auto max-w-3xl text-4xl font-bold leading-tight sm:text-5xl"
-            style={heading}
+            className="font-bold leading-[1.05] tracking-[-0.02em]"
+            style={{ ...heading, fontSize: 'var(--site-h1)', maxWidth: '18ch' }}
           >
             {block.title}
           </HeroHeading>
-          <p className="mx-auto mt-5 max-w-xl text-lg" style={muted}>
-            {block.subtitle}
-          </p>
-          <span
-            className="mt-8 inline-block rounded-lg px-6 py-3 text-sm font-medium"
-            style={button}
-          >
-            {block.cta}
-          </span>
-        </section>
+          {block.subtitle && (
+            <p
+              className="mt-6"
+              style={{ ...muted, fontSize: 'var(--site-lead)', maxWidth: '46ch', lineHeight: 1.5 }}
+            >
+              {block.subtitle}
+            </p>
+          )}
+          {block.cta && <Action label={block.cta} theme={theme} />}
+        </Section>
       )
 
     case 'features':
       return (
-        <section className="px-8 py-16">
-          <h2 className="text-center text-2xl font-bold sm:text-3xl" style={heading}>
+        <Section theme={theme} band={index % 2 === 1} wide>
+          <h2 className="font-bold" style={{ ...heading, fontSize: 'var(--site-h2)' }}>
             {block.heading}
           </h2>
-          <div className="mx-auto mt-10 grid max-w-4xl gap-6 sm:grid-cols-3">
+          {/* The schema allows one to four items and the grid was hardwired to
+              three, so four wrapped 3+1 and two sat lopsided. */}
+          <div
+            className="mt-10 grid"
+            style={{
+              gap: 'var(--site-gap)',
+              /* `auto-fit` rather than a count, so the grid needs no breakpoint
+                 and cannot hold two columns at 390px — which is what a fixed
+                 count did, wrapping a card's body to two words a line. The
+                 `min()` is what stops it overflowing a narrow phone. */
+              gridTemplateColumns: `repeat(auto-fit, minmax(min(100%, 15rem), 1fr))`,
+            }}
+          >
             {block.items.map((item, index) => (
-              <div key={index} className="text-center">
+              <div key={index}>
                 <div
-                  className="mx-auto mb-4 h-1 w-10 rounded-full"
+                  className="mb-4 h-1 w-10"
                   style={{ backgroundColor: theme.secondaryColor }}
                 />
-                <h3 className="text-lg font-semibold" style={heading}>
+                <h3 className="font-semibold" style={{ ...heading, fontSize: 'var(--site-h3)' }}>
                   {item.title}
                 </h3>
                 <p className="mt-1.5 text-sm leading-relaxed" style={muted}>
@@ -152,17 +238,20 @@ export function BlockRenderer({
               </div>
             ))}
           </div>
-        </section>
+        </Section>
       )
 
     case 'richText':
       return (
-        <section className="px-8 py-16">
-          <div className="mx-auto max-w-2xl">
-            <h2 className="text-2xl font-bold sm:text-3xl" style={heading}>
+        <Section theme={theme} band={index % 2 === 1}>
+          <div>
+            <h2 className="font-bold" style={{ ...heading, fontSize: 'var(--site-h2)' }}>
               {block.heading}
             </h2>
-            <div className="mt-4 space-y-4 leading-relaxed" style={muted}>
+            <div
+              className="mt-6 space-y-5"
+              style={{ ...muted, fontSize: 'var(--site-body)', lineHeight: 1.7 }}
+            >
               {block.body
                 .split('\n')
                 .filter(Boolean)
@@ -171,23 +260,29 @@ export function BlockRenderer({
                 ))}
             </div>
           </div>
-        </section>
+        </Section>
       )
 
     case 'services':
       return (
-        <section className="px-8 py-16">
-          <h2 className="text-center text-2xl font-bold sm:text-3xl" style={heading}>
+        <Section theme={theme} band={index % 2 === 1} wide>
+          <h2 className="font-bold" style={{ ...heading, fontSize: 'var(--site-h2)' }}>
             {block.heading}
           </h2>
-          <div className="mx-auto mt-10 grid max-w-4xl gap-5 sm:grid-cols-2">
+          <div
+            className="mt-10 grid"
+            style={{
+              gap: 'var(--site-gap)',
+              gridTemplateColumns: `repeat(auto-fit, minmax(min(100%, 20rem), 1fr))`,
+            }}
+          >
             {block.services.map((service, index) => (
               <div
                 key={index}
-                className="rounded-xl p-6"
-                style={{ border: `1px solid ${theme.safe.line}` }}
+                className="p-7"
+                style={{ border: `1px solid ${theme.safe.line}`, borderRadius: 'var(--site-radius)' }}
               >
-                <h3 className="text-lg font-semibold" style={heading}>
+                <h3 className="font-semibold" style={{ ...heading, fontSize: 'var(--site-h3)' }}>
                   {service.title}
                 </h3>
                 <p className="mt-1.5 text-sm leading-relaxed" style={muted}>
@@ -201,33 +296,72 @@ export function BlockRenderer({
               </div>
             ))}
           </div>
-        </section>
+        </Section>
       )
 
     case 'cta':
       return (
-        <section className="px-8 py-16">
-          <div
-            className="mx-auto max-w-3xl rounded-2xl px-8 py-14 text-center"
-            style={{ backgroundColor: `${theme.primaryColor}12` }}
-          >
-            <h2 className="text-2xl font-bold sm:text-3xl" style={heading}>
+        /*
+         * The full width of the brand's own colour, rather than a tinted card
+         * floating in the middle of a white page. A call to action is the one
+         * block that should interrupt.
+         *
+         * `${theme.primaryColor}12` was the old tint — string concatenation
+         * assuming a six-digit hex, which produced an invalid colour and a
+         * silently untinted panel for any brand whose palette came back in
+         * three digits. It was also the one colour path that skipped
+         * `checkedSiteColors`.
+         */
+        <section
+          style={{
+            paddingBlock: 'var(--site-section)',
+            paddingInline: 'var(--site-gutter)',
+            backgroundColor: theme.safe.primary,
+          }}
+        >
+          <div style={{ maxWidth: 'var(--site-measure)', marginInline: 'auto' }}>
+            <h2
+              className="font-bold"
+              style={{ ...heading, color: theme.safe.onPrimary, fontSize: 'var(--site-h2)' }}
+            >
               {block.heading}
             </h2>
-            <p className="mx-auto mt-3 max-w-lg" style={muted}>
-              {block.body}
-            </p>
-            <span className="mt-7 inline-block rounded-lg px-6 py-3 text-sm font-medium" style={button}>
-              {block.cta}
-            </span>
+            {block.body && (
+              <p
+                className="mt-4"
+                style={{
+                  ...body,
+                  color: theme.safe.onPrimary,
+                  opacity: 0.9,
+                  fontSize: 'var(--site-lead)',
+                  maxWidth: '46ch',
+                }}
+              >
+                {block.body}
+              </p>
+            )}
+            {block.cta && (
+              <a
+                href="?page=contact"
+                className="mt-9 inline-block px-7 py-3.5 text-sm font-medium no-underline"
+                style={{
+                  backgroundColor: theme.safe.onPrimary,
+                  color: theme.safe.primary,
+                  fontFamily: `'${theme.fontBody}', sans-serif`,
+                  borderRadius: 'var(--site-radius)',
+                }}
+              >
+                {block.cta}
+              </a>
+            )}
           </div>
         </section>
       )
 
     case 'contact':
       return (
-        <section className="px-8 py-16 text-center">
-          <h2 className="text-2xl font-bold sm:text-3xl" style={heading}>
+        <Section theme={theme}>
+          <h2 className="font-bold" style={{ ...heading, fontSize: 'var(--site-h2)' }}>
             {block.heading}
           </h2>
           <p className="mx-auto mt-3 max-w-lg" style={muted}>
@@ -255,7 +389,7 @@ export function BlockRenderer({
           {!preview && contact && (
             <ContactForm colors={theme.safe} labels={contact} font={theme.fontBody} />
           )}
-        </section>
+        </Section>
       )
   }
 }
@@ -273,7 +407,7 @@ export function PageRenderer({
   return (
     <div style={{ backgroundColor: theme.safe.paper }}>
       {blocks.map((block, index) => (
-        <BlockRenderer key={index} block={block} theme={theme} contact={contact} />
+        <BlockRenderer key={index} block={block} index={index} theme={theme} contact={contact} />
       ))}
     </div>
   )

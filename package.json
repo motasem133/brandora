@@ -31,7 +31,8 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "db:seed:test": "node scripts/seed-test-data.mjs",
-    "preview:kit": "tsx --conditions react-server scripts/preview-kit.ts"
+    "preview:kit": "tsx --conditions react-server scripts/preview-kit.ts",
+    "preview:site": "tsx --conditions react-server scripts/preview-site.ts"
   },
   "dependencies": {
     "@ai-sdk/react": "^4.0.50",
