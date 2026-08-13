@@ -1,6 +1,6 @@
 'use server'
 
-import { and, eq, ne } from 'drizzle-orm'
+import { and, eq, ne, sql } from 'drizzle-orm'
 import { updateTag } from 'next/cache'
 import { z } from 'zod'
 
@@ -88,6 +88,9 @@ export const updateWebsiteContent = orgAction
       projectId: z.uuid(),
       pages: pagesSchema,
       theme: themeSchema.optional(),
+      /* The menu label only — the address is not the customer's to change, and
+         renaming it would break links already shared. */
+      pageTitles: z.record(z.string(), z.string().max(40)).optional(),
     }),
   )
   .action(async ({ parsedInput, ctx }) => {
@@ -98,6 +101,7 @@ export const updateWebsiteContent = orgAction
       .set({
         pages: parsedInput.pages,
         ...(parsedInput.theme ? { customStyles: parsedInput.theme } : {}),
+        ...(parsedInput.pageTitles ? { pageTitles: parsedInput.pageTitles } : {}),
         updatedAt: new Date(),
       })
       .where(eq(websiteAssets.projectId, parsedInput.projectId))
@@ -105,11 +109,15 @@ export const updateWebsiteContent = orgAction
 
     if (!updated) throw new AppError('NOT_FOUND', 'This project has no website yet.')
 
-    // updateTag rather than revalidateTag: this runs inside a Server Action, so
-    // the caller should immediately read its own write. Only a published site is
-    // cached, so only then is there anything to purge.
-    if (updated.isPublished) purgeSite(updated)
-
+    /*
+     * Deliberately no purge.
+     *
+     * This used to invalidate the live site's cache on every autosave, because
+     * this column *was* the live site: a customer editing a published page had
+     * their half-typed sentence in front of visitors a second and a half later.
+     * The working copy is private now, and the cross-region purge has left the
+     * keystroke path with it.
+     */
     return { savedAt: new Date().toISOString() }
   })
 
@@ -143,11 +151,18 @@ export const publishWebsite = orgAdminAction
 
     if (taken) throw new AppError('VALIDATION', 'That address is already taken.')
 
+    /*
+     * Publishing is the copy. One statement, so a site can never be live
+     * against half of an edit — and `sql` rather than a read-then-write,
+     * because the row is the only thing that knows what is current.
+     */
     const [published] = await db
       .update(websiteAssets)
       .set({
         subdomain: parsedInput.subdomain,
         isPublished: true,
+        publishedPages: sql`${websiteAssets.pages}`,
+        publishedStyles: sql`${websiteAssets.customStyles}`,
         publishedAt: new Date(),
         updatedAt: new Date(),
       })
@@ -300,6 +315,46 @@ export const removeCustomDomain = orgAdminAction
     purgeSite({ subdomain: site.subdomain, customDomain: site.customDomain })
 
     return { success: true }
+  })
+
+/**
+ * Throws the working copy away and starts again from what visitors see.
+ *
+ * The cheapest reassurance in the editor, and free now that the published copy
+ * exists: undo covers a step, this covers an afternoon. It deliberately does
+ * not touch `is_published` or purge anything — the live site is not changing,
+ * which is the whole point.
+ */
+export const discardDraft = orgAction
+  .metadata({ name: 'discard-draft' })
+  .inputSchema(z.object({ projectId: z.uuid() }))
+  .action(async ({ parsedInput, ctx }) => {
+    await assertOwnedProject(parsedInput.projectId, ctx.orgId)
+
+    const [site] = await db
+      .select({
+        publishedPages: websiteAssets.publishedPages,
+        publishedStyles: websiteAssets.publishedStyles,
+      })
+      .from(websiteAssets)
+      .where(eq(websiteAssets.projectId, parsedInput.projectId))
+      .limit(1)
+
+    if (!site) throw new AppError('NOT_FOUND', 'This project has no website yet.')
+    if (!site.publishedPages) {
+      throw new AppError('VALIDATION', 'This site has never been online, so there is nothing to go back to.')
+    }
+
+    await db
+      .update(websiteAssets)
+      .set({
+        pages: site.publishedPages,
+        customStyles: site.publishedStyles ?? {},
+        updatedAt: new Date(),
+      })
+      .where(eq(websiteAssets.projectId, parsedInput.projectId))
+
+    return { pages: site.publishedPages, theme: site.publishedStyles ?? {} }
   })
 
 export const unpublishWebsite = orgAdminAction

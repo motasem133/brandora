@@ -142,16 +142,19 @@ function Section({
   theme,
   band = false,
   wide = false,
+  tight = false,
 }: {
   children: React.ReactNode
   theme: SiteTheme
   band?: boolean
   wide?: boolean
+  /** For a section that is three lines: the full rhythm reads as a mistake. */
+  tight?: boolean
 }) {
   return (
     <section
       style={{
-        paddingBlock: 'var(--site-section)',
+        paddingBlock: tight ? 'calc(var(--site-section) * 0.62)' : 'var(--site-section)',
         paddingInline: 'var(--site-gutter)',
         /* A tint of the brand's own primary, never a grey. Unchecked on
            purpose and safe by construction: it is a ground, never a text
@@ -161,10 +164,59 @@ function Section({
           : undefined,
       }}
     >
-      <div style={{ maxWidth: wide ? 'var(--site-container)' : 'var(--site-measure)', marginInline: 'auto' }}>
-        {children}
+      {/*
+        One left edge down the whole page.
+        
+        Narrow sections used to be centred at the measure while wide ones filled
+        the container, so a visitor scrolling past a hero, an hours table and a
+        contact form watched the page's own margin move three times. The column
+        is always the container now; text inside it is held to the measure and
+        stays where the heading above it started.
+      */}
+      <div style={{ maxWidth: 'var(--site-container)', marginInline: 'auto' }}>
+        <div style={{ maxWidth: wide ? undefined : 'var(--site-measure)' }}>{children}</div>
       </div>
     </section>
+  )
+}
+
+/**
+ * A heading beside its prose, rather than a single column ranged hard left.
+ *
+ * Every section on every generated site was one column of one measure, pinned
+ * to the left of whatever screen it was on — which is what made a page of good
+ * copy read as a document somebody had not finished laying out. Wide screens
+ * get the heading in its own column; a phone gets what it always got.
+ *
+ * `lg:` and not a clamp, because this is the one thing a clamp cannot do:
+ * change how many columns there are.
+ */
+function Split({
+  aside,
+  children,
+  centred = false,
+}: {
+  aside: React.ReactNode
+  children: React.ReactNode
+  centred?: boolean
+}) {
+  if (centred) {
+    return (
+      <div className="mx-auto text-center" style={{ maxWidth: 'var(--site-measure)' }}>
+        {aside}
+        {children}
+      </div>
+    )
+  }
+
+  return (
+    <div
+      className="grid gap-x-16 gap-y-6 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]"
+      style={{ maxWidth: 'var(--site-container)', marginInline: 'auto' }}
+    >
+      <div className="lg:sticky lg:top-12 lg:self-start">{aside}</div>
+      <div style={{ maxWidth: 'var(--site-measure)' }}>{children}</div>
+    </div>
   )
 }
 
@@ -260,6 +312,12 @@ export function registerStyle(name: RegisterName): React.CSSProperties {
 
   return {
     '--site-scale': String(register.scale),
+    /* Multiplied here rather than in the stylesheet: a custom property resolves
+       its own `var()`s on the element that declares it, so a scale applied at
+       `:root` would be the root's scale — which is 1, for everyone. */
+    '--site-h1': `calc(var(--site-h1-raw) * ${register.scale})`,
+    '--site-h2': `calc(var(--site-h2-raw) * ${register.scale})`,
+    '--site-h3': `calc(var(--site-h3-raw) * ${register.scale})`,
     '--site-section': register.section,
     '--site-radius': register.radius,
     '--site-measure': register.measure,
@@ -317,6 +375,7 @@ export function BlockRenderer({
   block,
   theme,
   index = 0,
+  repeated = false,
   images,
   register = 'editorial',
   base = '',
@@ -327,6 +386,8 @@ export function BlockRenderer({
   theme: SiteTheme
   /** Where it sits on the page, so grounds can alternate. */
   index?: number
+  /** The block before this one is the same type — see the `cta` case. */
+  repeated?: boolean
   images?: SiteImages
   /** The brand's bearing — see `lib/register.ts`. */
   register?: RegisterName
@@ -513,6 +574,7 @@ export function BlockRenderer({
 
     case 'richText': {
       const portrait = images?.scenes.people
+      const centred = SITE_REGISTERS[register].align === 'center'
 
       const prose = (
         <div>
@@ -538,8 +600,27 @@ export function BlockRenderer({
          phone without a second breakpoint. */
       if (!portrait) {
         return (
-          <Section theme={theme} band={index % 2 === 1}>
-            {prose}
+          <Section theme={theme} band={index % 2 === 1} wide>
+            <Split
+              centred={centred}
+              aside={
+                <h2 className="font-bold" style={{ ...heading, fontSize: 'var(--site-h2)' }}>
+                  {block.heading}
+                </h2>
+              }
+            >
+              <div
+                className="space-y-5"
+                style={{ ...muted, fontSize: 'var(--site-body)', lineHeight: 1.7 }}
+              >
+                {block.body
+                  .split('\n')
+                  .filter(Boolean)
+                  .map((paragraph, paragraphIndex) => (
+                    <p key={paragraphIndex}>{paragraph}</p>
+                  ))}
+              </div>
+            </Split>
           </Section>
         )
       }
@@ -621,60 +702,78 @@ export function BlockRenderer({
         </Section>
       )
 
-    case 'cta':
+    case 'cta': {
+      /*
+       * The brand's own colour, full width — a call to action is the one block
+       * that should interrupt. But only once in a row: a page whose last two
+       * sections are both calls to action rendered as nine hundred pixels of
+       * unbroken brown with two small buttons adrift in it, which is what one
+       * real customer's home page looks like today. The second one is set
+       * quietly instead, on the page's own ground.
+       *
+       * `${theme.primaryColor}12` was the old tint — string concatenation
+       * assuming a six-digit hex, which produced an invalid colour and a
+       * silently untinted panel for any brand whose palette came back in three
+       * digits, and the one colour path that skipped `checkedSiteColors`.
+       */
+      const loud = !repeated
+
       return (
-        /*
-         * The full width of the brand's own colour, rather than a tinted card
-         * floating in the middle of a white page. A call to action is the one
-         * block that should interrupt.
-         *
-         * `${theme.primaryColor}12` was the old tint — string concatenation
-         * assuming a six-digit hex, which produced an invalid colour and a
-         * silently untinted panel for any brand whose palette came back in
-         * three digits. It was also the one colour path that skipped
-         * `checkedSiteColors`.
-         */
         <section
           style={{
-            paddingBlock: 'var(--site-section)',
+            paddingBlock: 'calc(var(--site-section) * 0.72)',
             paddingInline: 'var(--site-gutter)',
-            backgroundColor: theme.safe.primary,
+            backgroundColor: loud ? theme.safe.primary : undefined,
+            borderTop: loud ? undefined : `1px solid ${theme.safe.line}`,
           }}
         >
-          <div style={{ maxWidth: 'var(--site-measure)', marginInline: 'auto' }}>
-            <h2
-              className="font-bold"
-              style={{ ...heading, color: theme.safe.onPrimary, fontSize: 'var(--site-h2)' }}
-            >
-              {block.heading}
-            </h2>
-            {block.body && (
-              <p
-                className="mt-4"
+          <div
+            className="flex flex-wrap items-end justify-between gap-x-12 gap-y-6"
+            style={{ maxWidth: 'var(--site-container)', marginInline: 'auto' }}
+          >
+            {/* The words and the act, side by side on a wide screen: a heading
+                with a button four hundred pixels below it is not one gesture. */}
+            <div style={{ maxWidth: '34ch' }}>
+              <h2
+                className="font-bold"
                 style={{
-                  ...body,
-                  color: theme.safe.onPrimary,
-                  opacity: 0.9,
-                  fontSize: 'var(--site-lead)',
-                  maxWidth: '46ch',
+                  ...heading,
+                  color: loud ? theme.safe.onPrimary : theme.safe.ink,
+                  fontSize: 'var(--site-h2)',
                 }}
               >
-                {block.body}
-              </p>
-            )}
+                {block.heading}
+              </h2>
+              {block.body && (
+                <p
+                  className="mt-4"
+                  style={{
+                    ...body,
+                    color: loud ? theme.safe.onPrimary : theme.safe.muted,
+                    opacity: loud ? 0.9 : 1,
+                    fontSize: 'var(--site-lead)',
+                  }}
+                >
+                  {block.body}
+                </p>
+              )}
+            </div>
             {block.cta && (
-              <Action
-                    label={block.cta}
-                    href={block.ctaHref}
-                    base={base}
-                    theme={theme}
-                    preview={preview}
-                    onDark
-                  />
+              <div className="shrink-0">
+                <Action
+                  label={block.cta}
+                  href={block.ctaHref}
+                  base={base}
+                  theme={theme}
+                  preview={preview}
+                  onDark={loud}
+                />
+              </div>
             )}
           </div>
         </section>
       )
+    }
 
     case 'quote':
       /* Set as a statement, not as a card. The brand's own primary carries it
@@ -770,7 +869,10 @@ export function BlockRenderer({
           <h2 className="font-bold" style={{ ...heading, fontSize: 'var(--site-h2)' }}>
             {block.heading}
           </h2>
-          <p className="mx-auto mt-3 max-w-lg" style={muted}>
+          {/* Left, with everything else on the page. `mx-auto` centred it
+              inside a left-aligned section, so the sentence sat inboard of its
+              own heading. */}
+          <p className="mt-3 max-w-lg" style={muted}>
             {block.body}
           </p>
           <p className="mt-6 text-lg font-medium" style={accent}>
@@ -801,6 +903,60 @@ export function BlockRenderer({
 }
 
 /** Renders a whole page, including the Google Fonts the theme references. */
+/**
+ * Which photograph each block on a page gets — each one used once.
+ *
+ * A home page is often three `richText` blocks in a row; handing every one of
+ * them the same portrait would print the same picture three times, which is the
+ * single most obvious way a generated site announces itself as generated. The
+ * first block that can carry a given scene takes it, and the ones after it fall
+ * back to the type-and-space design.
+ *
+ * Exported because the builder's canvas has to make the same allocation and
+ * cannot call `PageRenderer` — every block there is wrapped in its own
+ * drag-and-drop shell. A second copy of this rule in the editor would be a
+ * fourth way for the preview to disagree with the site.
+ */
+export function claimImages(blocks: Block[], images?: SiteImages) {
+  const unused = { ...(images?.scenes ?? {}) }
+
+  /* A section the customer has spoken for takes its picture first, whatever
+     the automatic order would have done with it. */
+  const chosen = new Map<number, 'hero' | 'people' | 'detail'>()
+  blocks.forEach((block, index) => {
+    const picture = 'picture' in block ? block.picture : undefined
+    if (picture && picture !== 'none' && unused[picture]) {
+      chosen.set(index, picture)
+      delete unused[picture]
+    }
+  })
+
+  return blocks.map((block, index): SiteImages | undefined => {
+    if (!images) return undefined
+
+    const asked = chosen.get(index)
+    if (asked) return { ...images, scenes: { [asked]: images.scenes[asked] } }
+
+    // "None" is an answer, not a gap to fill from the pile.
+    if ('picture' in block && block.picture === 'none') return { ...images, scenes: {} }
+
+    const wants =
+      block.type === 'hero'
+        ? 'hero'
+        : block.type === 'richText'
+          ? 'people'
+          : block.type === 'services'
+            ? 'detail'
+            : null
+
+    if (!wants || !unused[wants]) return { ...images, scenes: {} }
+
+    const scene = { [wants]: unused[wants] }
+    delete unused[wants]
+    return { ...images, scenes: scene }
+  })
+}
+
 export function PageRenderer({
   blocks,
   theme,
@@ -818,28 +974,7 @@ export function PageRenderer({
   base?: string
   contact?: ContactLabels
 }) {
-  /*
-   * Each photograph is used once on a page.
-   *
-   * A home page is often three `richText` blocks in a row; handing every one of
-   * them the same portrait would print the same picture three times, which is
-   * the single most obvious way a generated site announces itself as generated.
-   * The first block that can carry a given scene takes it, and the ones after it
-   * fall back to the type-and-space design.
-   */
-  const unused = { ...(images?.scenes ?? {}) }
-  const claim = (block: Block): SiteImages | undefined => {
-    if (!images) return undefined
-
-    const wants =
-      block.type === 'hero' ? 'hero' : block.type === 'richText' ? 'people' : block.type === 'services' ? 'detail' : null
-
-    if (!wants || !unused[wants]) return { ...images, scenes: {} }
-
-    const scene = { [wants]: unused[wants] }
-    delete unused[wants]
-    return { ...images, scenes: scene }
-  }
+  const claimed = claimImages(blocks, images)
 
   return (
     <div style={{ backgroundColor: theme.safe.paper }}>
@@ -848,8 +983,9 @@ export function PageRenderer({
           key={index}
           block={block}
           index={index}
+          repeated={index > 0 && blocks[index - 1].type === block.type}
           theme={theme}
-          images={claim(block)}
+          images={claimed[index]}
           register={register}
           base={base}
           contact={contact}

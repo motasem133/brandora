@@ -2,7 +2,7 @@ import 'dotenv/config'
 import { eq } from 'drizzle-orm'
 
 import { db } from '../src/server/db'
-import { brandingAssets, projects } from '../src/server/db/schema'
+import { brandingAssets, projects, websiteAssets } from '../src/server/db/schema'
 import { runModel } from '../src/server/ai/run'
 import { websiteSchema } from '../src/server/ai/schemas'
 import { websitePrompt, websiteSystem } from '../src/server/ai/prompts'
@@ -20,6 +20,11 @@ import { websitePrompt, websiteSystem } from '../src/server/ai/prompts'
  * the pages, prints the shape and the copy, and exits.
  *
  *   pnpm tsx scripts/preview-website.ts <projectId>
+ *   pnpm tsx scripts/preview-website.ts <projectId> --save
+ *
+ * `--save` writes the result into the project's *working copy* — the draft the
+ * builder loads. What visitors are getting is untouched until somebody presses
+ * Publish, which is the whole point of the two columns.
  */
 async function main() {
   const id = process.argv[2]
@@ -57,6 +62,15 @@ async function main() {
   })
 
   console.log(`${Date.now() - started}ms\n`)
+
+  if (process.argv.includes('--save')) {
+    await db
+      .update(websiteAssets)
+      .set({ pages: output, updatedAt: new Date() })
+      .where(eq(websiteAssets.projectId, project.id))
+
+    console.log('written to the working copy — publish it from the editor to make it live\n')
+  }
   for (const [page, blocks] of Object.entries(output)) {
     console.log(`# ${page}: ${(blocks as { type: string }[]).map((b) => b.type).join(' → ')}`)
   }

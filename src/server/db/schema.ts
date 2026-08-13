@@ -582,9 +582,39 @@ export const websiteAssets = pgTable(
       .unique()
       .references(() => projects.id, { onDelete: 'cascade' }),
 
-    /** Record<pageKey, Block[]> — see the Block union in §5. */
+    /**
+     * The working copy — Record<pageKey, Block[]>, see the Block union in §5.
+     *
+     * What the builder loads and autosaves into. Deliberately not what a
+     * visitor sees; that is `publishedPages` below.
+     */
     pages: jsonb('pages').$type<Record<string, unknown[]>>().notNull().default({}),
     customStyles: jsonb('custom_styles').$type<Record<string, string>>().notNull().default({}),
+
+    /**
+     * What the public actually gets, copied from the working copy on publish.
+     *
+     * There was no such thing until now. The builder autosaved into `pages` and
+     * purged the live cache, so on a published site every keystroke reached
+     * visitors within a second and a half, half-typed — and nothing in the
+     * product said so. A customer could not try anything.
+     *
+     * Null means never published, which is why these are nullable rather than
+     * defaulted: "is there anything waiting to go online" is then a question
+     * about a null, not a comparison of two blobs.
+     */
+    publishedPages: jsonb('published_pages').$type<Record<string, unknown[]>>(),
+    publishedStyles: jsonb('published_styles').$type<Record<string, string>>(),
+
+    /**
+     * What each page is called in the site's own menu.
+     *
+     * The label only — the address never changes. A café's page of food was
+     * called "Services" because the vocabulary is fixed and shared with the
+     * URL; renaming the slug instead would break every link already shared and
+     * every entry already indexed, to fix a word nobody types.
+     */
+    pageTitles: jsonb('page_titles').$type<Record<string, string>>().notNull().default({}),
 
     isPublished: boolean('is_published').notNull().default(false),
     subdomain: text('subdomain').unique(),

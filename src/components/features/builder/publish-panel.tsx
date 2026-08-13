@@ -11,8 +11,10 @@ import { Field } from '@/components/ui/field'
 import { FieldError } from '@/components/ui/field-error'
 import { Input } from '@/components/ui/input'
 import { EVENTS, capture } from '@/lib/analytics'
+import type { Pages, Theme } from '@/lib/blocks'
 import {
   attachCustomDomain,
+  discardDraft,
   publishWebsite,
   refreshCustomDomain,
   removeCustomDomain,
@@ -38,6 +40,11 @@ export function PublishPanel({
   isPublished,
   canPublish,
   planAllowsPublish,
+  waiting,
+  changedPages,
+  onPublished,
+  onTakenOffline,
+  onDiscarded,
   canUseCustomDomain,
   atDomainLimit,
 }: {
@@ -47,6 +54,13 @@ export function PublishPanel({
   isPublished: boolean
   canPublish: boolean
   planAllowsPublish: boolean
+  /** Something in the working copy differs from what visitors are getting. */
+  waiting: boolean
+  /** Their names, already translated, for the list of what will change. */
+  changedPages: string[]
+  onPublished: () => void
+  onTakenOffline: () => void
+  onDiscarded: (pages: Pages, theme: Theme) => void
   canUseCustomDomain: boolean
   /** Plan allows domains, but every one it includes is already attached. */
   atDomainLimit: boolean
@@ -102,12 +116,28 @@ export function PublishPanel({
       setPublished(true)
       setLiveSubdomain(data?.subdomain ?? subdomain)
       setOpen(false)
+      onPublished()
     },
   })
 
   const unpublish = useAction(unpublishWebsite, {
-    onSuccess: () => setPublished(false),
+    onSuccess: () => {
+      setPublished(false)
+      onTakenOffline()
+    },
   })
+
+  /* The cheapest reassurance in the editor: undo covers a step, this covers an
+     afternoon. Only offered once there is a live version to go back to. */
+  const discard = useAction(discardDraft, {
+    onSuccess: ({ data }) => {
+      if (data) onDiscarded(data.pages as unknown as Pages, data.theme as unknown as Theme)
+      setDiscarding(false)
+      setOpen(false)
+    },
+  })
+
+  const [discarding, setDiscarding] = useState(false)
 
   if (!canPublish) {
     /* Two different problems: an account that has not bought the feature, and a
@@ -145,9 +175,11 @@ export function PublishPanel({
         cancelLabel={t('notYet')}
       />
 
+      {/* The button says what pressing it does. "Published" was a label for a
+          state, on the one control whose job is to change it. */}
       <Button size="sm" onClick={() => setOpen((value) => !value)}>
         <Globe />
-        {published ? t('published') : t('publish')}
+        {published ? t('update') : t('publish')}
       </Button>
 
       {/*
@@ -174,18 +206,44 @@ export function PublishPanel({
             />
           </Field>
 
+          {/*
+            What pressing the button will do to the live site, named page by
+            page. A customer who has been editing for an hour cannot otherwise
+            know what they are about to show people.
+          */}
+          {published && (
+            <div className="mt-4 border-t border-line pt-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-fg-muted">
+                {t('whatWillChange')}
+              </p>
+              {waiting ? (
+                <>
+                  <ul className="mt-2 space-y-1 text-sm text-fg-secondary">
+                    {changedPages.map((page) => (
+                      <li key={page}>{page}</li>
+                    ))}
+                    {changedPages.length === 0 && <li>{t('theColours')}</li>}
+                  </ul>
+                  <p className="mt-2 text-xs text-fg-muted">{t('visitorsSeeAtOnce')}</p>
+                </>
+              ) : (
+                <p className="mt-2 text-sm text-fg-muted">{t('nothingWaiting')}</p>
+              )}
+            </div>
+          )}
+
           <div className="mt-4 flex gap-2">
             {/*
-              Publishing puts a customer's site on the open internet under
-              their client's name, and it used to take one press of a small
-              button — less friction than deleting a draft, which has always
-              asked. Updating an already-published site does not ask again:
-              the address is already public and the question has been answered.
+              Publishing puts a customer's site on the open internet under their
+              client's name, and it used to take one press of a small button —
+              less friction than deleting a draft, which has always asked. An
+              update does not ask again: the address is already public, and the
+              list above answers the question a dialog would have asked.
             */}
             <Button
               size="sm"
               className="flex-1"
-              disabled={publish.isPending || subdomain.length < 3}
+              disabled={publish.isPending || subdomain.length < 3 || (published && !waiting)}
               onClick={() => {
                 if (published) {
                   publish.execute({ projectId, subdomain })
@@ -199,17 +257,41 @@ export function PublishPanel({
               {published ? t('update') : t('publish')}
             </Button>
 
-            {published && (
+            {published && waiting && (
               <Button
                 size="sm"
                 variant="ghost"
-                disabled={unpublish.isPending}
-                onClick={() => unpublish.execute({ projectId })}
+                disabled={discard.isPending}
+                onClick={() => setDiscarding(true)}
               >
-                {t('unpublish')}
+                {t('goBackToLive')}
               </Button>
             )}
           </div>
+
+          {published && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="mt-2 w-full"
+              disabled={unpublish.isPending}
+              onClick={() => unpublish.execute({ projectId })}
+            >
+              {t('takeOffline')}
+            </Button>
+          )}
+
+          <ConfirmDialog
+            open={discarding}
+            pending={discard.isPending}
+            destructive
+            onClose={() => setDiscarding(false)}
+            onConfirm={() => discard.execute({ projectId })}
+            title={t('discardTitle')}
+            body={t('discardBody')}
+            confirmLabel={t('goBackToLive')}
+            cancelLabel={t('keepMyChanges')}
+          />
 
           {published && liveSubdomain && (
             <a

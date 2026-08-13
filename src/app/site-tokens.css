@@ -34,11 +34,26 @@
   --site-scale: 1;
   --site-band: 5%;
 
-  /* Headings take the register's scale; body text does not — a multiplier on
-     running prose costs legibility and buys nothing. */
-  --site-h1: calc(clamp(2.25rem, 5.5vw, 4rem) * var(--site-scale));
-  --site-h2: calc(clamp(1.75rem, 3.4vw, 2.6rem) * var(--site-scale));
-  --site-h3: calc(clamp(1.05rem, 1.4vw, 1.25rem) * var(--site-scale));
+  /*
+   * Headings take the register's scale; body text does not — a multiplier on
+   * running prose costs legibility and buys nothing.
+   *
+   * The scale is applied where the register is declared, not here, and the raw
+   * clamps exist for exactly that reason. A custom property is substituted at
+   * computed-value time *on the element that declares it*: written as
+   * `calc(clamp(…) * var(--site-scale))` on `:root`, `--site-h1` resolved
+   * against the root's own scale of 1 and descendants inherited that finished
+   * value — so `registerStyle` set `--site-scale` and nothing read it, and
+   * every register rendered at the same type size. See `registerStyle`, which
+   * multiplies these.
+   */
+  --site-h1-raw: clamp(2.25rem, 5.5vw, 4rem);
+  --site-h2-raw: clamp(1.75rem, 3.4vw, 2.6rem);
+  --site-h3-raw: clamp(1.05rem, 1.4vw, 1.25rem);
+
+  --site-h1: var(--site-h1-raw);
+  --site-h2: var(--site-h2-raw);
+  --site-h3: var(--site-h3-raw);
   --site-lead: clamp(1.05rem, 1.7vw, 1.35rem);
   --site-body: clamp(1rem, 1.15vw, 1.075rem);
 

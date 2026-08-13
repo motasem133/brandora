@@ -585,32 +585,37 @@
       "services": "Services",
       "contact": "Contact"
     },
-    "edit": "Edit website",
+    "edit": "Edit your website",
     "liveAt": "Live at",
     "notPublished": "Not published yet",
     "openSite": "Open the live site",
     "messagesTitle": "Messages from your site",
-    "messagesSubtitle": "Sent through the contact form. Each one was emailed to you as well."
+    "messagesSubtitle": "Sent through the contact form. Each one was emailed to you as well.",
+    "changesWaiting": "Changes you have not published yet",
+    "readyToLookOver": "Your website is written and ready. Look it over, change anything that is wrong, then publish it."
   },
   "Builder": {
     "pages": {
       "home": "Home",
       "about": "About",
       "services": "Services",
+      "menu": "Menu",
+      "pricing": "Pricing",
+      "faq": "FAQ",
       "contact": "Contact"
     },
     "blocks": {
-      "hero": "Hero",
-      "features": "Features",
-      "richText": "Text section",
-      "services": "Services",
-      "quote": "Quote",
-      "faq": "Questions",
+      "hero": "Top of the page",
+      "features": "Highlights",
+      "richText": "Paragraph",
+      "services": "What you offer",
+      "quote": "One big line",
+      "faq": "Questions and answers",
       "hours": "Opening hours",
-      "cta": "Call to action",
-      "contact": "Contact"
+      "cta": "Next step",
+      "contact": "How to reach you"
     },
-    "addSection": "Add section",
+    "addSection": "Add a section",
     "selectPrompt": "Select a section to edit it.",
     "emptyPage": "This page is empty. Add a section to start it.",
     "undo": "Undo",
@@ -654,18 +659,19 @@
     "addItem": "Add another",
     "removeItem": "Remove",
     "fields": {
-      "title": "Title",
-      "subtitle": "Subtitle",
+      "title": "Headline",
+      "subtitle": "Second line",
       "heading": "Heading",
-      "body": "Body text",
-      "cta": "Button label",
+      "body": "Text",
+      "cta": "What the button says",
       "email": "Email address",
       "phone": "Phone number",
       "price": "Price",
       "quote": "The line",
       "attribution": "Who said it",
-      "note": "Note",
-      "ctaHref": "Button link"
+      "note": "Extra note",
+      "ctaHref": "Where the button goes",
+      "picture": "Picture"
     },
     "confirmTitle": "Publish this site?",
     "confirmBody": "Anyone with the address will be able to see it, and search engines can find it. You can unpublish at any time.",
@@ -683,6 +689,133 @@
       "phone": "+971 …",
       "price": "From AED 45",
       "note": "Anything that qualifies the above"
+    },
+    "siteStyle": "Site style",
+    "colors": {
+      "primary": "Primary",
+      "secondary": "Secondary",
+      "background": "Background",
+      "text": "Text"
+    },
+    "typeHeading": "Headings",
+    "typeBody": "Body",
+    "resetTheme": "Reset to brand colours",
+    "blankSection": "Empty {section} — it will not appear on your published site.",
+    "notOnline": "Not online yet",
+    "onlineAndCurrent": "Your site is online and up to date",
+    "changesWaiting": "Changes on {pages} aren't online yet",
+    "theColours": "the colours",
+    "and": " and ",
+    "andOthers": "{first} and {count} other pages",
+    "whatWillChange": "What will change",
+    "visitorsSeeAtOnce": "Your visitors will see this straight away.",
+    "nothingWaiting": "Nothing has changed since your last update.",
+    "goBackToLive": "Go back to what's online",
+    "keepMyChanges": "Keep my changes",
+    "discardTitle": "Undo all your changes?",
+    "discardBody": "Everything you've edited since your last update will be replaced with what's on your live site right now. This can't be undone.",
+    "takeOffline": "Take it offline",
+    "blockDescriptions": {
+      "hero": "The first thing anyone sees — a headline, a line under it, and a button.",
+      "features": "A few short points, side by side.",
+      "richText": "A heading and some writing.",
+      "services": "A list of what you sell or do, with prices if you want them.",
+      "quote": "A sentence set large on its own — your promise, or something a customer said.",
+      "faq": "The things people ask before they buy.",
+      "hours": "When your doors are open.",
+      "cta": "A short line and a button. Book, call, order.",
+      "contact": "Your email, your phone, and a line about when you answer."
+    },
+    "itemFields": {
+      "features": {
+        "title": "Title",
+        "body": "Text"
+      },
+      "services": {
+        "title": "Name",
+        "body": "Description"
+      },
+      "faq": {
+        "title": "Question",
+        "body": "Answer"
+      },
+      "hours": {
+        "title": "Day or days",
+        "body": "Hours"
+      }
+    },
+    "itemLabels": {
+      "features": "Highlight {number}",
+      "services": "Item {number}",
+      "faq": "Question {number}",
+      "hours": "Day {number}"
+    },
+    "itemAdd": {
+      "features": "Add a highlight",
+      "services": "Add an item",
+      "faq": "Add a question",
+      "hours": "Add a day"
+    },
+    "itemRemove": {
+      "features": "Remove this highlight",
+      "services": "Remove this item",
+      "faq": "Remove this question",
+      "hours": "Remove this day"
+    },
+    "itemHints": {
+      "hours": {
+        "title": "e.g. Monday – Thursday",
+        "body": "e.g. 8am – 10pm"
+      },
+      "faq": {
+        "title": "Something people actually ask",
+        "body": "The answer, plainly"
+      }
+    },
+    "editThis": "Edit",
+    "remove": "Remove",
+    "removeTitle": "Remove \"{section}\"?",
+    "removeBody": "This section and everything in it will be taken off this page. You can undo it.",
+    "removeConfirm": "Remove it",
+    "keepIt": "Keep it",
+    "pickSectionTitle": "Pick a part of your page",
+    "pickSectionBody": "Click any section on the left and its words appear here. Your changes are saved as you type — nothing reaches your visitors until you publish.",
+    "emptyPageNotInMenu": "This page has nothing on it, so it isn't in your site's menu.",
+    "firstRunTitle": "This is your website. Everything on it can be changed.",
+    "firstRunBody": "Click any part of the page to edit its words. Nothing you do here reaches your visitors until you publish.",
+    "firstRunDismiss": "Got it",
+    "optional": "Optional",
+    "linkToPage": "My {page} page",
+    "linkToPhone": "My phone",
+    "linkToEmail": "My email",
+    "linkToWeb": "Another website",
+    "linkWebLabel": "Web address",
+    "pictures": {
+      "hero": "Wide shot",
+      "people": "People",
+      "detail": "Close-up",
+      "none": "No picture"
+    },
+    "pictureHint": "These came with your brand kit.",
+    "pictureAuto": "chosen for you",
+    "noPhotographs": "Your site has no photographs.",
+    "noPhotographsBody": "Photographs come with the social media kit — three pictures of your business, used across your site and your posts.",
+    "seeTheKit": "See the kit",
+    "addPage": "Add a page",
+    "thisPage": "This page",
+    "pageMenuLabel": "What this page is called in the menu",
+    "pageAddressFixed": "Address: {path} — this does not change.",
+    "removePage": "Remove this page",
+    "removePageTitle": "Remove the {page} page?",
+    "removePageBody": "It will disappear from your site's menu and its address will stop working. Anything written on it will be lost.",
+    "pageDescriptions": {
+      "home": "The front page.",
+      "about": "Who you are and why you started.",
+      "services": "What you do for people, priced or not.",
+      "menu": "What you serve, with prices.",
+      "pricing": "Your rates or plans, when price is the first question.",
+      "faq": "The questions you are asked most.",
+      "contact": "How to reach you."
     }
   },
   "Billing": {

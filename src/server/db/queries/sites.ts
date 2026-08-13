@@ -1,11 +1,12 @@
 import 'server-only'
 
-import { and, count, eq, inArray, isNotNull, ne } from 'drizzle-orm'
+import { and, count, eq, isNotNull, ne, sql } from 'drizzle-orm'
 import { unstable_cache } from 'next/cache'
 import { cache } from 'react'
 
 import { db } from '@/server/db'
-import { brandingAssets, generatedFiles, projects, websiteAssets } from '@/server/db/schema'
+import { brandingAssets, projects, websiteAssets } from '@/server/db/schema'
+import { siteImages } from './site-images'
 
 /** The cache tag for one site, so publishing can drop exactly its own entry. */
 export function siteTag(host: string) {
@@ -48,8 +49,38 @@ export const getPublishedSite = cache(async (host: string) => {
         ? eq(websiteAssets.customDomain, target)
         : eq(websiteAssets.subdomain, target)
 
+      /*
+       * The published copy, and only the columns a visitor's page needs.
+       *
+       * `websiteAssets` in full would carry the working copy into every cached
+       * entry — the whole draft of a site, held in cache, for a page that must
+       * never render it.
+       */
       const [row] = await db
-        .select({ website: websiteAssets, project: projects, branding: brandingAssets })
+        .select({
+          website: {
+            projectId: websiteAssets.projectId,
+            /*
+             * The published copy, falling back to the working one.
+             *
+             * A row marked published with no published copy should not exist —
+             * the migration backfilled every live site and `publishWebsite`
+             * writes both — but a fixture, a hand-written INSERT or a row the
+             * backfill somehow missed would otherwise serve a site with no
+             * pages at all: a 200 with nothing on it, and a 404 on every page
+             * but the front one. Serving what that row means is better than
+             * serving a blank.
+             */
+            pages: sql<Record<string, unknown[]>>`coalesce(${websiteAssets.publishedPages}, ${websiteAssets.pages})`,
+            customStyles: sql<Record<string, string>>`coalesce(${websiteAssets.publishedStyles}, ${websiteAssets.customStyles})`,
+            pageTitles: websiteAssets.pageTitles,
+            subdomain: websiteAssets.subdomain,
+            customDomain: websiteAssets.customDomain,
+            updatedAt: websiteAssets.updatedAt,
+          },
+          project: projects,
+          branding: brandingAssets,
+        })
         .from(websiteAssets)
         .innerJoin(projects, eq(projects.id, websiteAssets.projectId))
         .leftJoin(brandingAssets, eq(brandingAssets.projectId, websiteAssets.projectId))
@@ -63,42 +94,12 @@ export const getPublishedSite = cache(async (host: string) => {
        *
        * A separate query per image would put a cross-region round trip in the
        * path of every visitor — the thing caching this at all was meant to
-       * remove. Resolved by kind rather than stored on the blocks, which is what
-       * makes photography appear on a live site the day its owner buys a kit,
-       * with no regeneration and no edit.
+       * remove. The resolution itself lives in `site-images.ts`, because the
+       * builder's canvas has to ask exactly the same question.
        */
-      const files = await db
-        .select({
-          id: generatedFiles.id,
-          kind: generatedFiles.kind,
-          metadata: generatedFiles.metadata,
-        })
-        .from(generatedFiles)
-        .where(
-          and(
-            eq(generatedFiles.projectId, row.website.projectId),
-            inArray(generatedFiles.kind, ['social_scene', 'favicon', 'social_avatar']),
-          ),
-        )
+      const images = await siteImages(row.website.projectId)
 
-      const variant = (name: string) =>
-        files.find((file) => file.kind === 'social_avatar' && file.metadata?.variant === name)?.id
-
-      const scenes: Partial<Record<'hero' | 'people' | 'detail', string>> = {}
-      for (const file of files) {
-        const scene = file.kind === 'social_scene' ? file.metadata?.scene : undefined
-        if (scene === 'hero' || scene === 'people' || scene === 'detail') scenes[scene] = file.id
-      }
-
-      return {
-        ...row,
-        images: {
-          scenes,
-          logo: variant('transparent'),
-          favicon: files.find((file) => file.kind === 'favicon')?.id,
-          og: variant('og'),
-        },
-      }
+      return { ...row, images }
     },
     ['published-site', host],
     { tags: [siteTag(host)], revalidate: SITE_TTL_SECONDS },

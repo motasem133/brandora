@@ -84,7 +84,30 @@ async function main() {
         for (const register of REGISTERS) {
           const path = `${BASE}/sites/${site.subdomain}${name === 'home' ? '' : `/${name}`}`
           const url = register ? `${path}?register=${register}` : path
-          const response = await page.goto(url, { waitUntil: 'networkidle' })
+          /* `load` and a beat, not `networkidle`: the dev server polls Inngest
+             every second, so the network is never idle and every shot timed
+             out. The beat is for webfonts, which is what the wait was for. */
+          /* `domcontentloaded` and a beat, not `networkidle` or `load`: the dev
+             server polls Inngest every second and keeps a websocket open, so
+             neither of the other two ever settles. The beat is for webfonts,
+             which is what the wait was for. */
+          /*
+           * Retried once, because the dev server this usually points at
+           * reloads the open page whenever it recompiles — which interrupts
+           * whatever navigation is in flight and killed the whole run over
+           * nothing.
+           */
+          let response = null
+          for (let attempt = 0; attempt < 2; attempt += 1) {
+            try {
+              response = await page.goto(url, { waitUntil: 'domcontentloaded' })
+              break
+            } catch (error) {
+              if (attempt === 1) throw error
+              await page.waitForTimeout(1500)
+            }
+          }
+          await page.waitForTimeout(900)
 
           const file = `${OUT}/${site.subdomain}-${name}${register ? `-${register}` : ''}-${width}.png`
           await page.screenshot({ path: file, fullPage: true })

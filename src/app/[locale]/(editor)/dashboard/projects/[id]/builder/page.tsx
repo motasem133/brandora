@@ -10,6 +10,7 @@ import { getOrgPlan } from '@/server/db/queries/plans'
 import { countCustomDomains } from '@/server/db/queries/sites'
 import { getProject } from '@/server/db/queries/projects'
 import { brandingAssets, websiteAssets } from '@/server/db/schema'
+import { siteImages } from '@/server/db/queries/site-images'
 import { isDomainsConfigured } from '@/server/services/domains'
 import { requireOrg } from '@/server/session'
 
@@ -61,6 +62,14 @@ export default async function BuilderPage({
     .where(eq(brandingAssets.projectId, project.id))
     .limit(1)
 
+  /*
+   * The same pictures the published site resolves, by the same function.
+   *
+   * The canvas showed a photoless site while production was photo-led, which is
+   * the third time this preview has drifted from the thing it previews.
+   */
+  const images = await siteImages(project.id)
+
   const plan = await getOrgPlan(org.id)
 
   return (
@@ -70,6 +79,11 @@ export default async function BuilderPage({
          then — the same fallback the project page itself uses. */
       projectName={project.businessName || project.title}
       initialPages={normalisePages(website.pages)}
+      /* What visitors are getting right now, so the editor can say which pages
+         have changes waiting. Null until the site has been online once. */
+      publishedPages={website.publishedPages ? normalisePages(website.publishedPages) : null}
+      publishedTheme={(website.publishedStyles ?? null) as Theme | null}
+      initialPageTitles={website.pageTitles ?? {}}
       initialTheme={(website.customStyles ?? {}) as Theme}
       /*
        * What the published site is actually set in.
@@ -92,6 +106,14 @@ export default async function BuilderPage({
         fontBody: branding?.fonts?.body,
       }}
       register={registerFor(project.brandStyle, project.industry)}
+      /* The brand's own language, because its nav is written in it — the same
+         rule the published site follows. */
+      language={project.language}
+      /* The transparent logo, when a kit has been bought. Resolved by kind, as
+         the published site resolves it, rather than stored on a block. */
+      logoFileId={images.logo ?? null}
+      images={images}
+      year={new Date().getFullYear()}
       initialSubdomain={website.subdomain}
       initialCustomDomain={website.customDomain}
       isPublished={website.isPublished}

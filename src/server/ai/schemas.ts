@@ -197,12 +197,36 @@ function mergeable(block: Block): block is Block & { type: keyof typeof LIST_FIE
 }
 
 function tidy(blocks: Block[], isHome: boolean): Block[] {
-  const ordered = [...blocks]
+  let ordered = [...blocks]
 
   if (isHome) {
     const hero = ordered.findIndex((block) => block.type === 'hero')
     if (hero > 0) ordered.unshift(...ordered.splice(hero, 1))
   }
+
+  /*
+   * One top-of-page section per page.
+   *
+   * A real run came back with `hero → services → hero → faq`, which renders as
+   * two opening statements with a list between them — the page starts twice.
+   * The later one keeps every word it was written with and becomes the closing
+   * ask, which is the same three fields under different names.
+   */
+  let seenHero = false
+  ordered = ordered.map((block) => {
+    if (block.type !== 'hero') return block
+    if (!seenHero) {
+      seenHero = true
+      return block
+    }
+    return {
+      type: 'cta' as const,
+      heading: block.title,
+      body: block.subtitle,
+      cta: block.cta,
+      ...(block.ctaHref ? { ctaHref: block.ctaHref } : {}),
+    }
+  })
 
   /* A call to action is a closing move. A model put one at the top of a home
      page and made another page out of nothing but a button; sorting them to

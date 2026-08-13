@@ -2,7 +2,8 @@ import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import { notFound, redirect } from 'next/navigation'
 
-import { PageRenderer, SITE_REGISTERS, registerStyle, resolveTheme } from '@/components/blocks/block-renderer'
+import { PageRenderer, registerStyle, resolveTheme } from '@/components/blocks/block-renderer'
+import { SiteFooter, SiteHeader, TITLES } from '@/components/blocks/site-chrome'
 import { PAGE_KEYS, type Block, type PageKey, type Theme } from '@/lib/blocks'
 import { asRegister, registerFor } from '@/lib/register'
 import { absoluteUrl, basePath } from '@/lib/site-url'
@@ -41,34 +42,6 @@ const CONTACT_LABELS = {
 
 /** Where a public image is served from — see `/api/site-image`. */
 const imageUrl = (id: string) => `/api/site-image/${id}`
-
-/**
- * What each page is called, in the two languages a brand can be generated in.
- *
- * The nav printed the page keys — `home`, `about` — capitalised by CSS, which
- * is English structure showing through on an Arabic site. Same argument as the
- * contact form's labels above: the language belongs to the brand.
- */
-const TITLES = {
-  en: {
-    home: 'Home',
-    about: 'About',
-    services: 'Services',
-    menu: 'Menu',
-    pricing: 'Pricing',
-    faq: 'FAQ',
-    contact: 'Contact',
-  },
-  ar: {
-    home: 'الرئيسية',
-    about: 'من نحن',
-    services: 'خدماتنا',
-    menu: 'القائمة',
-    pricing: 'الأسعار',
-    faq: 'أسئلة شائعة',
-    contact: 'اتصل بنا',
-  },
-} as const satisfies Record<string, Record<PageKey, string>>
 
 /**
  * The page a path asks for, defaulting to home; anything deeper is not a page.
@@ -130,7 +103,10 @@ export async function generateMetadata({
   const description = site.branding?.slogan ?? undefined
 
   /* Four pages shared one title for as long as they shared one URL. */
-  const title = active === 'home' ? name : `${TITLES[site.project.language][active]} — ${name}`
+  const pageName =
+    (site.website.pageTitles as Record<string, string> | null)?.[active]?.trim() ||
+    TITLES[site.project.language][active]
+  const title = active === 'home' ? name : `${pageName} — ${name}`
 
   /*
    * The brand's own favicon and share card, which have existed in storage since
@@ -227,51 +203,17 @@ export default async function PublishedSite({
   // precedence without being told.
   return (
     <div style={{ ...registerStyle(register), backgroundColor: theme.safe.paper, minHeight: '100dvh' }}>
-        <header
-          className="flex flex-wrap items-center justify-between gap-4 px-8 py-5"
-          style={{ borderBottom: `1px solid ${theme.safe.line}` }}
-        >
-          {/* The logo when there is one, the name when there is not — never both,
-              and never a name-shaped gap while an image loads. */}
-          {site.images.logo ? (
-            <img
-              src={imageUrl(site.images.logo)}
-              alt={name}
-              className="w-auto"
-              style={{ height: 'clamp(1.75rem, 3vw, 2.5rem)' }}
-            />
-          ) : (
-            <span
-              className="text-lg font-bold"
-              /* The brand's own colour when it can be read on the brand's own
-                 ground, deepened when it cannot — this is the site's name. */
-              style={{ fontFamily: `'${theme.fontHeading}', sans-serif`, color: theme.safe.accent }}
-            >
-              {name}
-            </span>
-          )}
-
-          <nav aria-label={TITLES[site.project.language].home} className="flex gap-5">
-            {nav.map((key) => (
-              <a
-                key={key}
-                href={key === 'home' ? `${base}/` : `${base}/${key}`}
-                aria-current={key === active ? 'page' : undefined}
-                className={`text-sm hover:underline${
-                  SITE_REGISTERS[register].formal ? ' uppercase tracking-[0.14em]' : ''
-                }`}
-                /* The inactive state is a checked softer ink rather than an
-                   opacity multiplier, which cannot reach the contrast floor. */
-                style={{
-                  fontFamily: `'${theme.fontBody}', sans-serif`,
-                  color: key === active ? theme.safe.ink : theme.safe.muted,
-                }}
-              >
-                {TITLES[site.project.language][key]}
-              </a>
-            ))}
-          </nav>
-        </header>
+        <SiteHeader
+          name={name}
+          logoUrl={site.images.logo ? imageUrl(site.images.logo) : undefined}
+          nav={nav}
+          active={active}
+          titles={site.website.pageTitles ?? undefined}
+          theme={theme}
+          register={register}
+          base={base}
+          language={site.project.language}
+        />
 
         <PageRenderer
           blocks={blocks}
@@ -282,16 +224,15 @@ export default async function PublishedSite({
           contact={CONTACT_LABELS[site.project.language]}
         />
 
-        <footer
-          className="px-8 py-10 text-center text-sm"
-          style={{
-            fontFamily: `'${theme.fontBody}', sans-serif`,
-            color: theme.safe.muted,
-            borderTop: `1px solid ${theme.safe.line}`,
-          }}
-        >
-          © {new Date().getFullYear()} {name}
-      </footer>
+        <SiteFooter
+          name={name}
+          nav={nav}
+          titles={site.website.pageTitles ?? undefined}
+          theme={theme}
+          base={base}
+          language={site.project.language}
+          year={new Date().getFullYear()}
+        />
     </div>
   )
 }
