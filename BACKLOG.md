@@ -10,24 +10,16 @@ have been built on top of a product that was quietly losing customers' money.
 
 Times are working estimates, not commitments. Where one is uncertain it says so.
 
-*Last true on 13 August 2026.*
+*Last true on 13 August 2026, end of day.*
 
 ---
 
 ## Fixes
 
-### CI has been red on main for days — half a day
-
-`soft-updates`, `verification-gate` and `tabs` fail in GitHub Actions and pass
-locally, on main and on every branch, since before 12 August. Nothing is known
-to be broken in the product; what is broken is the signal. A suite that is
-always red is a suite nobody reads, and the site work of 13 August went out with
-it red because the alternative was not shipping at all.
-
-The likely cause is fixture state in CI rather than the code — the failures are
-"element not found" on a chosen logo and on the verification notice, both of
-which depend on what the seed leaves behind. Worth an hour with the CI logs and
-the seed script side by side.
+**Empty.** The CI suite that had been red for days is green again — three
+causes, one of them a real defect: choosing a logo failed *after* it had
+worked, because the derived assets were rebuilt inline and unguarded, so a
+customer saw an error for something that had succeeded.
 
 Ten older fixes are closed — eight shipped on 10 August, one died when the
 customer deleted the project it was about, and one was found on 12 August while
@@ -365,6 +357,37 @@ Two defects the deploy itself found, both fixed the same day: a fixture seed
 still writing the dropped `template` column, and `?page=` serving the home page
 in production because a search param may not share a name with the dynamic
 segment above it. `next dev` redirected correctly, which is why it got that far.
+
+### The editor, 13 August
+
+The client, on the editor: *"still hard to understand or to deal with it, we
+are not dealing with developers."* Audited against Nielsen's heuristics and
+WCAG, designed before it was written, then built in seven stages.
+
+21. **Editing stopped publishing.** On a live site every keystroke was public
+    within a second and a half, half-typed, and nothing said so. `pages` is the
+    working copy now; two new columns hold what visitors get, copied across in
+    the statement that publishes. The top bar names the pages that are waiting,
+    the panel lists what will change before it changes, and "Go back to what's
+    online" undoes an afternoon.
+22. **The preview stopped lying, twice more** — no photographs and no
+    alternating grounds in the canvas while production had both. Third drift in
+    that pair, so the allocation rule and the image lookup are shared code now.
+23. **The vocabulary is a shop's, not a CMS's** — "Top of the page", "What you
+    offer", "Questions and answers"; and a day and its hours stopped both being
+    called "Title" and "Body text".
+24. **Six things the editor kept to itself**: deleting asks, undo stops
+    pretending, the section says "Edit", the right column never opens empty, an
+    empty page says it has left the menu, and three sentences at the top say
+    what the screen is.
+25. **Forms ask answerable questions** — fields come from the schema, so a
+    phone number, a price and the button link stop being invisible; "where the
+    button goes" is a question rather than a request for `mailto:` syntax.
+26. **Pictures can be chosen**, and a café can call its menu page a Menu.
+27. **The site itself lays out** — a heading beside its prose rather than one
+    column pinned hard left, one call to action rather than two shouting bands,
+    a header that acts and a footer that ends the page, and one left edge from
+    top to bottom.
 
 ### Also fixed on the way, not on any list
 
