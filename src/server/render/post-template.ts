@@ -55,6 +55,75 @@ export const SHAPE_DEVICES = {
 
 export type ShapeDevice = keyof typeof SHAPE_DEVICES
 
+/**
+ * How a brand is *set*, as opposed to what colour it is.
+ *
+ * A kit that reads the same for a coffee roaster and a fintech is a template
+ * with the palette swapped, which is exactly what the shell became when the
+ * per-brand gesture was removed from it. Colour and typeface already differ per
+ * brand and are not enough on their own: the arrangement carries as much of the
+ * register as the palette does, and it was identical for everyone.
+ *
+ * So the composition is parameterised too. Each register decides the margin,
+ * how the type is ranged and scaled, whether corners are cut square, how much
+ * of the palette becomes field rather than accent, and whether a field's edge
+ * is a straight line or the brand's own curve. Same layouts, different bearing.
+ *
+ * Chosen from fields the project already carries — the style the customer picked
+ * at the wizard, and the industry they typed — so nothing new is asked of them.
+ */
+export type Register = {
+  /** The page margin, in 1080-space. Room is itself an expression. */
+  margin: number
+  /** Where the type ranges. Centred reads formal; left reads editorial. */
+  align: 'start' | 'center'
+  /** Multiplier on every headline in the kit. */
+  scale: number
+  /** Corner radius on fields and framed pictures. */
+  radius: number
+  /** Whether a field's leading edge is straight or takes the brand's curve. */
+  edge: 'straight' | 'curve'
+  /** How much of the palette runs as field rather than as a bar. */
+  colour: 'restrained' | 'full'
+  /** Small caps and tracking on the standing details. */
+  formal: boolean
+  /**
+   * How a photograph is treated.
+   *
+   * `plain` leaves it alone, which is the honest editorial choice and the right
+   * one for a brand whose credibility is the picture. `duotone` maps it onto the
+   * brand's own two colours, which is what makes a generated stock frame read as
+   * this brand's photography rather than as a stock frame. `tint` is the same
+   * idea at a whisper, for a register that would rather the picture stayed a
+   * picture.
+   */
+  photo: 'plain' | 'duotone' | 'tint'
+}
+
+const REGISTERS = {
+  /** Sharp, ranged left, plenty of room. Technology, corporate, consultancy. */
+  editorial: { margin: 88, align: 'start', scale: 1, radius: 0, edge: 'straight', colour: 'restrained', formal: false, photo: 'plain' },
+  /** Big type, colour as field, tight margins. Bold, playful, retail, sport. */
+  loud: { margin: 72, align: 'start', scale: 1.16, radius: 10, edge: 'straight', colour: 'full', formal: false, photo: 'duotone' },
+  /** Centred, generous, quiet. Luxury, jewellery, hospitality, an Arabic register. */
+  refined: { margin: 132, align: 'center', scale: 0.92, radius: 0, edge: 'straight', colour: 'restrained', formal: true, photo: 'tint' },
+  /** Soft edges and warm fields. Food, beauty, wellness, craft. */
+  organic: { margin: 96, align: 'start', scale: 1, radius: 26, edge: 'curve', colour: 'full', formal: false, photo: 'duotone' },
+} as const satisfies Record<string, Register>
+
+export function registerFor(
+  style: string | null,
+  industry: string | null,
+  forced?: keyof typeof REGISTERS,
+): Register {
+  if (forced && REGISTERS[forced]) return REGISTERS[forced]
+  if (style === 'luxury' || style === 'arabic' || style === 'elegant') return REGISTERS.refined
+  if (style === 'bold' || style === 'playful') return REGISTERS.loud
+  if (/food|beverage|coffee|craft|beauty|wellness|floris|bakery/i.test(industry ?? '')) return REGISTERS.organic
+  if (style === 'minimal') return { ...REGISTERS.editorial, margin: 132, scale: 0.94 }
+  return REGISTERS.editorial
+}
+
 /** Which gesture belongs to which brand, from fields the project already has. */
 export function deviceFor(style: string | null, industry: string | null): ShapeDevice {
   if (style === 'arabic' || style === 'luxury') return 'arch'
