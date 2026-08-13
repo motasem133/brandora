@@ -44,6 +44,12 @@ export async function WebsiteView({
   const present = PAGE_ORDER.filter((page) => pages[page]?.length)
   const live = website.isPublished && website.subdomain
 
+  /* Edits are private until they are published now, so a customer who edited
+     and left needs telling from here — this page is where they come back to. */
+  const waiting =
+    live &&
+    JSON.stringify(website.pages ?? {}) !== JSON.stringify(website.publishedPages ?? {})
+
   return (
     <section className="space-y-5">
       {/*
@@ -53,7 +59,12 @@ export async function WebsiteView({
         instead of them.
       */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-line bg-surface/60 px-5 py-3">
-        {live ? (
+        {live && waiting ? (
+          <span className="inline-flex min-w-0 items-center gap-2 text-sm">
+            <span className="size-2 shrink-0 rounded-full bg-warning" />
+            <span className="text-fg-secondary">{t('changesWaiting')}</span>
+          </span>
+        ) : live ? (
           <a
             href={`/sites/${website.subdomain}`}
             target="_blank"

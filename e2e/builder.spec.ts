@@ -38,7 +38,7 @@ test.describe('website builder', () => {
   test('opens with the page tabs, section library and publish control', async ({ page }) => {
     await expect(page.getByTestId('page-tabs')).toBeVisible()
     await expect(page.getByTestId('block-library')).toBeVisible()
-    await expect(page.getByRole('button', { name: /Publish|Published/ })).toBeVisible()
+    await expect(page.getByRole('button', { name: /Publish|Update/ }).first()).toBeVisible()
   })
 
   test('says whose site it is, and offers the way back', async ({ page }) => {
@@ -142,7 +142,7 @@ test.describe('website builder', () => {
    * it back the way they found it.
    */
   test('an address under three characters cannot be published', async ({ page }) => {
-    await page.getByRole('button', { name: /^(Publish|Published)$/ }).click()
+    await page.getByRole('button', { name: /^(Publish|Update)$/ }).first().click()
 
     const address = page.getByPlaceholder('my-brand')
     await address.fill('ab')
@@ -153,7 +153,7 @@ test.describe('website builder', () => {
   })
 
   test('the address is slugified as it is typed', async ({ page }) => {
-    await page.getByRole('button', { name: /^(Publish|Published)$/ }).click()
+    await page.getByRole('button', { name: /^(Publish|Update)$/ }).first().click()
 
     const address = page.getByPlaceholder('my-brand')
     await address.fill('My Brand & Co!')
@@ -177,12 +177,14 @@ test.describe('website builder', () => {
     await expect(dialog).toContainText(subdomain)
     await dialog.getByRole('button', { name: /^Publish$/ }).click()
 
-    await expect(page.getByRole('button', { name: /^Published$/ })).toBeVisible()
+    await expect(page.getByTestId('online-status')).toContainText(/up to date/i)
 
     const [row] = await sql`
-      SELECT is_published, subdomain FROM website_assets WHERE project_id = ${projectId}`
+      SELECT is_published, subdomain, published_pages FROM website_assets WHERE project_id = ${projectId}`
     expect(row.is_published).toBe(true)
     expect(row.subdomain).toBe(subdomain)
+    // Publishing is the copy: what visitors get must exist, not be null.
+    expect(row.published_pages).not.toBeNull()
 
     // And the site itself answers, without a session.
     const response = await page.request.get(`/sites/${subdomain}`)
@@ -196,8 +198,11 @@ test.describe('website builder', () => {
       WHERE project_id = ${projectId}`
     await page.reload()
 
-    await page.getByRole('button', { name: /^Published$/ }).click()
-    await page.getByTestId('publish-panel').getByRole('button', { name: /^Unpublish$/ }).click()
+    await page.getByRole('button', { name: /^Update$/ }).click()
+    await page
+      .getByTestId('publish-panel')
+      .getByRole('button', { name: /^Take it offline$/ })
+      .click()
 
     // The control itself is the readout: it says Publish again.
     await expect(page.getByRole('button', { name: /^Publish$/ }).first()).toBeVisible()

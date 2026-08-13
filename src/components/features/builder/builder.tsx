@@ -103,6 +103,8 @@ export function Builder({
   projectId,
   projectName,
   initialPages,
+  publishedPages,
+  publishedTheme,
   initialTheme,
   brandTheme,
   register,
@@ -120,6 +122,9 @@ export function Builder({
   projectId: string
   projectName: string
   initialPages: Pages
+  /** What visitors are getting. Null until the site has been online once. */
+  publishedPages: Pages | null
+  publishedTheme: Theme | null
   /** Overrides only — and what autosave writes back. */
   initialTheme: Theme
   /** The generated identity the published site is set in. */
@@ -289,6 +294,42 @@ export function Builder({
     window.addEventListener('beforeunload', handler)
     return () => window.removeEventListener('beforeunload', handler)
   }, [dirty])
+
+  /*
+   * Which pages differ from what visitors are getting.
+   *
+   * Compared per page rather than counted: "changes on Home and Contact" is
+   * something a person can act on, and a number is not. A live site whose
+   * published copy is missing — which cannot happen after the backfill — is
+   * treated as having everything waiting rather than nothing.
+   */
+  const [live, setLive] = useState<{ pages: Pages | null; theme: Theme | null }>({
+    pages: publishedPages,
+    theme: publishedTheme,
+  })
+  const [onlineState, setOnlineState] = useState({ published: isPublished })
+
+  const changedPages = useMemo(() => {
+    if (!live.pages) return []
+    return PAGE_KEYS.filter(
+      (key) => JSON.stringify(pages[key] ?? []) !== JSON.stringify(live.pages?.[key] ?? []),
+    )
+  }, [pages, live.pages])
+
+  const styleChanged = useMemo(
+    () => JSON.stringify(themeOverrides) !== JSON.stringify(live.theme ?? {}),
+    [themeOverrides, live.theme],
+  )
+
+  const waiting = changedPages.length > 0 || styleChanged
+
+  /* Two pages named, then counted — a list of seven is not a sentence. */
+  const changedList = useMemo(() => {
+    const names = changedPages.map((key) => t(`pages.${key}`))
+    if (styleChanged && names.length === 0) return t('theColours')
+    if (names.length <= 2) return names.join(t('and'))
+    return t('andOthers', { first: names.slice(0, 2).join(t('and')), count: names.length - 2 })
+  }, [changedPages, styleChanged, t])
 
   /*
    * Selecting a section takes you to its fields.
@@ -523,15 +564,54 @@ export function Builder({
               </Button>
             )}
 
+            {/*
+              What is true about the site itself, which is a different question
+              from whether the last keystroke reached the database. The dot
+              carries the word rather than replacing it.
+            */}
+            <span className="hidden items-center gap-2 text-xs text-fg-muted sm:inline-flex">
+              <span
+                className={cn(
+                  'size-2 shrink-0 rounded-full',
+                  !onlineState.published
+                    ? 'bg-fg-muted/50'
+                    : waiting
+                      ? 'bg-warning'
+                      : 'bg-success',
+                )}
+              />
+              <span data-testid="online-status">
+                {!onlineState.published
+                  ? t('notOnline')
+                  : waiting
+                    ? t('changesWaiting', { pages: changedList })
+                    : t('onlineAndCurrent')}
+              </span>
+            </span>
+
             <PublishPanel
               projectId={projectId}
               initialSubdomain={initialSubdomain}
               initialCustomDomain={initialCustomDomain}
-              isPublished={isPublished}
+              isPublished={onlineState.published}
               canPublish={canPublish}
               planAllowsPublish={planAllowsPublish}
               canUseCustomDomain={canUseCustomDomain}
               atDomainLimit={atDomainLimit}
+              waiting={waiting}
+              changedPages={changedPages.map((key) => t(`pages.${key}`))}
+              onPublished={() => {
+                setOnlineState({ published: true })
+                setLive({ pages, theme: themeOverrides })
+              }}
+              onTakenOffline={() => setOnlineState({ published: false })}
+              onDiscarded={(restored, theme) => {
+                setPages(restored)
+                setThemeOverrides(theme)
+                setSelected(null)
+                past.current = []
+                future.current = []
+              }}
             />
           </div>
         </div>

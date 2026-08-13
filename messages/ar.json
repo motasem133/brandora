@@ -590,7 +590,8 @@
     "notPublished": "لم يُنشر بعد",
     "openSite": "افتح الموقع المنشور",
     "messagesTitle": "رسائل من موقعك",
-    "messagesSubtitle": "أُرسلت عبر نموذج التواصل، ووصلت نسخة منها إلى بريدك."
+    "messagesSubtitle": "أُرسلت عبر نموذج التواصل، ووصلت نسخة منها إلى بريدك.",
+    "changesWaiting": "تعديلات لم تنشرها بعد"
   },
   "Builder": {
     "pages": {
@@ -697,7 +698,21 @@
     "typeHeading": "العناوين",
     "typeBody": "النص",
     "resetTheme": "العودة إلى ألوان العلامة",
-    "blankSection": "{section} فارغ — لن يظهر على موقعك المنشور."
+    "blankSection": "{section} فارغ — لن يظهر على موقعك المنشور.",
+    "notOnline": "ليس على الإنترنت بعد",
+    "onlineAndCurrent": "موقعك منشور وكل التعديلات ظاهرة",
+    "changesWaiting": "تعديلات في {pages} لم تُنشر بعد",
+    "theColours": "الألوان",
+    "and": " و",
+    "andOthers": "{first} و{count} صفحات أخرى",
+    "whatWillChange": "ما الذي سيتغيّر",
+    "visitorsSeeAtOnce": "سيراه زوّارك فوراً.",
+    "nothingWaiting": "لا شيء تغيّر منذ آخر تحديث.",
+    "goBackToLive": "العودة إلى النسخة المنشورة",
+    "keepMyChanges": "أبقِ تعديلاتي",
+    "discardTitle": "التراجع عن كل تعديلاتك؟",
+    "discardBody": "كل ما عدّلته منذ آخر تحديث سيُستبدل بما هو منشور على موقعك الآن. لا يمكن التراجع عن هذا.",
+    "takeOffline": "أوقف نشر الموقع"
   },
   "Billing": {
     "title": "الفوترة",

@@ -590,7 +590,8 @@
     "notPublished": "Not published yet",
     "openSite": "Open the live site",
     "messagesTitle": "Messages from your site",
-    "messagesSubtitle": "Sent through the contact form. Each one was emailed to you as well."
+    "messagesSubtitle": "Sent through the contact form. Each one was emailed to you as well.",
+    "changesWaiting": "Changes you have not published yet"
   },
   "Builder": {
     "pages": {
@@ -697,7 +698,21 @@
     "typeHeading": "Headings",
     "typeBody": "Body",
     "resetTheme": "Reset to brand colours",
-    "blankSection": "Empty {section} — it will not appear on your published site."
+    "blankSection": "Empty {section} — it will not appear on your published site.",
+    "notOnline": "Not online yet",
+    "onlineAndCurrent": "Your site is online and up to date",
+    "changesWaiting": "Changes on {pages} aren't online yet",
+    "theColours": "the colours",
+    "and": " and ",
+    "andOthers": "{first} and {count} other pages",
+    "whatWillChange": "What will change",
+    "visitorsSeeAtOnce": "Your visitors will see this straight away.",
+    "nothingWaiting": "Nothing has changed since your last update.",
+    "goBackToLive": "Go back to what's online",
+    "keepMyChanges": "Keep my changes",
+    "discardTitle": "Undo all your changes?",
+    "discardBody": "Everything you've edited since your last update will be replaced with what's on your live site right now. This can't be undone.",
+    "takeOffline": "Take it offline"
   },
   "Billing": {
     "title": "Billing",

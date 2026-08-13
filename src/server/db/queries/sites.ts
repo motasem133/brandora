@@ -48,8 +48,26 @@ export const getPublishedSite = cache(async (host: string) => {
         ? eq(websiteAssets.customDomain, target)
         : eq(websiteAssets.subdomain, target)
 
+      /*
+       * The published copy, and only the columns a visitor's page needs.
+       *
+       * `websiteAssets` in full would carry the working copy into every cached
+       * entry — the whole draft of a site, held in cache, for a page that must
+       * never render it.
+       */
       const [row] = await db
-        .select({ website: websiteAssets, project: projects, branding: brandingAssets })
+        .select({
+          website: {
+            projectId: websiteAssets.projectId,
+            pages: websiteAssets.publishedPages,
+            customStyles: websiteAssets.publishedStyles,
+            subdomain: websiteAssets.subdomain,
+            customDomain: websiteAssets.customDomain,
+            updatedAt: websiteAssets.updatedAt,
+          },
+          project: projects,
+          branding: brandingAssets,
+        })
         .from(websiteAssets)
         .innerJoin(projects, eq(projects.id, websiteAssets.projectId))
         .leftJoin(brandingAssets, eq(brandingAssets.projectId, websiteAssets.projectId))
