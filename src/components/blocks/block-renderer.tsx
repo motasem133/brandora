@@ -824,8 +824,25 @@ export function BlockRenderer({
 export function claimImages(blocks: Block[], images?: SiteImages) {
   const unused = { ...(images?.scenes ?? {}) }
 
-  return blocks.map((block): SiteImages | undefined => {
+  /* A section the customer has spoken for takes its picture first, whatever
+     the automatic order would have done with it. */
+  const chosen = new Map<number, 'hero' | 'people' | 'detail'>()
+  blocks.forEach((block, index) => {
+    const picture = 'picture' in block ? block.picture : undefined
+    if (picture && picture !== 'none' && unused[picture]) {
+      chosen.set(index, picture)
+      delete unused[picture]
+    }
+  })
+
+  return blocks.map((block, index): SiteImages | undefined => {
     if (!images) return undefined
+
+    const asked = chosen.get(index)
+    if (asked) return { ...images, scenes: { [asked]: images.scenes[asked] } }
+
+    // "None" is an answer, not a gap to fill from the pile.
+    if ('picture' in block && block.picture === 'none') return { ...images, scenes: {} }
 
     const wants =
       block.type === 'hero'

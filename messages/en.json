@@ -670,7 +670,8 @@
       "quote": "The line",
       "attribution": "Who said it",
       "note": "Extra note",
-      "ctaHref": "Where the button goes"
+      "ctaHref": "Where the button goes",
+      "picture": "Picture"
     },
     "confirmTitle": "Publish this site?",
     "confirmBody": "Anyone with the address will be able to see it, and search engines can find it. You can unpublish at any time.",
@@ -788,7 +789,18 @@
     "linkToPhone": "My phone",
     "linkToEmail": "My email",
     "linkToWeb": "Another website",
-    "linkWebLabel": "Web address"
+    "linkWebLabel": "Web address",
+    "pictures": {
+      "hero": "Wide shot",
+      "people": "People",
+      "detail": "Close-up",
+      "none": "No picture"
+    },
+    "pictureHint": "These came with your brand kit.",
+    "pictureAuto": "chosen for you",
+    "noPhotographs": "Your site has no photographs.",
+    "noPhotographsBody": "Photographs come with the social media kit — three pictures of your business, used across your site and your posts.",
+    "seeTheKit": "See the kit"
   },
   "Billing": {
     "title": "Billing",

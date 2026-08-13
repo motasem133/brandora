@@ -47,7 +47,7 @@ import {
 } from '@/components/blocks/block-renderer'
 import { SiteFooter, SiteHeader } from '@/components/blocks/site-chrome'
 import type { RegisterName } from '@/lib/register'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Field } from '@/components/ui/field'
@@ -128,6 +128,7 @@ const FIELD_ORDER = [
   'email',
   'phone',
   'note',
+  'picture',
 ]
 
 /**
@@ -243,6 +244,12 @@ export function Builder({
   /* The same allocation the published page makes, by the same function — the
      canvas showed no photographs at all while production was photo-led. */
   const blockImages = useMemo(() => claimImages(blocks, images), [blocks, images])
+
+  const sceneNames = useMemo(
+    () =>
+      (['hero', 'people', 'detail'] as const).filter((scene) => images.scenes[scene]),
+    [images],
+  )
   const selectedBlock = selected !== null ? blocks[selected] : undefined
 
   /*
@@ -535,6 +542,24 @@ export function Builder({
         ))}
       </div>
 
+      {/*
+        Where photographs come from, said once and in the right place: a
+        customer with no kit has nothing to pick from, and an empty picker in
+        every section would be an advertisement in the middle of a form.
+      */}
+      {sceneNames.length === 0 && (
+        <div className="space-y-2 border-t border-line pt-4">
+          <p className="text-sm font-medium">{t('noPhotographs')}</p>
+          <p className="text-sm text-fg-muted">{t('noPhotographsBody')}</p>
+          <a
+            href={`/dashboard/projects/${projectId}#kit`}
+            className={buttonVariants({ variant: 'secondary', size: 'sm', className: 'w-full' })}
+          >
+            {t('seeTheKit')}
+          </a>
+        </div>
+      )}
+
       {/* The only route back for someone who has broken their colours.
           `checkedSiteColors` keeps text legible whatever they choose, but it
           cannot restore the brand. */}
@@ -551,6 +576,7 @@ export function Builder({
       block={selectedBlock}
       pages={PAGE_KEYS.filter((key) => pages[key])}
       pageName={(key) => t(`pages.${key}`)}
+      scenes={sceneNames}
       showTitle={!inSheet}
       index={selected as number}
       count={blocks.length}
@@ -1233,6 +1259,7 @@ function Inspector({
   block,
   pages,
   pageName,
+  scenes,
   index,
   count,
   showTitle,
@@ -1244,6 +1271,8 @@ function Inspector({
   /** The pages this site has, so a button can be pointed at one by name. */
   pages: PageKey[]
   pageName: (page: PageKey) => string
+  /** The photographs this project owns, if any. */
+  scenes: ('hero' | 'people' | 'detail')[]
   index: number
   count: number
   showTitle: boolean
@@ -1377,6 +1406,40 @@ function Inspector({
         /* Where a button goes was a text field asking for `https://…`,
            `mailto:…`, `tel:…` or `/contact`. Nobody outside this repository
            knows what that sentence means, and no customer could satisfy it. */
+        if (name === 'picture') {
+          /* No control at all when the project owns no photographs — most
+             customers. An empty picker is an advertisement for something they
+             have not bought, in the middle of the form they are trying to
+             fill in. The offer belongs in Site style, once. */
+          if (scenes.length === 0) return null
+
+          return (
+            <Field key={name} label={t('fields.picture')} hint={t('pictureHint')}>
+              <div className="flex flex-wrap gap-2">
+                {[...scenes, 'none' as const].map((scene) => {
+                  const active = (value || scenes[0]) === scene || (!value && scene === scenes[0])
+                  return (
+                    <button
+                      key={scene}
+                      onClick={() => set(name, scene)}
+                      aria-pressed={value === scene}
+                      className={cn(
+                        'min-h-11 rounded-control border px-3 text-xs transition-colors',
+                        value === scene
+                          ? 'border-brand bg-elevated text-fg'
+                          : 'border-line text-fg-secondary hover:bg-elevated',
+                      )}
+                    >
+                      {t(`pictures.${scene}`)}
+                      {!value && active && ` · ${t('pictureAuto')}`}
+                    </button>
+                  )
+                })}
+              </div>
+            </Field>
+          )
+        }
+
         if (name === 'ctaHref') {
           return (
             <LinkField

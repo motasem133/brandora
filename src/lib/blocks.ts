@@ -42,6 +42,20 @@ export const LINK_MESSAGE = 'Use a full https:// address, a mailto:/tel: link, o
 
 const href = z.string().max(300).regex(LINK, LINK_MESSAGE).optional()
 
+/**
+ * Which of the brand's photographs a section shows.
+ *
+ * Optional, and absent from everything stored today: without it the automatic
+ * assignment stands — each scene handed to the first section that can carry it
+ * — which is what makes a site become photographic the day its owner buys a
+ * kit. This is the customer overruling that, section by section, and `none` is
+ * a real answer rather than a missing one.
+ *
+ * The three names are the generator's (`metadata.scene`); the editor shows
+ * them as Wide shot, People and Close-up, because nobody asked for a "hero".
+ */
+export const picture = z.enum(['hero', 'people', 'detail', 'none']).optional()
+
 /** A block's text field: capped, and text rather than markup. */
 const text = (max: number) =>
   z
@@ -55,6 +69,7 @@ export const heroBlock = z.object({
   subtitle: text(200),
   cta: text(30),
   ctaHref: href,
+  picture,
 })
 
 export const featuresBlock = z.object({
@@ -70,6 +85,7 @@ export const richTextBlock = z.object({
   type: z.literal('richText'),
   heading: text(80),
   body: text(900),
+  picture,
 })
 
 export const servicesBlock = z.object({
@@ -85,6 +101,7 @@ export const servicesBlock = z.object({
     )
     .min(1)
     .max(4),
+  picture,
 })
 
 export const ctaBlock = z.object({
