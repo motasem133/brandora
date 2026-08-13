@@ -224,7 +224,15 @@ export default async function PublishedSite({
           contact={CONTACT_LABELS[site.project.language]}
         />
 
-        <SiteFooter name={name} theme={theme} year={new Date().getFullYear()} />
+        <SiteFooter
+          name={name}
+          nav={nav}
+          titles={site.website.pageTitles ?? undefined}
+          theme={theme}
+          base={base}
+          language={site.project.language}
+          year={new Date().getFullYear()}
+        />
     </div>
   )
 }

@@ -1008,7 +1008,15 @@ export function Builder({
               </div>
             )}
 
-            <SiteFooter name={projectName} theme={theme} year={year} />
+            <SiteFooter
+              name={projectName}
+              nav={PAGE_KEYS.filter((key) => pages[key]?.length)}
+              titles={pageTitles}
+              theme={theme}
+              language={language}
+              year={year}
+              preview
+            />
           </div>
         </main>
 

@@ -142,16 +142,19 @@ function Section({
   theme,
   band = false,
   wide = false,
+  tight = false,
 }: {
   children: React.ReactNode
   theme: SiteTheme
   band?: boolean
   wide?: boolean
+  /** For a section that is three lines: the full rhythm reads as a mistake. */
+  tight?: boolean
 }) {
   return (
     <section
       style={{
-        paddingBlock: 'var(--site-section)',
+        paddingBlock: tight ? 'calc(var(--site-section) * 0.62)' : 'var(--site-section)',
         paddingInline: 'var(--site-gutter)',
         /* A tint of the brand's own primary, never a grey. Unchecked on
            purpose and safe by construction: it is a ground, never a text
@@ -165,6 +168,46 @@ function Section({
         {children}
       </div>
     </section>
+  )
+}
+
+/**
+ * A heading beside its prose, rather than a single column ranged hard left.
+ *
+ * Every section on every generated site was one column of one measure, pinned
+ * to the left of whatever screen it was on — which is what made a page of good
+ * copy read as a document somebody had not finished laying out. Wide screens
+ * get the heading in its own column; a phone gets what it always got.
+ *
+ * `lg:` and not a clamp, because this is the one thing a clamp cannot do:
+ * change how many columns there are.
+ */
+function Split({
+  aside,
+  children,
+  centred = false,
+}: {
+  aside: React.ReactNode
+  children: React.ReactNode
+  centred?: boolean
+}) {
+  if (centred) {
+    return (
+      <div className="mx-auto text-center" style={{ maxWidth: 'var(--site-measure)' }}>
+        {aside}
+        {children}
+      </div>
+    )
+  }
+
+  return (
+    <div
+      className="grid gap-x-16 gap-y-6 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]"
+      style={{ maxWidth: 'var(--site-container)', marginInline: 'auto' }}
+    >
+      <div className="lg:sticky lg:top-12 lg:self-start">{aside}</div>
+      <div style={{ maxWidth: 'var(--site-measure)' }}>{children}</div>
+    </div>
   )
 }
 
@@ -323,6 +366,7 @@ export function BlockRenderer({
   block,
   theme,
   index = 0,
+  repeated = false,
   images,
   register = 'editorial',
   base = '',
@@ -333,6 +377,8 @@ export function BlockRenderer({
   theme: SiteTheme
   /** Where it sits on the page, so grounds can alternate. */
   index?: number
+  /** The block before this one is the same type — see the `cta` case. */
+  repeated?: boolean
   images?: SiteImages
   /** The brand's bearing — see `lib/register.ts`. */
   register?: RegisterName
@@ -519,6 +565,7 @@ export function BlockRenderer({
 
     case 'richText': {
       const portrait = images?.scenes.people
+      const centred = SITE_REGISTERS[register].align === 'center'
 
       const prose = (
         <div>
@@ -544,8 +591,27 @@ export function BlockRenderer({
          phone without a second breakpoint. */
       if (!portrait) {
         return (
-          <Section theme={theme} band={index % 2 === 1}>
-            {prose}
+          <Section theme={theme} band={index % 2 === 1} wide>
+            <Split
+              centred={centred}
+              aside={
+                <h2 className="font-bold" style={{ ...heading, fontSize: 'var(--site-h2)' }}>
+                  {block.heading}
+                </h2>
+              }
+            >
+              <div
+                className="space-y-5"
+                style={{ ...muted, fontSize: 'var(--site-body)', lineHeight: 1.7 }}
+              >
+                {block.body
+                  .split('\n')
+                  .filter(Boolean)
+                  .map((paragraph, paragraphIndex) => (
+                    <p key={paragraphIndex}>{paragraph}</p>
+                  ))}
+              </div>
+            </Split>
           </Section>
         )
       }
@@ -627,60 +693,78 @@ export function BlockRenderer({
         </Section>
       )
 
-    case 'cta':
+    case 'cta': {
+      /*
+       * The brand's own colour, full width — a call to action is the one block
+       * that should interrupt. But only once in a row: a page whose last two
+       * sections are both calls to action rendered as nine hundred pixels of
+       * unbroken brown with two small buttons adrift in it, which is what one
+       * real customer's home page looks like today. The second one is set
+       * quietly instead, on the page's own ground.
+       *
+       * `${theme.primaryColor}12` was the old tint — string concatenation
+       * assuming a six-digit hex, which produced an invalid colour and a
+       * silently untinted panel for any brand whose palette came back in three
+       * digits, and the one colour path that skipped `checkedSiteColors`.
+       */
+      const loud = !repeated
+
       return (
-        /*
-         * The full width of the brand's own colour, rather than a tinted card
-         * floating in the middle of a white page. A call to action is the one
-         * block that should interrupt.
-         *
-         * `${theme.primaryColor}12` was the old tint — string concatenation
-         * assuming a six-digit hex, which produced an invalid colour and a
-         * silently untinted panel for any brand whose palette came back in
-         * three digits. It was also the one colour path that skipped
-         * `checkedSiteColors`.
-         */
         <section
           style={{
-            paddingBlock: 'var(--site-section)',
+            paddingBlock: 'calc(var(--site-section) * 0.72)',
             paddingInline: 'var(--site-gutter)',
-            backgroundColor: theme.safe.primary,
+            backgroundColor: loud ? theme.safe.primary : undefined,
+            borderTop: loud ? undefined : `1px solid ${theme.safe.line}`,
           }}
         >
-          <div style={{ maxWidth: 'var(--site-measure)', marginInline: 'auto' }}>
-            <h2
-              className="font-bold"
-              style={{ ...heading, color: theme.safe.onPrimary, fontSize: 'var(--site-h2)' }}
-            >
-              {block.heading}
-            </h2>
-            {block.body && (
-              <p
-                className="mt-4"
+          <div
+            className="flex flex-wrap items-end justify-between gap-x-12 gap-y-6"
+            style={{ maxWidth: 'var(--site-container)', marginInline: 'auto' }}
+          >
+            {/* The words and the act, side by side on a wide screen: a heading
+                with a button four hundred pixels below it is not one gesture. */}
+            <div style={{ maxWidth: '34ch' }}>
+              <h2
+                className="font-bold"
                 style={{
-                  ...body,
-                  color: theme.safe.onPrimary,
-                  opacity: 0.9,
-                  fontSize: 'var(--site-lead)',
-                  maxWidth: '46ch',
+                  ...heading,
+                  color: loud ? theme.safe.onPrimary : theme.safe.ink,
+                  fontSize: 'var(--site-h2)',
                 }}
               >
-                {block.body}
-              </p>
-            )}
+                {block.heading}
+              </h2>
+              {block.body && (
+                <p
+                  className="mt-4"
+                  style={{
+                    ...body,
+                    color: loud ? theme.safe.onPrimary : theme.safe.muted,
+                    opacity: loud ? 0.9 : 1,
+                    fontSize: 'var(--site-lead)',
+                  }}
+                >
+                  {block.body}
+                </p>
+              )}
+            </div>
             {block.cta && (
-              <Action
-                    label={block.cta}
-                    href={block.ctaHref}
-                    base={base}
-                    theme={theme}
-                    preview={preview}
-                    onDark
-                  />
+              <div className="shrink-0">
+                <Action
+                  label={block.cta}
+                  href={block.ctaHref}
+                  base={base}
+                  theme={theme}
+                  preview={preview}
+                  onDark={loud}
+                />
+              </div>
             )}
           </div>
         </section>
       )
+    }
 
     case 'quote':
       /* Set as a statement, not as a card. The brand's own primary carries it
@@ -887,6 +971,7 @@ export function PageRenderer({
           key={index}
           block={block}
           index={index}
+          repeated={index > 0 && blocks[index - 1].type === block.type}
           theme={theme}
           images={claimed[index]}
           register={register}
