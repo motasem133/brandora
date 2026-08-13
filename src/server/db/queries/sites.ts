@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { and, count, eq, isNotNull, ne } from 'drizzle-orm'
+import { and, count, eq, isNotNull, ne, sql } from 'drizzle-orm'
 import { unstable_cache } from 'next/cache'
 import { cache } from 'react'
 
@@ -60,8 +60,19 @@ export const getPublishedSite = cache(async (host: string) => {
         .select({
           website: {
             projectId: websiteAssets.projectId,
-            pages: websiteAssets.publishedPages,
-            customStyles: websiteAssets.publishedStyles,
+            /*
+             * The published copy, falling back to the working one.
+             *
+             * A row marked published with no published copy should not exist —
+             * the migration backfilled every live site and `publishWebsite`
+             * writes both — but a fixture, a hand-written INSERT or a row the
+             * backfill somehow missed would otherwise serve a site with no
+             * pages at all: a 200 with nothing on it, and a 404 on every page
+             * but the front one. Serving what that row means is better than
+             * serving a blank.
+             */
+            pages: sql<Record<string, unknown[]>>`coalesce(${websiteAssets.publishedPages}, ${websiteAssets.pages})`,
+            customStyles: sql<Record<string, string>>`coalesce(${websiteAssets.publishedStyles}, ${websiteAssets.customStyles})`,
             pageTitles: websiteAssets.pageTitles,
             subdomain: websiteAssets.subdomain,
             customDomain: websiteAssets.customDomain,

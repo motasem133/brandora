@@ -191,6 +191,14 @@ async function main() {
             ${sql.json({})}, true, 'e2e-fixture', now())
     ON CONFLICT (project_id) DO UPDATE SET is_published = true, subdomain = 'e2e-fixture'`
 
+  /* A published fixture is a site that has been published: the working copy and
+     the public one agree. Without this the site is live with no published copy,
+     which serves a front page with nothing on it and a 404 on every other. */
+  await sql`
+    UPDATE website_assets
+    SET published_pages = pages, published_styles = custom_styles
+    WHERE project_id = ${projectId} AND published_pages IS NULL`
+
   await sql`
     INSERT INTO social_media_assets (project_id, instagram_bio, instagram_posts, story_templates,
                                      ad_copy, hashtags)
