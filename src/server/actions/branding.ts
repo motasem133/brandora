@@ -130,7 +130,28 @@ export const selectPrimaryLogo = orgAction
 
     if (!updated) throw new AppError('NOT_FOUND', 'This project has no branding yet.')
 
-    await rederivePrimaryAssets(parsedInput.projectId)
+    /*
+     * The choice is made. Rebuilding what hangs off it is an extra.
+     *
+     * This ran unguarded, so a failure anywhere inside it — a resize, a read
+     * from storage, a network blip — failed the whole action *after* the choice
+     * had already been written. The customer saw an error for something that
+     * had succeeded, the button never said "Chosen", and a reload showed the
+     * logo chosen all along.
+     *
+     * It is the same rule `logos.ts` already states about derived assets and
+     * for the same reason: the deliverable is the concept, and the favicon, the
+     * avatars and the kit are built from work that is already finished. They
+     * are rebuilt on the next choice or the next run.
+     *
+     * It is also why this was red in CI, where there is no object storage to
+     * read the chosen logo back out of.
+     */
+    try {
+      await rederivePrimaryAssets(parsedInput.projectId)
+    } catch (error) {
+      console.warn('[branding] the logo is chosen; its derived assets failed', error)
+    }
 
     revalidatePath('/[locale]/dashboard', 'layout')
     return { fileId: file.id }

@@ -29,7 +29,7 @@ test.describe('project deliverables', () => {
     // The identity plate leads, so the brand is named before anything else.
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
 
-    for (const section of [/Logo concepts/, /Edit website/, /Instagram bio/]) {
+    for (const section of [/Logo concepts/, /Edit your website/, /Instagram bio/]) {
       await expect(page.getByText(section).first()).toBeVisible()
     }
   })

@@ -122,6 +122,38 @@ async function main() {
   }
 
   /*
+   * The run this fixture is pretending to have finished.
+   *
+   * The project is seeded complete — branding, a website, a social kit — but
+   * the ledger recorded only a grant, so as far as the product was concerned
+   * this account had never spent anything. `mustVerifyEmail` reads exactly
+   * that: the gate falls on the *second* run, and with no first run in the
+   * ledger it never falls at all. The verification suite asserts the refusal
+   * and went red in CI for that reason and no other, while passing on a
+   * developer's machine where the account has really generated something.
+   *
+   * Four credits, the cost of a brand run, and the balance follows it — the
+   * data-integrity check in `system-test` compares the two.
+   */
+  const [spend] = await sql`
+    SELECT id FROM credit_transactions WHERE idempotency_key = ${'fixture-run:' + org.id}`
+
+  if (!spend) {
+    /* Relative, not absolute: this org may already carry spends from real work
+       on a developer's machine, and a hardcoded balance would put the cached
+       number and the ledger out of step — which `system-test` checks. */
+    const [current] = await sql`SELECT credit_balance FROM organizations WHERE id = ${org.id}`
+    const after = Number(current.credit_balance) - 4
+
+    await sql`
+      INSERT INTO credit_transactions (organization_id, amount, balance_after, reason,
+                                       idempotency_key, metadata)
+      VALUES (${org.id}, -4, ${after}, 'generation',
+              ${'fixture-run:' + org.id}, ${sql.json({ kind: 'test_fixture' })})`
+    await sql`UPDATE organizations SET credit_balance = ${after} WHERE id = ${org.id}`
+  }
+
+  /*
    * Looked up before inserting rather than relying on ON CONFLICT: there is no
    * unique constraint on a project's title, so a conflict clause matches
    * nothing and every run would create another project — which then collides on
