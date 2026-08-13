@@ -269,6 +269,36 @@ export function createBlock(type: BlockType): Block {
 }
 
 /**
+ * Which fields a section actually has, asked of the schema rather than of the
+ * data that happens to be stored.
+ *
+ * The editor used to build its form from `Object.entries(block)`, so a field
+ * the generator left out simply had no control: a phone number on a contact
+ * section, a price on a service, a note under the opening hours, and the link
+ * on every button — which the generator never emits, so no customer could ever
+ * point a button anywhere. Two customers with the same kind of section saw
+ * different forms, depending on what a model had felt like writing.
+ *
+ * `optional` is asked the only way that cannot go stale: whether the field
+ * accepts being absent.
+ */
+export type BlockField = { name: string; optional: boolean }
+
+export function fieldsOf(type: BlockType): BlockField[] {
+  const option = blockSchema.options.find((candidate) => candidate.shape.type.value === type)
+  if (!option) return []
+
+  return Object.entries(option.shape)
+    .filter(([name]) => !['type', 'items', 'services'].includes(name))
+    .map(([name, schema]) => ({
+      name,
+      optional: (schema as { safeParse: (value: unknown) => { success: boolean } }).safeParse(
+        undefined,
+      ).success,
+    }))
+}
+
+/**
  * Whether a block has anything to say.
  *
  * The other half of empty-by-default. A block arrives blank now, and a customer

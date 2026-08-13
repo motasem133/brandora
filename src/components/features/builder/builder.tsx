@@ -35,7 +35,7 @@ import {
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useAction } from 'next-safe-action/hooks'
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 
 import {
   BlockRenderer,
@@ -52,6 +52,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
 import { SegmentedButton, SegmentedControl } from '@/components/ui/segmented-control'
 import { Sheet } from '@/components/ui/sheet'
 import { Textarea } from '@/components/ui/textarea'
@@ -59,7 +60,10 @@ import { Link } from '@/i18n/navigation'
 import { cn } from '@/lib/utils'
 import {
   BLOCK_TYPES,
+  blockSchema,
+  fieldsOf,
   isBlank,
+  type BlockField,
   blockKey,
   createBlock,
   PAGE_KEYS,
@@ -108,6 +112,9 @@ function dismissIntro() {
   window.localStorage.setItem(INTRO_SEEN, '1')
   window.dispatchEvent(new Event(INTRO_EVENT))
 }
+
+/** The fields that are prose rather than a line. */
+const LONG_FIELDS = new Set(['body', 'quote'])
 
 const FIELD_ORDER = [
   'title',
@@ -320,13 +327,27 @@ export function Builder({
     [blocks, setBlocks],
   )
 
+  /* Where the customer pressed, not always the end of the page. Reaching a new
+     section's place used to mean pressing "Move up" five times. */
+  const [insertAt, setInsertAt] = useState<number | null>(null)
+
   const addBlock = useCallback(
     (type: (typeof BLOCK_TYPES)[number]) => {
-      setBlocks([...blocks, createBlock(type)])
-      setSelected(blocks.length)
+      const at = insertAt ?? blocks.length
+      setBlocks([...blocks.slice(0, at), createBlock(type), ...blocks.slice(at)])
+      setSelected(at)
       setSheet(null)
+      setInsertAt(null)
     },
-    [blocks, setBlocks],
+    [blocks, setBlocks, insertAt, setInsertAt],
+  )
+
+  const openLibrary = useCallback(
+    (at: number | null) => {
+      setInsertAt(at)
+      setSheet('library')
+    },
+    [setInsertAt, setSheet],
   )
 
   /*
@@ -528,6 +549,8 @@ export function Builder({
   const inspector = (inSheet: boolean) => selectedBlock ? (
     <Inspector
       block={selectedBlock}
+      pages={PAGE_KEYS.filter((key) => pages[key])}
+      pageName={(key) => t(`pages.${key}`)}
       showTitle={!inSheet}
       index={selected as number}
       count={blocks.length}
@@ -539,16 +562,23 @@ export function Builder({
     />
   ) : null
 
+  /* Each one says what it is. A list of nine names is a list of nine guesses
+     for somebody who has never built a page. */
   const library = (
-    <div className="space-y-1">
+    <div className="space-y-1" data-testid="block-library">
       {BLOCK_TYPES.map((type) => (
         <button
           key={type}
           onClick={() => addBlock(type)}
-          className="flex min-h-11 w-full items-center gap-2 rounded-control px-2.5 text-start text-sm text-fg-secondary transition-colors hover:bg-elevated hover:text-fg"
+          className="w-full rounded-control p-3 text-start transition-colors hover:bg-elevated"
         >
-          <Plus className="size-3.5 shrink-0" />
-          {t(`blocks.${type}`)}
+          <span className="flex items-center gap-2 text-sm font-medium text-fg">
+            <Plus className="size-3.5 shrink-0" />
+            {t(`blocks.${type}`)}
+          </span>
+          <span className="mt-0.5 block ps-5 text-xs text-fg-muted">
+            {t(`blockDescriptions.${type}`)}
+          </span>
         </button>
       ))}
     </div>
@@ -738,16 +768,6 @@ export function Builder({
       </header>
 
       <div className="flex min-h-0 flex-1">
-        <aside
-          className="hidden w-48 shrink-0 overflow-y-auto border-e border-line p-3 xl:block"
-          data-testid="block-library"
-        >
-          <p className="mb-2 px-1 text-xs font-semibold uppercase tracking-[0.12em] text-fg-muted">
-            {t('addSection')}
-          </p>
-          {library}
-        </aside>
-
         <main className="min-w-0 flex-1 overflow-y-auto bg-elevated/30 p-4 pb-24 xl:pb-4" data-testid="canvas">
           {/*
             Three sentences, once: what the screen is, how to act on it, and
@@ -813,7 +833,7 @@ export function Builder({
                   variant="secondary"
                   size="sm"
                   className="mt-5"
-                  onClick={() => setSheet('library')}
+                  onClick={() => openLibrary(null)}
                 >
                   <Plus />
                   {t('addSection')}
@@ -838,8 +858,24 @@ export function Builder({
                   strategy={verticalListSortingStrategy}
                 >
                   {blocks.map((block, index) => (
-                    <SortableBlock
-                      key={blockKey(index)}
+                    <Fragment key={blockKey(index)}>
+                      {/* Somewhere to put a section that belongs here. Pointer
+                          only and hidden from a screen reader: the keyboard
+                          route is the button under the page, and twelve extra
+                          tab stops on a long page is not an accessibility
+                          feature. */}
+                      <button
+                        aria-hidden
+                        tabIndex={-1}
+                        onClick={() => openLibrary(index)}
+                        className="group relative z-10 flex h-3 w-full items-center justify-center opacity-0 transition-opacity hover:opacity-100"
+                      >
+                        <span className="h-px w-full bg-brand/40" />
+                        <span className="absolute rounded-full border border-line bg-surface p-0.5 shadow-sm">
+                          <Plus className="size-3 text-fg-secondary" />
+                        </span>
+                      </button>
+                      <SortableBlock
                       id={blockKey(index)}
                       name={t(`blocks.${block.type}`)}
                       selected={selected === index}
@@ -874,10 +910,21 @@ export function Builder({
                           preview
                         />
                       )}
-                    </SortableBlock>
+                      </SortableBlock>
+                    </Fragment>
                   ))}
                 </SortableContext>
               </DndContext>
+            )}
+
+            {/* The keyboard's way in, and the obvious one for everybody else. */}
+            {blocks.length > 0 && (
+              <div className="flex justify-center px-6 pb-6">
+                <Button variant="secondary" size="sm" onClick={() => openLibrary(null)}>
+                  <Plus />
+                  {t('addSection')}
+                </Button>
+              </div>
             )}
 
             <SiteFooter name={projectName} theme={theme} year={year} />
@@ -926,7 +973,7 @@ export function Builder({
           variant="secondary"
           size="sm"
           data-testid="add-section"
-          onClick={() => setSheet('library')}
+          onClick={() => openLibrary(null)}
         >
           <Plus />
           {t('add')}
@@ -1099,8 +1146,93 @@ function SortableBlock({
  * `ctaHref` and `subtitle`, and printing those capitalised put an engineer's
  * vocabulary in front of a customer editing their own website.
  */
+/**
+ * Where a button goes, asked as a question rather than as a syntax.
+ *
+ * The field was free text with the hint `https://… , mailto:… , tel:… or
+ * /contact`, which is a protocol list shown to somebody who runs a café. The
+ * customer chooses a destination; the string is assembled here, so the `LINK`
+ * rule in `lib/blocks.ts` is satisfied by construction rather than by asking
+ * anyone to satisfy it.
+ */
+function LinkField({
+  value,
+  pages,
+  pageName,
+  onChange,
+}: {
+  value: string
+  pages: PageKey[]
+  pageName: (page: PageKey) => string
+  onChange: (value: string) => void
+}) {
+  const t = useTranslations('Builder')
+
+  const kind = value.startsWith('tel:')
+    ? 'phone'
+    : value.startsWith('mailto:')
+      ? 'email'
+      : value.startsWith('http')
+        ? 'web'
+        : 'page'
+
+  const detail = kind === 'phone' ? value.slice(4) : kind === 'email' ? value.slice(7) : value
+
+  return (
+    <>
+      <Field label={t('fields.ctaHref')}>
+        <Select
+          value={kind === 'page' ? `page:${value || '/contact'}` : kind}
+          onChange={(event) => {
+            const next = event.target.value
+            if (next.startsWith('page:')) onChange(next.slice(5))
+            else if (next === 'phone') onChange('tel:')
+            else if (next === 'email') onChange('mailto:')
+            else onChange('https://')
+          }}
+        >
+          {pages.map((page) => (
+            <option key={page} value={`page:${page === 'home' ? '/' : `/${page}`}`}>
+              {t('linkToPage', { page: pageName(page) })}
+            </option>
+          ))}
+          <option value="phone">{t('linkToPhone')}</option>
+          <option value="email">{t('linkToEmail')}</option>
+          <option value="web">{t('linkToWeb')}</option>
+        </Select>
+      </Field>
+
+      {kind !== 'page' && (
+        <Field
+          label={t(kind === 'phone' ? 'fields.phone' : kind === 'email' ? 'fields.email' : 'linkWebLabel')}
+        >
+          <Input
+            dir="ltr"
+            value={detail}
+            placeholder={
+              kind === 'phone' ? '+971 50 123 4567' : kind === 'email' ? 'hello@yourbusiness.com' : 'https://instagram.com/yourbusiness'
+            }
+            onChange={(event) => {
+              const entered = event.target.value
+              onChange(
+                kind === 'phone'
+                  ? `tel:${entered}`
+                  : kind === 'email'
+                    ? `mailto:${entered}`
+                    : entered,
+              )
+            }}
+          />
+        </Field>
+      )}
+    </>
+  )
+}
+
 function Inspector({
   block,
+  pages,
+  pageName,
   index,
   count,
   showTitle,
@@ -1109,6 +1241,9 @@ function Inspector({
   onDelete,
 }: {
   block: Block
+  /** The pages this site has, so a button can be pointed at one by name. */
+  pages: PageKey[]
+  pageName: (page: PageKey) => string
   index: number
   count: number
   showTitle: boolean
@@ -1119,6 +1254,36 @@ function Inspector({
   const t = useTranslations('Builder')
 
   const set = (key: string, value: unknown) => onChange({ ...block, [key]: value } as Block)
+
+  /* From the schema, so an optional field the generator skipped still has a
+     control — and in a fixed reading order rather than the order the JSON
+     happens to carry. */
+  const fields = useMemo(
+    () =>
+      fieldsOf(block.type).sort(
+        (a, b) => FIELD_ORDER.indexOf(a.name) - FIELD_ORDER.indexOf(b.name),
+      ),
+    [block.type],
+  )
+
+  /*
+   * What is wrong with this section, said under the field it is wrong in.
+   *
+   * A field over its cap failed the schema on save and arrived as a validation
+   * error the editor never read, so the customer got "Not saved" with no idea
+   * which field or why. Checked here as they type instead.
+   */
+  const issues = useMemo(() => {
+    const parsed = blockSchema.safeParse(block)
+    if (parsed.success) return {} as Record<string, string>
+
+    const found: Record<string, string> = {}
+    for (const issue of parsed.error.issues) {
+      const key = issue.path[0]
+      if (typeof key === 'string' && !found[key]) found[key] = issue.message
+    }
+    return found
+  }, [block])
 
   const listKey = 'items' in block ? 'items' : 'services' in block ? 'services' : null
 
@@ -1206,28 +1371,49 @@ function Inspector({
         </div>
       </div>
 
-      {Object.entries(block)
-        .filter(([key]) => !['type', 'items', 'services'].includes(key))
-        .sort(([a], [b]) => FIELD_ORDER.indexOf(a) - FIELD_ORDER.indexOf(b))
-        .map(([key, value]) => (
-          <Field key={key} label={t(`fields.${key}`)}>
+      {fields.map(({ name, optional }: BlockField) => {
+        const value = String((block as unknown as Record<string, unknown>)[name] ?? '')
+
+        /* Where a button goes was a text field asking for `https://…`,
+           `mailto:…`, `tel:…` or `/contact`. Nobody outside this repository
+           knows what that sentence means, and no customer could satisfy it. */
+        if (name === 'ctaHref') {
+          return (
+            <LinkField
+              key={name}
+              value={value}
+              pages={pages}
+              pageName={pageName}
+              onChange={(next: string) => set(name, next)}
+            />
+          )
+        }
+
+        return (
+          <Field
+            key={name}
+            label={t(`fields.${name}`)}
+            error={issues[name]}
+            hint={optional ? t('optional') : undefined}
+          >
             {/* The guidance that used to be typed into the canvas as content.
                 A placeholder cannot be published by being left alone. */}
-            {typeof value === 'string' && value.length > 90 ? (
+            {LONG_FIELDS.has(name) ? (
               <Textarea
                 value={value}
-                placeholder={t(`hints.${key}`)}
-                onChange={(event) => set(key, event.target.value)}
+                placeholder={t(`hints.${name}`)}
+                onChange={(event) => set(name, event.target.value)}
               />
             ) : (
               <Input
-                value={String(value ?? '')}
-                placeholder={t(`hints.${key}`)}
-                onChange={(event) => set(key, event.target.value)}
+                value={value}
+                placeholder={t(`hints.${name}`)}
+                onChange={(event) => set(name, event.target.value)}
               />
             )}
           </Field>
-        ))}
+        )
+      })}
 
       {list && listKey && (
         <div className="space-y-3 border-t border-line pt-4">

@@ -35,8 +35,13 @@ test.describe('website builder', () => {
     await expect(page.getByTestId('canvas')).toBeVisible()
   })
 
-  test('opens with the page tabs, section library and publish control', async ({ page }) => {
+  test('opens with the page tabs, a way to add a section and a publish control', async ({
+    page,
+  }) => {
     await expect(page.getByTestId('page-tabs')).toBeVisible()
+    /* The permanent rail is gone — a 192px column held for the fourth-most
+       common job. Adding a section is a button on the page and between them. */
+    await page.getByRole('button', { name: /^Add a section$/ }).first().click()
     await expect(page.getByTestId('block-library')).toBeVisible()
     await expect(page.getByRole('button', { name: /Publish|Update/ }).first()).toBeVisible()
   })
@@ -78,6 +83,7 @@ test.describe('website builder', () => {
     const sections = page.getByTestId('canvas-block')
     const before = await sections.count()
 
+    await page.getByRole('button', { name: /^Add a section$/ }).first().click()
     await page.getByTestId('block-library').getByRole('button', { name: /^Paragraph/ }).click()
 
     await expect(sections).toHaveCount(before + 1)

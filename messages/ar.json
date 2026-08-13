@@ -782,7 +782,13 @@
     "emptyPageNotInMenu": "لا يوجد شيء في هذه الصفحة، لذلك لا تظهر في قائمة موقعك.",
     "firstRunTitle": "هذا موقعك. كل ما فيه قابل للتغيير.",
     "firstRunBody": "اضغط أي جزء من الصفحة لتعديل كلماته. لا يصل شيء تفعله هنا إلى زوّارك حتى تنشر.",
-    "firstRunDismiss": "فهمت"
+    "firstRunDismiss": "فهمت",
+    "optional": "اختياري",
+    "linkToPage": "صفحة {page}",
+    "linkToPhone": "رقم هاتفي",
+    "linkToEmail": "بريدي الإلكتروني",
+    "linkToWeb": "موقع آخر",
+    "linkWebLabel": "عنوان الموقع"
   },
   "Billing": {
     "title": "الفوترة",

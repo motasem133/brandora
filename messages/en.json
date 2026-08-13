@@ -615,7 +615,7 @@
       "cta": "Next step",
       "contact": "How to reach you"
     },
-    "addSection": "Add section",
+    "addSection": "Add a section",
     "selectPrompt": "Select a section to edit it.",
     "emptyPage": "This page is empty. Add a section to start it.",
     "undo": "Undo",
@@ -782,7 +782,13 @@
     "emptyPageNotInMenu": "This page has nothing on it, so it isn't in your site's menu.",
     "firstRunTitle": "This is your website. Everything on it can be changed.",
     "firstRunBody": "Click any part of the page to edit its words. Nothing you do here reaches your visitors until you publish.",
-    "firstRunDismiss": "Got it"
+    "firstRunDismiss": "Got it",
+    "optional": "Optional",
+    "linkToPage": "My {page} page",
+    "linkToPhone": "My phone",
+    "linkToEmail": "My email",
+    "linkToWeb": "Another website",
+    "linkWebLabel": "Web address"
   },
   "Billing": {
     "title": "Billing",
