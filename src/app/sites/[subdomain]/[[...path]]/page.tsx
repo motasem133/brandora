@@ -73,6 +73,13 @@ const TITLES = {
 /**
  * The page a path asks for, defaulting to home; anything deeper is not a page.
  *
+ * The segment is `[[...path]]` and not `[[...page]]`, which it was until a
+ * production build proved that a search param may not share a name with the
+ * dynamic segment it sits under: `?page=about` arrived as nothing, the page
+ * fell back to home, and every `?page=` link ever shared quietly stopped
+ * working. `next dev` redirected correctly, which is why this reached
+ * production before it was seen.
+ *
  * Checked against the pages this site actually has rather than against the
  * vocabulary: a consultancy has no menu, and `/menu` on its site is a 404, not
  * an empty page with a heading and nothing under it.
@@ -112,13 +119,13 @@ function themeFromBranding(branding: BrandingAsset | null): Theme {
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ subdomain: string; page?: string[] }>
+  params: Promise<{ subdomain: string; path?: string[] }>
 }): Promise<Metadata> {
-  const { subdomain, page } = await params
+  const { subdomain, path } = await params
   const site = await getPublishedSite(subdomain)
   if (!site) return { title: 'Not found' }
 
-  const active = pageKey(page, (site.website.pages ?? {}) as Record<string, unknown>)
+  const active = pageKey(path, (site.website.pages ?? {}) as Record<string, unknown>)
   const name = site.project.businessName || site.project.title
   const description = site.branding?.slogan ?? undefined
 
@@ -165,10 +172,10 @@ export default async function PublishedSite({
   params,
   searchParams,
 }: {
-  params: Promise<{ subdomain: string; page?: string[] }>
+  params: Promise<{ subdomain: string; path?: string[] }>
   searchParams: Promise<{ page?: string; register?: string }>
 }) {
-  const { subdomain, page } = await params
+  const { subdomain, path } = await params
   /* `register` is honoured outside production only: it is how the preview
      harness puts four registers side by side without four brands. */
   const { page: queryPage, register: forcedRegister } = await searchParams
@@ -198,7 +205,7 @@ export default async function PublishedSite({
   const theme = resolveTheme({ ...themeFromBranding(site.branding), ...(site.website.customStyles as Theme) })
   const pages = (site.website.pages ?? {}) as Record<string, Block[]>
 
-  const active = pageKey(page, pages)
+  const active = pageKey(path, pages)
   const blocks = pages[active] ?? []
 
   /*
