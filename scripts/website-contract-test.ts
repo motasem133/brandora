@@ -39,7 +39,7 @@ const contact = {
 
 const parsed = websiteSchema.parse({
   pages: [
-    { key: 'home', blocks: [cta, services(1), hero] },
+    { key: 'home', blocks: [cta, services(1), hero, { ...hero, title: 'A second opening' }] },
     { key: 'menu', blocks: [services(1), services(2), services(3), services(4)] },
     { key: 'contact', blocks: [contact] },
   ],
@@ -52,6 +52,9 @@ console.log('menu:', menu.map((b) => b.type).join(' → '))
 console.log('menu items:', (menu[0] as { services: unknown[] }).services.length)
 
 if (home[0] !== 'hero') throw new Error('home must open on its hero')
+if (home.filter((type) => type === 'hero').length !== 1) {
+  throw new Error('a page opens once — a second hero becomes the closing ask')
+}
 if (home[home.length - 1] !== 'cta') throw new Error('a leading cta moves to the end')
 if (menu.length !== 1) throw new Error('adjacent list sections merge into one')
 if ((menu[0] as { services: unknown[] }).services.length !== 4) throw new Error('merged up to the ceiling')

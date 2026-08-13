@@ -115,7 +115,9 @@ export function ContactForm({
   const labelStyle = { color: colors.muted, fontFamily: font }
 
   return (
-    <form onSubmit={submit} className="mx-auto mt-8 grid max-w-lg gap-3 text-start">
+    /* Left, like the heading above it: centring a form inside a left-aligned
+       section put it inboard of everything it belongs to. */
+    <form onSubmit={submit} className="mt-8 grid max-w-lg gap-3 text-start">
       <label className="grid gap-1.5">
         <span className="text-sm" style={labelStyle}>
           {labels.name}

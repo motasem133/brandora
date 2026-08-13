@@ -164,8 +164,17 @@ function Section({
           : undefined,
       }}
     >
-      <div style={{ maxWidth: wide ? 'var(--site-container)' : 'var(--site-measure)', marginInline: 'auto' }}>
-        {children}
+      {/*
+        One left edge down the whole page.
+        
+        Narrow sections used to be centred at the measure while wide ones filled
+        the container, so a visitor scrolling past a hero, an hours table and a
+        contact form watched the page's own margin move three times. The column
+        is always the container now; text inside it is held to the measure and
+        stays where the heading above it started.
+      */}
+      <div style={{ maxWidth: 'var(--site-container)', marginInline: 'auto' }}>
+        <div style={{ maxWidth: wide ? undefined : 'var(--site-measure)' }}>{children}</div>
       </div>
     </section>
   )
@@ -860,7 +869,10 @@ export function BlockRenderer({
           <h2 className="font-bold" style={{ ...heading, fontSize: 'var(--site-h2)' }}>
             {block.heading}
           </h2>
-          <p className="mx-auto mt-3 max-w-lg" style={muted}>
+          {/* Left, with everything else on the page. `mx-auto` centred it
+              inside a left-aligned section, so the sentence sat inboard of its
+              own heading. */}
+          <p className="mt-3 max-w-lg" style={muted}>
             {block.body}
           </p>
           <p className="mt-6 text-lg font-medium" style={accent}>
