@@ -10,13 +10,26 @@ have been built on top of a product that was quietly losing customers' money.
 
 Times are working estimates, not commitments. Where one is uncertain it says so.
 
-*Last true on 12 August 2026.*
+*Last true on 13 August 2026.*
 
 ---
 
 ## Fixes
 
-**Empty.** Ten are closed — eight shipped on 10 August, one died when the
+### CI has been red on main for days — half a day
+
+`soft-updates`, `verification-gate` and `tabs` fail in GitHub Actions and pass
+locally, on main and on every branch, since before 12 August. Nothing is known
+to be broken in the product; what is broken is the signal. A suite that is
+always red is a suite nobody reads, and the site work of 13 August went out with
+it red because the alternative was not shipping at all.
+
+The likely cause is fixture state in CI rather than the code — the failures are
+"element not found" on a chosen logo and on the verification notice, both of
+which depend on what the seed leaves behind. Worth an hour with the CI logs and
+the seed script side by side.
+
+Ten older fixes are closed — eight shipped on 10 August, one died when the
 customer deleted the project it was about, and one was found on 12 August while
 testing something else: a save that wrote to the database and painted nothing.
 What they were, and what they turned out to be, is at the end of this file.
@@ -65,7 +78,9 @@ Shipped on 12 August, drawn rather than described: both sections render the
 thing in the customer's own palette, faces and mark. What is left is the step
 past a drawing — a real render of the site their brand would actually produce —
 which is a design decision before it is code, and worth having the funnel's
-answer on the drawing first.
+answer on the drawing first. Cheaper than it was on 12 August: the site is now
+photographic, sized per brand and rendered from stored blocks, so what a free
+customer is missing can be shown by rendering it rather than by drawing it.
 
 ---
 
@@ -100,6 +115,23 @@ Two open pull requests as of 12 August: #19 and #33. Four merged on 12 August
 with their branches deleted, which frees their preview branches — Neon's own
 cleanup is slower than a working day's merges, so it is worth checking that
 those four are actually gone.
+
+### The wildcard DNS record — 5 minutes, and it is holding a feature shut
+
+`*.brandora.enigmitic.com` does not resolve. The apex is a CNAME to
+`cname.vercel-dns.com` and Vercel already holds the wildcard alias on the
+production deployment, so the platform half is done and the DNS half was never
+made: `dig +short anything.brandora.enigmitic.com` returns nothing.
+
+Every published site is therefore reachable only at
+`brandora.enigmitic.com/sites/{subdomain}` — while the builder shows the
+customer their subdomain address and the publish dialog puts that address in
+front of them to confirm. What they are handed to share does not answer.
+
+One record at whoever holds `enigmitic.com`: `*.brandora` CNAME
+`cname.vercel-dns.com`. The routing behind it is tested and works; the system
+test exercises it over raw HTTP with a `Host` header, which is why nothing ever
+went red over this.
 
 ### After the database move — whenever
 
@@ -233,9 +265,10 @@ and a three-scene kit at $0.15 an image loses money on every plan.
    Recording since 10 August.
 2. **Move the database to `us-east-1`** — a new Neon project and a
    dump/restore, verified table by table. Every query was crossing regions.
-3. **Cache published customer sites** — the query rather than the page, which
-   cannot be cached because it reads `?page=`. Found and fixed an invalidation
-   gap on custom domains while doing it.
+3. **Cache published customer sites** — the query rather than the page. Found
+   and fixed an invalidation gap on custom domains while doing it. (The pages
+   have their own URLs since 13 August; the query is still the right thing to
+   cache, now because four pages would otherwise hold four copies of one row.)
 4. **Let people edit their own brand copy** — the assistant's own bounds,
    shared, so a person and a model are held to one contract.
 5. **A working contact form** — emailed to the owner with reply-to the visitor,
@@ -284,6 +317,55 @@ Shipped 12 August, all four from the growth memo:
     value added in the same transaction. The *image share* figure was reading
     `logo` alone while it was at it — wrong since vectorising shipped — and
     sums everything that draws now.
+### The website, 13 August
+
+The generated site had never had a design pass, and it is the most public thing
+this product makes. Seven changes, in the order they mattered:
+
+13. **A customer's own pictures on their own site** — the logo, favicon, share
+    card and kit photography had been in storage the whole time with no way to
+    serve them: `/api/files` needs a session and sells SVG export by plan.
+    `/api/site-image` authorises through a join instead — published site, kind on
+    an allowlist — so the bucket stays private and kit archives stay unreachable.
+    Images resolve by kind at render, which makes a site become photographic the
+    day its owner buys a kit, with no regeneration and no credits.
+14. **Every page got its own address** — four pages shared one URL, so `/about`
+    404'd and search saw one page. `?page=` redirects rather than breaking. The
+    contact form's endpoint moved to `/contact/submit` to stay out of the way of
+    the contact page.
+15. **The button became a button** — `cta` was a `<span>` on every site ever
+    published; the primary conversion element could not be clicked. `ctaHref` is
+    validated against the four link forms a small business uses, and refuses
+    `javascript:`.
+16. **Blocks worth having** — the brand's own line, questions, opening hours. No
+    testimonials block and no stats block: both invite a model to invent a person
+    or a number on a real business's site. New blocks arrive empty, because
+    sample copy in a canvas is indistinguishable from finished copy — which is
+    how "Tell the story in a few short paragraphs" got published.
+17. **One brand, one bearing** — four registers, the same judgement the kit
+    makes from the same two fields, deciding scale, rhythm, radius, measure, nav
+    formality and whether photography is duotoned. Two businesses no longer get
+    the same site with two palettes.
+18. **Pages generated for the business** — a café gets a menu, a consultancy
+    gets pricing. The copy contract had no minimum lengths and no descriptions at
+    all, and `contact.email` was free text: "email us" validated as an address.
+    Six real generations went into the shape of it, and most of what they taught
+    was what *not* to enforce — every structural rule refused as a schema error
+    cost a whole generation, so arrangement is corrected in code now.
+19. **The builder stopped lying** — a failed save said "Unsaved changes" forever
+    and the work went with the next reload; a plain member saw Publish and got
+    "Insufficient permissions." after confirming; list items could be edited but
+    never added or removed. Publishing had no tests at all and has five now.
+20. **A sitemap and a robots.txt** — worth having only now the pages have
+    addresses. Both are the exception to the proxy matcher's file-extension rule,
+    which is pinned by `test:proxy`, because unmatched they serve Brandora's own
+    files under a customer's domain.
+
+Two defects the deploy itself found, both fixed the same day: a fixture seed
+still writing the dropped `template` column, and `?page=` serving the home page
+in production because a search param may not share a name with the dynamic
+segment above it. `next dev` redirected correctly, which is why it got that far.
+
 ### Also fixed on the way, not on any list
 
 - **The app bar printed itself over itself** below ~1400px for administrators.
