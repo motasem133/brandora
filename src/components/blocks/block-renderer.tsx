@@ -260,6 +260,12 @@ export function registerStyle(name: RegisterName): React.CSSProperties {
 
   return {
     '--site-scale': String(register.scale),
+    /* Multiplied here rather than in the stylesheet: a custom property resolves
+       its own `var()`s on the element that declares it, so a scale applied at
+       `:root` would be the root's scale — which is 1, for everyone. */
+    '--site-h1': `calc(var(--site-h1-raw) * ${register.scale})`,
+    '--site-h2': `calc(var(--site-h2-raw) * ${register.scale})`,
+    '--site-h3': `calc(var(--site-h3-raw) * ${register.scale})`,
     '--site-section': register.section,
     '--site-radius': register.radius,
     '--site-measure': register.measure,

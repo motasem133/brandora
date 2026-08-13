@@ -73,7 +73,9 @@ test.describe('website builder', () => {
   })
 
   test('adding a section renders it and autosaves', async ({ page }) => {
-    const sections = page.getByTestId('canvas').locator('section')
+    /* The block wrapper, not `<section>`: a section arrives empty now and
+       renders as a placeholder saying so until it has copy in it. */
+    const sections = page.getByTestId('canvas-block')
     const before = await sections.count()
 
     await page.getByTestId('block-library').getByRole('button', { name: 'Text section' }).click()
@@ -107,7 +109,7 @@ test.describe('website builder', () => {
   })
 
   test('switching pages changes the canvas', async ({ page }) => {
-    const sections = page.getByTestId('canvas').locator('section')
+    const sections = page.getByTestId('canvas-block')
     const home = await sections.count()
 
     await page.getByTestId('page-tabs').getByRole('button', { name: 'Contact' }).click()

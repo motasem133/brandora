@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm'
+import { and, eq, sql } from 'drizzle-orm'
 import { setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 
@@ -9,7 +9,7 @@ import { db } from '@/server/db'
 import { getOrgPlan } from '@/server/db/queries/plans'
 import { countCustomDomains } from '@/server/db/queries/sites'
 import { getProject } from '@/server/db/queries/projects'
-import { brandingAssets, websiteAssets } from '@/server/db/schema'
+import { brandingAssets, generatedFiles, websiteAssets } from '@/server/db/schema'
 import { isDomainsConfigured } from '@/server/services/domains'
 import { requireOrg } from '@/server/session'
 
@@ -61,6 +61,19 @@ export default async function BuilderPage({
     .where(eq(brandingAssets.projectId, project.id))
     .limit(1)
 
+  /* One row, by the same kind and variant the published site looks for. */
+  const [logo] = await db
+    .select({ id: generatedFiles.id })
+    .from(generatedFiles)
+    .where(
+      and(
+        eq(generatedFiles.projectId, project.id),
+        eq(generatedFiles.kind, 'social_avatar'),
+        sql`${generatedFiles.metadata}->>'variant' = 'transparent'`,
+      ),
+    )
+    .limit(1)
+
   const plan = await getOrgPlan(org.id)
 
   return (
@@ -92,6 +105,13 @@ export default async function BuilderPage({
         fontBody: branding?.fonts?.body,
       }}
       register={registerFor(project.brandStyle, project.industry)}
+      /* The brand's own language, because its nav is written in it — the same
+         rule the published site follows. */
+      language={project.language}
+      /* The transparent logo, when a kit has been bought. Resolved by kind, as
+         the published site resolves it, rather than stored on a block. */
+      logoFileId={logo?.id ?? null}
+      year={new Date().getFullYear()}
       initialSubdomain={website.subdomain}
       initialCustomDomain={website.customDomain}
       isPublished={website.isPublished}

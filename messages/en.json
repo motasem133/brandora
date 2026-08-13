@@ -597,6 +597,9 @@
       "home": "Home",
       "about": "About",
       "services": "Services",
+      "menu": "Menu",
+      "pricing": "Pricing",
+      "faq": "FAQ",
       "contact": "Contact"
     },
     "blocks": {
@@ -683,7 +686,18 @@
       "phone": "+971 …",
       "price": "From AED 45",
       "note": "Anything that qualifies the above"
-    }
+    },
+    "siteStyle": "Site style",
+    "colors": {
+      "primary": "Primary",
+      "secondary": "Secondary",
+      "background": "Background",
+      "text": "Text"
+    },
+    "typeHeading": "Headings",
+    "typeBody": "Body",
+    "resetTheme": "Reset to brand colours",
+    "blankSection": "Empty {section} — it will not appear on your published site."
   },
   "Billing": {
     "title": "Billing",

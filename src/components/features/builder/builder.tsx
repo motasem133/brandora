@@ -24,6 +24,7 @@ import {
   ChevronUp,
   GripVertical,
   Monitor,
+  Palette,
   Pencil,
   Plus,
   Redo2,
@@ -35,7 +36,8 @@ import { useTranslations } from 'next-intl'
 import { useAction } from 'next-safe-action/hooks'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-import { BlockRenderer, registerStyle, resolveTheme } from '@/components/blocks/block-renderer'
+import { BlockRenderer, fontHref, registerStyle, resolveTheme } from '@/components/blocks/block-renderer'
+import { SiteFooter, SiteHeader } from '@/components/blocks/site-chrome'
 import type { RegisterName } from '@/lib/register'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
@@ -47,6 +49,7 @@ import { Link } from '@/i18n/navigation'
 import { cn } from '@/lib/utils'
 import {
   BLOCK_TYPES,
+  isBlank,
   blockKey,
   createBlock,
   PAGE_KEYS,
@@ -103,6 +106,9 @@ export function Builder({
   initialTheme,
   brandTheme,
   register,
+  language,
+  logoFileId,
+  year,
   initialSubdomain,
   initialCustomDomain,
   isPublished,
@@ -120,6 +126,12 @@ export function Builder({
   brandTheme: Theme
   /** The brand's bearing, the same one the published site resolves. */
   register: RegisterName
+  /** The brand's language, which is what its nav is written in. */
+  language: 'en' | 'ar'
+  /** The transparent logo, when the customer has bought a kit. */
+  logoFileId: string | null
+  /** Read on the server, so the canvas and the published footer cannot differ. */
+  year: number
   initialSubdomain: string | null
   initialCustomDomain: string | null
   isPublished: boolean
@@ -137,15 +149,31 @@ export function Builder({
   const [selected, setSelected] = useState<number | null>(null)
   const [device, setDevice] = useState<'desktop' | 'mobile'>('desktop')
   const [dirty, setDirty] = useState(false)
-  const [sheet, setSheet] = useState<'library' | 'inspector' | null>(null)
+  const [sheet, setSheet] = useState<'library' | 'inspector' | 'style' | null>(null)
 
-  // Snapshots of the whole page map. Cheap at this size, and it makes undo
-  // correct across page switches rather than only within one page.
-  const past = useRef<Pages[]>([])
-  const future = useRef<Pages[]>([])
+  /*
+   * The colours and faces the customer has overridden, if any.
+   *
+   * Held in state rather than read from the prop, which is what made the
+   * palette unchangeable: autosave has always sent a `theme`, and it has always
+   * sent back the same frozen value it was given. Empty for every project that
+   * has never overridden anything — the brand's own identity is underneath.
+   */
+  const [themeOverrides, setThemeOverrides] = useState<Theme>(initialTheme)
+
+  // Snapshots of the whole document. Cheap at this size, and it makes undo
+  // correct across page switches rather than only within one page — and across
+  // a colour change, which is the edit a customer is most likely to regret.
+  /* The panel, not the heading inside it: passing a ref down as a prop trips
+     the compiler's "cannot access refs during render" rule, and the panel is
+     the only element this component owns. */
+  const inspectorPanel = useRef<HTMLElement>(null)
+
+  const past = useRef<{ pages: Pages; theme: Theme }[]>([])
+  const future = useRef<{ pages: Pages; theme: Theme }[]>([])
 
   // Overrides win over the generated identity, exactly as the site resolves it.
-  const theme = resolveTheme({ ...brandTheme, ...initialTheme })
+  const theme = resolveTheme({ ...brandTheme, ...themeOverrides })
   /* Memoised because it is a new array whenever the page has no blocks, and
      every callback below depends on it. */
   const blocks = useMemo(() => pages[page] ?? [], [pages, page])
@@ -177,38 +205,47 @@ export function Builder({
   })
 
   const commit = useCallback(
-    (next: Pages) => {
-      past.current = [...past.current.slice(-MAX_HISTORY + 1), pages]
+    (next: { pages?: Pages; theme?: Theme }) => {
+      past.current = [...past.current.slice(-MAX_HISTORY + 1), { pages, theme: themeOverrides }]
       future.current = []
-      setPages(next)
+      if (next.pages) setPages(next.pages)
+      if (next.theme) setThemeOverrides(next.theme)
       setDirty(true)
     },
-    [pages],
+    [pages, themeOverrides],
   )
 
   const setBlocks = useCallback(
-    (next: Block[]) => commit({ ...pages, [page]: next }),
+    (next: Block[]) => commit({ pages: { ...pages, [page]: next } }),
     [commit, pages, page],
+  )
+
+  /** One colour or face at a time, each its own undo step. */
+  const setThemeKey = useCallback(
+    (key: keyof Theme, value: string) => commit({ theme: { ...themeOverrides, [key]: value } }),
+    [commit, themeOverrides],
   )
 
   const undo = useCallback(() => {
     const previous = past.current.pop()
     if (!previous) return
-    future.current = [pages, ...future.current]
-    setPages(previous)
+    future.current = [{ pages, theme: themeOverrides }, ...future.current]
+    setPages(previous.pages)
+    setThemeOverrides(previous.theme)
     setDirty(true)
     setSelected(null)
-  }, [pages])
+  }, [pages, themeOverrides])
 
   const redo = useCallback(() => {
     const [next, ...rest] = future.current
     if (!next) return
-    past.current = [...past.current, pages]
+    past.current = [...past.current, { pages, theme: themeOverrides }]
     future.current = rest
-    setPages(next)
+    setPages(next.pages)
+    setThemeOverrides(next.theme)
     setDirty(true)
     setSelected(null)
-  }, [pages])
+  }, [pages, themeOverrides])
 
   /** Reordering without a pointer, and without a drag anyone has to discover. */
   const move = useCallback(
@@ -241,9 +278,9 @@ export function Builder({
   // keeps a burst of typing to a single write.
   useEffect(() => {
     if (!dirty) return
-    const timer = setTimeout(() => save({ projectId, pages, theme: initialTheme }), 1500)
+    const timer = setTimeout(() => save({ projectId, pages, theme: themeOverrides }), 1500)
     return () => clearTimeout(timer)
-  }, [dirty, pages, projectId, save, initialTheme])
+  }, [dirty, pages, projectId, save, themeOverrides])
 
   // Warn before losing edits that have not been flushed yet.
   useEffect(() => {
@@ -252,6 +289,21 @@ export function Builder({
     window.addEventListener('beforeunload', handler)
     return () => window.removeEventListener('beforeunload', handler)
   }, [dirty])
+
+  /*
+   * Selecting a section takes you to its fields.
+   *
+   * The inspector is after the canvas in the document, so from the select
+   * button a keyboard user tabbed through that section's own controls and then
+   * every remaining section's three controls — about thirty stops on a full
+   * page — before reaching the field they had just opened. Selection has
+   * exactly one purpose, so it moves focus, and a screen reader announces the
+   * section's name on arrival.
+   */
+  useEffect(() => {
+    if (selected === null) return
+    inspectorPanel.current?.querySelector<HTMLElement>('[data-inspector-title]')?.focus()
+  }, [selected])
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -269,6 +321,91 @@ export function Builder({
     setBlocks(arrayMove(blocks, from, to))
     setSelected(to)
   }
+
+  /**
+   * The site's own colours and faces, always on screen.
+   *
+   * The column this sits in showed one grey sentence — "Select a section to
+   * edit it." — for as long as nothing was selected, which is a quarter of a
+   * 1440px screen doing nothing. And nothing anywhere in the editor showed the
+   * customer their own palette, let alone let them change it, though the schema
+   * and the save action have both accepted a theme since the day they shipped.
+   *
+   * A native colour input beside a hex field: the platform owns the picker, it
+   * works from a keyboard, and a customer holding a brand hex on a piece of
+   * paper can type it. The typefaces are shown and not editable — a family name
+   * that is not a Google Font renders as the fallback with nothing to say it
+   * failed, and a real font picker is a curated list, which is other work.
+   */
+  const styles = (
+    <div className="space-y-4">
+      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-fg-muted">
+        {t('siteStyle')}
+      </p>
+
+      {(
+        [
+          ['primaryColor', 'primary'],
+          ['secondaryColor', 'secondary'],
+          ['backgroundColor', 'background'],
+          ['textColor', 'text'],
+        ] as const
+      ).map(([key, label]) => (
+        <Field key={key} label={t(`colors.${label}`)}>
+          <div className="flex items-center gap-2">
+            {/*
+              A raw input rather than the Input primitive: both controls sit in
+              one Field and the primitive claims the Field's id, so the two would
+              fight over the label. The swatch keeps the 44px target the rest of
+              the editor holds to.
+            */}
+            <input
+              type="color"
+              value={theme[key]}
+              aria-label={t(`colors.${label}`)}
+              onChange={(event) => setThemeKey(key, event.target.value)}
+              className="size-11 shrink-0 cursor-pointer rounded-control border border-line bg-transparent p-1"
+            />
+            <Input
+              value={theme[key]}
+              onChange={(event) => setThemeKey(key, event.target.value)}
+              className="font-mono uppercase"
+            />
+          </div>
+        </Field>
+      ))}
+
+      <div className="space-y-2 border-t border-line pt-4">
+        {(
+          [
+            ['fontHeading', t('typeHeading')],
+            ['fontBody', t('typeBody')],
+          ] as const
+        ).map(([key, label]) => (
+          <div key={key} className="flex items-baseline justify-between gap-3">
+            <span className="text-xs text-fg-muted">{label}</span>
+            {/* Set in the face itself — the name alone means nothing to most
+                people, and the specimen is the whole point. */}
+            <span
+              className="truncate text-sm text-fg"
+              style={{ fontFamily: `'${theme[key]}', sans-serif` }}
+            >
+              Aa — {theme[key]}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* The only route back for someone who has broken their colours.
+          `checkedSiteColors` keeps text legible whatever they choose, but it
+          cannot restore the brand. */}
+      {Object.keys(themeOverrides).length > 0 && (
+        <Button variant="secondary" size="sm" className="w-full" onClick={() => commit({ theme: {} })}>
+          {t('resetTheme')}
+        </Button>
+      )}
+    </div>
+  )
 
   const inspector = (inSheet: boolean) => selectedBlock ? (
     <Inspector
@@ -299,8 +436,18 @@ export function Builder({
     </div>
   )
 
+  /*
+   * The brand's own typefaces.
+   *
+   * Linked in the published site's layout and nowhere else, so every block in
+   * this canvas fell back to the app's Jakarta while production drew the same
+   * words in the brand's face. React hoists and dedupes this into <head>.
+   */
+  const fonts = fontHref(theme)
+
   return (
     <div className="flex h-dvh flex-col">
+      {fonts && <link rel="stylesheet" href={fonts} precedence="default" />}
       <header className="shrink-0 border-b border-line">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3">
           {/*
@@ -370,7 +517,7 @@ export function Builder({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => save({ projectId, pages, theme: initialTheme })}
+                onClick={() => save({ projectId, pages, theme: themeOverrides })}
               >
                 {t('retry')}
               </Button>
@@ -443,8 +590,25 @@ export function Builder({
               device === 'mobile' ? 'max-w-sm' : 'max-w-4xl',
             )}
           >
+            {/* The header and footer the published page draws, so the canvas
+                is a picture of a website rather than a stack of sections. The
+                nav marks the page being edited, and lists only the pages that
+                have something on them — the same rule the live site follows. */}
+            <SiteHeader
+              name={projectName}
+              logoUrl={logoFileId ? `/api/site-image/${logoFileId}` : undefined}
+              nav={PAGE_KEYS.filter((key) => pages[key]?.length)}
+              active={page}
+              theme={theme}
+              register={register}
+              language={language}
+              preview
+            />
+
             {blocks.length === 0 ? (
-              <p className="p-16 text-center text-sm text-fg-muted">{t('emptyPage')}</p>
+              <p className="p-16 text-center text-sm" style={{ color: theme.safe.muted }}>
+                {t('emptyPage')}
+              </p>
             ) : (
               <DndContext
                 /*
@@ -475,20 +639,47 @@ export function Builder({
                         setSelected(null)
                       }}
                     >
-                      <BlockRenderer block={block} theme={theme} register={register} preview />
+                      {/* A section with nothing in it renders as a tall
+                          nothing — and the rule that it will not be published
+                          was a secret the renderer kept. Said in the site's own
+                          checked colours, so it stays inside the preview. */}
+                      {isBlank(block) ? (
+                        <div
+                          className="flex min-h-32 items-center justify-center border-y border-dashed px-6 py-10 text-center"
+                          style={{ borderColor: theme.safe.line }}
+                        >
+                          <span
+                            className="text-sm"
+                            style={{
+                              color: theme.safe.muted,
+                              fontFamily: `'${theme.fontBody}', sans-serif`,
+                            }}
+                          >
+                            {t('blankSection', { section: t(`blocks.${block.type}`) })}
+                          </span>
+                        </div>
+                      ) : (
+                        <BlockRenderer block={block} theme={theme} register={register} preview />
+                      )}
                     </SortableBlock>
                   ))}
                 </SortableContext>
               </DndContext>
             )}
+
+            <SiteFooter name={projectName} theme={theme} year={year} />
           </div>
         </main>
 
         <aside
+          ref={inspectorPanel}
           className="hidden w-80 shrink-0 overflow-y-auto border-s border-line p-4 xl:block"
           data-testid="inspector"
         >
-          {inspector(false) ?? <p className="text-sm text-fg-muted">{t('selectPrompt')}</p>}
+          {inspector(false) ?? (
+            <p className="mb-4 text-xs text-fg-muted">{t('selectPrompt')}</p>
+          )}
+          <div className={cn(selectedBlock && 'mt-6 border-t border-line pt-6')}>{styles}</div>
         </aside>
       </div>
 
@@ -501,13 +692,17 @@ export function Builder({
         <Button
           variant="secondary"
           size="sm"
-          className="flex-1"
+          className="min-w-0 flex-1"
           data-testid="edit-section"
           disabled={!selectedBlock}
           onClick={() => setSheet('inspector')}
         >
           <Pencil />
-          {selectedBlock ? t(`blocks.${selectedBlock.type}`) : t('editSection')}
+          {/* The Arabic block names are long and this bar now carries five
+              controls at 390px. */}
+          <span className="min-w-0 truncate">
+            {selectedBlock ? t(`blocks.${selectedBlock.type}`) : t('editSection')}
+          </span>
         </Button>
         <Button
           variant="secondary"
@@ -517,6 +712,15 @@ export function Builder({
         >
           <Plus />
           {t('add')}
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
+          data-testid="site-style"
+          aria-label={t('siteStyle')}
+          onClick={() => setSheet('style')}
+        >
+          <Palette />
         </Button>
         <Button
           variant="ghost"
@@ -554,6 +758,10 @@ export function Builder({
         {/* The sheet's own header already names the section; repeating it
             inside would be the title twice, forty pixels apart. */}
         {inspector(true)}
+      </Sheet>
+
+      <Sheet open={sheet === 'style'} onClose={() => setSheet(null)} title={t('siteStyle')}>
+        {styles}
       </Sheet>
     </div>
   )
@@ -604,14 +812,31 @@ function SortableBlock({
       />
 
       {/*
-        Visible on hover *and* on focus. They were hover-only, so a keyboard
-        user tabbed into controls they could not see.
+        One cluster rather than two loose circles, and it carries the section's
+        name — which was the only thing in the canvas that never said what you
+        were looking at.
+        
+        In the app's own tokens with a border and a shadow, because these sit on
+        the customer's page: a white grip on white paper was invisible, and a
+        red delete circle was the loudest object on a preview of somebody's
+        website. The danger colour arrives on intent now, not at rest.
+
+        Visible on hover *and* on focus — they were hover-only, so a keyboard
+        user tabbed into controls they could not see — and always while the
+        section is selected.
       */}
-      <div className="absolute end-2 top-2 z-20 flex gap-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+      <div
+        className={cn(
+          'absolute end-2 top-2 z-20 flex items-center gap-0.5 rounded-control border border-line bg-surface/95 p-0.5 shadow-lg backdrop-blur',
+          'opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100',
+          selected && 'opacity-100',
+        )}
+      >
+        <span className="max-w-32 truncate px-2 text-xs text-fg-muted">{name}</span>
         <button
           {...attributes}
           {...listeners}
-          className="cursor-grab rounded-control bg-fg/80 p-1.5 text-bg"
+          className="cursor-grab rounded-control p-1.5 text-fg-secondary hover:bg-elevated hover:text-fg"
           aria-label={t('reorderSection', { section: name })}
         >
           <GripVertical className="size-3.5" />
@@ -621,7 +846,7 @@ function SortableBlock({
             event.stopPropagation()
             onDelete()
           }}
-          className="rounded-control bg-danger/90 p-1.5 text-white"
+          className="rounded-control p-1.5 text-fg-secondary hover:bg-elevated hover:text-danger"
           aria-label={t('deleteSection', { section: name })}
         >
           <Trash2 className="size-3.5" />
@@ -689,7 +914,11 @@ function Inspector({
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2">
         {showTitle ? (
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-fg-muted">
+          <p
+            data-inspector-title
+            tabIndex={-1}
+            className="text-xs font-semibold uppercase tracking-[0.12em] text-fg-muted outline-none focus-visible:outline-2 focus-visible:outline-brand"
+          >
             {t(`blocks.${block.type}`)}
           </p>
         ) : (
