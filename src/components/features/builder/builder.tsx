@@ -77,6 +77,13 @@ const MAX_HISTORY = 50
  * generator happened to write — which put "Body text" above "Heading" on a text
  * section. Fields are shown in the order somebody reads them on the page.
  */
+/** What a list's controls are called when a section has no words of its own. */
+const fallbackWord = {
+  itemLabels: 'itemNumber',
+  itemAdd: 'addItem',
+  itemRemove: 'removeItem',
+} as const
+
 const FIELD_ORDER = [
   'title',
   'subtitle',
@@ -992,6 +999,27 @@ function Inspector({
   const listKey = 'items' in block ? 'items' : 'services' in block ? 'services' : null
 
   /*
+   * The same two stored fields mean different things in different sections.
+   *
+   * `title` and `body` are what the schema calls them, and the editor said so:
+   * an opening-hours section asked for a "Title" and "Body text" when it wanted
+   * a day and its hours, and a question and its answer got the same two words.
+   * The stored shape stays; only what the customer is asked changes.
+   */
+  const itemWord = (field: 'title' | 'body') =>
+    t.has(`itemFields.${block.type}.${field}`)
+      ? t(`itemFields.${block.type}.${field}`)
+      : t(`fields.${field}`)
+
+  const itemHint = (field: 'title' | 'body') =>
+    t.has(`itemHints.${block.type}.${field}`)
+      ? t(`itemHints.${block.type}.${field}`)
+      : t(`hints.${field}`)
+
+  const listWord = (key: 'itemLabels' | 'itemAdd' | 'itemRemove', values?: Record<string, number>) =>
+    t.has(`${key}.${block.type}`) ? t(`${key}.${block.type}`, values) : t(fallbackWord[key], values)
+
+  /*
    * How many items this block may hold.
    *
    * A customer could edit the three items a block arrived with and nothing
@@ -1080,13 +1108,16 @@ function Inspector({
         <div className="space-y-3 border-t border-line pt-4">
           {list.map((item, itemIndex) => (
             <div key={itemIndex} className="space-y-3 rounded-control border border-line p-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-fg-muted">
-                {t('itemNumber', { number: itemIndex + 1 })}
+              {/* Its own title once there is one — the rule the project page
+                  already follows for pages, for the same reason: "Item 3" is
+                  the editor's word for a thing the customer has named. */}
+              <p className="truncate text-xs font-semibold uppercase tracking-[0.12em] text-fg-muted">
+                {item.title?.trim() || listWord('itemLabels', { number: itemIndex + 1 })}
               </p>
-              <Field label={t('fields.title')}>
+              <Field label={itemWord('title')}>
                 <Input
                   value={item.title}
-                  placeholder={t('hints.title')}
+                  placeholder={itemHint('title')}
                   onChange={(event) =>
                     set(
                       listKey,
@@ -1097,10 +1128,10 @@ function Inspector({
                   }
                 />
               </Field>
-              <Field label={t('fields.body')}>
+              <Field label={itemWord('body')}>
                 <Textarea
                   value={item.body}
-                  placeholder={t('hints.body')}
+                  placeholder={itemHint('body')}
                   className="min-h-20"
                   onChange={(event) =>
                     set(
@@ -1138,7 +1169,7 @@ function Inspector({
                   onClick={() => set(listKey, list.filter((_, i) => i !== itemIndex))}
                 >
                   <Trash2 className="size-3.5" />
-                  {t('removeItem')}
+                  {listWord('itemRemove')}
                 </Button>
               )}
             </div>
@@ -1152,7 +1183,7 @@ function Inspector({
               onClick={() => set(listKey, [...list, { title: '', body: '' }])}
             >
               <Plus className="size-4" />
-              {t('addItem')}
+              {listWord('itemAdd')}
             </Button>
           )}
         </div>

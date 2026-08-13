@@ -604,15 +604,15 @@
       "contact": "Contact"
     },
     "blocks": {
-      "hero": "Hero",
-      "features": "Features",
-      "richText": "Text section",
-      "services": "Services",
-      "quote": "Quote",
-      "faq": "Questions",
+      "hero": "Top of the page",
+      "features": "Highlights",
+      "richText": "Paragraph",
+      "services": "What you offer",
+      "quote": "One big line",
+      "faq": "Questions and answers",
       "hours": "Opening hours",
-      "cta": "Call to action",
-      "contact": "Contact"
+      "cta": "Next step",
+      "contact": "How to reach you"
     },
     "addSection": "Add section",
     "selectPrompt": "Select a section to edit it.",
@@ -658,18 +658,18 @@
     "addItem": "Add another",
     "removeItem": "Remove",
     "fields": {
-      "title": "Title",
-      "subtitle": "Subtitle",
+      "title": "Headline",
+      "subtitle": "Second line",
       "heading": "Heading",
-      "body": "Body text",
-      "cta": "Button label",
+      "body": "Text",
+      "cta": "What the button says",
       "email": "Email address",
       "phone": "Phone number",
       "price": "Price",
       "quote": "The line",
       "attribution": "Who said it",
-      "note": "Note",
-      "ctaHref": "Button link"
+      "note": "Extra note",
+      "ctaHref": "Where the button goes"
     },
     "confirmTitle": "Publish this site?",
     "confirmBody": "Anyone with the address will be able to see it, and search engines can find it. You can unpublish at any time.",
@@ -712,7 +712,64 @@
     "keepMyChanges": "Keep my changes",
     "discardTitle": "Undo all your changes?",
     "discardBody": "Everything you've edited since your last update will be replaced with what's on your live site right now. This can't be undone.",
-    "takeOffline": "Take it offline"
+    "takeOffline": "Take it offline",
+    "blockDescriptions": {
+      "hero": "The first thing anyone sees — a headline, a line under it, and a button.",
+      "features": "A few short points, side by side.",
+      "richText": "A heading and some writing.",
+      "services": "A list of what you sell or do, with prices if you want them.",
+      "quote": "A sentence set large on its own — your promise, or something a customer said.",
+      "faq": "The things people ask before they buy.",
+      "hours": "When your doors are open.",
+      "cta": "A short line and a button. Book, call, order.",
+      "contact": "Your email, your phone, and a line about when you answer."
+    },
+    "itemFields": {
+      "features": {
+        "title": "Title",
+        "body": "Text"
+      },
+      "services": {
+        "title": "Name",
+        "body": "Description"
+      },
+      "faq": {
+        "title": "Question",
+        "body": "Answer"
+      },
+      "hours": {
+        "title": "Day or days",
+        "body": "Hours"
+      }
+    },
+    "itemLabels": {
+      "features": "Highlight {number}",
+      "services": "Item {number}",
+      "faq": "Question {number}",
+      "hours": "Day {number}"
+    },
+    "itemAdd": {
+      "features": "Add a highlight",
+      "services": "Add an item",
+      "faq": "Add a question",
+      "hours": "Add a day"
+    },
+    "itemRemove": {
+      "features": "Remove this highlight",
+      "services": "Remove this item",
+      "faq": "Remove this question",
+      "hours": "Remove this day"
+    },
+    "itemHints": {
+      "hours": {
+        "title": "e.g. Monday – Thursday",
+        "body": "e.g. 8am – 10pm"
+      },
+      "faq": {
+        "title": "Something people actually ask",
+        "body": "The answer, plainly"
+      }
+    }
   },
   "Billing": {
     "title": "Billing",

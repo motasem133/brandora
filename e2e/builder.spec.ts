@@ -64,7 +64,7 @@ test.describe('website builder', () => {
 
     await page.getByTestId('add-section').click()
     const library = page.getByRole('dialog')
-    await expect(library.getByRole('button', { name: 'Text section' })).toBeVisible()
+    await expect(library.getByRole('button', { name: /^Paragraph/ })).toBeVisible()
     await page.keyboard.press('Escape')
 
     await page.getByTestId('canvas-block').first().getByRole('button', { name: /^Select / }).click()
@@ -78,7 +78,7 @@ test.describe('website builder', () => {
     const sections = page.getByTestId('canvas-block')
     const before = await sections.count()
 
-    await page.getByTestId('block-library').getByRole('button', { name: 'Text section' }).click()
+    await page.getByTestId('block-library').getByRole('button', { name: /^Paragraph/ }).click()
 
     await expect(sections).toHaveCount(before + 1)
     await expect(page.getByTestId('save-status')).toHaveAttribute('data-state', 'saved', {
