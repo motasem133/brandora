@@ -807,6 +807,43 @@ export function BlockRenderer({
 }
 
 /** Renders a whole page, including the Google Fonts the theme references. */
+/**
+ * Which photograph each block on a page gets — each one used once.
+ *
+ * A home page is often three `richText` blocks in a row; handing every one of
+ * them the same portrait would print the same picture three times, which is the
+ * single most obvious way a generated site announces itself as generated. The
+ * first block that can carry a given scene takes it, and the ones after it fall
+ * back to the type-and-space design.
+ *
+ * Exported because the builder's canvas has to make the same allocation and
+ * cannot call `PageRenderer` — every block there is wrapped in its own
+ * drag-and-drop shell. A second copy of this rule in the editor would be a
+ * fourth way for the preview to disagree with the site.
+ */
+export function claimImages(blocks: Block[], images?: SiteImages) {
+  const unused = { ...(images?.scenes ?? {}) }
+
+  return blocks.map((block): SiteImages | undefined => {
+    if (!images) return undefined
+
+    const wants =
+      block.type === 'hero'
+        ? 'hero'
+        : block.type === 'richText'
+          ? 'people'
+          : block.type === 'services'
+            ? 'detail'
+            : null
+
+    if (!wants || !unused[wants]) return { ...images, scenes: {} }
+
+    const scene = { [wants]: unused[wants] }
+    delete unused[wants]
+    return { ...images, scenes: scene }
+  })
+}
+
 export function PageRenderer({
   blocks,
   theme,
@@ -824,28 +861,7 @@ export function PageRenderer({
   base?: string
   contact?: ContactLabels
 }) {
-  /*
-   * Each photograph is used once on a page.
-   *
-   * A home page is often three `richText` blocks in a row; handing every one of
-   * them the same portrait would print the same picture three times, which is
-   * the single most obvious way a generated site announces itself as generated.
-   * The first block that can carry a given scene takes it, and the ones after it
-   * fall back to the type-and-space design.
-   */
-  const unused = { ...(images?.scenes ?? {}) }
-  const claim = (block: Block): SiteImages | undefined => {
-    if (!images) return undefined
-
-    const wants =
-      block.type === 'hero' ? 'hero' : block.type === 'richText' ? 'people' : block.type === 'services' ? 'detail' : null
-
-    if (!wants || !unused[wants]) return { ...images, scenes: {} }
-
-    const scene = { [wants]: unused[wants] }
-    delete unused[wants]
-    return { ...images, scenes: scene }
-  }
+  const claimed = claimImages(blocks, images)
 
   return (
     <div style={{ backgroundColor: theme.safe.paper }}>
@@ -855,7 +871,7 @@ export function PageRenderer({
           block={block}
           index={index}
           theme={theme}
-          images={claim(block)}
+          images={claimed[index]}
           register={register}
           base={base}
           contact={contact}

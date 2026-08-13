@@ -1,4 +1,4 @@
-import { and, eq, sql } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 
@@ -9,7 +9,8 @@ import { db } from '@/server/db'
 import { getOrgPlan } from '@/server/db/queries/plans'
 import { countCustomDomains } from '@/server/db/queries/sites'
 import { getProject } from '@/server/db/queries/projects'
-import { brandingAssets, generatedFiles, websiteAssets } from '@/server/db/schema'
+import { brandingAssets, websiteAssets } from '@/server/db/schema'
+import { siteImages } from '@/server/db/queries/site-images'
 import { isDomainsConfigured } from '@/server/services/domains'
 import { requireOrg } from '@/server/session'
 
@@ -61,18 +62,13 @@ export default async function BuilderPage({
     .where(eq(brandingAssets.projectId, project.id))
     .limit(1)
 
-  /* One row, by the same kind and variant the published site looks for. */
-  const [logo] = await db
-    .select({ id: generatedFiles.id })
-    .from(generatedFiles)
-    .where(
-      and(
-        eq(generatedFiles.projectId, project.id),
-        eq(generatedFiles.kind, 'social_avatar'),
-        sql`${generatedFiles.metadata}->>'variant' = 'transparent'`,
-      ),
-    )
-    .limit(1)
+  /*
+   * The same pictures the published site resolves, by the same function.
+   *
+   * The canvas showed a photoless site while production was photo-led, which is
+   * the third time this preview has drifted from the thing it previews.
+   */
+  const images = await siteImages(project.id)
 
   const plan = await getOrgPlan(org.id)
 
@@ -114,7 +110,8 @@ export default async function BuilderPage({
       language={project.language}
       /* The transparent logo, when a kit has been bought. Resolved by kind, as
          the published site resolves it, rather than stored on a block. */
-      logoFileId={logo?.id ?? null}
+      logoFileId={images.logo ?? null}
+      images={images}
       year={new Date().getFullYear()}
       initialSubdomain={website.subdomain}
       initialCustomDomain={website.customDomain}

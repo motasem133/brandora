@@ -36,7 +36,14 @@ import { useTranslations } from 'next-intl'
 import { useAction } from 'next-safe-action/hooks'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-import { BlockRenderer, fontHref, registerStyle, resolveTheme } from '@/components/blocks/block-renderer'
+import {
+  BlockRenderer,
+  claimImages,
+  fontHref,
+  registerStyle,
+  resolveTheme,
+  type SiteImages,
+} from '@/components/blocks/block-renderer'
 import { SiteFooter, SiteHeader } from '@/components/blocks/site-chrome'
 import type { RegisterName } from '@/lib/register'
 import { Button } from '@/components/ui/button'
@@ -110,6 +117,7 @@ export function Builder({
   register,
   language,
   logoFileId,
+  images,
   year,
   initialSubdomain,
   initialCustomDomain,
@@ -135,6 +143,8 @@ export function Builder({
   language: 'en' | 'ar'
   /** The transparent logo, when the customer has bought a kit. */
   logoFileId: string | null
+  /** The project's own pictures, exactly as the published site resolves them. */
+  images: SiteImages
   /** Read on the server, so the canvas and the published footer cannot differ. */
   year: number
   initialSubdomain: string | null
@@ -182,6 +192,10 @@ export function Builder({
   /* Memoised because it is a new array whenever the page has no blocks, and
      every callback below depends on it. */
   const blocks = useMemo(() => pages[page] ?? [], [pages, page])
+
+  /* The same allocation the published page makes, by the same function — the
+     canvas showed no photographs at all while production was photo-led. */
+  const blockImages = useMemo(() => claimImages(blocks, images), [blocks, images])
   const selectedBlock = selected !== null ? blocks[selected] : undefined
 
   /*
@@ -739,7 +753,14 @@ export function Builder({
                           </span>
                         </div>
                       ) : (
-                        <BlockRenderer block={block} theme={theme} register={register} preview />
+                        <BlockRenderer
+                          block={block}
+                          index={index}
+                          images={blockImages[index]}
+                          theme={theme}
+                          register={register}
+                          preview
+                        />
                       )}
                     </SortableBlock>
                   ))}
