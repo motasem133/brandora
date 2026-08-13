@@ -52,6 +52,7 @@ export function SiteHeader({
   logoUrl,
   nav,
   active,
+  titles,
   theme,
   register,
   base = '',
@@ -63,6 +64,8 @@ export function SiteHeader({
   /** The pages that have something on them — the same rule the site follows. */
   nav: readonly PageKey[]
   active: PageKey
+  /** What the customer calls each page, when they have said. */
+  titles?: Record<string, string>
   theme: SiteTheme
   register: RegisterName
   base?: string
@@ -120,7 +123,7 @@ export function SiteHeader({
           color: key === active ? theme.safe.ink : theme.safe.muted,
         }}
       >
-        {TITLES[language][key]}
+        {titles?.[key]?.trim() || TITLES[language][key]}
       </Item>
     )
   }

@@ -83,6 +83,7 @@ export default async function BuilderPage({
          have changes waiting. Null until the site has been online once. */
       publishedPages={website.publishedPages ? normalisePages(website.publishedPages) : null}
       publishedTheme={(website.publishedStyles ?? null) as Theme | null}
+      initialPageTitles={website.pageTitles ?? {}}
       initialTheme={(website.customStyles ?? {}) as Theme}
       /*
        * What the published site is actually set in.

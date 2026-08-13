@@ -62,6 +62,7 @@ export const getPublishedSite = cache(async (host: string) => {
             projectId: websiteAssets.projectId,
             pages: websiteAssets.publishedPages,
             customStyles: websiteAssets.publishedStyles,
+            pageTitles: websiteAssets.pageTitles,
             subdomain: websiteAssets.subdomain,
             customDomain: websiteAssets.customDomain,
             updatedAt: websiteAssets.updatedAt,

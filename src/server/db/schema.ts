@@ -606,6 +606,16 @@ export const websiteAssets = pgTable(
     publishedPages: jsonb('published_pages').$type<Record<string, unknown[]>>(),
     publishedStyles: jsonb('published_styles').$type<Record<string, string>>(),
 
+    /**
+     * What each page is called in the site's own menu.
+     *
+     * The label only — the address never changes. A café's page of food was
+     * called "Services" because the vocabulary is fixed and shared with the
+     * URL; renaming the slug instead would break every link already shared and
+     * every entry already indexed, to fix a word nobody types.
+     */
+    pageTitles: jsonb('page_titles').$type<Record<string, string>>().notNull().default({}),
+
     isPublished: boolean('is_published').notNull().default(false),
     subdomain: text('subdomain').unique(),
     customDomain: text('custom_domain').unique(),

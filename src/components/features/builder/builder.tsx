@@ -152,6 +152,7 @@ export function Builder({
   initialPages,
   publishedPages,
   publishedTheme,
+  initialPageTitles,
   initialTheme,
   brandTheme,
   register,
@@ -173,6 +174,8 @@ export function Builder({
   /** What visitors are getting. Null until the site has been online once. */
   publishedPages: Pages | null
   publishedTheme: Theme | null
+  /** What the customer calls each page in their own menu. */
+  initialPageTitles: Record<string, string>
   /** Overrides only — and what autosave writes back. */
   initialTheme: Theme
   /** The generated identity the published site is set in. */
@@ -201,6 +204,14 @@ export function Builder({
 
   const [pages, setPages] = useState<Pages>(initialPages)
   const [page, setPage] = useState<PageKey>('home')
+  const [pageTitles, setPageTitles] = useState<Record<string, string>>(initialPageTitles)
+
+  /** What this page is called in the site's menu, customer's word or ours. */
+  const pageName = useCallback(
+    (key: PageKey) => pageTitles[key]?.trim() || t(`pages.${key}`),
+    [pageTitles, t],
+  )
+
   /* Open on the first section rather than on an empty column — and decided
      here and at the page tabs rather than in an effect, so nothing reselects
      mid-typing and steals focus out of the field being edited. */
@@ -209,7 +220,7 @@ export function Builder({
   )
   const [device, setDevice] = useState<'desktop' | 'mobile'>('desktop')
   const [dirty, setDirty] = useState(false)
-  const [sheet, setSheet] = useState<'library' | 'inspector' | 'style' | null>(null)
+  const [sheet, setSheet] = useState<'library' | 'inspector' | 'style' | 'pages' | null>(null)
 
   /*
    * The colours and faces the customer has overridden, if any.
@@ -366,6 +377,7 @@ export function Builder({
    * knows undo exists and notices in time.
    */
   const [removing, setRemoving] = useState<number | null>(null)
+  const [removingPage, setRemovingPage] = useState<PageKey | null>(null)
 
   const introSeen = useSyncExternalStore(
     subscribeToIntro,
@@ -388,9 +400,12 @@ export function Builder({
   // keeps a burst of typing to a single write.
   useEffect(() => {
     if (!dirty) return
-    const timer = setTimeout(() => save({ projectId, pages, theme: themeOverrides }), 1500)
+    const timer = setTimeout(
+      () => save({ projectId, pages, theme: themeOverrides, pageTitles }),
+      1500,
+    )
     return () => clearTimeout(timer)
-  }, [dirty, pages, projectId, save, themeOverrides])
+  }, [dirty, pages, projectId, save, themeOverrides, pageTitles])
 
   // Warn before losing edits that have not been flushed yet.
   useEffect(() => {
@@ -430,11 +445,11 @@ export function Builder({
 
   /* Two pages named, then counted — a list of seven is not a sentence. */
   const changedList = useMemo(() => {
-    const names = changedPages.map((key) => t(`pages.${key}`))
+    const names = changedPages.map((key) => pageName(key))
     if (styleChanged && names.length === 0) return t('theColours')
     if (names.length <= 2) return names.join(t('and'))
     return t('andOthers', { first: names.slice(0, 2).join(t('and')), count: names.length - 2 })
-  }, [changedPages, styleChanged, t])
+  }, [changedPages, styleChanged, pageName, t])
 
   /*
    * Selecting a section takes you to its fields.
@@ -483,6 +498,32 @@ export function Builder({
    * that is not a Google Font renders as the fallback with nothing to say it
    * failed, and a real font picker is a curated list, which is other work.
    */
+  /* What this page is called, and whether it exists at all — next to the page
+     it is about rather than in a settings screen somewhere else. */
+  const pageSettings = (
+    <div className="space-y-3 border-t border-line pt-4">
+      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-fg-muted">
+        {t('thisPage')}
+      </p>
+      <Field label={t('pageMenuLabel')} hint={t('pageAddressFixed', { path: page === 'home' ? '/' : `/${page}` })}>
+        <Input
+          value={pageTitles[page] ?? ''}
+          placeholder={t(`pages.${page}`)}
+          onChange={(event) => {
+            setPageTitles({ ...pageTitles, [page]: event.target.value })
+            setDirty(true)
+          }}
+        />
+      </Field>
+      {page !== 'home' && (
+        <Button variant="ghost" size="sm" onClick={() => setRemovingPage(page)}>
+          <Trash2 />
+          {t('removePage')}
+        </Button>
+      )}
+    </div>
+  )
+
   const styles = (
     <div className="space-y-4">
       <p className="text-xs font-semibold uppercase tracking-[0.12em] text-fg-muted">
@@ -575,7 +616,7 @@ export function Builder({
     <Inspector
       block={selectedBlock}
       pages={PAGE_KEYS.filter((key) => pages[key])}
-      pageName={(key) => t(`pages.${key}`)}
+      pageName={pageName}
       scenes={sceneNames}
       showTitle={!inSheet}
       index={selected as number}
@@ -708,7 +749,7 @@ export function Builder({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => save({ projectId, pages, theme: themeOverrides })}
+                onClick={() => save({ projectId, pages, theme: themeOverrides, pageTitles })}
               >
                 {t('retry')}
               </Button>
@@ -787,9 +828,22 @@ export function Builder({
                   : 'text-fg-secondary hover:text-fg',
               )}
             >
-              {t(`pages.${key}`)}
+              {pageName(key)}
             </button>
           ))}
+          {/* The pages this site does not have yet. Not free-form: the seven
+              are the ones the site route, the sitemap and the generator all
+              already know, and a custom address is a page nobody visits. */}
+          {PAGE_KEYS.some((key) => !pages[key]) && (
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-label={t('addPage')}
+              onClick={() => setSheet('pages')}
+            >
+              <Plus />
+            </Button>
+          )}
         </nav>
       </header>
 
@@ -843,6 +897,7 @@ export function Builder({
               logoUrl={logoFileId ? `/api/site-image/${logoFileId}` : undefined}
               nav={PAGE_KEYS.filter((key) => pages[key]?.length)}
               active={page}
+              titles={pageTitles}
               theme={theme}
               register={register}
               language={language}
@@ -970,7 +1025,10 @@ export function Builder({
               body={t('pickSectionBody')}
             />
           )}
-          <div className={cn(selectedBlock && 'mt-6 border-t border-line pt-6')}>{styles}</div>
+          <div className={cn(selectedBlock && 'mt-6 border-t border-line pt-6')}>
+            {styles}
+            {pageSettings}
+          </div>
         </aside>
       </div>
 
@@ -1069,6 +1127,50 @@ export function Builder({
       <Sheet open={sheet === 'style'} onClose={() => setSheet(null)} title={t('siteStyle')}>
         {styles}
       </Sheet>
+
+      <Sheet open={sheet === 'pages'} onClose={() => setSheet(null)} title={t('addPage')}>
+        <div className="space-y-1">
+          {PAGE_KEYS.filter((key) => !pages[key]).map((key) => (
+            <button
+              key={key}
+              onClick={() => {
+                commit({ pages: { ...pages, [key]: [] } })
+                setPage(key)
+                setSelected(null)
+                setSheet(null)
+              }}
+              className="w-full rounded-control p-3 text-start transition-colors hover:bg-elevated"
+            >
+              <span className="flex items-center gap-2 text-sm font-medium text-fg">
+                <Plus className="size-3.5 shrink-0" />
+                {t(`pages.${key}`)}
+              </span>
+              <span className="mt-0.5 block ps-5 text-xs text-fg-muted">
+                {t(`pageDescriptions.${key}`)}
+              </span>
+            </button>
+          ))}
+        </div>
+      </Sheet>
+
+      <ConfirmDialog
+        open={removingPage !== null}
+        destructive
+        onClose={() => setRemovingPage(null)}
+        onConfirm={() => {
+          if (!removingPage) return
+          const next = { ...pages }
+          delete next[removingPage]
+          commit({ pages: next })
+          setPage('home')
+          setSelected(null)
+          setRemovingPage(null)
+        }}
+        title={t('removePageTitle', { page: removingPage ? pageName(removingPage) : '' })}
+        body={t('removePageBody')}
+        confirmLabel={t('removeConfirm')}
+        cancelLabel={t('keepIt')}
+      />
     </div>
   )
 }

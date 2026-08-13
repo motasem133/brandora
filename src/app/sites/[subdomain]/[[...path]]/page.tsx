@@ -103,7 +103,10 @@ export async function generateMetadata({
   const description = site.branding?.slogan ?? undefined
 
   /* Four pages shared one title for as long as they shared one URL. */
-  const title = active === 'home' ? name : `${TITLES[site.project.language][active]} — ${name}`
+  const pageName =
+    (site.website.pageTitles as Record<string, string> | null)?.[active]?.trim() ||
+    TITLES[site.project.language][active]
+  const title = active === 'home' ? name : `${pageName} — ${name}`
 
   /*
    * The brand's own favicon and share card, which have existed in storage since
@@ -205,6 +208,7 @@ export default async function PublishedSite({
           logoUrl={site.images.logo ? imageUrl(site.images.logo) : undefined}
           nav={nav}
           active={active}
+          titles={site.website.pageTitles ?? undefined}
           theme={theme}
           register={register}
           base={base}

@@ -88,6 +88,9 @@ export const updateWebsiteContent = orgAction
       projectId: z.uuid(),
       pages: pagesSchema,
       theme: themeSchema.optional(),
+      /* The menu label only — the address is not the customer's to change, and
+         renaming it would break links already shared. */
+      pageTitles: z.record(z.string(), z.string().max(40)).optional(),
     }),
   )
   .action(async ({ parsedInput, ctx }) => {
@@ -98,6 +101,7 @@ export const updateWebsiteContent = orgAction
       .set({
         pages: parsedInput.pages,
         ...(parsedInput.theme ? { customStyles: parsedInput.theme } : {}),
+        ...(parsedInput.pageTitles ? { pageTitles: parsedInput.pageTitles } : {}),
         updatedAt: new Date(),
       })
       .where(eq(websiteAssets.projectId, parsedInput.projectId))

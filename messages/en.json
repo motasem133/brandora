@@ -800,7 +800,23 @@
     "pictureAuto": "chosen for you",
     "noPhotographs": "Your site has no photographs.",
     "noPhotographsBody": "Photographs come with the social media kit — three pictures of your business, used across your site and your posts.",
-    "seeTheKit": "See the kit"
+    "seeTheKit": "See the kit",
+    "addPage": "Add a page",
+    "thisPage": "This page",
+    "pageMenuLabel": "What this page is called in the menu",
+    "pageAddressFixed": "Address: {path} — this does not change.",
+    "removePage": "Remove this page",
+    "removePageTitle": "Remove the {page} page?",
+    "removePageBody": "It will disappear from your site's menu and its address will stop working. Anything written on it will be lost.",
+    "pageDescriptions": {
+      "home": "The front page.",
+      "about": "Who you are and why you started.",
+      "services": "What you do for people, priced or not.",
+      "menu": "What you serve, with prices.",
+      "pricing": "Your rates or plans, when price is the first question.",
+      "faq": "The questions you are asked most.",
+      "contact": "How to reach you."
+    }
   },
   "Billing": {
     "title": "Billing",
