@@ -24,6 +24,7 @@ import {
   ChevronUp,
   GripVertical,
   Monitor,
+  MousePointerClick,
   Palette,
   Pencil,
   Plus,
@@ -34,7 +35,7 @@ import {
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useAction } from 'next-safe-action/hooks'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 
 import {
   BlockRenderer,
@@ -47,6 +48,8 @@ import {
 import { SiteFooter, SiteHeader } from '@/components/blocks/site-chrome'
 import type { RegisterName } from '@/lib/register'
 import { Button } from '@/components/ui/button'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { EmptyState } from '@/components/ui/empty-state'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { SegmentedButton, SegmentedControl } from '@/components/ui/segmented-control'
@@ -83,6 +86,28 @@ const fallbackWord = {
   itemAdd: 'addItem',
   itemRemove: 'removeItem',
 } as const
+
+/**
+ * One line, once, per browser.
+ *
+ * Read through `useSyncExternalStore` rather than an effect: localStorage does
+ * not exist on the server, and the server must render the same thing the client
+ * does on its first pass. `true` on the server means the strip is absent until
+ * the browser says otherwise, which is the honest direction to be wrong in — a
+ * line that appears is better than one that flashes and vanishes.
+ */
+const INTRO_SEEN = 'brandora.builder.intro'
+const INTRO_EVENT = 'brandora:intro-seen'
+
+function subscribeToIntro(onChange: () => void) {
+  window.addEventListener(INTRO_EVENT, onChange)
+  return () => window.removeEventListener(INTRO_EVENT, onChange)
+}
+
+function dismissIntro() {
+  window.localStorage.setItem(INTRO_SEEN, '1')
+  window.dispatchEvent(new Event(INTRO_EVENT))
+}
 
 const FIELD_ORDER = [
   'title',
@@ -168,7 +193,12 @@ export function Builder({
 
   const [pages, setPages] = useState<Pages>(initialPages)
   const [page, setPage] = useState<PageKey>('home')
-  const [selected, setSelected] = useState<number | null>(null)
+  /* Open on the first section rather than on an empty column — and decided
+     here and at the page tabs rather than in an effect, so nothing reselects
+     mid-typing and steals focus out of the field being edited. */
+  const [selected, setSelected] = useState<number | null>(
+    initialPages.home?.length ? 0 : null,
+  )
   const [device, setDevice] = useState<'desktop' | 'mobile'>('desktop')
   const [dirty, setDirty] = useState(false)
   const [sheet, setSheet] = useState<'library' | 'inspector' | 'style' | null>(null)
@@ -193,6 +223,9 @@ export function Builder({
 
   const past = useRef<{ pages: Pages; theme: Theme }[]>([])
   const future = useRef<{ pages: Pages; theme: Theme }[]>([])
+  /* Mirrored into state because a ref does not re-render, which is why both
+     buttons have always looked available and silently done nothing. */
+  const [history, setHistory] = useState({ past: 0, future: 0 })
 
   // Overrides win over the generated identity, exactly as the site resolves it.
   const theme = resolveTheme({ ...brandTheme, ...themeOverrides })
@@ -234,6 +267,7 @@ export function Builder({
     (next: { pages?: Pages; theme?: Theme }) => {
       past.current = [...past.current.slice(-MAX_HISTORY + 1), { pages, theme: themeOverrides }]
       future.current = []
+      setHistory({ past: past.current.length, future: 0 })
       if (next.pages) setPages(next.pages)
       if (next.theme) setThemeOverrides(next.theme)
       setDirty(true)
@@ -256,6 +290,7 @@ export function Builder({
     const previous = past.current.pop()
     if (!previous) return
     future.current = [{ pages, theme: themeOverrides }, ...future.current]
+    setHistory({ past: past.current.length, future: future.current.length })
     setPages(previous.pages)
     setThemeOverrides(previous.theme)
     setDirty(true)
@@ -267,6 +302,7 @@ export function Builder({
     if (!next) return
     past.current = [...past.current, { pages, theme: themeOverrides }]
     future.current = rest
+    setHistory({ past: past.current.length, future: rest.length })
     setPages(next.pages)
     setThemeOverrides(next.theme)
     setDirty(true)
@@ -293,12 +329,32 @@ export function Builder({
     [blocks, setBlocks],
   )
 
-  const removeSelected = useCallback(() => {
-    if (selected === null) return
-    setBlocks(blocks.filter((_, index) => index !== selected))
-    setSelected(null)
-    setSheet(null)
-  }, [blocks, selected, setBlocks])
+  /*
+   * Deleting a section asks first.
+   *
+   * It used to go on a single press of a small red circle sitting two pixels
+   * from the grip people drag with — less friction than deleting a draft
+   * project, which has always asked. Undo covers it, but only if the customer
+   * knows undo exists and notices in time.
+   */
+  const [removing, setRemoving] = useState<number | null>(null)
+
+  const introSeen = useSyncExternalStore(
+    subscribeToIntro,
+    () => window.localStorage.getItem(INTRO_SEEN) === '1',
+    () => true,
+  )
+
+
+  const removeSelected = useCallback(
+    (index: number) => {
+      setBlocks(blocks.filter((_, i) => i !== index))
+      setSelected(null)
+      setSheet(null)
+      setRemoving(null)
+    },
+    [blocks, setBlocks, setRemoving],
+  )
 
   // Autosave rather than relying on the user to press Save. The 1.5s debounce
   // keeps a burst of typing to a single write.
@@ -479,7 +535,7 @@ export function Builder({
         setBlocks(blocks.map((block, i) => (i === selected ? next : block)))
       }
       onMove={(direction) => move(selected as number, direction)}
-      onDelete={removeSelected}
+      onDelete={() => setRemoving(selected)}
     />
   ) : null
 
@@ -533,11 +589,28 @@ export function Builder({
           </h1>
 
           <div className="ms-auto flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={undo} aria-label={t('undo')}>
+            {/* Disabled when there is nothing to undo. They were always
+                available and did nothing, which teaches a person that the
+                control is broken rather than that the history is empty. */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={undo}
+              disabled={history.past === 0}
+              aria-label={t('undo')}
+            >
               <Undo2 />
+              <span className="hidden xl:inline">{t('undo')}</span>
             </Button>
-            <Button variant="ghost" size="icon" onClick={redo} aria-label={t('redo')}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={redo}
+              disabled={history.future === 0}
+              aria-label={t('redo')}
+            >
               <Redo2 />
+              <span className="hidden xl:inline">{t('redo')}</span>
             </Button>
 
             <SegmentedControl label={t('preview')} className="hidden sm:inline-flex">
@@ -632,6 +705,7 @@ export function Builder({
                 setSelected(null)
                 past.current = []
                 future.current = []
+                setHistory({ past: 0, future: 0 })
               }}
             />
           </div>
@@ -647,7 +721,7 @@ export function Builder({
               key={key}
               onClick={() => {
                 setPage(key)
-                setSelected(null)
+                setSelected(pages[key]?.length ? 0 : null)
               }}
               aria-current={key === page ? 'page' : undefined}
               className={cn(
@@ -675,6 +749,29 @@ export function Builder({
         </aside>
 
         <main className="min-w-0 flex-1 overflow-y-auto bg-elevated/30 p-4 pb-24 xl:pb-4" data-testid="canvas">
+          {/*
+            Three sentences, once: what the screen is, how to act on it, and
+            that it is safe. Dismissed into localStorage because it is a
+            preference, not data — and the alternative, a tour, needs a popover
+            this app has deliberately never had.
+          */}
+          {!introSeen && (
+            <div className="mx-auto mb-4 flex max-w-4xl items-start gap-4 rounded-card border border-line bg-surface p-4">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold">{t('firstRunTitle')}</p>
+                <p className="mt-1 text-sm text-fg-secondary">{t('firstRunBody')}</p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="ms-auto shrink-0"
+                onClick={dismissIntro}
+              >
+                {t('firstRunDismiss')}
+              </Button>
+            </div>
+          )}
+
           {/*
             The canvas takes the brand's own ground, as the published page does.
             Hardcoded white, a dark-ground brand previewed at 1.18:1 here and
@@ -707,9 +804,21 @@ export function Builder({
             />
 
             {blocks.length === 0 ? (
-              <p className="p-16 text-center text-sm" style={{ color: theme.safe.muted }}>
-                {t('emptyPage')}
-              </p>
+              <div className="p-12 text-center" style={{ color: theme.safe.muted }}>
+                <p className="text-sm">{t('emptyPage')}</p>
+                {/* The fact nothing said out loud: an empty page silently
+                    disappears from the site's own menu. */}
+                <p className="mt-1 text-sm">{t('emptyPageNotInMenu')}</p>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="mt-5"
+                  onClick={() => setSheet('library')}
+                >
+                  <Plus />
+                  {t('addSection')}
+                </Button>
+              </div>
             ) : (
               <DndContext
                 /*
@@ -735,10 +844,6 @@ export function Builder({
                       name={t(`blocks.${block.type}`)}
                       selected={selected === index}
                       onSelect={() => setSelected(index)}
-                      onDelete={() => {
-                        setBlocks(blocks.filter((_, i) => i !== index))
-                        setSelected(null)
-                      }}
                     >
                       {/* A section with nothing in it renders as a tall
                           nothing — and the rule that it will not be published
@@ -785,7 +890,12 @@ export function Builder({
           data-testid="inspector"
         >
           {inspector(false) ?? (
-            <p className="mb-4 text-xs text-fg-muted">{t('selectPrompt')}</p>
+            <EmptyState
+              className="mb-6 py-6"
+              icon={<MousePointerClick className="size-5" />}
+              title={t('pickSectionTitle')}
+              body={t('pickSectionBody')}
+            />
           )}
           <div className={cn(selectedBlock && 'mt-6 border-t border-line pt-6')}>{styles}</div>
         </aside>
@@ -868,6 +978,21 @@ export function Builder({
         {inspector(true)}
       </Sheet>
 
+      {/* Named in the customer's own vocabulary, because "Remove section" is
+          not what they are about to lose. */}
+      <ConfirmDialog
+        open={removing !== null}
+        destructive
+        onClose={() => setRemoving(null)}
+        onConfirm={() => removing !== null && removeSelected(removing)}
+        title={t('removeTitle', {
+          section: removing !== null && blocks[removing] ? t(`blocks.${blocks[removing].type}`) : '',
+        })}
+        body={t('removeBody')}
+        confirmLabel={t('removeConfirm')}
+        cancelLabel={t('keepIt')}
+      />
+
       <Sheet open={sheet === 'style'} onClose={() => setSheet(null)} title={t('siteStyle')}>
         {styles}
       </Sheet>
@@ -880,14 +1005,12 @@ function SortableBlock({
   name,
   selected,
   onSelect,
-  onDelete,
   children,
 }: {
   id: string
   name: string
   selected: boolean
   onSelect: () => void
-  onDelete: () => void
   children: React.ReactNode
 }) {
   const t = useTranslations('Builder')
@@ -941,6 +1064,17 @@ function SortableBlock({
         )}
       >
         <span className="max-w-32 truncate px-2 text-xs text-fg-muted">{name}</span>
+        {/* "Edit" as a word: the section was clickable through an invisible
+            overlay, and nothing on the page said so. */}
+        <button
+          onClick={onSelect}
+          className="rounded-control px-2 py-1.5 text-xs font-medium text-fg-secondary hover:bg-elevated hover:text-fg"
+        >
+          {t('editThis')}
+        </button>
+        {/* The bin is gone from here. A destructive control does not belong two
+            pixels from the grip a customer drags with; it lives in the panel
+            where the section is being edited, with its word visible. */}
         <button
           {...attributes}
           {...listeners}
@@ -948,16 +1082,6 @@ function SortableBlock({
           aria-label={t('reorderSection', { section: name })}
         >
           <GripVertical className="size-3.5" />
-        </button>
-        <button
-          onClick={(event) => {
-            event.stopPropagation()
-            onDelete()
-          }}
-          className="rounded-control p-1.5 text-fg-secondary hover:bg-elevated hover:text-danger"
-          aria-label={t('deleteSection', { section: name })}
-        >
-          <Trash2 className="size-3.5" />
         </button>
       </div>
 
@@ -1075,8 +1199,9 @@ function Inspector({
           >
             <ChevronDown />
           </Button>
-          <Button variant="ghost" size="icon" aria-label={t('delete')} onClick={onDelete}>
+          <Button variant="ghost" size="sm" onClick={onDelete}>
             <Trash2 />
+            {t('remove')}
           </Button>
         </div>
       </div>

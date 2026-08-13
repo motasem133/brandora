@@ -95,6 +95,11 @@ export async function WebsiteView({
         )}
       </div>
 
+      {/* The sentence this product has never said to the person it was written
+          for: their site exists, it is theirs to correct, and putting it online
+          is a separate act they control. */}
+      {!live && <p className="text-sm text-fg-secondary">{t('readyToLookOver')}</p>}
+
       {live ? (
         <SitePreview subdomain={website.subdomain!} label={t('openSite')} />
       ) : (

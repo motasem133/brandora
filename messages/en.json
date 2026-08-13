@@ -585,13 +585,14 @@
       "services": "Services",
       "contact": "Contact"
     },
-    "edit": "Edit website",
+    "edit": "Edit your website",
     "liveAt": "Live at",
     "notPublished": "Not published yet",
     "openSite": "Open the live site",
     "messagesTitle": "Messages from your site",
     "messagesSubtitle": "Sent through the contact form. Each one was emailed to you as well.",
-    "changesWaiting": "Changes you have not published yet"
+    "changesWaiting": "Changes you have not published yet",
+    "readyToLookOver": "Your website is written and ready. Look it over, change anything that is wrong, then publish it."
   },
   "Builder": {
     "pages": {
@@ -769,7 +770,19 @@
         "title": "Something people actually ask",
         "body": "The answer, plainly"
       }
-    }
+    },
+    "editThis": "Edit",
+    "remove": "Remove",
+    "removeTitle": "Remove \"{section}\"?",
+    "removeBody": "This section and everything in it will be taken off this page. You can undo it.",
+    "removeConfirm": "Remove it",
+    "keepIt": "Keep it",
+    "pickSectionTitle": "Pick a part of your page",
+    "pickSectionBody": "Click any section on the left and its words appear here. Your changes are saved as you type — nothing reaches your visitors until you publish.",
+    "emptyPageNotInMenu": "This page has nothing on it, so it isn't in your site's menu.",
+    "firstRunTitle": "This is your website. Everything on it can be changed.",
+    "firstRunBody": "Click any part of the page to edit its words. Nothing you do here reaches your visitors until you publish.",
+    "firstRunDismiss": "Got it"
   },
   "Billing": {
     "title": "Billing",

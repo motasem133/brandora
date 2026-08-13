@@ -117,15 +117,19 @@ test.describe('website builder', () => {
     await expect(sections).not.toHaveCount(home, { timeout: 10_000 })
   })
 
-  test('a section can be deleted', async ({ page }) => {
-    // The controls live on the block wrapper, not inside the rendered section.
+  test('a section can be deleted, and it asks first', async ({ page }) => {
     const blocks = page.getByTestId('canvas-block')
     const before = await blocks.count()
     test.skip(before === 0, 'nothing to delete on this page')
 
-    const first = blocks.first()
-    await first.hover()
-    await first.getByRole('button', { name: /^Delete / }).click()
+    /* Removing is no longer a press of a small red circle on the canvas: it
+       lives in the panel where the section is being edited, and it asks. */
+    await blocks.first().getByRole('button', { name: /^Select / }).click()
+    await page.getByTestId('inspector').getByRole('button', { name: /^Remove$/ }).click()
+
+    const dialog = page.getByRole('dialog')
+    await expect(dialog).toContainText(/Remove/)
+    await dialog.getByRole('button', { name: /^Remove it$/ }).click()
 
     await expect(blocks).toHaveCount(before - 1)
     await expect(page.getByTestId('save-status')).toHaveAttribute('data-state', 'saved', {
