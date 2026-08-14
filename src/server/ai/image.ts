@@ -83,6 +83,25 @@ export function isIconStyle(style: unknown): boolean {
 }
 
 /**
+ * The concept that is the name set as type, and nothing else.
+ *
+ * This is the only style a favicon must be rescued from, and naming it matters
+ * because projects exist that were generated against a wider set of styles than
+ * `LOGO_STYLES` now holds — `lettermark monogram` and `emblem badge` are on real
+ * brands in production. Those are already compact marks that shrink cleanly; a
+ * rule phrased as "anything that is not the icon" would overwrite a mark the
+ * customer deliberately chose with one they did not.
+ *
+ * Under the current two styles this and `!isIconStyle` agree exactly. They part
+ * company only on the older brands, and there this is the honest one.
+ */
+export const WORDMARK_STYLE: LogoStyle = 'wordmark'
+
+export function isWordmarkStyle(style: unknown): boolean {
+  return style === WORDMARK_STYLE
+}
+
+/**
  * The brief, trimmed to something a diffusion prompt can still act on.
  *
  * An image prompt is not a chat prompt: the later clauses stop steering the

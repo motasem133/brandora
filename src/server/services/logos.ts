@@ -5,6 +5,7 @@ import { and, eq, inArray } from 'drizzle-orm'
 import {
   generateLogoImage,
   isIconStyle,
+  isWordmarkStyle,
   LOGO_STYLES,
   logoPrompt,
   vectorizeToSvg,
@@ -606,9 +607,14 @@ export async function rederivePrimaryAssets(projectId: string, primaryKey?: stri
  * styles — the answer is null and the caller falls back to the logo, which is
  * the old behaviour and still better than artwork from an unrelated round.
  *
- * Returns null when the chosen concept is already the icon: there is nothing to
- * swap to, and reporting a swap that changes nothing would make
- * `rederivePrimaryAssets` read a second copy of the same object.
+ * Returns null for anything that is not a wordmark, which includes the icon
+ * itself — there is nothing to swap to — and, less obviously, the older styles.
+ * Brands generated before `LOGO_STYLES` narrowed to two carry `lettermark
+ * monogram` and `emblem badge`, and both are already compact marks that shrink
+ * cleanly. Phrasing this as "anything that is not the icon" would have replaced
+ * a mark those customers deliberately chose with one they did not, on the
+ * favicon of a site that is already published. The wordmark is the only concept
+ * that actually fails at 32px, so it is the only one rescued.
  */
 export async function iconKeyForLogo(projectId: string, logoKey: string): Promise<string | null> {
   const rasters = await db
@@ -619,7 +625,7 @@ export async function iconKeyForLogo(projectId: string, logoKey: string): Promis
     )
 
   const chosen = rasters.find((file) => file.r2Key === logoKey)
-  if (!chosen || isIconStyle(chosen.metadata?.style)) return null
+  if (!chosen || !isWordmarkStyle(chosen.metadata?.style)) return null
 
   /* Concepts generated before rounds existed carry no round number and group
      together as round 1 — the same rule `groupLogoRounds` follows. */
