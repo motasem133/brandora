@@ -51,15 +51,40 @@ test.describe('renaming a brand', () => {
     const dialog = page.getByRole('dialog')
     await expect(dialog).toBeVisible()
 
-    // The warning, assembled from the sections this project actually has.
     await expect(
-      dialog.getByText(
-        'Your logo, website copy, and social captions still use the old name until you regenerate them.',
-      ),
+      dialog.getByText(/still use the old name until you regenerate them/),
     ).toBeVisible()
 
-    // Logos 6 + website 1 + social 1. The price beside the control that spends it.
-    await expect(dialog.getByText(/costs 8 credits/)).toBeVisible()
+    /*
+     * Derived, not hardcoded — and the reason is worth keeping.
+     *
+     * `sectionsForProject` drops `logos` when logo generation is unavailable,
+     * which is `FAL_KEY` plus object storage. CI has neither, so the sentence
+     * there names two things where a configured environment names three. The
+     * literal three-item string passed locally and failed in CI on exactly
+     * that difference — a green run that was only green because of what
+     * happened to be in one `.env`.
+     *
+     * What holds in both is the relationship: the price is the sum of what the
+     * sentence just listed. That is the rule the product actually promises —
+     * the price beside a control is the price that will be charged — so it is
+     * the one worth asserting.
+     */
+    const COSTS: Record<string, number> = {
+      logo: 6,
+      'website copy': 1,
+      'social captions': 1,
+    }
+
+    const body = (await dialog.textContent()) ?? ''
+    const listed = Object.keys(COSTS).filter((item) => body.includes(item))
+
+    /* Written copy is never gated on a key, so this one is always named and a
+       silently empty list cannot pass this test. */
+    expect(listed, 'the warning must name what carries the old name').toContain('social captions')
+
+    const expected = listed.reduce((total, item) => total + COSTS[item], 0)
+    await expect(dialog.getByText(new RegExp(`costs ${expected} credits`))).toBeVisible()
 
     // Both answers, and the one that spends nothing is the confirm.
     await expect(dialog.getByRole('button', { name: 'Save name only' })).toBeEnabled()

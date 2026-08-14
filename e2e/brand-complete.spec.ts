@@ -67,8 +67,17 @@ test.describe('brand completion screen', () => {
     // The stream polls every 1500ms; the default expect timeout covers it.
     await expect(page.getByText('Everything below was generated from your brief')).toBeVisible()
 
-    // The manifest names what the run produced.
-    await expect(page.getByText('Two logo concepts')).toBeVisible()
+    /*
+     * The manifest names what the run produced.
+     *
+     * Branding rather than the logos, deliberately. Once the job is no longer
+     * active the panel falls back to `sectionsToRun`, which returns the whole
+     * plan — and that plan drops `logos` where logo generation is unavailable,
+     * which is CI. Asserting the logo line would pass or fail on whether a
+     * refresh landed before this line, which is a flake waiting to be blamed on
+     * the browser. Branding is in the plan in every environment.
+     */
+    await expect(page.getByText('A name, palette, fonts and story')).toBeVisible()
 
     // The upsell, with a real preview rather than a sentence about one.
     await expect(page.getByText('What Creator adds to this brand')).toBeVisible()
