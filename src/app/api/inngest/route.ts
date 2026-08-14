@@ -3,6 +3,7 @@ import { serve } from 'inngest/next'
 import { inngest } from '@/server/inngest/client'
 import { generateRenderedContent } from '@/server/inngest/content'
 import { generateBrand } from '@/server/inngest/generate'
+import { sendBrandNudges } from '@/server/inngest/nudge'
 
 /**
  * The kit's photography step runs three image generations in parallel, each
@@ -19,19 +20,22 @@ export const maxDuration = 300
  * for. See `services/stuck-holds.ts`.
  */
 /*
- * `sendBrandNudges` is deliberately not in this list yet.
+ * `sendBrandNudges` mails real customers on a schedule, and an email is the one
+ * thing in this product that cannot be taken back — so it was built, merged and
+ * deliberately left out of this list until two things had been settled: its
+ * copy, and what "has not returned" means. Both were, on 15 August.
  *
- * It is built, tested and reviewable — see `services/brand-nudge` — but the
- * moment it is registered it starts mailing real customers on a daily schedule,
- * and an email is the one thing in this product that cannot be taken back. It
- * stays out until its copy has been read and the rule it uses for "has not
- * returned" has been agreed, because that rule decides who hears from us.
+ * It reads "returned" as having *done* something with the brand — another run,
+ * content, the assistant, a publish, an edit — rather than as having opened the
+ * page, because nothing here records a page view and adding one would put a
+ * write on every load of the project page. Someone who looked and did nothing
+ * is therefore counted as absent and will hear from us. That was the call.
  *
- * Turning it on is importing `sendBrandNudges` from `@/server/inngest/nudge`
- * and adding it to the list below. `project_emails` ships in this change, so
- * there is no migration left to sequence behind it.
+ * Taking it back out is deleting it from this list; nothing else depends on it.
+ * `project_emails` keeps a row per project already written to, so switching it
+ * off and on again cannot re-send to anyone who has had it.
  */
 export const { GET, POST, PUT } = serve({
   client: inngest,
-  functions: [generateBrand, generateRenderedContent],
+  functions: [generateBrand, generateRenderedContent, sendBrandNudges],
 })
