@@ -27,6 +27,8 @@
     "test:copy": "tsx scripts/copy-contract-test.ts",
     "test:brand-copy": "tsx scripts/brand-copy-test.ts",
     "test:logo-progress": "tsx scripts/logo-progress-test.ts",
+    "test:logo-icon": "tsx scripts/logo-icon-test.ts",
+    "test:brand-nudge": "tsx scripts/brand-nudge-test.ts",
     "test:rendered": "tsx scripts/rendered-content-test.ts",
     "test:verification": "tsx --conditions react-server scripts/verification-gate-test.ts",
     "test:e2e": "playwright test",

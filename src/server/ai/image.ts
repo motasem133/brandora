@@ -67,6 +67,22 @@ export const LOGO_STYLES = ['wordmark', 'abstract geometric icon'] as const
 export type LogoStyle = (typeof LOGO_STYLES)[number]
 
 /**
+ * The concept the derived assets are cut from, when a round produced one.
+ *
+ * Named rather than left as a string literal because two files have to agree
+ * about it: this module writes it into `generated_files.metadata.style`, and
+ * `services/logos` reads it back to decide which concept becomes the favicon
+ * and the avatars. A typo in either would not fail — it would silently pick
+ * the wordmark, which is the exact defect this exists to prevent.
+ */
+export const ICON_STYLE: LogoStyle = 'abstract geometric icon'
+
+/** Whether a stored `metadata.style` is the text-free concept. */
+export function isIconStyle(style: unknown): boolean {
+  return style === ICON_STYLE
+}
+
+/**
  * The brief, trimmed to something a diffusion prompt can still act on.
  *
  * An image prompt is not a chat prompt: the later clauses stop steering the
