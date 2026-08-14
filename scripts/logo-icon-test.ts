@@ -115,6 +115,42 @@ async function main() {
       'an unknown logo key should resolve to nothing',
     )
 
+    /* ---------- A brand from before the styles narrowed to two ---------- */
+    const legacyStyles = await scratchProject('logo-icon-test legacy styles')
+    const oldKey = (name: string) => `scratch/${legacyStyles}/${name}.png`
+
+    await db.insert(generatedFiles).values([
+      concept(legacyStyles, 'wordmark', 'wordmark', 1),
+      concept(legacyStyles, 'icon', 'abstract geometric icon', 1),
+      concept(legacyStyles, 'monogram', 'lettermark monogram', 1),
+      concept(legacyStyles, 'emblem', 'emblem badge', 1),
+    ])
+
+    /*
+     * 6 and 7 are the rule this test exists to pin, and they were found by
+     * looking at production rather than by reasoning: three live brands had
+     * chosen a monogram or an emblem. Those are already compact marks that
+     * shrink cleanly, and a rule phrased as "anything that is not the icon"
+     * would have replaced a mark those customers deliberately chose with one
+     * they did not — on the favicon of a site that is already published.
+     */
+    assert.equal(
+      await iconKeyForLogo(legacyStyles, oldKey('monogram')),
+      null,
+      'a chosen lettermark monogram is already an icon — leave it alone',
+    )
+    assert.equal(
+      await iconKeyForLogo(legacyStyles, oldKey('emblem')),
+      null,
+      'a chosen emblem badge is already an icon — leave it alone',
+    )
+    // The wordmark in that same round is still rescued.
+    assert.equal(
+      await iconKeyForLogo(legacyStyles, oldKey('wordmark')),
+      oldKey('icon'),
+      'the wordmark is the one concept that actually fails at 32px',
+    )
+
     /* ---------- A project from before rounds existed ---------- */
     const legacy = await scratchProject('logo-icon-test legacy')
     const legacyKey = (name: string) => `scratch/${legacy}/${name}.png`
