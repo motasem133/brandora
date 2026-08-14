@@ -9,6 +9,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardTitle } from '@/components/ui/card'
 import { FieldError } from '@/components/ui/field-error'
+import { BrandComplete, type LockedFeature } from '@/components/features/projects/brand-complete'
 import { EmailVerification } from '@/components/features/settings/email-verification'
 import { Link, usePathname, useRouter } from '@/i18n/navigation'
 import { cn } from '@/lib/utils'
@@ -39,6 +40,9 @@ export function GenerationPanel({
   mustVerify,
   userEmail,
   brandName,
+  brandLogoUrl,
+  brandSwatches,
+  lockedFeatures,
 }: {
   projectId: string
   sections: string[]
@@ -52,6 +56,18 @@ export function GenerationPanel({
   userEmail: string
   /** What to call the brand when the run that made it finishes. */
   brandName: string
+  /**
+   * The three below are the completion moment's material, and they are threaded
+   * through this panel rather than rendered where they are needed because this
+   * is where `justFinished` lives — the transition that decides whether the
+   * moment happened at all. Splitting the state from the screen would mean a
+   * second source of truth for "did a run just finish here", which is precisely
+   * the question this file already answers carefully.
+   */
+  brandLogoUrl: string | null
+  brandSwatches: string[]
+  /** What this plan cannot have, each with a picture. Empty when nothing is. */
+  lockedFeatures: LockedFeature[]
 }) {
   const t = useTranslations('Generation')
   const ts = useTranslations('Settings')
@@ -379,43 +395,14 @@ export function GenerationPanel({
    */
   if (status === 'completed' && justFinished) {
     return (
-      <Card className="space-y-5 glow-brand">
-        <div className="flex items-start gap-3">
-          <span className="grid size-9 shrink-0 place-items-center rounded-full bg-brand/15">
-            <Sparkles className="size-4 text-brand" />
-          </span>
-          <div className="min-w-0">
-            <CardTitle>{t('doneTitle', { brand: brandName })}</CardTitle>
-            <CardDescription className="mt-1">{t('doneBody')}</CardDescription>
-          </div>
-        </div>
-
-        {/* What arrived, named — the run's own manifest rather than a count. */}
-        <ul className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
-          {sections.map((section) => (
-            <li key={section} className="flex items-center gap-2.5">
-              <Check className="size-4 shrink-0 text-success" />
-              <span className="text-fg-secondary">{t(`produced.${section}`)}</span>
-            </li>
-          ))}
-        </ul>
-
-        <div className="flex flex-wrap items-center gap-3">
-          <Button
-            onClick={() => {
-              document
-                .getElementById('brand')
-                ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-              setJustFinished(false)
-            }}
-          >
-            {t('doneCta')}
-          </Button>
-          <Button variant="ghost" onClick={() => setJustFinished(false)}>
-            {t('doneDismiss')}
-          </Button>
-        </div>
-      </Card>
+      <BrandComplete
+        brandName={brandName}
+        sections={sections}
+        logoUrl={brandLogoUrl}
+        swatches={brandSwatches}
+        locked={lockedFeatures}
+        onDismiss={() => setJustFinished(false)}
+      />
     )
   }
 

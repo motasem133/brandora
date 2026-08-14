@@ -2,7 +2,14 @@ import 'server-only'
 
 import { and, eq, inArray } from 'drizzle-orm'
 
-import { generateLogoImage, LOGO_STYLES, logoPrompt, vectorizeToSvg, type LogoStyle } from '@/server/ai/image'
+import {
+  generateLogoImage,
+  isIconStyle,
+  LOGO_STYLES,
+  logoPrompt,
+  vectorizeToSvg,
+  type LogoStyle,
+} from '@/server/ai/image'
 import type { ProjectBrief } from '@/server/ai/prompts'
 import type { BrandingOutput } from '@/server/ai/schemas'
 import { db } from '@/server/db'
@@ -273,16 +280,38 @@ export async function generateLogos(params: {
       return { generated: results.length, requested: LOGO_COUNT }
     }
 
-    // Nothing chosen yet: the newest round's first concept is the wordmark,
-    // which is the one that works as an avatar and a favicon.
-    const slug = results[0].style.replace(/\s+/g, '-')
-    const primary = kitFiles.get(`${slug}.png`)
+    /*
+     * Nothing chosen yet, so the run picks the default pair.
+     *
+     * The lockup is the first concept — the wordmark, which is what a social
+     * card and a monochrome mark have to show, because a card cropped to an
+     * icon says nothing about who posted it. The favicon and the avatars come
+     * from the icon concept instead.
+     *
+     * They were the same file until now, and the comment here asserted that the
+     * wordmark "is the one that works as an avatar and a favicon" — which is
+     * the opposite of what `LOGO_STYLES` says three files away, and the reason
+     * every project generated so far has a wordmark squeezed into 32 pixels as
+     * its favicon.
+     */
+    const slugOf = (style: string) => style.replace(/\s+/g, '-')
+
+    const primary = kitFiles.get(`${slugOf(results[0].style)}.png`)
+    const iconConcept = results.find((result) => isIconStyle(result.style))
+
+    /* Undefined when this round produced no icon — one of the two images
+       failed — and `derivePrimaryAssets` then falls back to the lockup. */
+    const icon =
+      iconConcept && iconConcept.style !== results[0].style
+        ? kitFiles.get(`${slugOf(iconConcept.style)}.png`)
+        : undefined
 
     if (primary) {
       await derivePrimaryAssets({
         projectId: params.projectId,
         primary,
-        primarySvg: kitFiles.get(`${slug}.svg`)?.toString('utf8'),
+        primarySvg: kitFiles.get(`${slugOf(results[0].style)}.svg`)?.toString('utf8'),
+        icon,
         background: params.branding.colorPalette.background,
         kitFiles,
       })
@@ -504,7 +533,13 @@ export async function rederivePrimaryAssets(projectId: string, primaryKey?: stri
   const logoKey = primaryKey ?? (await keyOfFile(branding?.primaryLogoFileId))
   if (!logoKey) throw new Error('No logo has been chosen for this project.')
 
-  const iconKey = await keyOfFile(branding?.markLogoFileId)
+  /*
+   * An explicit choice still wins. `markLogoFileId` is the customer saying
+   * "use this where text will not fit", and a decision a person made outranks
+   * one the pipeline inferred. Automatic selection fills the null it leaves.
+   */
+  const iconKey =
+    (await keyOfFile(branding?.markLogoFileId)) ?? (await iconKeyForLogo(projectId, logoKey))
 
   const primary = await readObject(logoKey)
   const icon = iconKey && iconKey !== logoKey ? await readObject(iconKey) : undefined
@@ -552,6 +587,50 @@ export async function rederivePrimaryAssets(projectId: string, primaryKey?: stri
 
   await derivePrimaryAssets({ projectId, primary, primarySvg, icon, background, kitFiles })
   await buildBrandKit(projectId, kitFiles)
+}
+
+/**
+ * The concept a favicon and an avatar should actually be cut from.
+ *
+ * A round produces two concepts for two different jobs: the wordmark goes on a
+ * header, a sign, a letterhead; the icon is the one that survives being shrunk.
+ * Every derived square — the 32px favicon, the 128/256/512 avatars, the 1080
+ * social avatar — was being cut from whichever concept was chosen as the logo,
+ * and on a fresh run that is the wordmark. A wordmark at 32px is an unreadable
+ * smudge, so the product was shipping one as the icon of every published site.
+ *
+ * Scoped to the chosen concept's own round, deliberately. Reaching into another
+ * round would pair a mark from one idea with a wordmark from a different one,
+ * and the whole claim of this product is that the kit agrees with itself. If
+ * this round has no icon — the concept failed, or the project predates the two
+ * styles — the answer is null and the caller falls back to the logo, which is
+ * the old behaviour and still better than artwork from an unrelated round.
+ *
+ * Returns null when the chosen concept is already the icon: there is nothing to
+ * swap to, and reporting a swap that changes nothing would make
+ * `rederivePrimaryAssets` read a second copy of the same object.
+ */
+export async function iconKeyForLogo(projectId: string, logoKey: string): Promise<string | null> {
+  const rasters = await db
+    .select()
+    .from(generatedFiles)
+    .where(
+      and(eq(generatedFiles.projectId, projectId), eq(generatedFiles.kind, 'logo_raster')),
+    )
+
+  const chosen = rasters.find((file) => file.r2Key === logoKey)
+  if (!chosen || isIconStyle(chosen.metadata?.style)) return null
+
+  /* Concepts generated before rounds existed carry no round number and group
+     together as round 1 — the same rule `groupLogoRounds` follows. */
+  const round = Number(chosen.metadata?.round ?? 1)
+
+  const icon = rasters.find(
+    (file) =>
+      Number(file.metadata?.round ?? 1) === round && isIconStyle(file.metadata?.style),
+  )
+
+  return icon?.r2Key ?? null
 }
 
 /** Resolves a stored file id to its object key, tolerating a stale reference. */

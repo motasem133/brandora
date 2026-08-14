@@ -9,7 +9,8 @@ import { DeleteProjectButton } from '@/components/features/projects/delete-proje
 import { GenerationPanel } from '@/components/features/projects/generation-panel'
 import { IdentityPlate } from '@/components/features/projects/identity-plate'
 import { SocialKit } from '@/components/features/projects/social-kit'
-import { KitMockup, WebsiteMockup } from '@/components/features/projects/brand-mockups'
+import type { LockedFeature } from '@/components/features/projects/brand-complete'
+import { KitMockup, VectorMockup, WebsiteMockup } from '@/components/features/projects/brand-mockups'
 import { SocialView } from '@/components/features/projects/social-view'
 import { SiteMessages } from '@/components/features/projects/site-messages'
 import { WebsiteView } from '@/components/features/projects/website-view'
@@ -26,8 +27,10 @@ import { getThreadMessages } from '@/server/db/queries/assistant'
 import { getOrgPlan } from '@/server/db/queries/plans'
 import { getProject } from '@/server/db/queries/projects'
 import { brandingAssets, generatedFiles, socialMediaAssets, websiteAssets } from '@/server/db/schema'
+import { publicUrl } from '@/server/storage/r2'
 import {
   getLatestJobForProject,
+  sectionsCarryingName,
   sectionsForProject,
   sectionsToRun,
 } from '@/server/services/generation'
@@ -155,6 +158,105 @@ export default async function ProjectDetailPage({
    */
   const onAssistant = tab === 'assistant' && canAssist
 
+  /*
+   * The completion moment's material.
+   *
+   * Built here rather than inside the panel because the previews are server
+   * components — the same reason `SocialKit` takes its `lockedPreview` as a
+   * prop. The panel decides *whether* the moment happens; this decides what it
+   * has to show.
+   *
+   * Only what the plan actually withholds, and only where there is a brand to
+   * draw it in. A customer who could have had a website and said no at the
+   * wizard is not locked out of anything — that is the same distinction the
+   * locked website section below already makes, and telling them otherwise
+   * would be a lie with a price attached.
+   */
+  const lockedCandidates: (LockedFeature | null)[] = brandingAsset
+    ? [
+        plan?.websiteBuilder ? null : {
+          key: 'website',
+          preview: (
+            <WebsiteMockup
+              palette={brandingAsset.colorPalette}
+              fonts={brandingAsset.fontRecommendations}
+              logo={primaryLogo}
+              name={project.businessName || project.title}
+              slogan={brandingAsset.slogan}
+              language={project.language}
+            />
+          ),
+        },
+        plan?.socialMediaKit ? null : {
+          key: 'kit',
+          preview: (
+            <KitMockup
+              palette={brandingAsset.colorPalette}
+              fonts={brandingAsset.fontRecommendations}
+              logo={primaryLogo}
+              name={project.businessName || project.title}
+            />
+          ),
+        },
+        plan?.vectorExport ? null : {
+          key: 'vector',
+          preview: <VectorMockup palette={brandingAsset.colorPalette} logo={primaryLogo} />,
+        },
+      ]
+    : []
+
+  const lockedFeatures = lockedCandidates.filter(
+    (feature): feature is LockedFeature => feature !== null,
+  )
+
+  /*
+   * What a rename would leave behind.
+   *
+   * `sectionsCarryingName` is used for both the sentence and the price, rather
+   * than filtering it down to the sections that happen to have output already.
+   * Those are two different questions and answering them with two different
+   * lists is how the price beside a control stops being the price that is
+   * charged — the action runs exactly this set, so this is exactly what it
+   * costs. The same rule `sectionsToRun` is used for above.
+   *
+   * Absent entirely until a run has produced something, because a warning that
+   * fires on the first name anyone picks is one people learn to dismiss without
+   * reading — and at that point nothing carries the old name anyway.
+   */
+  const hasGeneratedWork =
+    logoFiles.length > 0 || Boolean(websiteAsset) || Boolean(socialAsset)
+
+  const nameSections = sectionsCarryingName(project)
+
+  /* Not `project.businessName` alone: until a name is chosen, everything
+     downstream was drawn with the first idea, so that is the name the work
+     actually carries and re-choosing it must not warn about itself. */
+  const nameOnTheWork =
+    project.businessName || brandingAsset?.businessNameIdeas[0]?.name || null
+
+  const renameImpact =
+    hasGeneratedWork && nameOnTheWork && nameSections.length > 0
+      ? {
+          carries: nameOnTheWork,
+          sections: nameSections,
+          cost: creditsForSections(nameSections),
+          balance: org.creditBalance,
+          mustVerify,
+          isGenerating: isJobActive,
+        }
+      : undefined
+
+  /* The palette as the plate draws it along its base — the brand's colours, not
+     its ground, for the reason `IdentityPlate` documents. */
+  const brandSwatches = brandingAsset?.colorPalette
+    ? [
+        brandingAsset.colorPalette.primary,
+        brandingAsset.colorPalette.secondary,
+        brandingAsset.colorPalette.accent,
+        brandingAsset.colorPalette.text,
+      ]
+    : []
+
   return (
     <div className="mx-auto max-w-6xl space-y-8">
       {/*
@@ -229,6 +331,11 @@ export default async function ProjectDetailPage({
         mustVerify={mustVerify}
         userEmail={user.email}
         brandName={project.businessName || project.title}
+        brandLogoUrl={
+          primaryLogo ? (publicUrl(primaryLogo.r2Key) ?? `/api/files/${primaryLogo.id}`) : null
+        }
+        brandSwatches={brandSwatches}
+        lockedFeatures={lockedFeatures}
       />
 
       {/*
@@ -261,6 +368,7 @@ export default async function ProjectDetailPage({
           language={project.language}
           mustVerify={mustVerify}
           userEmail={user.email}
+          renameImpact={renameImpact}
         />
       )}
 

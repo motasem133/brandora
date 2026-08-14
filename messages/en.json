@@ -476,6 +476,23 @@
       "website": "A multi-page website",
       "social": "A social kit — nine posts, bios, ads"
     },
+    "lockedTitle": "What Creator adds to this brand",
+    "lockedBody": "Everything above is yours to keep. These are built from the same brand — drawn here in your colours, your faces and your mark.",
+    "locked": {
+      "website": {
+        "title": "A published website",
+        "benefit": "Four pages written from this brand, live on its own address, with a contact form that emails you."
+      },
+      "kit": {
+        "title": "The designed social kit",
+        "benefit": "Eight ready-to-post images, plus the whole identity as one PDF."
+      },
+      "vector": {
+        "title": "Vector logo files",
+        "benefit": "SVG that holds its edge on a business card or on a building."
+      }
+    },
+    "lockedCta": "Upgrade to Creator",
     "failedCharged": "That run charged {credits} credits for the parts it finished. The rest was refunded.",
     "failedNoCharge": "No credits were charged — the whole run was refunded."
   },
@@ -493,6 +510,19 @@
     "customName": "Or use your own",
     "customNamePlaceholder": "Type a name",
     "customNameHint": "Everything made from here on — logos, website, social — uses the name you choose.",
+    "renameTitle": "Save this name?",
+    "renameWarning": "Your {items} still use the old name until you regenerate them.",
+    "renameItems": {
+      "logos": "logo",
+      "website": "website copy",
+      "social": "social captions"
+    },
+    "renameCost": "Regenerating them costs {credits} credits — you have {balance}.",
+    "renameSaveOnly": "Save name only",
+    "renameSaveAndRun": "Save and regenerate",
+    "renameBusy": "This brand is already generating — save the name and regenerate once it finishes.",
+    "renameVerify": "Verify your email address to regenerate.",
+    "renameNoCredits": "Regenerating needs {needed} credits, which is more than you have.",
     "voice": "Brand voice",
     "logos": "Logo concepts",
     "download": "Download",

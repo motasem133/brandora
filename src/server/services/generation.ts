@@ -47,6 +47,33 @@ export function sectionsForProject(project: {
 }
 
 /**
+ * The sections whose output actually carries the business name.
+ *
+ * Renaming a brand renames the record, not the work: the logo has the old name
+ * drawn into the image, and the website copy and the social captions have it
+ * written through them. These are what a customer is offered the chance to
+ * redraw when they change it.
+ *
+ * `branding` is deliberately not among them, and that is the load-bearing part
+ * of this function. It is the section that *produces* the name ideas, along
+ * with the palette, the fonts, the slogan and the story — so re-running it in
+ * response to someone choosing a name would throw away the identity they just
+ * named and hand back five fresh suggestions instead. The one thing they
+ * decided is the one thing it would overwrite.
+ *
+ * The designed kit is also absent, for a different reason: it is not in
+ * `sectionsForProject` at all, because it is built from a chosen logo and
+ * requested explicitly from the project page. Redrawing the logos here makes
+ * the existing kit stale in turn, which the kit's own section already says.
+ */
+export function sectionsCarryingName(project: {
+  needsWebsite: boolean
+  needsSocialMedia: boolean
+}): GenerationSection[] {
+  return sectionsForProject(project).filter((section) => section !== 'branding')
+}
+
+/**
  * What pressing the button should actually run.
  *
  * "Retry" on a part-finished run used to mean the whole plan again. A brand

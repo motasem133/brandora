@@ -9,7 +9,7 @@ import { AppError } from '@/lib/errors'
 import { db } from '@/server/db'
 import { brandingAssets, projects } from '@/server/db/schema'
 import { getOrgPlan } from '@/server/db/queries/plans'
-import { startGeneration } from '@/server/services/generation'
+import { sectionsCarryingName, startGeneration } from '@/server/services/generation'
 
 /*
  * Long enough to stop being a limit anyone writes into. It is a bound rather
@@ -75,6 +75,68 @@ export const regenerateLogos = orgAction
 
     revalidatePath('/[locale]/dashboard', 'layout')
     return result
+  })
+
+/**
+ * Renames the brand and redraws what carried the old name, as one act.
+ *
+ * The product's documented limit is that renaming updates the record and not
+ * the work — so the customer is told that at the moment they rename, and given
+ * the choice rather than a footnote. `selectBusinessName` remains exactly as it
+ * was for the answer that only saves the name; this is the other answer.
+ *
+ * One action rather than two client calls, for the reason `regenerateLogos`
+ * gives above: as separate presses the common outcome is the name saved and the
+ * run started against the old one, which is the exact failure this exists to
+ * prevent. The name is written first because the run reads it from this row.
+ */
+export const renameAndRegenerate = orgAction
+  .metadata({ name: 'rename-and-regenerate' })
+  .inputSchema(z.object({ projectId: z.uuid(), name: z.string().trim().min(2).max(60) }))
+  .action(async ({ parsedInput, ctx }) => {
+    const [project] = await db
+      .select()
+      .from(projects)
+      .where(
+        and(eq(projects.id, parsedInput.projectId), eq(projects.organizationId, ctx.orgId)),
+      )
+      .limit(1)
+
+    if (!project) throw new AppError('NOT_FOUND', 'Project not found.')
+
+    const only = sectionsCarryingName(project)
+
+    if (only.length === 0) {
+      throw new AppError('VALIDATION', 'There is nothing here that carries the name yet.')
+    }
+
+    await db
+      .update(projects)
+      .set({ businessName: parsedInput.name, updatedAt: new Date() })
+      .where(eq(projects.id, parsedInput.projectId))
+
+    try {
+      const result = await startGeneration({
+        organizationId: ctx.orgId,
+        userId: ctx.user.id,
+        projectId: parsedInput.projectId,
+        emailVerified: ctx.user.emailVerified,
+        only,
+      })
+
+      revalidatePath('/[locale]/dashboard', 'layout')
+      return result
+    } catch (error) {
+      /*
+       * The name is saved and the run was refused — no credits, an unverified
+       * address, a run already in flight. That is precisely the "save name
+       * only" outcome, so the page has to show the new name rather than leave
+       * the customer reading an error beside the old one and assuming nothing
+       * happened. The refusal is still theirs to see, so it is rethrown.
+       */
+      revalidatePath('/[locale]/dashboard', 'layout')
+      throw error
+    }
   })
 
 /**

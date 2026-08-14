@@ -5,7 +5,7 @@ import { Disclosure } from '@/components/ui/disclosure'
 import type { BrandingAsset, GeneratedFile } from '@/server/db/schema'
 import { BrandCopy } from './brand-copy'
 import { LogoVariations } from './logo-variations'
-import { NamePicker } from './name-picker'
+import { NamePicker, type RenameImpact } from './name-picker'
 
 /**
  * The reference material: what is still open, and what is consulted rarely.
@@ -20,11 +20,14 @@ export async function BrandSheet({
   files,
   projectId,
   chosenName,
+  renameImpact,
 }: {
   branding: BrandingAsset
   files: GeneratedFile[]
   projectId: string
   chosenName: string | null
+  /** What a rename would leave carrying the old name. Absent when nothing does. */
+  renameImpact?: RenameImpact
 }) {
   const t = await getTranslations('Branding')
 
@@ -43,6 +46,7 @@ export async function BrandSheet({
               projectId={projectId}
               ideas={branding.businessNameIdeas}
               selected={chosenName}
+              impact={renameImpact}
             />
           </div>
         </section>

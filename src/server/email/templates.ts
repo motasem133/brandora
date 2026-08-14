@@ -28,6 +28,16 @@ export type EmailTemplate =
    */
   | { kind: 'brand-ready'; url: string; name: string; code: string; percent: number }
   /**
+   * The one reminder a finished brand earns.
+   *
+   * Not to be confused with `brand-ready` above, which it sits next to and does
+   * not resemble: that one is an apology for a run that failed on our side and
+   * carries a goodwill code. This is sent two days after a run that worked, to
+   * someone who has not been back since — no apology, nothing to make up for,
+   * and nothing to type. One link to the brand they already own.
+   */
+  | { kind: 'brand-nudge'; url: string; brand: string }
+  /**
    * A message somebody sent through a customer's own published site.
    *
    * The only email this product sends that is not about Brandora. It is a
@@ -91,6 +101,20 @@ const COPY = {
       offer: (percent: number) => `And for the trouble, here is ${percent}% off your first plan:`,
       footer: 'Thank you for your patience with us early on. Reply to this email if anything is not right.',
     },
+    'brand-nudge': {
+      subject: (brand: string) => `Your brand ${brand} is ready`,
+      heading: (brand: string) => `${brand} is ready`,
+      /*
+       * Short, and careful about what it promises. A free brand has no website
+       * and no designed kit, and this email is sent to every plan — so it names
+       * the things every run produces and lets the page sell the rest.
+       */
+      body: () =>
+        'Your brand has been waiting since you generated it. The mark, the palette and the words are all still there — see how it comes together.',
+      button: 'See your brand',
+      footer:
+        'You are getting this because you generated a brand on Brandora. It is the only reminder we send for it.',
+    },
     'site-message': {
       subject: (site: string) => `New message from your ${site} website`,
       heading: 'Someone contacted you',
@@ -138,6 +162,14 @@ const COPY = {
       credits: 'أُعيدت الأرصدة المحجوزة إلى رصيدك — لم يكلّفك هذا التشغيل شيئاً.',
       offer: (percent: number) => `واعتذاراً عن الإزعاج، إليك خصم ${percent}% على أول اشتراك لك:`,
       footer: 'شكراً لصبرك معنا في بداياتنا. إن كان هناك أي خلل، ردّ على هذه الرسالة.',
+    },
+    'brand-nudge': {
+      subject: (brand: string) => `علامتك ${brand} جاهزة`,
+      heading: (brand: string) => `${brand} جاهزة`,
+      body: () =>
+        'علامتك بانتظارك منذ أن ولّدتها. الشعار ولوحة الألوان والنصوص كلها ما زالت هناك — اطّلع على شكلها مجتمعة.',
+      button: 'اعرض علامتك',
+      footer: 'وصلتك هذه الرسالة لأنك ولّدت علامة على براندورا، وهي التذكير الوحيد الذي نرسله عنها.',
     },
     'site-message': {
       subject: (site: string) => `رسالة جديدة من موقع ${site}`,
@@ -309,19 +341,6 @@ function codeLayout(params: {
 }
 
 /**
- * The card, carrying a link and a code.
- *
- * The two existing layouts each hold one or the other, and deliberately: an
- * email with two things to do is an email where neither gets done. This one is
- * the exception the situation earns — the link is the delivery and the code is
- * the apology, and splitting them into two emails to a customer we have
- * already let down would be worse than the crowding.
- *
- * The order says which is which. The button is the point; the code sits under
- * a rule, quieter, so it reads as something extra rather than as the reason we
- * wrote.
- */
-/**
  * The card, carrying somebody else's words.
  *
  * No button and no code: there is nothing to click and nothing to type, only
@@ -345,6 +364,19 @@ function quoteLayout(params: {
   })
 }
 
+/**
+ * The card, carrying a link and a code.
+ *
+ * The two other action layouts each hold one or the other, and deliberately: an
+ * email with two things to do is an email where neither gets done. This one is
+ * the exception the situation earns — the link is the delivery and the code is
+ * the apology, and splitting them into two emails to a customer we have already
+ * let down would be worse than the crowding.
+ *
+ * The order says which is which. The button is the point; the code sits under a
+ * rule, quieter, so it reads as something extra rather than as the reason we
+ * wrote.
+ */
 function offerLayout(params: {
   locale: Locale
   heading: string
@@ -433,6 +465,24 @@ export function renderEmail(template: EmailTemplate, locale: Locale = 'en') {
           locale,
           heading: c.heading,
           body: c.body(template.inviter, template.organization),
+          button: c.button,
+          url: template.url,
+          footer: c.footer,
+        }),
+      }
+    }
+
+    case 'brand-nudge': {
+      const c = copy['brand-nudge']
+      return {
+        /* The brand's own name in the subject, because that is the only word in
+           this email the reader is waiting to see — and the only thing that
+           tells it apart from every other product email in an inbox. */
+        subject: c.subject(template.brand),
+        html: layout({
+          locale,
+          heading: c.heading(template.brand),
+          body: c.body(),
           button: c.button,
           url: template.url,
           footer: c.footer,

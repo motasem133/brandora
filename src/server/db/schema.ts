@@ -745,6 +745,40 @@ export const generationJobs = pgTable(
   (t) => [index('generation_jobs_project_created_idx').on(t.projectId, t.createdAt)],
 )
 
+/**
+ * Which one-off emails a project has already caused.
+ *
+ * The enum has one member today. It is an enum rather than a boolean column on
+ * `projects` because the next lifecycle email would need a second column, and a
+ * third a third — and because the row carries when it was sent, which a boolean
+ * cannot.
+ *
+ * The unique index below is the whole duplicate guard. Checking "have we sent
+ * this?" and then sending is a race: the sweep is scheduled, and a retry or an
+ * overlapping run would read the same empty result twice and send twice. The
+ * row is written *before* the send instead, and the constraint is what refuses
+ * the second attempt — so the question is answered by the database rather than
+ * by the order two callers happen to run in.
+ */
+export const projectEmailKindEnum = pgEnum('project_email_kind', ['brand_nudge'])
+
+export const projectEmails = pgTable(
+  'project_emails',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    projectId: uuid('project_id')
+      .notNull()
+      .references(() => projects.id, { onDelete: 'cascade' }),
+    kind: projectEmailKindEnum('kind').notNull(),
+
+    /** Claimed at, not delivered at — see the note on the guard above. */
+    sentAt: timestamp('sent_at', { withTimezone: true }).notNull().defaultNow(),
+    /** False when Resend refused it, so a failure is visible rather than silent. */
+    delivered: boolean('delivered').notNull().default(false),
+  },
+  (t) => [uniqueIndex('project_emails_project_kind_key').on(t.projectId, t.kind)],
+)
+
 /** One row per model call. This is how per-customer margin becomes knowable. */
 export const aiUsage = pgTable(
   'ai_usage',
