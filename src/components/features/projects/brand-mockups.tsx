@@ -169,6 +169,82 @@ export async function WebsiteMockup({
   )
 }
 
+/**
+ * What a vector file buys, drawn as the thing it actually does: hold its edge
+ * at any size.
+ *
+ * The hardest of the three to draw honestly, because the difference between an
+ * SVG and the PNG beside it is invisible at the size a preview renders. So this
+ * does not try to fake a comparison — no simulated pixellation, no
+ * `image-rendering: pixelated` on a raster that would not have blurred at this
+ * size anyway. It shows the mark climbing a scale ramp and labels the top of
+ * the ramp with what the product already calls it everywhere else: `SVG · ∞`.
+ *
+ * The claim is therefore true as drawn. A mockup that invented a blurry PNG to
+ * argue against would be selling with a picture of a defect the customer does
+ * not have.
+ */
+export async function VectorMockup({
+  palette,
+  logo,
+}: {
+  palette: BrandPalette
+  logo?: GeneratedFile
+}) {
+  const t = await getTranslations('Branding')
+  const site = colors(palette)
+
+  /* Three steps and a ceiling. The pixel figures are the raster the customer
+     already has; `∞` is the one that is locked. */
+  const steps = [
+    { size: 'size-6', label: '32' },
+    { size: 'size-12', label: '128' },
+    { size: 'size-20', label: '1024' },
+  ]
+
+  return (
+    <figure className="space-y-2">
+      <div
+        aria-hidden
+        className="flex items-end justify-center gap-5 rounded-control border border-line px-4 py-8 sm:gap-8"
+        style={{ backgroundColor: site.paper }}
+      >
+        {steps.map((step) => (
+          <div key={step.label} className="flex flex-col items-center gap-2">
+            {logo ? (
+              <Mark logo={logo} className={`${step.size} object-contain`} />
+            ) : (
+              <span
+                className={`${step.size} rounded-full`}
+                style={{ backgroundColor: site.line }}
+              />
+            )}
+            <span className="text-xs tabular-nums" style={{ color: site.muted }}>
+              {step.label}
+            </span>
+          </div>
+        ))}
+
+        {/* The step that is not a number. Set in the brand's own accent so the
+            locked rung is the one wearing the colour. */}
+        <div className="flex flex-col items-center gap-2">
+          <span
+            className="grid size-20 place-items-center rounded-control border border-dashed text-3xl leading-none"
+            style={{ borderColor: site.accent, color: site.accent }}
+          >
+            ∞
+          </span>
+          <span className="text-xs font-medium" style={{ color: site.accent }}>
+            {t('varVector')}
+          </span>
+        </div>
+      </div>
+
+      <figcaption className="text-xs text-fg-muted">{t('mockupCaption')}</figcaption>
+    </figure>
+  )
+}
+
 export async function KitMockup({
   palette,
   fonts,

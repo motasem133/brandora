@@ -31,6 +31,7 @@ export function ConfirmDialog({
   body,
   confirmLabel,
   cancelLabel,
+  secondary,
   destructive = false,
   pending = false,
 }: {
@@ -42,6 +43,17 @@ export function ConfirmDialog({
   body: ReactNode
   confirmLabel: string
   cancelLabel: string
+  /**
+   * A second affirmative answer, for the confirmations that are a fork rather
+   * than a yes-or-no — renaming a brand can save the name alone or also pay to
+   * redraw what carries it.
+   *
+   * Optional, and drawn quieter than the confirm on purpose. Where the two
+   * answers differ by whether one of them spends credits, the confirm is the
+   * one that does not: "nothing spends them without a deliberate act" means the
+   * spending answer has to be reached for, never landed on by pressing Enter.
+   */
+  secondary?: { label: string; onSelect: () => void; disabled?: boolean }
   /** Colours the confirm control and nothing else; the copy carries the weight. */
   destructive?: boolean
   pending?: boolean
@@ -119,6 +131,16 @@ export function ConfirmDialog({
           <Button variant="ghost" size="sm" onClick={onClose} disabled={pending}>
             {cancelLabel}
           </Button>
+          {secondary && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={secondary.onSelect}
+              disabled={pending || secondary.disabled}
+            >
+              {secondary.label}
+            </Button>
+          )}
           <Button
             variant={destructive ? 'danger' : 'primary'}
             size="sm"

@@ -41,6 +41,18 @@ export const EVENTS = {
   projectCreated: 'project_created',
   generationStarted: 'generation_started',
   generationFinished: 'generation_finished',
+  /*
+   * The completion moment, and whether it sells anything.
+   *
+   * A pair, for the reason above: `generationFinished` already records that a
+   * run ended, but not that the customer was still there to see what it
+   * produced — the note only appears for a run watched from this page, so
+   * "shown" is a strictly smaller number and the one an upsell converts
+   * against. Measured apart from `checkoutStarted` because that fires on the
+   * billing page from every entrance; this says which entrance it was.
+   */
+  brandCompleteShown: 'brand_complete_shown',
+  brandCompleteUpgrade: 'brand_complete_upgrade',
   logosRegenerated: 'logos_regenerated',
   contentGenerated: 'content_generated',
   websitePublished: 'website_published',

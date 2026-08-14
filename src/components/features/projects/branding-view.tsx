@@ -6,6 +6,7 @@ import { publicUrl } from '@/server/storage/r2'
 import type { LogoRound } from '@/lib/logo-rounds'
 import type { BrandingAsset, GeneratedFile } from '@/server/db/schema'
 import { BrandSheet } from './brand-sheet'
+import type { RenameImpact } from './name-picker'
 import { BrandSystem } from './brand-system'
 import { LogoStudio } from './logo-studio'
 import { LogoUsage } from './logo-usage'
@@ -39,6 +40,7 @@ export async function BrandingView({
   language,
   mustVerify,
   userEmail,
+  renameImpact,
 }: {
   branding: BrandingAsset
   /** Every file the project has, so the variations panel can pair them up. */
@@ -58,6 +60,8 @@ export async function BrandingView({
   language: string
   mustVerify: boolean
   userEmail: string
+  /** What a rename would leave carrying the old name. Absent when nothing does. */
+  renameImpact?: RenameImpact
 }) {
   const t = await getTranslations('Branding')
 
@@ -162,6 +166,7 @@ export async function BrandingView({
         files={files}
         projectId={projectId}
         chosenName={chosenName}
+        renameImpact={renameImpact}
       />
     </div>
   )
