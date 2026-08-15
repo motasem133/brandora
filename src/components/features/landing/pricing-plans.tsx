@@ -58,9 +58,35 @@ export async function PricingPlans({
   const t = await getTranslations('Landing')
   const rows = await db.select().from(plans).where(eq(plans.isActive, true)).orderBy(plans.sortOrder)
 
+  /*
+   * No plans, no ladder.
+   *
+   * This reads a table an admin screen can edit, so "every plan is inactive" is
+   * a state the query can genuinely return — and it used to render an empty
+   * grid under a heading and an assurance row promising a free tier that was no
+   * longer on the page. An empty section is a smaller lie than a broken one.
+   */
+  if (rows.length === 0) return null
+
+  /*
+   * The column count follows the plan count.
+   *
+   * `md:grid-cols-3` was hardcoded against a seed file that happens to ship
+   * three. The file's own comment notes an admin can add a plan and that an
+   * unknown slug still renders — at four that meant a row of three and one
+   * orphan below it, which reads as a mistake rather than as a tier.
+   */
+  const columns =
+    rows.length === 1
+      ? 'mx-auto max-w-md'
+      : rows.length === 2
+        ? 'sm:grid-cols-2'
+        : rows.length === 3
+          ? 'md:grid-cols-3'
+          : 'sm:grid-cols-2 xl:grid-cols-4'
+
   return (
-    /* Three across from `md` up. Two columns would strand the third. */
-    <div className="grid gap-5 md:grid-cols-3">
+    <div className={cn('grid gap-5', columns)}>
       {rows.map((plan, index) => {
         /* The plan the product recommends, marked once. */
         const featured = plan.slug === 'creator'
@@ -133,8 +159,12 @@ export async function PricingPlans({
               >
                 <p className="text-sm text-fg-secondary">{plan.name}</p>
 
-                <p className="mt-4 flex items-baseline gap-1.5">
-                  <span className="font-display text-5xl font-semibold tracking-[-0.02em]">
+                {/* Wraps rather than overflows. The figure is 48px and the
+                    string is a formatted currency from the database — AED
+                    renders longer than USD, and an admin can price a plan at
+                    anything. At today's values nothing wraps. */}
+                <p className="mt-4 flex flex-wrap items-baseline gap-x-1.5">
+                  <span className="min-w-0 font-display text-5xl font-semibold tracking-[-0.02em]">
                     {plan.priceMonthly === 0
                       ? t('pricingFree')
                       : formatPrice(price.amount, price.currency, locale)}
@@ -156,7 +186,7 @@ export async function PricingPlans({
                   as one of two things the same credits buy.
                 */}
                 <p className="mt-5 rounded-control border border-line bg-elevated/40 px-3.5 py-3">
-                  <span className="block font-display text-lg font-semibold">
+                  <span className="type-title block">
                     {recurring
                       ? t('planCreditsLead', { credits: plan.monthlyCredits })
                       : t('planCreditsOnceLead', { credits: plan.monthlyCredits })}
@@ -200,10 +230,14 @@ export async function PricingPlans({
                   someone.
                 */}
                 {footnote && (
-                  <p className="mt-3 text-center text-xs text-fg-muted">
+                  <p className="text-center text-xs text-fg-muted">
+                    {/* 15px tall as a bare inline link, which is under WCAG
+                        2.2's 24px floor. The padding carries the target and
+                        replaces the paragraph's old top margin, so the card is
+                        laid out as before. */}
                     <a
                       href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Brandora Studio — more than 10 seats')}`}
-                      className="accent-text underline-offset-4 hover:underline"
+                      className="accent-text inline-block px-2 py-3 underline-offset-4 hover:underline"
                     >
                       {footnote}
                     </a>

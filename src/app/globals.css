@@ -14,8 +14,21 @@
  */
 @theme {
   --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
-  --font-arabic: var(--font-arabic), ui-sans-serif, system-ui, sans-serif;
+  --font-arabic: var(--font-arabic-face), ui-sans-serif, system-ui, sans-serif;
+  /*
+   * The app's display face is its body face, and that is still right: inside
+   * the product a heading is a heading, not a performance. The marketing scopes
+   * override this to Bricolage Grotesque — see `.world-dark, .world-light`
+   * below — so the shared components (`Disclosure`'s title, `PricingPlans`'
+   * price figure) render in the app's face in the app and in the display face
+   * on the page that is selling typography.
+   */
   --font-display: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  /*
+   * Was Tailwind's default stack, which meant every hex on the palette card
+   * rendered in whatever the visitor's browser called monospace.
+   */
+  --font-mono: var(--font-plex-mono), ui-monospace, SFMono-Regular, monospace;
 
   /* Generous and consistent: cards 20px, panels 24px, controls 14px. */
   --radius-control: 0.875rem;
@@ -84,6 +97,18 @@
   --brand-indigo: #5b5cfb;
   --brand-secondary: #3b82f6;
   --brand-fg: #ffffff;
+
+  /*
+   * The colour that decorative light is drawn in — a lit edge, a bloom, a rail.
+   *
+   * One level of indirection away from the ramp, and the only reason it exists
+   * is `.world-light`. In a section the generated brand owns, our violet edge
+   * around the customer's cream card is the exact failure the Guest Palette
+   * Rule was written to stop, so that scope re-points these at the brand's own
+   * accent. The chrome ramp itself stays put — a focus ring is not decoration.
+   */
+  --accent-surface: var(--brand-primary);
+  --accent-surface-2: var(--brand-secondary);
   /*
    * The ramp, turned to face the horizon.
    *
@@ -173,6 +198,113 @@
   --danger: #b91c1c;
 }
 
+/*
+ * The marketing display face.
+ *
+ * Scoped to the two marketing worlds rather than declared globally, so the app
+ * keeps one family and the page that sells typography gets a pairing. Every
+ * component reading `font-display` — including the ones shared with the app —
+ * follows the scope it is rendered inside.
+ */
+.world-dark,
+.world-light {
+  --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+}
+
+/*
+ * Under RTL the display role *is* the Arabic face.
+ *
+ * Measured on `/ar`, 451 Arabic glyphs were rendering in Arial: `type-display`,
+ * `type-section`, `stat-figure` and every bare `font-display` utility — every
+ * FAQ question, every step name, the price figure — resolved to a Latin-only
+ * face and fell through to the system.
+ *
+ * Two fixes were tried before this one, and both are worth recording because
+ * they look right.
+ *
+ * Patching the `[dir='rtl']` blocks of `type-display` and `type-section` fixes
+ * those two utilities and nothing else; the sixty-odd bare `font-display` call
+ * sites have no RTL block to patch.
+ *
+ * Appending the Arabic face to the end of the Latin stack looks like the
+ * textbook answer — per-glyph fallback should route Arabic to it and leave
+ * Latin alone — and it does not work here. `var(--font-jakarta)` expands to
+ * `"Plus Jakarta Sans", "Plus Jakarta Sans Fallback"`, and that second family
+ * is next/font's metric-adjusted fallback, declared as `local("Arial")`. Arial
+ * has Arabic coverage, so it answers first and the Arabic face further down the
+ * list is never reached. The fallback that exists to protect CLS is the thing
+ * swallowing the script.
+ *
+ * So the variable is re-pointed instead. Everything reads `--font-display`, so
+ * one declaration moves every consumer, and the descendant selectors are here
+ * because `.world-dark` sets the same variable at equal specificity.
+ *
+ * `--font-mono` is deliberately left alone: its content on this page is hex
+ * codes, page paths and a clock, all Latin, and they should stay monospaced.
+ * `type-eyebrow` already swaps its own family under RTL, which is where Arabic
+ * actually meets the mono role.
+ */
+[dir='rtl'],
+[dir='rtl'] .world-dark,
+[dir='rtl'] .world-light {
+  --font-display: var(--font-arabic);
+  --font-sans: var(--font-arabic);
+}
+
+/*
+ * The light world: a section the generated brand owns.
+ *
+ * This is the Guest Palette Rule applied to a whole region rather than to a
+ * card. The chrome token names are re-pointed at the `--guest-*` variables that
+ * `lib/brand-theme.ts` emits, so every existing utility — `text-fg-secondary`,
+ * `border-line`, `bg-surface` — keeps working unchanged inside it and resolves
+ * to the customer's ink instead of ours. Nothing in here is a literal: the
+ * values arrive at runtime from a palette that has already been contrast-checked
+ * against its own paper.
+ *
+ * Deliberately absent: `--brand-primary` and the rest of the ramp. `brand-theme`
+ * records why — `:focus-visible` draws its outline from `--brand-primary`, and a
+ * guest palette allowed to shadow it can render an invisible focus ring on its
+ * own section. Chrome tokens are not shadowable by untrusted input, and a
+ * generated palette is untrusted input even when it is our own example brand.
+ *
+ * Greys are absent too, for a different reason: grey on a coloured ground reads
+ * as dirt. Secondary ink, raised fills and hairlines are all mixed from the
+ * brand's own ink at strengths the sidecar has already cleared.
+ */
+.world-light {
+  --bg-base: var(--guest-paper);
+  --bg-surface: color-mix(in srgb, var(--guest-ink) 3%, var(--guest-paper));
+  --bg-elevated: color-mix(in srgb, var(--guest-ink) 7%, var(--guest-paper));
+
+  --text-primary: var(--guest-ink);
+  /* Both resolved values, not mixes: `brand-theme` walks each one back toward
+     full ink until it clears 4.5:1 on this exact paper. */
+  --text-secondary: var(--guest-ink-soft);
+  --text-muted: var(--guest-ink-faint);
+  /* The brand's own colour, deepened if it could not carry text on its paper. */
+  --text-accent: var(--guest-accent);
+
+  --border: var(--guest-line);
+  --border-strong: color-mix(in srgb, var(--guest-ink) 24%, transparent);
+
+  /* Decorative light takes the brand's accent. Both stops resolve to the same
+     colour because the sidecar publishes one checked accent and not the raw
+     palette — a second unchecked hue in scope is an invitation to put text on
+     it later. */
+  --accent-surface: var(--guest-accent);
+  --accent-surface-2: var(--guest-accent);
+
+  /* The light in this world comes from the brand's accent, not from ours. */
+  --lit-inset: inset 0 1px 0 0 color-mix(in srgb, var(--guest-ink) 4%, transparent),
+    inset 0 -1px 0 0 color-mix(in srgb, var(--guest-accent) 28%, transparent);
+
+  --shadow-soft: 0 1px 2px color-mix(in srgb, var(--guest-ink) 6%, transparent),
+    0 10px 30px -18px color-mix(in srgb, var(--guest-ink) 28%, transparent);
+  --shadow-lifted: 0 2px 6px color-mix(in srgb, var(--guest-ink) 8%, transparent),
+    0 24px 48px -24px color-mix(in srgb, var(--guest-accent) 38%, transparent);
+}
+
 @theme inline {
   /*
    * No --color-base here, deliberately.
@@ -205,9 +337,12 @@
     border-color: var(--border);
   }
 
-  /* A dark subtree carries its own ground and ink rather than inheriting the
-     document's, which may be light. */
-  .world-dark {
+  /* A world carries its own ground and ink rather than inheriting the
+     document's, which may be either. `.world-light` is not the light *theme* —
+     it is a region handed to a generated brand, and it stays that brand's
+     colour whichever theme the reader has chosen. */
+  .world-dark,
+  .world-light {
     background-color: var(--bg-base);
     color: var(--text-primary);
   }
@@ -299,8 +434,20 @@
    * above it was most of the fold before a single claim had been read. 2.05rem
    * is still display type at that width — it is the only size on the screen —
    * and it leaves the deck and both buttons above the crease.
+   *
+   * 2.2rem now: Bricolage Grotesque sets narrower than Plus Jakarta Sans at the
+   * same size, so the phone gets that width back and the headline still lands
+   * on the same number of lines.
+   *
+   * The middle term carries a rem as well as a vw. A pure `vw` is frozen
+   * against the reader's own font size — at 200% root this heading grew 21%
+   * while body text grew 125%, so the display-to-body ratio collapsed from 4.1
+   * to 2.5 and the hierarchy inverted for exactly the person who most needed
+   * it. Mixing a rem term restores the response and the computed sizes at
+   * 390 / 768 / 1440 are unchanged.
    */
-  font-size: clamp(2.05rem, 6.2vw, 4.6rem);
+  font-size: clamp(2.2rem, 1rem + 5vw, 4.6rem);
+  font-family: var(--font-display);
   font-weight: 600;
   line-height: 1.12;
   letter-spacing: -0.02em;
@@ -308,11 +455,24 @@
   [dir='rtl'] & {
     line-height: 1.4;
     letter-spacing: normal;
+    /* DESIGN.md asks for 700 in Arabic, for presence the Latin face gets from
+       its own drawing. It was never applied. */
+    font-weight: 700;
   }
 }
 
+/*
+ * The section step, and the floor that keeps it below the display step.
+ *
+ * Both clamps used to bottom out together — 2.2rem against 2rem — so at 390px
+ * the page's largest type and its section headings rendered 35.2px and 32px:
+ * same face, same weight, same tracking, 3.2px apart. On a phone the page had
+ * no display step at all. 1.75rem restores a 1.26 ratio there and changes
+ * nothing from `sm` up, where the vw term has already taken over.
+ */
 @utility type-section {
-  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-size: clamp(1.75rem, 0.9rem + 3.2vw, 3.2rem);
+  font-family: var(--font-display);
   font-weight: 600;
   line-height: 1.1;
   letter-spacing: -0.02em;
@@ -320,6 +480,7 @@
   [dir='rtl'] & {
     line-height: 1.4;
     letter-spacing: normal;
+    font-weight: 700;
   }
 }
 
@@ -331,8 +492,86 @@
  * a headline a shape without a second size or a second colour. The product
  * already did it by hand in three places; this names it.
  */
+/*
+ * The title step, which DESIGN.md has always declared and the code has never
+ * had.
+ *
+ * Without a token for it, "a heading on a card" was hand-rolled as
+ * `font-display text-Nxl font-semibold tracking-[-0.02em]` in eight places and
+ * drifted to four sizes — 18px on a plan's credits line and a FAQ question,
+ * 20px on the FAQ heading, 24px on a step name, 30px on the contact sheet.
+ * Exactly the failure `type-section` was written to stop, repeated one level
+ * down.
+ *
+ * The two larger ones stay larger on purpose and are not this: a step name
+ * outranks a card heading, and the contact sheet's 30px lines are *specimens* —
+ * a typeface and a brand name shown at a size worth looking at, which is
+ * content rather than chrome.
+ */
+@utility type-title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+
+  [dir='rtl'] & {
+    line-height: 1.6;
+    letter-spacing: normal;
+  }
+}
+
+/*
+ * A value the machine wrote, protected from the paragraph it sits in.
+ *
+ * A hex code, a route, a hostname, a clock. These are Latin strings with
+ * neutral characters at their edges — `#`, `/`, `:` — and the bidi algorithm
+ * resolves a neutral by the direction of its surroundings. Inside an Arabic
+ * paragraph that means the leading `#` is reordered to the trailing edge, so
+ * `#1B3A3A` renders as `1B3A3A#` and `/home` as `home/`. Both are wrong in the
+ * worst way: a hex is something a customer copies, and a route is something
+ * they type.
+ *
+ * `isolate` keeps the run from participating in the surrounding paragraph's
+ * ordering, and `ltr` gives its own neutrals a direction to resolve against.
+ * Layout is untouched — the flex row holding these still mirrors, which is
+ * correct; only the characters inside each value stay put.
+ */
+@utility machine-value {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
 @utility type-trail {
   color: var(--text-secondary);
+}
+
+/*
+ * Machine voice: a run's log lines, a stage name on the spine, a timing.
+ *
+ * Deliberately not `Eyebrow`, which is DESIGN.md's `label` step and stays in the
+ * body face — that one is a heading's quiet companion, set by us. This one is
+ * the product talking: keys the run emitted, elapsed time, file counts. The
+ * distinction is worth two tokens because the page uses both within a few
+ * hundred pixels of each other, and reading them in the same face would make
+ * the replay look authored rather than reported.
+ *
+ * Arabic drops the tracking and the mono face: IBM Plex Mono has no Arabic, and
+ * letter-spacing on joined letterforms pulls them apart.
+ */
+@utility type-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+
+  [dir='rtl'] & {
+    font-family: var(--font-arabic);
+    letter-spacing: normal;
+    text-transform: none;
+  }
 }
 
 @utility surface-card {
@@ -401,7 +640,7 @@
 /* A single expanding ring — one running step, not a row of bouncing dots. */
 @keyframes pulse-ring {
   0% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--brand-primary) 55%, transparent);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-surface) 55%, transparent);
   }
   70% {
     box-shadow: 0 0 0 10px transparent;
@@ -597,7 +836,7 @@
   /* The class in markup is `pulse-brand`; `pulse-ring` is the keyframe name.
      Aimed at the keyframe, this substitution silently applied to nothing. */
   .pulse-brand {
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-primary) 35%, transparent) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-surface) 35%, transparent) !important;
   }
 }
 
@@ -667,8 +906,9 @@
     pointer-events: none;
     background-image: radial-gradient(
       closest-side,
-      color-mix(in srgb, var(--brand-primary) var(--bloom-strength, 20%), transparent),
-      color-mix(in srgb, var(--brand-secondary) calc(var(--bloom-strength, 20%) / 2.5), transparent) 45%,
+      color-mix(in srgb, var(--accent-surface) var(--bloom-strength, 20%), transparent),
+      color-mix(in srgb, var(--accent-surface-2) calc(var(--bloom-strength, 20%) / 2.5), transparent)
+        45%,
       transparent 72%
     );
   }
@@ -743,8 +983,8 @@
 @utility lit {
   background-image: linear-gradient(
     0deg,
-    color-mix(in srgb, var(--brand-primary) 34%, transparent),
-    color-mix(in srgb, #ffffff 4%, transparent) 38%
+    color-mix(in srgb, var(--accent-surface) 34%, transparent),
+    color-mix(in srgb, var(--text-primary) 4%, transparent) 38%
   );
   padding: 1px;
   /* A panel of cards sets `--lit-radius` to the panel step. Everything else
@@ -817,8 +1057,8 @@
 @utility rail {
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--brand-primary) 70%, transparent),
-    color-mix(in srgb, var(--brand-secondary) 50%, transparent),
+    color-mix(in srgb, var(--accent-surface) 70%, transparent),
+    color-mix(in srgb, var(--accent-surface-2) 50%, transparent),
     transparent
   );
 }
@@ -826,6 +1066,6 @@
 /* The marker that sits on a rail, lit from within. */
 @utility rail-node {
   background-color: var(--bg-base);
-  border: 1px solid color-mix(in srgb, #ffffff 12%, transparent);
-  box-shadow: 0 0 28px -6px color-mix(in srgb, var(--brand-primary) 90%, transparent);
+  border: 1px solid color-mix(in srgb, var(--text-primary) 12%, transparent);
+  box-shadow: 0 0 28px -6px color-mix(in srgb, var(--accent-surface) 90%, transparent);
 }
