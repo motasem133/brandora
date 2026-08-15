@@ -1,77 +1,56 @@
-import { Check, FileText } from 'lucide-react'
+import { Check } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import Image from 'next/image'
 
-import { PaletteDeal, PillFan, StepMark } from '@/components/features/landing/flourish'
-import {
-  Cell,
-  Horizon,
-  LightSweep,
-  SectionArc,
-  ProductFrame,
-  SectionReveal,
-} from '@/components/ui/horizon'
-import { AfterHeadline, HeadlineWords } from '@/components/features/landing/motion-hero'
+import { ArabicProof } from '@/components/features/landing/arabic-proof'
+import { ContactSheet } from '@/components/features/landing/contact-sheet'
+import { StepMark } from '@/components/features/landing/flourish'
 import { PricingFaq } from '@/components/features/landing/pricing-faq'
 import { PricingPlans } from '@/components/features/landing/pricing-plans'
+import { RunPanel } from '@/components/features/landing/run-panel'
+import { RunSpine } from '@/components/features/landing/run-spine'
 import { StartCta } from '@/components/features/landing/start-cta'
+import { SULTANA } from '@/components/features/landing/sultana'
+import { AfterHeadline, HeadlineWords } from '@/components/features/landing/motion-hero'
 import { buttonVariants } from '@/components/ui/button'
+import { Eyebrow } from '@/components/ui/eyebrow'
+import { Cell, Horizon, SectionArc, SectionReveal } from '@/components/ui/horizon'
 import { LogoMark } from '@/components/ui/logo'
-import { MomentumField, MomentumItem } from '@/components/ui/momentum'
 import { Link } from '@/i18n/navigation'
 import { getSession } from '@/server/session'
 
 /**
- * Direction D — Horizon.
+ * Direction E — The Run.
  *
- * Built to the reference the client supplied: near-black ground, a centred
- * column, and a light source rising behind the fold with the product framed in
- * front of it. The arc is the page's whole visual argument, so it is drawn
- * rather than illustrated — a gradient ring, bloomed, cropped by the section.
+ * The page is the run. It opens in an empty dark room, a real generation plays
+ * in the fold, the room then hands itself over to the brand that generation
+ * produced, and it closes back in the dark with the price.
  *
- * The reference's customer logo wall is deliberately absent: there are no
- * customers yet, and inventing a "trusted by" row is the one thing on that
- * page we cannot honestly copy.
- */
-/**
- * Real files from a completed run, used as the deliverable specimens.
+ * That arc is the argument, not a mood. A product selling brand coherence has
+ * to demonstrate two things — that a whole identity arrives at once, and that
+ * the pieces agree — and both are visual. The hero shows the arrival; the light
+ * section shows the agreement, by being Sultana's paper rather than ours. The
+ * Guest Palette Rule was already in the design system and this page had never
+ * spent it.
  *
- * Sultana — a Syrian kitchen — rather than the earlier coffee brand, because
- * it is the project that exercises everything the product now does: two
- * concepts at 1536, a true vector trace, transparent variants, an Arabic
- * wordmark that has to shape correctly, and a social kit. Nothing here is a
- * mockup; every file is what a customer downloads.
+ * What the previous direction got wrong, and this is answering:
+ *
+ * - Its above-the-fold proof was a screenshot of the dashboard. The first image
+ *   a visitor got from a brand generator was an admin UI, and the actual output
+ *   started two thousand pixels down.
+ * - Its five sections had one rhythm — rule, arc, heading, reveal, grid, at
+ *   `py-28` each — so nothing accumulated and nothing pulled the scroll.
+ * - A published website, which is one of the ten things a run makes, was a pill
+ *   in a list called "And the rest of it".
+ * - Arabic, the sharpest differentiator the product has, was not on the page.
+ *   Nor were the three copy pairs written for it, which sat unreferenced in both
+ *   catalogues: `coherence*`, `edit*`, `arabic*`.
+ *
+ * The reference's customer logo wall is still deliberately absent: there are no
+ * customers yet, and inventing a "trusted by" row is the one thing on that page
+ * we cannot honestly copy.
  */
-/*
- * Rendered from the run's vector traces, not its raster previews. The previews
- * were downsampled generations — soft edges, mush in the lattice, and a paper
- * background baked in, which put a cream rectangle inside every white tile.
- * Traced, stripped of that paper and trimmed, each mark is transparent and
- * fills its tile, so every one of these carries its own ratio.
- */
-const LOGOS = [
-  { src: '/marketing/sultana-wordmark.webp', width: 1200, height: 464 },
-  { src: '/marketing/sultana-icon.webp', width: 1200, height: 980 },
-  { src: '/marketing/sultana-symbol.webp', width: 1200, height: 792 },
-  { src: '/marketing/sultana-name.webp', width: 1200, height: 260 },
-]
-
-/**
- * The posts the kit produced for that same run, at the size the renderer wrote
- * them. They were 900px re-encodes of these 1080px files, which cost a
- * downscale and a second lossy pass to show the same picture.
- */
-const POSTS = [
-  '/marketing/sultana-post-hero.webp',
-  '/marketing/sultana-post-feature.webp',
-  '/marketing/sultana-post-detail.webp',
-  '/marketing/sultana-post-palette.webp',
-]
-
-/** Sultana's own palette, as the run wrote it. */
-const PALETTE = ['#1B3A3A', '#D4A853', '#F43F5E', '#FEFAF5']
-
-export default async function HorizonDirection({
+export default async function RunDirection({
   params,
 }: {
   params: Promise<{ locale: string }>
@@ -89,45 +68,75 @@ export default async function HorizonDirection({
    */
   const t = await getTranslations('Landing')
   const tn = await getTranslations('Nav')
+  const tp = await getTranslations('Pricing')
   // Shared with StartCta's own lookup — getSession is cache()d per render.
   const session = await getSession()
-  const rest = t.raw('restItems') as string[]
   const steps = t.raw('steps') as { name: string; body: string }[]
+  const runSteps = t.raw('runSteps') as { key: string; label: string; detail: string }[]
+
+  /*
+   * Both languages, because the Arabic panel shows them side by side.
+   *
+   * `getTranslations` takes a locale, so the two briefs come out of the same
+   * catalogues every other string does rather than being inlined here — which
+   * is what stops the Arabic one from quietly becoming a translation of the
+   * English one the next time somebody edits it.
+   */
+  const [ten, tar] = await Promise.all([
+    getTranslations({ locale: 'en', namespace: 'Landing' }),
+    getTranslations({ locale: 'ar', namespace: 'Landing' }),
+  ])
+
+  const briefOf = (m: typeof ten) => ({
+    labelBusiness: m('runBriefLabelBusiness'),
+    labelMarket: m('runBriefLabelMarket'),
+    labelStyle: m('runBriefLabelStyle'),
+    business: m('runBriefBusiness'),
+    market: m('runBriefMarket'),
+    style: m('runBriefStyle'),
+  })
+
+  const spine = [
+    { id: 'kit', label: t('navKit') },
+    { id: 'how', label: t('navHow') },
+    { id: 'pricing', label: t('navPricing') },
+    { id: 'faq', label: tp('faqTitle') },
+  ]
 
   return (
     <div className="world-dark min-h-dvh overflow-x-hidden">
-      <header className="relative z-20 mx-auto flex max-w-7xl items-center justify-between px-8 py-6">
-        <span className="flex items-center gap-2.5">
-          <LogoMark className="size-12" />
-          <span className="text-lg font-semibold tracking-[-0.01em]">Brandora</span>
-        </span>
+      {/*
+        Sticky, which it was not.
 
-        <nav className="hidden items-center gap-8 text-sm text-fg-secondary md:flex">
-          <a href="#kit" className="transition-colors hover:text-white">
-            {t('navKit')}
-          </a>
-          <a href="#how" className="transition-colors hover:text-white">
-            {t('navHow')}
-          </a>
-          <a href="#pricing" className="transition-colors hover:text-white">
-            {t('navPricing')}
-          </a>
-        </nav>
+        A page this long put its only header call to action above the first
+        screen and then never offered it again until the visitor had scrolled
+        past everything. The bar costs 72px and carries the one press this page
+        is asking for.
+      */}
+      <header className="glass sticky top-0 z-40 border-b border-line">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
+          <span className="flex items-center gap-2.5">
+            <LogoMark className="size-10" />
+            <span className="text-lg font-semibold tracking-[-0.01em]">Brandora</span>
+          </span>
 
-        {/*
-          The same control the app uses, in the marketing world's shape.
+          <nav className="hidden items-center gap-8 text-sm text-fg-secondary md:flex">
+            <a href="#kit" className="transition-colors hover:text-white">
+              {t('navKit')}
+            </a>
+            <a href="#how" className="transition-colors hover:text-white">
+              {t('navHow')}
+            </a>
+            <a href="#pricing" className="transition-colors hover:text-white">
+              {t('navPricing')}
+            </a>
+          </nav>
 
-          These CTAs were four hand-rolled copies of the primary button that had
-          already drifted apart — three padding pairs, three shadow radii, none
-          of them the component. `shape="pill"` is what the reference does with
-          every control and what this page was reaching for by hand.
-        */}
-        <StartCta />
+          <StartCta size="sm" />
+        </div>
       </header>
 
-      {/* The header's rule stops before the edges. A line running corner to
-          corner is the clearest signal a page is a template. */}
-      <div aria-hidden className="rule-fade relative z-20" />
+      <RunSpine items={spine} label={t('spineAria')} />
 
       {/*
         Without JavaScript, 49 elements below the fold stayed at `opacity: 0`
@@ -145,428 +154,353 @@ export default async function HorizonDirection({
       </noscript>
 
       <main id="content" tabIndex={-1}>
-      {/* ------------------------------------------------------------- hero */}
-      <section className="relative overflow-hidden pb-0 pt-14 text-center sm:pt-20">
-        <Horizon />
+        {/* ----------------------------------------------------------- hero */}
+        <section className="relative overflow-hidden pb-24 pt-14 sm:pt-20">
+          <Horizon />
 
-        <div className="relative z-10 mx-auto max-w-4xl px-8">
-          {/* `sm:backdrop-blur`: a backdrop filter has to re-sample and re-blur
-              whatever is behind it, and what is behind this is the horizon —
-              which moves. On a phone that is a per-frame cost for a wash nobody
-              can see over a 390px pill. */}
-          <span className="animate-fade-in inline-flex items-center gap-2.5 rounded-full border border-line bg-elevated/40 py-1 pe-4 ps-1 text-sm sm:backdrop-blur">
-            <span className="rounded-full bg-[image:var(--brand-gradient)] px-3 py-1 text-xs font-semibold">
-              {t('badgePill')}
-            </span>
-            <span className="text-fg-secondary">{t('badgeText')}</span>
-          </span>
+          <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-8">
+            <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-10">
+              {/* The claim. Start-aligned rather than centred: a centred column
+                  above a centred blob is the one hero shape this page was asked
+                  not to be, and an asymmetric split is what lets the run sit
+                  beside the sentence it is proving. */}
+              <div className="lg:col-span-5">
+                <span className="animate-fade-in inline-flex items-center gap-2.5 rounded-full border border-line bg-elevated/40 py-1 pe-4 ps-1 text-sm sm:backdrop-blur">
+                  <span className="rounded-full bg-[image:var(--brand-gradient)] px-3 py-1 text-xs font-semibold">
+                    {t('badgePill')}
+                  </span>
+                  <span className="text-fg-secondary">{t('badgeText')}</span>
+                </span>
 
-          <div className="mt-8">
-            {/*
-              One sentence, one heading. The second clause was a `<p>` at
-              identical display size, which left the page's accessible title as
-              the fragment "Your entire brand identity,".
-
-              Word-level split, which is what keeps this legible in Arabic:
-              characters join, so a per-letter animation would break the script
-              outright.
-
-              Size, weight, leading and both Arabic overrides now live in
-              `type-display`. They were spelled out here and in four other
-              headings on this page, which is how one of them ended up a step
-              off from the rest.
-            */}
-            <h1 className="type-display">
-              <HeadlineWords text={t('heroHeadline')} />{' '}
-              <AfterHeadline delay={0.18}>
-                <span className="type-trail block">{t('heroHeadlineAfter')}</span>
-              </AfterHeadline>
-            </h1>
-          </div>
-
-          <AfterHeadline delay={0.3}>
-            <p className="mx-auto mt-7 max-w-[52ch] text-lg leading-relaxed text-fg-secondary">
-              {t('heroDeck')}
-            </p>
-          </AfterHeadline>
-
-          <AfterHeadline delay={0.4}>
-            <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
-              <Link
-                href="/pricing"
-                className={buttonVariants({ variant: 'outline', shape: 'pill' })}
-              >
-                {t('ctaSecondary')}
-              </Link>
-              <StartCta />
-            </div>
-          </AfterHeadline>
-        </div>
-
-        {/* The product, framed in front of the light and cropped by the fold. */}
-        <div className="relative z-10 mx-auto mt-28 max-w-6xl px-8 sm:mt-36">
-          <ProductFrame>
-            <div className="rounded-t-panel border border-line bg-elevated/30 p-2 shadow-[0_-10px_80px_-20px_color-mix(in_srgb,var(--brand-indigo)_60%,transparent)] backdrop-blur">
-              {/*
-                Renamed, not overwritten. The optimizer keys its cache on this
-                path, so replacing the file behind the same name leaves every
-                layer between here and a browser — the image cache, the CDN, the
-                visitor's disk — serving the old picture. The greeting in it is
-                the whole reason it changed, so it cannot be the one thing that
-                does not arrive.
-              */}
-              <Image
-                src="/marketing/app-overview.webp"
-                alt={t('productAlt')}
-                width={1600}
-                height={900}
-                className="w-full rounded-t-card"
-                sizes="(max-width: 1024px) 100vw, 1100px"
-                priority
-              />
-            </div>
-          </ProductFrame>
-        </div>
-      </section>
-
-      {/* -------------------------------------------------------------- kit */}
-      <div aria-hidden className="rule-fade" />
-      <section id="kit" className="relative overflow-hidden bg-surface/50">
-        <SectionArc className="top-0" />
-        <LightSweep />
-        <div className="relative z-10 mx-auto max-w-7xl px-8 py-28">
-          <SectionReveal>
-            <h2 className="type-section max-w-2xl">
-              {t('kitTitle')}
-              <span className="type-trail"> {t('kitTitleAccent')}</span>
-            </h2>
-          </SectionReveal>
-
-          {/*
-            The deliverables are shown, not listed. Ten identical cells told the
-            visitor a count; these tiles hand over the actual artifacts a run
-            produced, sized by how much looking each one rewards.
-          */}
-          <div className="mt-16 grid auto-rows-[13rem] grid-cols-2 gap-4 lg:grid-cols-4">
-            {/*
-              The one place on the page a visitor can put a hand on the output,
-              so it is the one place that answers back individually. The old
-              behaviour scaled all four whenever the cell was hovered, which
-              told you the cell was hoverable and nothing about the logos.
-            */}
-            {/*
-              The row span is what the inner grid measures itself against. Set
-              to one row's height while spanning two, the four concept tiles
-              overflowed this card by 179px and the two at the bottom were
-              covered by the tile beneath — so the one place a visitor can look
-              at real output showed half of it.
-            */}
-            <Cell index={0} className="col-span-2 row-span-2 min-h-0" lift={false}>
-              {/*
-                `lit` and `lit-inner`, not a sixth hand-written copy of them.
-
-                All six cells in this grid spelled the edge out inline and had
-                drifted to three different accent strengths — 28%, 30% and 35% —
-                for no reason anyone recorded. They were also lit from the top,
-                which is the light this system no longer has.
-              */}
-              {/*
-                No bloom on this one, deliberately. `bloom` clips to its own box
-                so a radial cannot bleed past a rounded corner, and the four
-                concepts in here can be picked up and thrown — a card flicked to
-                the edge would be cut in half by the clip, on the one part of
-                the page where a visitor can put a hand on real output.
-              */}
-              <div className="lit relative h-full">
-                <div className="lit-inner flex min-h-0 flex-col p-7">
-                  <p className="text-sm text-fg-secondary">{t('kitLogos')}</p>
-                  {/*
-                    Two explicit rows. The inner grid's rows were `auto`, so
-                    each one took the natural height of a square image at half
-                    the card's width — about 500px of content in 300px of card,
-                    which is how two of the four concepts ended up underneath
-                    the tile below.
-                  */}
-                  <MomentumField className="mt-5 grid min-h-0 flex-1 grid-cols-2 grid-rows-2 gap-3">
-                    {LOGOS.map((logo) => (
-                      <MomentumItem key={logo.src} throwGain={0.4} spinGain={0.09}>
-                        <div className="h-full min-h-0 overflow-hidden rounded-control bg-white/95">
-                          <Image
-                            src={logo.src}
-                            alt={t('kitLogoAlt')}
-                            width={logo.width}
-                            height={logo.height}
-                            className="size-full object-contain p-2"
-                            sizes="160px"
-                          />
-                        </div>
-                      </MomentumItem>
-                    ))}
-                  </MomentumField>
-                  <p className="mt-4 text-xs text-fg-muted">{t('kitLogosNote')}</p>
-                </div>
-              </div>
-            </Cell>
-
-            <Cell index={1} className="col-span-2">
-              <div className="lit h-full">
-                <div className="lit-inner flex flex-col p-7">
-                  <p className="text-sm text-fg-secondary">{t('kitPalette')}</p>
-                  <PaletteDeal colors={PALETTE} className="mt-5 flex flex-1 gap-2" />
-                  <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 font-mono text-xs text-fg-muted">
-                    {PALETTE.map((hex) => (
-                      <span key={hex}>{hex}</span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </Cell>
-
-            <Cell index={2}>
-              <div className="lit h-full">
                 {/*
-                  The light inside the card, which the reference gives its bento
-                  and this grid did not have: a source rising from the card's
-                  own base rather than an even fill inside a lit ring.
+                  One sentence, one heading. The second clause was a `<p>` at
+                  identical display size, which left the page's accessible title
+                  as the fragment "Your entire brand identity,".
 
-                  Two of the six carry it — this one and the last — because the
-                  reference lights two of its six, and a bento where every cell
-                  glows is a bento where nothing is lit.
+                  Word-level split, which is what keeps this legible in Arabic:
+                  characters join, so a per-letter animation would break the
+                  script outright.
                 */}
-                <div className="lit-inner bloom flex flex-col justify-between p-7 [--bloom-strength:18%]">
-                  <p className="text-sm text-fg-secondary">{t('kitNames')}</p>
-                  <div>
-                    <p className="text-2xl font-semibold tracking-[-0.02em]">Sultana</p>
-                    <p className="mt-1.5 text-xs leading-relaxed text-fg-muted">
-                      {t('kitNameReason')}
-                    </p>
+                <h1 className="type-display mt-7">
+                  <HeadlineWords text={t('heroHeadline')} />{' '}
+                  <AfterHeadline delay={0.18}>
+                    <span className="type-trail block">{t('heroHeadlineAfter')}</span>
+                  </AfterHeadline>
+                </h1>
+
+                <AfterHeadline delay={0.3}>
+                  <p className="mt-6 max-w-[48ch] text-lg leading-relaxed text-fg-secondary">
+                    {t('heroDeck')}
+                  </p>
+                </AfterHeadline>
+
+                <AfterHeadline delay={0.4}>
+                  <div className="mt-9 flex flex-wrap items-center gap-3">
+                    <StartCta size="lg" />
+                    <Link
+                      href="/pricing"
+                      className={buttonVariants({
+                        variant: 'outline',
+                        size: 'lg',
+                        shape: 'pill',
+                      })}
+                    >
+                      {t('ctaSecondary')}
+                    </Link>
                   </div>
-                </div>
+                </AfterHeadline>
               </div>
-            </Cell>
 
-            <Cell index={3}>
-              <div className="lit h-full">
-                <div className="lit-inner flex flex-col justify-between p-7">
-                  <p className="text-sm text-fg-secondary">{t('kitType')}</p>
-                  <div>
-                    <p className="text-3xl font-semibold tracking-[-0.02em]">Reem Kufi Ink</p>
-                    <p className="text-sm text-fg-secondary">El Messiri</p>
-                  </div>
-                </div>
-              </div>
-            </Cell>
-
-            <Cell index={4} className="col-span-2">
-              <div className="lit h-full">
-                <div className="lit-inner flex h-full flex-col p-7">
-                  <p className="text-sm text-fg-secondary">{t('kitSocial')}</p>
-
-                  {/* Four of the eight, at the size a grid of posts is read. */}
-                  <div className="mt-5 grid flex-1 grid-cols-4 gap-2.5">
-                    {POSTS.map((post) => (
-                      <div key={post} className="overflow-hidden rounded-control bg-white/95">
-                        <Image
-                          src={post}
-                          alt={t('kitSocialAlt')}
-                          width={1080}
-                          height={1080}
-                          className="size-full object-cover"
-                          sizes="130px"
-                        />
-                      </div>
-                    ))}
-                  </div>
-
-                  {/*
-                    The document itself, not a picture of it. It is the real
-                    file the run produced, so the claim can be checked rather
-                    than believed.
-                  */}
-                  <a
-                    href="/marketing/sultana-brand-kit.pdf"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-4 inline-flex w-fit items-center gap-2 rounded-control border border-line px-3 py-2 text-xs text-fg-secondary transition-colors hover:bg-elevated hover:text-white"
-                  >
-                    <FileText className="size-3.5" />
-                    {t('kitPdf')}
-                  </a>
-                </div>
-              </div>
-            </Cell>
-
-            <Cell index={5} className="col-span-2">
-              <div className="lit h-full">
-                <div className="lit-inner bloom flex flex-col justify-between p-7 [--bloom-x:84%] [--bloom-strength:18%]">
-                  <p className="text-sm text-fg-secondary">{t('kitRest')}</p>
-                  <PillFan items={rest} className="flex flex-wrap gap-2" />
-                </div>
-              </div>
-            </Cell>
-          </div>
-        </div>
-      </section>
-
-      {/* -------------------------------------------------------------- how */}
-      <div aria-hidden className="rule-fade" />
-      <section id="how" className="relative overflow-hidden">
-        <SectionArc className="top-0" />
-        <div className="relative z-10 mx-auto max-w-7xl px-8 py-28">
-          <SectionReveal>
-            <h2 className="type-section">{t('howTitle')}</h2>
-          </SectionReveal>
-
-          {/*
-            Two columns, because one was stranding this section.
-
-            The descent is unchanged and still right — the run happens in
-            sequence, and a row of equal boxes said nothing about order. But a
-            58ch column of text inside a 1024px section left the right-hand
-            third of the widest part of this page empty, and the fix for empty
-            space on a page selling generated output is not wider margins: it is
-            the output. So the space now holds the product doing the thing the
-            list is describing.
-          */}
-          {/*
-            The rail sits outside the list. An `<ol>` may contain only `<li>`,
-            and this one held a decorative div plus a motion wrapper around
-            every item — enough for several screen readers to drop the list
-            semantics, so "How a run works" stopped announcing five steps.
-          */}
-          <div className="mt-16 grid gap-x-16 gap-y-16 lg:grid-cols-[minmax(0,24rem)_1fr] lg:items-start">
-          <div className="relative">
-            {/* `rail` is the utility for exactly this and had no adopters,
-                while its hand-written equivalent lived here. */}
-            <div aria-hidden className="rail absolute bottom-8 start-[1.55rem] top-4 w-px" />
-
-            <ol>
-              {steps.map((step, index) => (
-                <li key={step.name} className="pb-14 last:pb-0">
-                  {/* The reveal wraps a real box: under `display: contents` it
-                      would generate none, and animate nothing. */}
-                  <Cell
-                    index={index}
-                    className="relative grid grid-cols-[3.5rem_1fr] items-start gap-x-6"
-                  >
-                  <StepMark
-                    index={index}
-                    className="rail-node relative z-10 flex size-14 items-center justify-center rounded-card text-lg font-semibold"
-                  >
-                    {index + 1}
-                  </StepMark>
-
-                    <div className="pt-2.5">
-                      <p className="text-2xl font-semibold tracking-[-0.02em]">{step.name}</p>
-                      <p className="mt-2 max-w-[58ch] leading-relaxed text-fg-secondary">
-                        {step.body}
-                      </p>
-                    </div>
-                  </Cell>
-                </li>
-              ))}
-            </ol>
-          </div>
-
-          {/*
-            The run itself, cropped out of the product and floated in the
-            section's own light — which is what the reference does with every
-            fragment of its app it puts on that page.
-
-            Sticky, so it stays beside whichever step is being read rather than
-            scrolling past the first one. Only from `lg`, where there are two
-            columns for it to stay beside.
-          */}
-          <SectionReveal delay={0.15} className="lg:sticky lg:top-24">
-            <div className="lit [--lit-radius:var(--radius-panel)]">
-              <div className="lit-inner bloom p-4 [--bloom-strength:16%] sm:p-6">
-                <Image
-                  src="/marketing/run-brief.webp"
-                  alt={t('howShot')}
-                  /* The capture's own pixel dimensions. `w-full` with no height
-                     class takes its aspect from these, so a stale pair here
-                     stretches the screenshot rather than failing loudly. */
-                  width={1440}
-                  height={624}
-                  className="w-full rounded-card"
-                  sizes="(max-width: 1024px) 100vw, 640px"
+              {/* The proof. */}
+              <AfterHeadline delay={0.5} className="lg:col-span-7">
+                <RunPanel
+                  steps={runSteps}
+                  strings={{
+                    replay: t('runReplay'),
+                    replayAction: t('runReplayAction'),
+                    files: t('runFiles'),
+                    briefBusiness: t('runBriefBusiness'),
+                    briefMarket: t('runBriefMarket'),
+                    briefStyle: t('runBriefStyle'),
+                    labelBusiness: t('runBriefLabelBusiness'),
+                    labelMarket: t('runBriefLabelMarket'),
+                    labelStyle: t('runBriefLabelStyle'),
+                    done: t('runDone'),
+                    /*
+                     * `raw`, because the placeholders are filled on the client.
+                     *
+                     * next-intl formats ICU at call time and throws when a
+                     * `{step}` it can see has no value — and the values here
+                     * depend on how far a replay running in the browser has
+                     * got, which the server cannot know. The template crosses
+                     * the boundary unformatted and the panel fills it in.
+                     */
+                    status: t.raw('runStatus') as string,
+                    statusDone: t('runStatusDone'),
+                    logoAlt: t('kitLogoAlt'),
+                    socialAlt: t('kitSocialAlt'),
+                  }}
                 />
+              </AfterHeadline>
+            </div>
+          </div>
+        </section>
+
+        {/* ------------------------------------------------- what you get --- */}
+        {/*
+          The handover.
+
+          `world-light` re-points every chrome token at the `--guest-*` variables
+          `brandTheme` emits, so this whole region is Sultana's paper, ink and
+          accent — contrast-checked against each other before they were written,
+          not eyeballed. Brandora's ramp withdraws to the shell, which is what
+          the Guest Palette Rule has always said and what the page never did.
+        */}
+        <section id="kit" className="world-light py-24 sm:py-32" style={SULTANA.vars}>
+          <div className="mx-auto max-w-7xl px-6 lg:px-8">
+            <SectionReveal>
+              <Eyebrow>{t('navKit')}</Eyebrow>
+              <h2 className="type-section mt-4 max-w-3xl">
+                {t('kitTitle')}
+                <span className="type-trail"> {t('kitTitleAccent')}</span>
+              </h2>
+            </SectionReveal>
+
+            <ContactSheet />
+
+            {/*
+              The conclusion the sheet has just demonstrated, said once.
+
+              This copy existed in both catalogues and was rendered nowhere. It
+              belongs here rather than in a section of its own: the argument
+              "they match because they were decided together" is only worth
+              making immediately after someone has looked at the things that
+              match.
+            */}
+            <SectionReveal>
+              <div className="mt-20 grid gap-8 border-t border-line pt-14 lg:grid-cols-12">
+                <h3 className="type-section lg:col-span-5">{t('coherenceTitle')}</h3>
+                <p className="max-w-[58ch] text-lg leading-relaxed text-fg-secondary lg:col-span-7">
+                  {t('coherenceBody')}
+                </p>
               </div>
-            </div>
-            <p className="mt-4 max-w-[46ch] text-sm text-fg-muted">{t('howShot')}</p>
-          </SectionReveal>
+            </SectionReveal>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ---------------------------------------------------------- pricing */}
-      <div aria-hidden className="rule-fade" />
-      <section id="pricing" className="relative overflow-hidden bg-surface/50">
-        <SectionArc className="top-0" />
+        {/* ------------------------------------------------- how it works --- */}
+        <section id="how" className="relative overflow-hidden py-24 sm:py-32">
+          <SectionArc className="top-0" />
 
-        <div className="relative z-10 mx-auto max-w-7xl px-8 py-28">
-          <SectionReveal>
-            <div className="flex flex-wrap items-end justify-between gap-6">
-              <h2 className="type-section">{t('pricingHeading')}</h2>
-              <p className="max-w-[42ch] text-fg-secondary">{t('pricingDeck')}</p>
+          <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-8">
+            <SectionReveal>
+              <Eyebrow>{t('navHow')}</Eyebrow>
+              <h2 className="type-section mt-4">{t('howTitle')}</h2>
+            </SectionReveal>
+
+            {/*
+              The descent is unchanged and still right — the run happens in
+              sequence, and a row of equal boxes said nothing about order. These
+              numbers are the only ones on the page and they are a real
+              sequence, which is the whole difference between this and a
+              decorative 01/02/03.
+
+              The rail sits outside the list. An `<ol>` may contain only `<li>`,
+              and this one held a decorative div plus a motion wrapper around
+              every item — enough for several screen readers to drop the list
+              semantics, so "How a run works" stopped announcing five steps.
+            */}
+            <div className="mt-14 grid gap-x-16 gap-y-14 lg:grid-cols-[minmax(0,26rem)_1fr] lg:items-start">
+              <div className="relative">
+                <div aria-hidden className="rail absolute bottom-8 start-[1.55rem] top-4 w-px" />
+
+                <ol>
+                  {steps.map((step, index) => (
+                    <li key={step.name} className="pb-12 last:pb-0">
+                      {/* The reveal wraps a real box: under `display: contents`
+                          it would generate none, and animate nothing. */}
+                      <Cell
+                        index={index}
+                        className="relative grid grid-cols-[3.5rem_1fr] items-start gap-x-6"
+                      >
+                        <StepMark
+                          index={index}
+                          className="rail-node relative z-10 flex size-14 items-center justify-center rounded-card font-display text-lg font-semibold"
+                        >
+                          {index + 1}
+                        </StepMark>
+
+                        <div className="pt-2.5">
+                          <p className="font-display text-2xl font-semibold tracking-[-0.02em]">
+                            {step.name}
+                          </p>
+                          <p className="mt-2 max-w-[52ch] leading-relaxed text-fg-secondary">
+                            {step.body}
+                          </p>
+                        </div>
+                      </Cell>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+
+              {/*
+                The run itself, cropped out of the product. Sticky, so it stays
+                beside whichever step is being read rather than scrolling past
+                the first one — and only from `lg`, where there are two columns
+                for it to stay beside.
+              */}
+              <SectionReveal delay={0.15} className="lg:sticky lg:top-28">
+                <div className="lit [--lit-radius:var(--radius-panel)]">
+                  <div className="lit-inner bloom p-4 [--bloom-strength:16%] sm:p-6">
+                    <Image
+                      src="/marketing/run-brief.webp"
+                      alt={t('howShot')}
+                      /* The capture's own pixel dimensions. `w-full` with no
+                         height class takes its aspect from these, so a stale
+                         pair here stretches the screenshot rather than failing
+                         loudly. */
+                      width={1440}
+                      height={624}
+                      className="w-full rounded-card"
+                      sizes="(max-width: 1024px) 100vw, 640px"
+                    />
+                  </div>
+                </div>
+                <p className="mt-4 max-w-[46ch] text-sm text-fg-muted">{t('howShot')}</p>
+              </SectionReveal>
             </div>
-          </SectionReveal>
-
-          {/*
-            The same component the pricing page renders, from the same table
-            that bills for it. These were two hand-written ladders that could —
-            and did — disagree about what a plan includes.
-          */}
-          <div className="mt-16">
-            <PricingPlans locale={locale} />
           </div>
+        </section>
 
-          {/*
-            The questions are part of the pricing section, not a page you have
-            to go and find. Someone deciding on this page is the person with
-            the questions, and sending them elsewhere to read the answers is
-            where the decision gets postponed.
-          */}
-          <SectionReveal>
-            <PricingFaq className="mt-16" />
-          </SectionReveal>
+        {/* ----------------------------------------------------- refine --- */}
+        {/* Recovered copy. "Then you change your mind" is the objection every
+            visitor has at this point in the page, and the answer to it was
+            written and then never rendered. */}
+        <div aria-hidden className="rule-fade" />
+        <section className="py-24 sm:py-32">
+          <div className="mx-auto max-w-7xl px-6 lg:px-8">
+            <div className="grid items-center gap-12 lg:grid-cols-12">
+              <SectionReveal className="lg:col-span-5">
+                <h2 className="type-section">{t('editTitle')}</h2>
+                <p className="mt-5 max-w-[52ch] text-lg leading-relaxed text-fg-secondary">
+                  {t('editBody')}
+                </p>
+              </SectionReveal>
 
-          <p className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-fg-muted">
-            <span className="flex items-center gap-2">
-              <Check className="size-4 accent-text" />
-              {t('assuranceCard')}
-            </span>
-            <span className="flex items-center gap-2">
-              <Check className="size-4 accent-text" />
-              {t('assuranceCredits')}
-            </span>
-            <span className="flex items-center gap-2">
-              <Check className="size-4 accent-text" />
-              {t('assuranceCancel')}
-            </span>
-          </p>
-        </div>
-      </section>
+              <SectionReveal delay={0.12} className="lg:col-span-7">
+                <div className="lit [--lit-radius:var(--radius-panel)]">
+                  <div className="lit-inner p-2">
+                    <Image
+                      src="/marketing/app-overview.webp"
+                      alt={t('productAlt')}
+                      width={1600}
+                      height={900}
+                      className="w-full rounded-card"
+                      sizes="(max-width: 1024px) 100vw, 720px"
+                    />
+                  </div>
+                </div>
+              </SectionReveal>
+            </div>
+          </div>
+        </section>
 
-      <div aria-hidden className="rule-fade" />
-      <section className="relative overflow-hidden">
-        <SectionArc className="top-[38%]" />
-        <div className="relative z-10 mx-auto max-w-7xl px-8 py-28 text-center">
-          <SectionReveal>
-            {/* The page's closing heading was a fifth size — 2.2rem to 4rem
-                against the hero's 2.6 to 4.6 — for no reason anyone recorded.
-                It takes the display step, like the hero. */}
-            <h2 className="type-display mx-auto max-w-3xl">
-              {t('closeTitle')}
-              <span className="type-trail"> {t('closeTitleAccent')}</span>
-            </h2>
-          </SectionReveal>
-          <SectionReveal delay={0.1}>
-            <StartCta size="lg" className="mt-10" />
-          </SectionReveal>
-        </div>
-      </section>
+        {/* ----------------------------------------------------- arabic --- */}
+        <div aria-hidden className="rule-fade" />
+        <section className="relative overflow-hidden py-24 sm:py-32">
+          <SectionArc className="top-0" />
 
+          <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-8">
+            <div className="grid items-center gap-12 lg:grid-cols-12">
+              <SectionReveal className="lg:col-span-5">
+                <h2 className="type-section">{t('arabicTitle')}</h2>
+                <p className="mt-5 max-w-[52ch] text-lg leading-relaxed text-fg-secondary">
+                  {t('arabicBody')}
+                </p>
+              </SectionReveal>
+
+              <SectionReveal delay={0.12} className="lg:col-span-7">
+                <ArabicProof
+                  en={briefOf(ten)}
+                  ar={briefOf(tar)}
+                  toggleAria={t('arabicToggleAria')}
+                />
+              </SectionReveal>
+            </div>
+          </div>
+        </section>
+
+        {/* ---------------------------------------------------- pricing --- */}
+        <div aria-hidden className="rule-fade" />
+        <section id="pricing" className="relative overflow-hidden bg-surface/50 py-24 sm:py-32">
+          <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-8">
+            <SectionReveal>
+              <Eyebrow>{t('navPricing')}</Eyebrow>
+              <div className="mt-4 flex flex-wrap items-end justify-between gap-6">
+                <h2 className="type-section max-w-2xl">{t('pricingHeading')}</h2>
+                <p className="max-w-[42ch] text-fg-secondary">{t('pricingDeck')}</p>
+              </div>
+            </SectionReveal>
+
+            {/*
+              The same component the pricing page renders, from the same table
+              that bills for it. These were two hand-written ladders that could
+              — and did — disagree about what a plan includes.
+            */}
+            <div className="mt-14">
+              <PricingPlans locale={locale} />
+            </div>
+
+            <p className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-fg-muted">
+              <span className="flex items-center gap-2">
+                <Check className="size-4 accent-text" />
+                {t('assuranceCard')}
+              </span>
+              <span className="flex items-center gap-2">
+                <Check className="size-4 accent-text" />
+                {t('assuranceCredits')}
+              </span>
+              <span className="flex items-center gap-2">
+                <Check className="size-4 accent-text" />
+                {t('assuranceCancel')}
+              </span>
+            </p>
+          </div>
+        </section>
+
+        {/* -------------------------------------------------------- faq --- */}
+        {/*
+          Its own section with its own id, so the rail can reach it. The
+          questions stay on this page rather than behind a link: someone
+          deciding here is the person with the questions, and sending them
+          elsewhere to read the answers is where the decision gets postponed.
+        */}
+        <div aria-hidden className="rule-fade" />
+        <section id="faq" className="py-24 sm:py-32">
+          <div className="mx-auto max-w-7xl px-6 lg:px-8">
+            <SectionReveal>
+              <PricingFaq columns />
+            </SectionReveal>
+          </div>
+        </section>
+
+        {/* ------------------------------------------------------ close --- */}
+        <div aria-hidden className="rule-fade" />
+        <section className="relative overflow-hidden">
+          <SectionArc className="top-[38%]" />
+          <div className="relative z-10 mx-auto max-w-7xl px-6 py-28 text-center lg:px-8">
+            <SectionReveal>
+              <h2 className="type-display mx-auto max-w-3xl">
+                {t('closeTitle')}
+                <span className="type-trail"> {t('closeTitleAccent')}</span>
+              </h2>
+            </SectionReveal>
+            <SectionReveal delay={0.1}>
+              <StartCta size="lg" className="mt-10" />
+            </SectionReveal>
+          </div>
+        </section>
       </main>
 
       {/*
@@ -578,13 +512,16 @@ export default async function HorizonDirection({
       */}
       <div aria-hidden className="rule-fade" />
       <footer>
-        <div className="mx-auto flex max-w-7xl flex-wrap items-start justify-between gap-x-16 gap-y-8 px-8 py-12">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-start justify-between gap-x-16 gap-y-8 px-6 py-12 lg:px-8">
           <div>
             <span className="flex items-center gap-2.5">
               <LogoMark className="size-11" />
               <span className="text-sm font-semibold">Brandora</span>
             </span>
-            <p className="mt-3 max-w-[34ch] text-sm text-fg-muted">{t('heroDeck')}</p>
+            {/* Was the hero's deck, repeated verbatim. The foot of a page is
+                where a visitor who has read everything arrives; restating the
+                first sentence they read tells them the page has run out. */}
+            <p className="mt-3 max-w-[34ch] text-sm text-fg-muted">{t('badgeText')}</p>
             {/* The studio behind it, said once, quietly, at the bottom. */}
             <p className="mt-4 text-xs text-fg-muted">
               {t('poweredBy')}{' '}
@@ -606,10 +543,7 @@ export default async function HorizonDirection({
             <a href="#how" className="text-fg-secondary transition-colors hover:text-white">
               {t('navHow')}
             </a>
-            <Link
-              href="/pricing"
-              className="text-fg-secondary transition-colors hover:text-white"
-            >
+            <Link href="/pricing" className="text-fg-secondary transition-colors hover:text-white">
               {t('navPricing')}
             </Link>
             {!session && (

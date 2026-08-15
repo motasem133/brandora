@@ -2,7 +2,12 @@ import { Analytics } from '@vercel/analytics/next'
 import type { Metadata } from 'next'
 import { NextIntlClientProvider, hasLocale } from 'next-intl'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { IBM_Plex_Sans_Arabic, Plus_Jakarta_Sans } from 'next/font/google'
+import {
+  Bricolage_Grotesque,
+  IBM_Plex_Mono,
+  IBM_Plex_Sans_Arabic,
+  Plus_Jakarta_Sans,
+} from 'next/font/google'
 import { notFound } from 'next/navigation'
 
 import { PostHogProvider } from '@/components/analytics/posthog-provider'
@@ -11,10 +16,18 @@ import { themeInitScript } from '@/lib/theme'
 import '../globals.css'
 
 /*
- * One family across the whole product, weight doing the work display type used
- * to do. Two families was one more than the brand needs, and the pairing put a
- * geometric display face next to a neutral text face for no reason anyone
- * could point at.
+ * Three Latin roles, not one.
+ *
+ * One family carried everything here, on the reasoning that two was one more
+ * than the brand needs. That holds inside the app and it does not hold on the
+ * marketing page, which sells typography as one of the ten things a run
+ * produces and was setting the whole argument in a single weight-varied UI
+ * sans. A page that cannot show a pairing is a poor advertisement for a product
+ * that generates them.
+ *
+ * The split is by role and the roles do not overlap: display is the only thing
+ * that changed, body is untouched, and the mono is a face the page already
+ * wanted and did not have.
  */
 const jakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -22,6 +35,36 @@ const jakarta = Plus_Jakarta_Sans({
   variable: '--font-jakarta',
   display: 'swap',
 })
+
+/*
+ * Display, marketing only.
+ *
+ * Variable across `opsz` as well as `wght`, which is the reason it is worth a
+ * second file: the same face is drawn correctly at a 74px hero and at a 20px
+ * card title, rather than one outline being scaled to both. No weight array —
+ * next/font serves the variable axis when the range is left open.
+ */
+const bricolage = Bricolage_Grotesque({
+  subsets: ['latin'],
+  variable: '--font-bricolage',
+  display: 'swap',
+})
+
+/*
+ * Utility. Hex codes, the run panel's log lines, timings, credit figures.
+ *
+ * `font-mono` resolved to whatever the visitor's browser called monospace,
+ * which on this page meant the palette card's four hex values rendered in a
+ * different face per platform. It is also the superfamily sibling of the
+ * Arabic face below, so the two non-Jakarta stacks are related by design.
+ */
+const mono = IBM_Plex_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500'],
+  variable: '--font-plex-mono',
+  display: 'swap',
+})
+
 const arabic = IBM_Plex_Sans_Arabic({
   subsets: ['arabic'],
   weight: ['300', '400', '500', '600', '700'],
@@ -57,7 +100,7 @@ export default async function LocaleLayout({
       lang={locale}
       dir={isRtl(locale) ? 'rtl' : 'ltr'}
       suppressHydrationWarning
-      className={`${jakarta.variable} ${arabic.variable}`}
+      className={`${jakarta.variable} ${bricolage.variable} ${mono.variable} ${arabic.variable}`}
     >
       <head>
         {/*

@@ -48,7 +48,13 @@ export function PaletteDeal({ colors, className }: { colors: string[]; className
         <motion.div
           data-reveal
           key={hex}
-          className="flex-1 rounded-card"
+          /*
+           * A hairline mixed from the ink, because a swatch can be the same
+           * colour as the paper it is shown on. Sultana's fourth colour is its
+           * own cream ground, so on the light section that tile rendered as a
+           * hole in the row — the palette appeared to have three colours in it.
+           */
+          className="flex-1 rounded-card ring-1 ring-inset ring-line"
           style={{ backgroundColor: hex }}
           initial={reduced ? false : { opacity: 0, y: 30, rotate: jitter(index, 9) }}
           whileInView={{ opacity: 1, y: 0, rotate: 0 }}
