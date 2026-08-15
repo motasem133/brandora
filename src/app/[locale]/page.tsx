@@ -253,6 +253,7 @@ export default async function RunDirection({
                      */
                     status: t.raw('runStatus') as string,
                     statusDone: t('runStatusDone'),
+                    header: t('runHeader'),
                     logoAlt: t('kitLogoAlt'),
                     socialAlt: t('kitSocialAlt'),
                   }}

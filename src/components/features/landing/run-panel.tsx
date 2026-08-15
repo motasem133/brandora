@@ -53,9 +53,25 @@ const TICK = 120
 const BRIEF_AT = [200, 600, 1000]
 const STEPS_AT = 1600
 const STEP_MS = 1150
-const CONVERGE_AT = STEPS_AT + STEP_MS * 5
-const DONE_AT = CONVERGE_AT + 1250
-const END_AT = DONE_AT + 600
+
+/**
+ * The timeline, derived from however many steps the catalogue actually has.
+ *
+ * These were constants with a literal `* 5` in them, against a `steps` array
+ * that arrives as a prop from `messages/*.json`. Adding or removing a step —
+ * an ordinary copy edit, in a file whose whole job is to be edited — would
+ * have left the convergence firing while a step was still running, or the
+ * panel sitting on a finished list for a second and a half before it resolved.
+ * Nothing would have thrown; it would just have been subtly wrong, in the one
+ * component on the page that has to look deliberate.
+ */
+function timelineFor(stepCount: number) {
+  /* One step minimum, so a catalogue that somehow arrives empty still plays a
+     coherent brief-then-resolve rather than converging before it starts. */
+  const converge = STEPS_AT + STEP_MS * Math.max(1, stepCount)
+  const done = converge + 1250
+  return { converge, done, end: done + 600 }
+}
 
 /** The run this replays took about a minute; the clock is scaled to it. */
 const REAL_SECONDS = 58
@@ -85,7 +101,7 @@ function useHydrated() {
   )
 }
 
-function useReplay(enabled: boolean, ref: React.RefObject<HTMLElement | null>) {
+function useReplay(enabled: boolean, ref: React.RefObject<HTMLElement | null>, endAt: number) {
   /*
    * Starts *finished*.
    *
@@ -95,7 +111,7 @@ function useReplay(enabled: boolean, ref: React.RefObject<HTMLElement | null>) {
    * about this component. The client rewinds to zero in a layout effect, before
    * paint, so nobody sees the end state flash past on the way to the beginning.
    */
-  const [phase, setPhase] = React.useState<Phase>({ t: END_AT, running: false })
+  const [phase, setPhase] = React.useState<Phase>({ t: endAt, running: false })
 
   const start = React.useCallback(() => setPhase({ t: 0, running: true }), [])
 
@@ -158,12 +174,12 @@ function useReplay(enabled: boolean, ref: React.RefObject<HTMLElement | null>) {
       setPhase((current) => {
         if (!current.running) return current
         const next = current.t + TICK
-        return next >= END_AT ? { t: END_AT, running: false } : { t: next, running: true }
+        return next >= endAt ? { t: endAt, running: false } : { t: next, running: true }
       })
     }, TICK)
 
     return () => clearInterval(id)
-  }, [phase.running])
+  }, [phase.running, endAt])
 
   return { t: phase.t, running: phase.running, start }
 }
@@ -189,6 +205,7 @@ export function RunPanel({
     done: string
     status: string
     statusDone: string
+    header: string
     logoAlt: string
     socialAlt: string
   }
@@ -206,8 +223,9 @@ export function RunPanel({
    * without JavaScript should be left looking at.
    */
   const figureRef = React.useRef<HTMLElement>(null)
+  const timeline = React.useMemo(() => timelineFor(steps.length), [steps.length])
   const plays = useHydrated() && !reduced
-  const { t, running, start } = useReplay(plays, figureRef)
+  const { t, running, start } = useReplay(plays, figureRef, timeline.end)
 
   const brief = [
     { label: strings.labelBusiness, value: strings.briefBusiness },
@@ -220,8 +238,8 @@ export function RunPanel({
     Math.max(0, Math.min(1, (t - (STEPS_AT + index * STEP_MS)) / STEP_MS))
 
   const doneCount = steps.filter((_, index) => progressOf(index) >= 1).length
-  const converged = t >= CONVERGE_AT
-  const finished = t >= DONE_AT
+  const converged = t >= timeline.converge
+  const finished = t >= timeline.done
 
   /*
    * The flip. Until `branding` lands, the panel is lit in Brandora's violet;
@@ -248,7 +266,7 @@ export function RunPanel({
     : undefined
 
   /* The clock, scaled from the replay's nine seconds to the run's real minute. */
-  const seconds = Math.min(REAL_SECONDS, Math.round((t / END_AT) * REAL_SECONDS))
+  const seconds = Math.min(REAL_SECONDS, Math.round((t / timeline.end) * REAL_SECONDS))
   const clock = `00:${String(seconds).padStart(2, '0')}`
 
   return (
@@ -268,13 +286,13 @@ export function RunPanel({
                   running && 'pulse-brand',
                 )}
               />
-              <span className="type-eyebrow truncate text-fg-secondary">run · Sultana</span>
+              <span className="type-eyebrow truncate text-fg-secondary">{strings.header}</span>
             </span>
             {/* `type-eyebrow`, not a second hand-rolled mono spec. The label to
                 its left and this clock are the same voice — the run reporting
                 itself — and they were set 11px/500/0.16em against 12px/400/normal
                 on the same row. */}
-            <span className="type-eyebrow text-fg-muted tabular-nums">{clock}</span>
+            <span className="machine-value type-eyebrow text-fg-muted tabular-nums">{clock}</span>
           </div>
 
           {/* ------------------------------------------------------- brief */}
@@ -471,7 +489,7 @@ function Payload({
       {['Home', 'About', 'Menu', 'Contact'].map((page) => (
         <span
           key={page}
-          className="rounded-full border border-line px-3 py-1.5 font-mono text-xs text-fg-secondary"
+          className="machine-value rounded-full border border-line px-3 py-1.5 font-mono text-xs text-fg-secondary"
         >
           /{page.toLowerCase()}
         </span>

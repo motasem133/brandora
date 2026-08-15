@@ -521,6 +521,27 @@
   }
 }
 
+/*
+ * A value the machine wrote, protected from the paragraph it sits in.
+ *
+ * A hex code, a route, a hostname, a clock. These are Latin strings with
+ * neutral characters at their edges — `#`, `/`, `:` — and the bidi algorithm
+ * resolves a neutral by the direction of its surroundings. Inside an Arabic
+ * paragraph that means the leading `#` is reordered to the trailing edge, so
+ * `#1B3A3A` renders as `1B3A3A#` and `/home` as `home/`. Both are wrong in the
+ * worst way: a hex is something a customer copies, and a route is something
+ * they type.
+ *
+ * `isolate` keeps the run from participating in the surrounding paragraph's
+ * ordering, and `ltr` gives its own neutrals a direction to resolve against.
+ * Layout is untouched — the flex row holding these still mirrors, which is
+ * correct; only the characters inside each value stay put.
+ */
+@utility machine-value {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
 @utility type-trail {
   color: var(--text-secondary);
 }

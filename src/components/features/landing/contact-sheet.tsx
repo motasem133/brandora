@@ -91,7 +91,9 @@ export async function ContactSheet() {
           <PaletteDeal colors={[...PALETTE]} className="mt-5 flex min-h-24 flex-1 gap-2" />
           <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 font-mono text-xs text-fg-muted">
             {PALETTE.map((hex) => (
-              <span key={hex}>{hex}</span>
+              <span key={hex} className="machine-value">
+                {hex}
+              </span>
             ))}
           </div>
         </Tile>
@@ -140,7 +142,9 @@ export async function ContactSheet() {
                   <span key={dot} className="size-2 rounded-full bg-line-strong" />
                 ))}
               </span>
-              <span className="truncate font-mono text-xs text-fg-muted">{SITE_ADDRESS}</span>
+              <span className="machine-value truncate font-mono text-xs text-fg-muted">
+                {SITE_ADDRESS}
+              </span>
             </div>
 
             <div className="p-5">
