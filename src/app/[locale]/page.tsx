@@ -117,7 +117,7 @@ export default async function RunDirection({
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
           <span className="flex items-center gap-2.5">
             <LogoMark className="size-10" />
-            <span className="text-lg font-semibold tracking-[-0.01em]">Brandora</span>
+            <span className="font-display text-lg font-semibold tracking-[-0.01em]">Brandora</span>
           </span>
 
           {/* `min-h-11` on each item: as bare inline links these measured 20px
@@ -205,7 +205,7 @@ export default async function RunDirection({
                 </h1>
 
                 <AfterHeadline delay={0.3}>
-                  <p className="mt-5 max-w-[48ch] leading-relaxed text-fg-secondary sm:mt-6 sm:text-lg">
+                  <p className="mt-5 max-w-[44ch] leading-relaxed text-fg-secondary sm:mt-6 sm:text-lg">
                     {t('heroDeck')}
                   </p>
                 </AfterHeadline>
@@ -296,7 +296,7 @@ export default async function RunDirection({
             <SectionReveal>
               <div className="mt-20 grid gap-8 border-t border-line pt-14 lg:grid-cols-12">
                 <h3 className="type-section lg:col-span-5">{t('coherenceTitle')}</h3>
-                <p className="max-w-[58ch] text-lg leading-relaxed text-fg-secondary lg:col-span-7">
+                <p className="max-w-[46ch] text-lg leading-relaxed text-fg-secondary lg:col-span-7">
                   {t('coherenceBody')}
                 </p>
               </div>
@@ -350,7 +350,7 @@ export default async function RunDirection({
                           <p className="font-display text-2xl font-semibold tracking-[-0.02em]">
                             {step.name}
                           </p>
-                          <p className="mt-2 max-w-[52ch] leading-relaxed text-fg-secondary">
+                          <p className="mt-2 max-w-[46ch] leading-relaxed text-fg-secondary">
                             {step.body}
                           </p>
                         </div>
@@ -383,7 +383,7 @@ export default async function RunDirection({
                     />
                   </div>
                 </div>
-                <p className="mt-4 max-w-[46ch] text-sm text-fg-muted">{t('howShot')}</p>
+                <p className="mt-4 max-w-[46ch] text-sm leading-relaxed text-fg-muted">{t('howShot')}</p>
               </SectionReveal>
             </div>
           </div>
@@ -399,7 +399,7 @@ export default async function RunDirection({
             <div className="grid items-center gap-12 lg:grid-cols-12">
               <SectionReveal className="lg:col-span-5">
                 <h2 className="type-section">{t('editTitle')}</h2>
-                <p className="mt-5 max-w-[52ch] text-lg leading-relaxed text-fg-secondary">
+                <p className="mt-5 max-w-[46ch] text-lg leading-relaxed text-fg-secondary">
                   {t('editBody')}
                 </p>
               </SectionReveal>
@@ -431,7 +431,7 @@ export default async function RunDirection({
             <div className="grid items-center gap-12 lg:grid-cols-12">
               <SectionReveal className="lg:col-span-5">
                 <h2 className="type-section">{t('arabicTitle')}</h2>
-                <p className="mt-5 max-w-[52ch] text-lg leading-relaxed text-fg-secondary">
+                <p className="mt-5 max-w-[46ch] text-lg leading-relaxed text-fg-secondary">
                   {t('arabicBody')}
                 </p>
               </SectionReveal>
@@ -455,7 +455,7 @@ export default async function RunDirection({
               <Eyebrow>{t('navPricing')}</Eyebrow>
               <div className="mt-4 flex flex-wrap items-end justify-between gap-6">
                 <h2 className="type-section max-w-2xl">{t('pricingHeading')}</h2>
-                <p className="max-w-[42ch] text-fg-secondary">{t('pricingDeck')}</p>
+                <p className="max-w-[42ch] leading-relaxed text-fg-secondary">{t('pricingDeck')}</p>
               </div>
             </SectionReveal>
 
@@ -540,9 +540,9 @@ export default async function RunDirection({
             {/* Was the hero's deck, repeated verbatim. The foot of a page is
                 where a visitor who has read everything arrives; restating the
                 first sentence they read tells them the page has run out. */}
-            <p className="mt-3 max-w-[34ch] text-sm text-fg-muted">{t('badgeText')}</p>
+            <p className="mt-3 max-w-[34ch] text-sm leading-relaxed text-fg-muted">{t('badgeText')}</p>
             {/* The studio behind it, said once, quietly, at the bottom. */}
-            <p className="mt-4 text-xs text-fg-muted">
+            <p className="mt-4 text-xs leading-relaxed text-fg-muted">
               {t('poweredBy')}{' '}
               <a
                 href="https://enigmitic.com"

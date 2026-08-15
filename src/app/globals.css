@@ -14,7 +14,7 @@
  */
 @theme {
   --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
-  --font-arabic: var(--font-arabic), ui-sans-serif, system-ui, sans-serif;
+  --font-arabic: var(--font-arabic-face), ui-sans-serif, system-ui, sans-serif;
   /*
    * The app's display face is its body face, and that is still right: inside
    * the product a heading is a heading, not a performance. The marketing scopes
@@ -212,6 +212,46 @@
 }
 
 /*
+ * Under RTL the display role *is* the Arabic face.
+ *
+ * Measured on `/ar`, 451 Arabic glyphs were rendering in Arial: `type-display`,
+ * `type-section`, `stat-figure` and every bare `font-display` utility — every
+ * FAQ question, every step name, the price figure — resolved to a Latin-only
+ * face and fell through to the system.
+ *
+ * Two fixes were tried before this one, and both are worth recording because
+ * they look right.
+ *
+ * Patching the `[dir='rtl']` blocks of `type-display` and `type-section` fixes
+ * those two utilities and nothing else; the sixty-odd bare `font-display` call
+ * sites have no RTL block to patch.
+ *
+ * Appending the Arabic face to the end of the Latin stack looks like the
+ * textbook answer — per-glyph fallback should route Arabic to it and leave
+ * Latin alone — and it does not work here. `var(--font-jakarta)` expands to
+ * `"Plus Jakarta Sans", "Plus Jakarta Sans Fallback"`, and that second family
+ * is next/font's metric-adjusted fallback, declared as `local("Arial")`. Arial
+ * has Arabic coverage, so it answers first and the Arabic face further down the
+ * list is never reached. The fallback that exists to protect CLS is the thing
+ * swallowing the script.
+ *
+ * So the variable is re-pointed instead. Everything reads `--font-display`, so
+ * one declaration moves every consumer, and the descendant selectors are here
+ * because `.world-dark` sets the same variable at equal specificity.
+ *
+ * `--font-mono` is deliberately left alone: its content on this page is hex
+ * codes, page paths and a clock, all Latin, and they should stay monospaced.
+ * `type-eyebrow` already swaps its own family under RTL, which is where Arabic
+ * actually meets the mono role.
+ */
+[dir='rtl'],
+[dir='rtl'] .world-dark,
+[dir='rtl'] .world-light {
+  --font-display: var(--font-arabic);
+  --font-sans: var(--font-arabic);
+}
+
+/*
  * The light world: a section the generated brand owns.
  *
  * This is the Guest Palette Rule applied to a whole region rather than to a
@@ -398,8 +438,15 @@
    * 2.2rem now: Bricolage Grotesque sets narrower than Plus Jakarta Sans at the
    * same size, so the phone gets that width back and the headline still lands
    * on the same number of lines.
+   *
+   * The middle term carries a rem as well as a vw. A pure `vw` is frozen
+   * against the reader's own font size — at 200% root this heading grew 21%
+   * while body text grew 125%, so the display-to-body ratio collapsed from 4.1
+   * to 2.5 and the hierarchy inverted for exactly the person who most needed
+   * it. Mixing a rem term restores the response and the computed sizes at
+   * 390 / 768 / 1440 are unchanged.
    */
-  font-size: clamp(2.2rem, 6.2vw, 4.6rem);
+  font-size: clamp(2.2rem, 1rem + 5vw, 4.6rem);
   font-family: var(--font-display);
   font-weight: 600;
   line-height: 1.12;
@@ -408,11 +455,23 @@
   [dir='rtl'] & {
     line-height: 1.4;
     letter-spacing: normal;
+    /* DESIGN.md asks for 700 in Arabic, for presence the Latin face gets from
+       its own drawing. It was never applied. */
+    font-weight: 700;
   }
 }
 
+/*
+ * The section step, and the floor that keeps it below the display step.
+ *
+ * Both clamps used to bottom out together — 2.2rem against 2rem — so at 390px
+ * the page's largest type and its section headings rendered 35.2px and 32px:
+ * same face, same weight, same tracking, 3.2px apart. On a phone the page had
+ * no display step at all. 1.75rem restores a 1.26 ratio there and changes
+ * nothing from `sm` up, where the vw term has already taken over.
+ */
 @utility type-section {
-  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-size: clamp(1.75rem, 0.9rem + 3.2vw, 3.2rem);
   font-family: var(--font-display);
   font-weight: 600;
   line-height: 1.1;
@@ -421,6 +480,7 @@
   [dir='rtl'] & {
     line-height: 1.4;
     letter-spacing: normal;
+    font-weight: 700;
   }
 }
 
@@ -432,6 +492,35 @@
  * a headline a shape without a second size or a second colour. The product
  * already did it by hand in three places; this names it.
  */
+/*
+ * The title step, which DESIGN.md has always declared and the code has never
+ * had.
+ *
+ * Without a token for it, "a heading on a card" was hand-rolled as
+ * `font-display text-Nxl font-semibold tracking-[-0.02em]` in eight places and
+ * drifted to four sizes — 18px on a plan's credits line and a FAQ question,
+ * 20px on the FAQ heading, 24px on a step name, 30px on the contact sheet.
+ * Exactly the failure `type-section` was written to stop, repeated one level
+ * down.
+ *
+ * The two larger ones stay larger on purpose and are not this: a step name
+ * outranks a card heading, and the contact sheet's 30px lines are *specimens* —
+ * a typeface and a brand name shown at a size worth looking at, which is
+ * content rather than chrome.
+ */
+@utility type-title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+
+  [dir='rtl'] & {
+    line-height: 1.6;
+    letter-spacing: normal;
+  }
+}
+
 @utility type-trail {
   color: var(--text-secondary);
 }

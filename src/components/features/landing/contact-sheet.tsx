@@ -174,7 +174,7 @@ export async function ContactSheet() {
             </div>
           </div>
 
-          <p className="mt-4 text-xs text-fg-muted">{t('kitWebsitePagesNote')}</p>
+          <p className="mt-4 max-w-[44ch] text-xs leading-relaxed text-fg-muted">{t('kitWebsitePagesNote')}</p>
         </Tile>
       </Cell>
 

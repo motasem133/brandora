@@ -36,7 +36,7 @@ export async function PricingFaq({
       {columns ? (
         <h2 className="type-section">{t('faqTitle')}</h2>
       ) : (
-        <h3 className="font-display text-xl font-semibold">{t('faqTitle')}</h3>
+        <h3 className="type-title">{t('faqTitle')}</h3>
       )}
 
       {/*
@@ -56,7 +56,7 @@ export async function PricingFaq({
       >
         {items.map((item) => (
           <Disclosure key={item.q} title={item.q}>
-            <p className="max-w-[70ch] text-sm leading-relaxed text-fg-secondary">{item.a}</p>
+            <p className="max-w-[45ch] text-sm leading-relaxed text-fg-secondary">{item.a}</p>
           </Disclosure>
         ))}
       </div>

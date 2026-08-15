@@ -46,7 +46,7 @@ export function Disclosure({
         at 56px, and nothing about the layout changes.
       */}
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 [&::-webkit-details-marker]:hidden sm:px-7 sm:py-5">
-        <span className="font-display text-base font-semibold sm:text-lg">{title}</span>
+        <span className="type-title">{title}</span>
         <span className="flex shrink-0 items-center gap-2.5 text-xs text-fg-muted">
           {meta}
           <ChevronDown className="size-4 transition-transform duration-200 group-open:rotate-180" />

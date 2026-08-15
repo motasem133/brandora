@@ -31,7 +31,9 @@ import '../globals.css'
  */
 const jakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
+  /* 800 is gone: `font-extrabold` appears nowhere in the codebase, and it was
+     a whole file per locale for a weight nothing sets. */
+  weight: ['400', '500', '600', '700'],
   variable: '--font-jakarta',
   display: 'swap',
 })
@@ -46,6 +48,18 @@ const jakarta = Plus_Jakarta_Sans({
  */
 const bricolage = Bricolage_Grotesque({
   subsets: ['latin'],
+  /*
+   * `opsz` has to be asked for.
+   *
+   * The whole justification for a second Latin file is that one outline is
+   * drawn correctly at a 74px hero and a 20px card title. Measured before this
+   * line existed, it was not: the served face advertised `wght` only, and the
+   * advance width of a string was identical with `font-optical-sizing: auto`
+   * and `none` at both sizes. next/font requests weight alone unless the other
+   * axes are named, so the face was being scaled — exactly what the comment
+   * above claims it avoids.
+   */
+  axes: ['opsz'],
   variable: '--font-bricolage',
   display: 'swap',
 })
@@ -67,8 +81,18 @@ const mono = IBM_Plex_Mono({
 
 const arabic = IBM_Plex_Sans_Arabic({
   subsets: ['arabic'],
-  weight: ['300', '400', '500', '600', '700'],
-  variable: '--font-arabic',
+  /* 300 is gone for the same reason as Jakarta's 800: `font-light` is unused. */
+  weight: ['400', '500', '600', '700'],
+  /*
+   * `--font-arabic-face`, not `--font-arabic`.
+   *
+   * The theme layer also declares `--font-arabic`, as `var(--font-arabic), …`
+   * — which with this name was a cycle. One of the two won by source order and
+   * the generic tail was silently dropped. Naming the raw face separately lets
+   * the theme token compose it properly, which is what makes it safe to append
+   * to the display and mono stacks.
+   */
+  variable: '--font-arabic-face',
   display: 'swap',
 })
 

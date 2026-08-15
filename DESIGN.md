@@ -19,13 +19,13 @@ colors:
 typography:
   display:
     fontFamily: "Bricolage Grotesque, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "clamp(2.2rem, 6.2vw, 4.6rem)"
+    fontSize: "clamp(2.2rem, 1rem + 5vw, 4.6rem)"
     fontWeight: 600
     lineHeight: 1.12
     letterSpacing: "-0.02em"
   section:
     fontFamily: "Bricolage Grotesque, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "clamp(2rem, 4vw, 3.2rem)"
+    fontSize: "clamp(1.75rem, 0.9rem + 3.2vw, 3.2rem)"
     fontWeight: 600
     lineHeight: 1.1
     letterSpacing: "-0.02em"
@@ -36,7 +36,7 @@ typography:
     lineHeight: 1.1
     letterSpacing: "-0.02em"
   title:
-    fontFamily: "Plus Jakarta Sans, ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "Bricolage Grotesque, ui-sans-serif, system-ui, sans-serif"
     fontSize: "1.25rem"
     fontWeight: 600
     lineHeight: 1.3
@@ -294,13 +294,44 @@ whose job is to prove Arabic is generated natively — would undercut the claim 
 is decorating. Arabic display takes IBM Plex Sans Arabic at 700 for presence and
 keeps its own leading and zero negative tracking.
 
+**The RTL Display Rule.** Under `[dir='rtl']`, `--font-display` and `--font-sans`
+are re-pointed at the Arabic face rather than the Arabic face being appended
+behind the Latin one. Everything reads those variables, so one declaration moves
+every consumer — the `type-*` utilities, `stat-figure`, and the sixty-odd bare
+`font-display` call sites that have no RTL block of their own.
+
+Appending to the stack is the textbook answer and it does not work here, which
+is worth writing down because it looks correct: `var(--font-jakarta)` expands to
+`"Plus Jakarta Sans", "Plus Jakarta Sans Fallback"`, and that second family is
+next/font's metric-adjusted fallback, declared `local("Arial")`. Arial covers
+Arabic, so it answers before any face further down the list. Measured before the
+fix, 451 Arabic glyphs on `/ar` — every FAQ question, every step name, the price
+figure — were rendering in Arial. The fallback that exists to protect CLS was
+swallowing the script.
+
+`--font-mono` is exempt: its content is hex codes, page paths and a clock, all
+Latin, and they stay monospaced. `type-eyebrow` swaps its own family under RTL,
+which is where Arabic actually meets the mono role.
+
+**Weights shipped are weights used.** Plus Jakarta Sans 400/500/600/700 and IBM
+Plex Sans Arabic 400/500/600/700. Jakarta's 800 and Plex Arabic's 300 were
+dropped after `font-extrabold` and `font-light` were found to appear nowhere in
+the codebase. IBM Plex Mono ships 400/500 only, so nothing may set
+`font-semibold` on it — that renders a browser-synthesised bold rather than a
+drawn one.
+
+Bricolage is requested with `axes: ['opsz']`. Without it next/font serves the
+weight axis alone, and the optical-size claim that justifies a second Latin file
+is not delivered — measured, the advance width was identical at 14px and 74px
+with optical sizing on and off.
+
 ### Hierarchy
 
 - **Display** (600, `clamp(2.05rem, 6.2vw, 4.6rem)`, 1.12, `-0.02em`): Marketing headlines only. Never inside the app. Available as `type-display`. The floor is the phone's size and was 2.6rem, which put a ten-word headline on four lines and 186px of a 390px screen — most of the fold before a single claim had been read. At 2.05rem it is still the only size on that screen, and the deck and both buttons sit above the crease.
 - **Section** (600, `clamp(2rem, 4vw, 3.2rem)`, 1.1, `-0.02em`): The heading that opens a marketing section. Available as `type-section`. It existed as a literal on five headings before it was a step, which is how one of them drifted a size away from the others.
 - **Headline** (600, 2.25rem, 1.1, `-0.02em`): The one page-owning `h1` — a dashboard greeting, a brand's name on its identity plate.
-- **Title** (600, 1.25rem, 1.3, `-0.02em`): Card and section headings.
-- **Body** (400, 0.875rem, 1.6): All prose. Measure stays inside 65–75ch.
+- **Title** (600, 1.25rem, 1.3, `-0.02em`): Card and section headings. Available as `type-title`. It was declared here and had no token for a long time, so "a heading on a card" was hand-rolled as `font-display text-Nxl font-semibold tracking-[-0.02em]` in eight places and drifted to four sizes — the same failure `type-section` was written to stop, one level down. Two larger sizes survive on purpose and are not this step: a step name outranks a card heading, and the contact sheet's 30px lines are specimens, where a typeface and a brand name are shown at a size worth looking at.
+- **Body** (400, 0.875rem, 1.6): All prose. Measure stays inside 65–75 *characters*, which is not what `ch` counts — `ch` is the advance of `0`, and in Plus Jakarta Sans a digit is about 1.4× the average lowercase advance, so `max-w-[70ch]` renders about 95. Caps on this page are set from measured character counts rather than from the unit: 44–46ch for body prose, which lands at 71–75.
 - **Label** (600, 0.75rem, 1.4, `0.12em`, uppercase): Section eyebrows above a group of content, and meta keys in a definition list. Available as `Eyebrow`.
 - **Eyebrow** (mono, 500, 0.6875rem, 1.4, `0.16em`, uppercase): The machine's voice — a run's log lines, a stage name, an elapsed time, a key the pipeline emitted. Available as `type-eyebrow`. Distinct from **Label**, which is a heading's quiet companion written by us; these two appear within a few hundred pixels of each other on the landing page and setting them in the same face would make a reported run look authored. Arabic drops both the mono face and the tracking: IBM Plex Mono has no Arabic, and letter-spacing pulls joined letterforms apart.
 

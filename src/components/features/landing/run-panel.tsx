@@ -270,7 +270,11 @@ export function RunPanel({
               />
               <span className="type-eyebrow truncate text-fg-secondary">run · Sultana</span>
             </span>
-            <span className="font-mono text-xs text-fg-muted tabular-nums">{clock}</span>
+            {/* `type-eyebrow`, not a second hand-rolled mono spec. The label to
+                its left and this clock are the same voice — the run reporting
+                itself — and they were set 11px/500/0.16em against 12px/400/normal
+                on the same row. */}
+            <span className="type-eyebrow text-fg-muted tabular-nums">{clock}</span>
           </div>
 
           {/* ------------------------------------------------------- brief */}

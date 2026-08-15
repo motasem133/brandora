@@ -156,7 +156,7 @@ export async function PricingPlans({
                   as one of two things the same credits buy.
                 */}
                 <p className="mt-5 rounded-control border border-line bg-elevated/40 px-3.5 py-3">
-                  <span className="block font-display text-lg font-semibold">
+                  <span className="type-title block">
                     {recurring
                       ? t('planCreditsLead', { credits: plan.monthlyCredits })
                       : t('planCreditsOnceLead', { credits: plan.monthlyCredits })}

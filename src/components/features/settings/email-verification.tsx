@@ -171,7 +171,10 @@ export function EmailVerification({ email }: { email: string }) {
             maxLength={1}
             className={cn(
               'field-lit size-11 rounded-control border border-line bg-elevated/60 text-center',
-              'font-mono text-base font-semibold text-fg tabular-nums',
+              /* 500, not 600: IBM Plex Mono is loaded at 400 and 500 only, so
+                 `font-semibold` here was a browser-synthesised bold — a smeared
+                 approximation of a weight the family has but we do not ship. */
+              'font-mono text-base font-medium text-fg tabular-nums',
               'transition-shadow duration-200 focus:border-brand focus:outline-none',
               'disabled:cursor-not-allowed disabled:opacity-50',
               error && 'border-danger',
