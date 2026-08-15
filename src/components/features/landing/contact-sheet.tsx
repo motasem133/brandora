@@ -204,7 +204,7 @@ export async function ContactSheet() {
             href={BRAND_KIT_PDF}
             target="_blank"
             rel="noreferrer"
-            className="mt-4 inline-flex w-fit items-center gap-2 rounded-control border border-line px-3 py-2 text-xs text-fg-secondary transition-colors hover:bg-elevated hover:text-fg"
+            className="mt-4 inline-flex min-h-11 w-fit items-center gap-2 rounded-control border border-line px-3.5 text-xs text-fg-secondary transition-colors hover:bg-elevated hover:text-fg"
           >
             <FileText className="size-3.5" />
             {t('kitPdf')}

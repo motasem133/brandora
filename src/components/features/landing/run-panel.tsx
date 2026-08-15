@@ -85,7 +85,7 @@ function useHydrated() {
   )
 }
 
-function useReplay(enabled: boolean) {
+function useReplay(enabled: boolean, ref: React.RefObject<HTMLElement | null>) {
   /*
    * Starts *finished*.
    *
@@ -99,9 +99,57 @@ function useReplay(enabled: boolean) {
 
   const start = React.useCallback(() => setPhase({ t: 0, running: true }), [])
 
+  /*
+   * The replay waits until it is on screen.
+   *
+   * It used to start on mount, which is correct on a desktop where the panel is
+   * in the first viewport and wrong everywhere else. Measured on a 390×844
+   * phone the panel's top edge sat 626px down, so all nine seconds — the whole
+   * demonstration this page is built around — played out below the fold and the
+   * visitor scrolled down to a finished still. The one thing the page has to
+   * show was the one thing a phone never saw.
+   *
+   * An observer decides, and nothing else does. The first version also carried
+   * a fast path — measure the panel in the layout effect, and if it was already
+   * inside the first viewport, rewind synchronously before paint to avoid a
+   * one-frame flash of the finished state. Measured, that path fired on a
+   * 390×844 phone too: at layout-effect time the fonts and images above the
+   * panel have not settled, so it sat higher up the document than it ends up,
+   * the check passed, and the replay started off-screen exactly as before. A
+   * position read before layout settles is not a position.
+   *
+   * So the observer owns it in every case. Until it fires the panel holds at
+   * the finished state, which is a perfectly good poster frame and the same
+   * thing a no-JS or reduced-motion visitor gets.
+   */
   useIsomorphicLayoutEffect(() => {
-    if (enabled) start()
-  }, [enabled, start])
+    if (!enabled) return
+
+    const node = ref.current
+    if (!node) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          start()
+          observer.disconnect()
+        }
+      },
+      /*
+       * Sixty per cent, measured rather than picked.
+       *
+       * At 0.35 this still fired at load on a phone: the panel is 616px tall
+       * and its top 243px peek into an 844px fold, which is 39% — over the
+       * threshold, so the replay started while only the header row and the
+       * brief were on screen. 0.6 needs 370px of it, which a phone reaches
+       * about 130px into the scroll and a desktop satisfies immediately.
+       */
+      { threshold: 0.6 },
+    )
+
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [enabled, start, ref])
 
   React.useEffect(() => {
     if (!phase.running) return
@@ -157,8 +205,9 @@ export function RunPanel({
    * unconditional — the finished run, which is also exactly what someone
    * without JavaScript should be left looking at.
    */
+  const figureRef = React.useRef<HTMLElement>(null)
   const plays = useHydrated() && !reduced
-  const { t, running, start } = useReplay(plays)
+  const { t, running, start } = useReplay(plays, figureRef)
 
   const brief = [
     { label: strings.labelBusiness, value: strings.briefBusiness },
@@ -203,7 +252,7 @@ export function RunPanel({
   const clock = `00:${String(seconds).padStart(2, '0')}`
 
   return (
-    <figure className="m-0">
+    <figure ref={figureRef} className="m-0">
       <div
         className="lit [--lit-radius:var(--radius-panel)] transition-[background-image] duration-700"
         style={accent}
@@ -362,7 +411,7 @@ export function RunPanel({
             distraction, which is why nothing in this system repeats forever
             except a job that is genuinely running. */}
         {plays && !running && (
-          <Button size="sm" variant="ghost" onClick={start} className="-me-2">
+          <Button size="sm" variant="ghost" onClick={start} className="-me-2 h-11 sm:h-9">
             {strings.replayAction}
           </Button>
         )}

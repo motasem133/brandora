@@ -120,19 +120,30 @@ export default async function RunDirection({
             <span className="text-lg font-semibold tracking-[-0.01em]">Brandora</span>
           </span>
 
+          {/* `min-h-11` on each item: as bare inline links these measured 20px
+              tall, which is under WCAG 2.2's 24px floor on the pointer devices
+              that are the only ones ever to see this row. The bar's own height
+              already allowed for it, so nothing moves. */}
           <nav className="hidden items-center gap-8 text-sm text-fg-secondary md:flex">
-            <a href="#kit" className="transition-colors hover:text-white">
-              {t('navKit')}
-            </a>
-            <a href="#how" className="transition-colors hover:text-white">
-              {t('navHow')}
-            </a>
-            <a href="#pricing" className="transition-colors hover:text-white">
-              {t('navPricing')}
-            </a>
+            {[
+              { href: '#kit', label: t('navKit') },
+              { href: '#how', label: t('navHow') },
+              { href: '#pricing', label: t('navPricing') },
+            ].map((item) => (
+              <a
+                key={item.href}
+                href={item.href}
+                className="inline-flex min-h-11 items-center transition-colors hover:text-white"
+              >
+                {item.label}
+              </a>
+            ))}
           </nav>
 
-          <StartCta size="sm" />
+          {/* 44px on touch, back to the compact 36px from `sm` up. This is the
+              one control that follows the visitor down the whole page, so it is
+              the last one that should be under the target-size floor. */}
+          <StartCta size="sm" className="h-11 sm:h-9" />
         </div>
       </header>
 
@@ -181,7 +192,12 @@ export default async function RunDirection({
                   characters join, so a per-letter animation would break the
                   script outright.
                 */}
-                <h1 className="type-display mt-7">
+                {/* Tighter above the crease on a phone and unchanged from `sm`
+                    up. The panel below still cannot fit in a 390×844 fold — it
+                    is 616px tall — but every pixel taken out here is another
+                    pixel of it visible, which is what invites the scroll that
+                    starts the replay. */}
+                <h1 className="type-display mt-6 sm:mt-7">
                   <HeadlineWords text={t('heroHeadline')} />{' '}
                   <AfterHeadline delay={0.18}>
                     <span className="type-trail block">{t('heroHeadlineAfter')}</span>
@@ -189,13 +205,13 @@ export default async function RunDirection({
                 </h1>
 
                 <AfterHeadline delay={0.3}>
-                  <p className="mt-6 max-w-[48ch] text-lg leading-relaxed text-fg-secondary">
+                  <p className="mt-5 max-w-[48ch] leading-relaxed text-fg-secondary sm:mt-6 sm:text-lg">
                     {t('heroDeck')}
                   </p>
                 </AfterHeadline>
 
                 <AfterHeadline delay={0.4}>
-                  <div className="mt-9 flex flex-wrap items-center gap-3">
+                  <div className="mt-7 flex flex-wrap items-center gap-3 sm:mt-9">
                     <StartCta size="lg" />
                     <Link
                       href="/pricing"
@@ -512,7 +528,10 @@ export default async function RunDirection({
       */}
       <div aria-hidden className="rule-fade" />
       <footer>
-        <div className="mx-auto flex max-w-7xl flex-wrap items-start justify-between gap-x-16 gap-y-8 px-6 py-12 lg:px-8">
+        {/* Extra bottom room below `lg` so the fixed section bar, which is
+            showing by the time anyone reaches the footer, does not sit on top
+            of the last row of links. */}
+        <div className="mx-auto flex max-w-7xl flex-wrap items-start justify-between gap-x-16 gap-y-8 px-6 pb-28 pt-12 lg:px-8 lg:pb-12">
           <div>
             <span className="flex items-center gap-2.5">
               <LogoMark className="size-11" />
@@ -529,37 +548,56 @@ export default async function RunDirection({
                 href="https://enigmitic.com"
                 target="_blank"
                 rel="noreferrer"
-                className="text-fg-secondary transition-colors hover:text-white"
+                /* Padding rather than a min-height: this one sits inside a
+                   sentence, so it has to grow its hit area without breaking the
+                   line box around it. */
+                className="inline-block py-2.5 text-fg-secondary transition-colors hover:text-white"
               >
                 Enigmitic
               </a>
             </p>
           </div>
 
-          <nav aria-label={t('navKit')} className="flex flex-wrap gap-x-8 gap-y-2 text-sm">
-            <a href="#kit" className="text-fg-secondary transition-colors hover:text-white">
-              {t('navKit')}
-            </a>
-            <a href="#how" className="text-fg-secondary transition-colors hover:text-white">
-              {t('navHow')}
-            </a>
-            <Link href="/pricing" className="text-fg-secondary transition-colors hover:text-white">
-              {t('navPricing')}
-            </Link>
-            {!session && (
-              <Link href="/login" className="text-fg-secondary transition-colors hover:text-white">
-                {tn('signIn')}
-              </Link>
+          {/*
+            Every one of these was a bare inline link 15 to 20 pixels tall,
+            which is under WCAG 2.2's 24px minimum target size — not merely
+            under the 44px anyone would want on a phone. `min-h-11` makes each
+            row its own 44px target; the vertical gap comes off to compensate,
+            so the block occupies roughly the space it did before.
+          */}
+          <nav
+            aria-label={t('navKit')}
+            className="-my-2 flex flex-wrap gap-x-8 gap-y-0 text-sm"
+          >
+            {[
+              { key: 'kit', href: '#kit', label: t('navKit'), external: true },
+              { key: 'how', href: '#how', label: t('navHow'), external: true },
+              { key: 'pricing', href: '/pricing', label: t('navPricing') },
+              ...(session ? [] : [{ key: 'login', href: '/login', label: tn('signIn') }]),
+              /* Reachable from the page a visitor is on when they decide whether
+                 to trust the product with a card — and from the only page Google
+                 checks when it verifies the consent screen. */
+              { key: 'privacy', href: '/privacy', label: tn('privacy') },
+              { key: 'terms', href: '/terms', label: tn('terms') },
+            ].map((item) =>
+              item.external ? (
+                <a
+                  key={item.key}
+                  href={item.href}
+                  className="inline-flex min-h-11 items-center text-fg-secondary transition-colors hover:text-white"
+                >
+                  {item.label}
+                </a>
+              ) : (
+                <Link
+                  key={item.key}
+                  href={item.href}
+                  className="inline-flex min-h-11 items-center text-fg-secondary transition-colors hover:text-white"
+                >
+                  {item.label}
+                </Link>
+              ),
             )}
-            {/* Reachable from the page a visitor is on when they decide whether
-                to trust the product with a card — and from the only page Google
-                checks when it verifies the consent screen. */}
-            <Link href="/privacy" className="text-fg-secondary transition-colors hover:text-white">
-              {tn('privacy')}
-            </Link>
-            <Link href="/terms" className="text-fg-secondary transition-colors hover:text-white">
-              {tn('terms')}
-            </Link>
           </nav>
         </div>
       </footer>

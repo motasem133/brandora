@@ -200,10 +200,14 @@ export async function PricingPlans({
                   someone.
                 */}
                 {footnote && (
-                  <p className="mt-3 text-center text-xs text-fg-muted">
+                  <p className="text-center text-xs text-fg-muted">
+                    {/* 15px tall as a bare inline link, which is under WCAG
+                        2.2's 24px floor. The padding carries the target and
+                        replaces the paragraph's old top margin, so the card is
+                        laid out as before. */}
                     <a
                       href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Brandora Studio — more than 10 seats')}`}
-                      className="accent-text underline-offset-4 hover:underline"
+                      className="accent-text inline-block px-2 py-3 underline-offset-4 hover:underline"
                     >
                       {footnote}
                     </a>

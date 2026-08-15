@@ -78,7 +78,9 @@ export function ArabicProof({
                 onClick={() => setLang(option.id)}
                 lang={option.id}
                 className={cn(
-                  'rounded-full border px-4 py-1.5 text-sm transition-colors',
+                  /* A radio a thumb has to hit, so it takes the 44px floor
+                     rather than the 34px its label alone would give it. */
+                  'inline-flex min-h-11 items-center rounded-full border px-5 text-sm transition-colors',
                   current
                     ? 'control-lit border-line-strong bg-elevated text-fg'
                     : 'border-line text-fg-secondary hover:text-fg',

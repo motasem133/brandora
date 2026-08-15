@@ -32,11 +32,20 @@ export function Disclosure({
     <details
       open={open}
       className={cn(
-        'group rounded-card border border-line bg-surface/60 px-5 py-4 transition-colors open:bg-surface sm:px-7 sm:py-5',
+        'group rounded-card border border-line bg-surface/60 transition-colors open:bg-surface',
         className,
       )}
     >
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
+      {/*
+        The padding belongs to the summary, not to the details.
+
+        On the details it made a comfortable-looking row whose actual control
+        was only as tall as its text — measured at 24px on a phone, which is
+        exactly WCAG 2.2's minimum target size and no more, on the most repeated
+        control the marketing page has. Moved here, the whole row is the target
+        at 56px, and nothing about the layout changes.
+      */}
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 [&::-webkit-details-marker]:hidden sm:px-7 sm:py-5">
         <span className="font-display text-base font-semibold sm:text-lg">{title}</span>
         <span className="flex shrink-0 items-center gap-2.5 text-xs text-fg-muted">
           {meta}
@@ -44,7 +53,7 @@ export function Disclosure({
         </span>
       </summary>
 
-      <div className="mt-5">{children}</div>
+      <div className="px-5 pb-5 sm:px-7 sm:pb-6">{children}</div>
     </details>
   )
 }

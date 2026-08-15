@@ -128,7 +128,11 @@ export function RunSpine({ items, label }: { items: SpineItem[]; label: string }
                      signal and a poor substitute for the focus ring, and the
                      global `:focus-visible` rule is what a keyboard user is
                      actually looking for. */
-                  className="group relative flex h-4 w-8 items-center rounded-full outline-offset-4"
+                  /* 32×44. The dash is 2px tall and the label only appears on
+                     hover, so the anchor carries the target size itself —
+                     otherwise this is a 32×16 control, under WCAG 2.2's 24px
+                     floor even on a pointer device. */
+                  className="group relative flex h-11 w-8 items-center rounded-full outline-offset-4"
                 >
                   {/*
                     Quiet Grey rather than a hairline mixed from white: this
@@ -156,6 +160,62 @@ export function RunSpine({ items, label }: { items: SpineItem[]; label: string }
                   >
                     {item.label}
                   </span>
+                </a>
+              </li>
+            )
+          })}
+        </ul>
+      </nav>
+
+      {/*
+        The same four destinations, adapted rather than scaled.
+
+        Below `lg` the margin the dash rail lives in does not exist, and the
+        header drops its own nav at `md` — so a phone had no way through 11,000
+        pixels of page except the scrollbar. The dashes could not simply be
+        shown at a narrower width either: their labels appear on hover, and
+        there is no hover on a touch screen.
+
+        So it becomes a bar along the bottom, which is where a thumb already is,
+        with the labels always visible because that is the only way they can be
+        read here. It scrolls horizontally rather than wrapping, so four items
+        stay on one line at 320px, and it arrives only once the hero is behind
+        you — navigation is worth nothing on the first screen, and 56px of
+        permanent furniture there would cost the fold the panel just won back.
+
+        This is the pattern DESIGN.md already gives the app for the same
+        problem: below `lg` the rail becomes a horizontally scrolling row.
+      */}
+      <nav
+        aria-label={label}
+        className={cn(
+          'glass fixed inset-x-0 bottom-0 z-40 border-t border-line lg:hidden',
+          'transition-[transform,visibility] duration-300',
+          past ? 'visible translate-y-0' : 'invisible translate-y-full',
+        )}
+        /* Clears the home indicator on a notched phone without adding a gap on
+           one that has none. */
+        style={{ paddingBottom: 'max(0px, env(safe-area-inset-bottom))' }}
+      >
+        <ul className="flex gap-1 overflow-x-auto px-3 py-1.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {items.map((item) => {
+            const current = active === item.id
+
+            return (
+              <li key={item.id} className="shrink-0">
+                <a
+                  href={`#${item.id}`}
+                  aria-current={current ? 'page' : undefined}
+                  /* 44px of height, which is the floor for something a thumb
+                     has to hit while the page is moving. */
+                  className={cn(
+                    'flex min-h-11 items-center rounded-full px-4 text-sm transition-colors',
+                    current
+                      ? 'control-lit bg-elevated text-fg'
+                      : 'text-fg-secondary hover:text-fg',
+                  )}
+                >
+                  {item.label}
                 </a>
               </li>
             )
