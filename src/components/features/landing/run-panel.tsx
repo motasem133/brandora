@@ -206,7 +206,9 @@ export function RunPanel({
     status: string
     statusDone: string
     header: string
-    logoAlt: string
+    /* One name per lockup, parallel to `LOGOS`. Four images cannot share one
+       alt when the thing being shown is how they differ. */
+    logoNames: string[]
     socialAlt: string
   }
   steps: Step[]
@@ -378,7 +380,7 @@ export function RunPanel({
               <div className="mt-4 h-20">
                 <Payload
                   index={doneCount}
-                  logoAlt={strings.logoAlt}
+                  logoNames={strings.logoNames}
                   socialAlt={strings.socialAlt}
                 />
               </div>
@@ -392,7 +394,12 @@ export function RunPanel({
               style={{ opacity: converged ? 1 : 0, pointerEvents: converged ? undefined : 'none' }}
               aria-hidden={!converged}
             >
-              <Convergence active={converged} reduced={!plays} alt={strings.logoAlt} />
+              <Convergence
+                active={converged}
+                reduced={!plays}
+                names={strings.logoNames}
+                socialAlt={strings.socialAlt}
+              />
               <p
                 className="mt-4 max-w-[28ch] text-center text-sm text-fg-secondary transition-opacity duration-500"
                 style={{ opacity: finished ? 1 : 0 }}
@@ -447,11 +454,11 @@ export function RunPanel({
 /** What the run has produced so far, one artifact at a time. */
 function Payload({
   index,
-  logoAlt,
+  logoNames,
   socialAlt,
 }: {
   index: number
-  logoAlt: string
+  logoNames: string[]
   socialAlt: string
 }) {
   const panes = [
@@ -471,11 +478,11 @@ function Payload({
     </div>,
     /* logos — the four traced variants */
     <div key="logos" className="grid h-full grid-cols-4 gap-2">
-      {LOGOS.map((logo) => (
+      {LOGOS.map((logo, index) => (
         <span key={logo.src} className="overflow-hidden rounded-control bg-white/95">
           <Image
             src={logo.src}
-            alt={logoAlt}
+            alt={logoNames[index]}
             width={logo.width}
             height={logo.height}
             className="size-full object-contain p-1.5"
@@ -546,11 +553,16 @@ function Payload({
 function Convergence({
   active,
   reduced,
-  alt,
+  names,
+  socialAlt,
 }: {
   active: boolean
   reduced: boolean
-  alt: string
+  /** One name per lockup, parallel to `LOGOS`. */
+  names: string[]
+  /* The post in this cluster is a post, and it had been carrying the logo alt
+     — so a screen reader met the word "logo" on a photograph. */
+  socialAlt: string
 }) {
   const spring = { type: 'spring', visualDuration: 0.55, bounce: 0.32 } as const
 
@@ -593,7 +605,7 @@ function Convergence({
         <span className={cn(tile, 'size-16 p-1.5')} style={paper}>
           <Image
             src={LOGOS[1].src}
-            alt={alt}
+            alt={names[1]}
             width={LOGOS[1].width}
             height={LOGOS[1].height}
             className="size-full object-contain"
@@ -609,7 +621,7 @@ function Convergence({
         <span className={cn(tile, 'size-16 overflow-hidden p-0')} style={paper}>
           <Image
             src={POSTS[0]}
-            alt={alt}
+            alt={socialAlt}
             width={1080}
             height={1080}
             className="size-full rounded-control object-cover"
@@ -661,7 +673,7 @@ function Convergence({
         <span className={cn(tile, 'px-2.5 py-2')} style={paper}>
           <Image
             src={LOGOS[0].src}
-            alt={alt}
+            alt={names[0]}
             width={LOGOS[0].width}
             height={LOGOS[0].height}
             className="h-9 w-auto object-contain"

@@ -10,6 +10,7 @@ import type { GeneratedFile } from '@/server/db/schema'
 import { publicUrl } from '@/server/storage/r2'
 import { LogoComposer } from './logo-composer'
 import { SelectLogoButton } from './logo-actions'
+import { Eyebrow } from '@/components/ui/eyebrow'
 
 /**
  * The stage: one mark, large, and the controls that act on it.
@@ -74,9 +75,9 @@ export async function LogoStudio({
         else on this column is a control acting on it.
       */}
       <div>
-        <h2 className="text-xs font-semibold uppercase tracking-[0.12em] text-fg-muted">
+        <Eyebrow as="h2">
           {round && !isLatestRound ? t('earlierRound', { round: round.round }) : t('logos')}
-        </h2>
+        </Eyebrow>
         <p className="mt-1.5 text-sm text-fg-secondary">
           {round?.brief ? t('roundDirection', { brief: round.brief }) : t('logosHint')}
         </p>

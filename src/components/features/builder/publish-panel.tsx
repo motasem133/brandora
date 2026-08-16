@@ -7,6 +7,7 @@ import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { Eyebrow } from '@/components/ui/eyebrow'
 import { Field } from '@/components/ui/field'
 import { FieldError } from '@/components/ui/field-error'
 import { Input } from '@/components/ui/input'
@@ -213,9 +214,7 @@ export function PublishPanel({
           */}
           {published && (
             <div className="mt-4 border-t border-line pt-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-fg-muted">
-                {t('whatWillChange')}
-              </p>
+              <Eyebrow>{t('whatWillChange')}</Eyebrow>
               {waiting ? (
                 <>
                   <ul className="mt-2 space-y-1 text-sm text-fg-secondary">

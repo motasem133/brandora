@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { ArabicProof } from '@/components/features/landing/arabic-proof'
 import { ContactSheet } from '@/components/features/landing/contact-sheet'
 import { StepMark } from '@/components/features/landing/flourish'
+import { HowPanel } from '@/components/features/landing/how-panel'
 import { PricingFaq } from '@/components/features/landing/pricing-faq'
 import { PricingPlans } from '@/components/features/landing/pricing-plans'
 import { RunPanel } from '@/components/features/landing/run-panel'
@@ -73,6 +74,14 @@ export default async function RunDirection({
   const session = await getSession()
   const steps = t.raw('steps') as { name: string; body: string }[]
   const runSteps = t.raw('runSteps') as { key: string; label: string; detail: string }[]
+  /* One caption per step for the panel beside the list, and the two real data
+     sets its diagrams name. Both are already on the page elsewhere; reading them
+     from the catalogue here rather than restating them is what keeps the process
+     section from drifting away from the contact sheet. */
+  const howCaptions = t.raw('howCaptions') as string[]
+  const logoNames = t.raw('kitLogoNames') as string[]
+  const sitePages = t.raw('kitWebsitePages') as string[]
+  const runSections = runSteps.map(({ key, label }) => ({ key, label }))
 
   /*
    * Both languages, because the Arabic panel shows them side by side.
@@ -254,7 +263,7 @@ export default async function RunDirection({
                     status: t.raw('runStatus') as string,
                     statusDone: t('runStatusDone'),
                     header: t('runHeader'),
-                    logoAlt: t('kitLogoAlt'),
+                    logoNames,
                     socialAlt: t('kitSocialAlt'),
                   }}
                 />
@@ -333,7 +342,9 @@ export default async function RunDirection({
 
                 <ol>
                   {steps.map((step, index) => (
-                    <li key={step.name} className="pb-12 last:pb-0">
+                    /* The id is what the panel beside this list observes to know
+                       which step is being read. */
+                    <li key={step.name} id={`how-step-${index}`} className="pb-12 last:pb-0">
                       {/* The reveal wraps a real box: under `display: contents`
                           it would generate none, and animate nothing. */}
                       <Cell
@@ -366,25 +377,22 @@ export default async function RunDirection({
                 beside whichever step is being read rather than scrolling past
                 the first one — and only from `lg`, where there are two columns
                 for it to stay beside.
+
+                It now changes with the step. One screenshot captioned "The first
+                of eight questions" sat here beside all five, which meant the
+                picture contradicted the words for four of them and left three
+                hundred pixels of empty column beside the last two.
               */}
-              <SectionReveal delay={0.15} className="lg:sticky lg:top-28">
-                <div className="lit [--lit-radius:var(--radius-panel)]">
-                  <div className="lit-inner bloom p-4 [--bloom-strength:16%] sm:p-6">
-                    <Image
-                      src="/marketing/run-brief.webp"
-                      alt={t('howShot')}
-                      /* The capture's own pixel dimensions. `w-full` with no
-                         height class takes its aspect from these, so a stale
-                         pair here stretches the screenshot rather than failing
-                         loudly. */
-                      width={1440}
-                      height={624}
-                      className="w-full rounded-card"
-                      sizes="(max-width: 1024px) 100vw, 640px"
-                    />
-                  </div>
-                </div>
-                <p className="mt-4 max-w-[46ch] text-sm leading-relaxed text-fg-muted">{t('howShot')}</p>
+              <SectionReveal delay={0.15}>
+                <HowPanel
+                  stepIds={steps.map((_, index) => `how-step-${index}`)}
+                  captions={howCaptions}
+                  shotAlt={t('howShotAlt')}
+                  logoNames={logoNames}
+                  sections={runSections}
+                  pages={sitePages}
+                  refineNote={t('howRefineNote')}
+                />
               </SectionReveal>
             </div>
           </div>

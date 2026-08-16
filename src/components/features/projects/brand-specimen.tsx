@@ -106,12 +106,20 @@ export async function BrandSpecimen({
             </p>
           )}
 
-          <h3
+          {/*
+            `h2`, because both pages that render a grid of these put them
+            directly under the page `h1` with nothing in between — so an `h3`
+            skipped a level on the projects list and on the dashboard, and a
+            screen reader's outline of the one screen a returning customer lives
+            on had a hole in it. The size is set here and owes nothing to the
+            level.
+          */}
+          <h2
             style={{ fontFamily: fontStack(fonts?.heading), color: 'var(--guest-ink)' }}
             className="truncate text-lg font-semibold tracking-[-0.02em]"
           >
             {name}
-          </h3>
+          </h2>
 
           {slogan && (
             <p

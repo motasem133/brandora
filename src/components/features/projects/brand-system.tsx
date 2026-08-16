@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server'
 
 import { CopyButton } from '@/components/ui/copy-button'
+import { Eyebrow } from '@/components/ui/eyebrow'
 import { brandTheme, fontStack } from '@/lib/brand-theme'
 import type { BrandFonts, BrandPalette } from '@/lib/brand-theme'
 import { PaletteGrid } from './palette-grid'
@@ -43,12 +44,9 @@ export async function BrandSystem({
           className="overflow-hidden rounded-panel bg-[var(--guest-paper)] shadow-[var(--shadow-soft)] ring-1 ring-[var(--guest-line)]"
         >
           <div className="space-y-6 p-7">
-            <h2
-              style={{ color: 'var(--guest-ink-faint)' }}
-              className="text-xs font-semibold uppercase tracking-[0.12em]"
-            >
+            <Eyebrow as="h2" style={{ color: 'var(--guest-ink-faint)' }} className="text-inherit">
               {t('fonts')}
-            </h2>
+            </Eyebrow>
 
             <div>
               <p
@@ -111,9 +109,7 @@ export async function BrandSystem({
         <section className="rounded-panel border border-line p-7">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h2 className="text-xs font-semibold uppercase tracking-[0.12em] text-fg-muted">
-                {t('palette')}
-              </h2>
+              <Eyebrow as="h2">{t('palette')}</Eyebrow>
               <p className="mt-1.5 text-sm text-fg-muted">{t('paletteHint')}</p>
             </div>
             <CopyButton

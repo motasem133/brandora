@@ -90,6 +90,19 @@ export function BrandComplete({
 
   return (
     <Card className="space-y-7 glow-brand">
+      {/*
+        The end of the run, announced.
+
+        `GenerationPanel`'s live region narrates the ninety seconds and then this
+        component replaces it, taking the region out of the document with it — so
+        without one here the run would be narrated step by step and then simply
+        stop, which is indistinguishable from a run that died. This panel appears
+        only on the transition, so it announces once and cannot repeat.
+      */}
+      <p role="status" aria-live="polite" className="sr-only">
+        {t('liveDone', { brand: brandName })}
+      </p>
+
       <div className="flex items-start gap-3">
         <span className="grid size-9 shrink-0 place-items-center rounded-full bg-brand/15">
           <Sparkles className="size-4 text-brand" />

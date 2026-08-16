@@ -30,10 +30,14 @@ test.describe('generation progress', () => {
 
     await page.goto(`/en/dashboard/projects/${projectId}`)
 
-    await expect(page.getByText(/Logo concepts —/)).toBeVisible()
+    /* Scoped to the step list. The panel also carries a visually-hidden live
+       region that narrates the running step, so an unscoped text match now finds
+       the announcement as well as the item it announces. */
+    const steps = page.getByRole('list', { name: 'Run progress' })
+    await expect(steps.getByText(/Logo concepts —/)).toBeVisible()
     // The other sections are not part of this run and must not be listed.
-    await expect(page.getByText(/Website content —/)).toHaveCount(0)
-    await expect(page.getByText(/Social media kit —/)).toHaveCount(0)
+    await expect(steps.getByText(/Website content —/)).toHaveCount(0)
+    await expect(steps.getByText(/Social media kit —/)).toHaveCount(0)
 
     await sql`UPDATE projects SET status = 'completed' WHERE id = ${projectId}`
   })

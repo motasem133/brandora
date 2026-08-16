@@ -372,6 +372,28 @@ export function GenerationPanel({
   const canAfford = creditBalance >= creditCost
 
   /*
+   * What the live region says, derived rather than stored.
+   *
+   * Derived so it cannot disagree with the list it is narrating: both read the
+   * same `progress`, so there is no second copy of "which step is running" to
+   * fall out of step with the first. A failure wins over a running step because
+   * a run that has already lost a section is the more important fact, and it is
+   * the one the visual list says only in the colour of a border.
+   */
+  const runningStep = sections.find((section) => stepStatus(progress[section]?.status) === 'running')
+  const failedStep = sections.find((section) => stepStatus(progress[section]?.status) === 'failed')
+
+  const announcement = failedStep
+    ? t('liveFailed', { step: t(`steps.${failedStep}`) })
+    : runningStep
+      ? t('liveStep', {
+          index: sections.indexOf(runningStep) + 1,
+          total: sections.length,
+          step: t(`steps.${runningStep}`),
+        })
+      : ''
+
+  /*
    * The wall, recorded where a customer actually meets it.
    *
    * Not on the server's refusal: the button is disabled before the action can
@@ -464,8 +486,37 @@ export function GenerationPanel({
         </div>
       )}
 
+      {/*
+        The ninety seconds, said out loud.
+
+        Everything this panel reports it reported in colour and motion: a band of
+        light crosses the running step, a tick replaces a hollow circle, a border
+        turns green. None of that reaches a screen reader, so a customer using
+        one pressed Generate and then had ninety seconds of silence with no way
+        to tell a run in progress from a run that had died — on the one screen
+        this product is sold on.
+
+        `polite`, not `assertive`: this is progress, and it should wait for a
+        gap rather than interrupt whatever is being read. One announcement per
+        step rather than per payload — the stream sends a message every time any
+        field moves, including the logo concept counter, and a region that
+        re-announced on each of those would talk over itself for a minute and a
+        half. `announcement` only changes when the step does.
+
+        Outside the conditional below on purpose. A live region has to be in the
+        document *before* its text changes or the change is not announced, and
+        this panel renders while idle — so the region is always mounted and only
+        its contents move.
+      */}
+      <p role="status" aria-live="polite" className="sr-only">
+        {announcement}
+      </p>
+
       {(isRunning || status === 'partial' || status === 'failed') && (
-        <ol className="space-y-2 stagger-children">
+        /* Named, so it is reachable as "the run's steps" rather than as an
+           anonymous list — the live region above narrates it, and the two want
+           telling apart both by a screen reader and by a test. */
+        <ol aria-label={t('stepsLabel')} className="space-y-2 stagger-children">
           {sections.map((section, index) => {
             const state = stepStatus(progress[section]?.status)
             return (

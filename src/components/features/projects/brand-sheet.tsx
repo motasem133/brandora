@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server'
 
 import { CopyButton } from '@/components/ui/copy-button'
 import { Disclosure } from '@/components/ui/disclosure'
+import { Eyebrow } from '@/components/ui/eyebrow'
 import type { BrandingAsset, GeneratedFile } from '@/server/db/schema'
 import { BrandCopy } from './brand-copy'
 import { LogoVariations } from './logo-variations'
@@ -37,9 +38,7 @@ export async function BrandSheet({
     <div className="space-y-4">
       {hasNames && (
         <section className="rounded-panel border border-line p-7">
-          <h2 className="text-xs font-semibold uppercase tracking-[0.12em] text-fg-muted">
-            {t('nameIdeas')}
-          </h2>
+          <Eyebrow as="h2">{t('nameIdeas')}</Eyebrow>
           <p className="mt-1.5 text-sm text-fg-muted">{t('nameIdeasHint')}</p>
           <div className="mt-4">
             <NamePicker
