@@ -59,7 +59,17 @@ export default async function ProjectsPage({
         /projects/[id], and a segment that streams answers 200 before it knows
         the project exists — which turned a cross-tenant 404 into a 200.
       */}
-      <Suspense key={`${q ?? ''}:${sort ?? ''}`} fallback={<ProjectsSkeleton label={t('loading')} />}>
+      {/*
+        Deliberately unkeyed on the query.
+
+        Keying it per search re-mounts the boundary, so every keystroke's worth
+        of navigation threw the list away and painted the skeleton — a flash on
+        a filter that resolves in one indexed read. Unkeyed, React holds the
+        previous list through the transition and swaps when the new one is
+        ready, which is the same behaviour the rest of the app's navigations
+        have. The skeleton still covers the first load, which is what it is for.
+      */}
+      <Suspense fallback={<ProjectsSkeleton label={t('loading')} />}>
         <ProjectList locale={locale} search={q} sort={isSort(sort) ? sort : 'recent'} />
       </Suspense>
     </div>
@@ -80,19 +90,35 @@ export default async function ProjectsPage({
  * a second round trip to narrow a set that is already in hand — and at the size
  * these accounts actually reach, the comparison is not the cost.
  */
+/**
+ * The fields a customer would expect to search by, including the one the card
+ * actually shows.
+ *
+ * `businessName` before `title`: the card's heading is
+ * `businessName || title`, so leaving it out meant typing a brand's own name as
+ * it appears on screen and being told nothing matched. `title` stays as well —
+ * it is what the project was called before a name was chosen, and a brand still
+ * mid-run has only that.
+ */
 function matches(specimen: Specimen, needle: string) {
   const { project, slogan } = specimen
-  return [project.title, project.industry, project.country, slogan]
+  return [project.businessName, project.title, project.industry, project.country, slogan]
     .filter((field): field is string => Boolean(field))
     .some((field) => field.toLowerCase().includes(needle))
+}
+
+/** What the card puts in its heading, and therefore what "by name" has to mean. */
+function displayName(specimen: Specimen) {
+  return specimen.project.businessName || specimen.project.title
 }
 
 function sortSpecimens(specimens: Specimen[], sort: Sort, locale: string) {
   const sorted = [...specimens]
   if (sort === 'name') {
     /* `localeCompare` with the page's own locale, because an Arabic list sorted
-       by code points is not sorted. */
-    return sorted.sort((a, b) => a.project.title.localeCompare(b.project.title, locale))
+       by code points is not sorted — and on the displayed name, because a sort
+       the reader cannot verify against what is on screen reads as broken. */
+    return sorted.sort((a, b) => displayName(a).localeCompare(displayName(b), locale))
   }
   const direction = sort === 'oldest' ? 1 : -1
   return sorted.sort(
