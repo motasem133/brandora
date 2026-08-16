@@ -1,3 +1,4 @@
+import { eyebrowClass } from '@/components/ui/eyebrow'
 import { cn } from '@/lib/utils'
 
 /**
@@ -44,7 +45,9 @@ export function Table({
 export function THead({ children }: { children: React.ReactNode }) {
   return (
     <thead>
-      <tr className="border-b border-line text-xs font-semibold uppercase tracking-[0.12em] text-fg-muted">
+      {/* The one place the token cannot be the component: this styles a row so
+          its cells inherit, and a `<tr>` may not hold a `<p>`. */}
+      <tr className={cn('border-b border-line text-fg-muted', eyebrowClass)}>
         {children}
       </tr>
     </thead>

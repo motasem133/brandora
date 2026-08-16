@@ -60,7 +60,9 @@ test.describe('brand completion screen', () => {
 
     // The panel has to see the run in flight first — that is what arms the
     // transition. Without this the finish below is just a cold load.
-    await expect(page.getByText(/Logo concepts —/)).toBeVisible()
+    await expect(
+      page.getByRole('list', { name: 'Run progress' }).getByText(/Logo concepts —/),
+    ).toBeVisible()
 
     await finishJob(sections)
 
@@ -98,7 +100,9 @@ test.describe('brand completion screen', () => {
     await startFakeJob(projectId, sections)
 
     await page.goto(`/en/dashboard/projects/${projectId}`)
-    await expect(page.getByText(/Brand identity —/)).toBeVisible()
+    await expect(
+      page.getByRole('list', { name: 'Run progress' }).getByText(/Brand identity —/),
+    ).toBeVisible()
 
     await finishJob(sections)
     await expect(page.getByText('What Creator adds to this brand')).toBeVisible()
@@ -136,7 +140,9 @@ test.describe('brand completion screen', () => {
     await startFakeJob(projectId, sections)
 
     await page.goto(`/en/dashboard/projects/${projectId}`)
-    await expect(page.getByText(/Brand identity —/)).toBeVisible()
+    await expect(
+      page.getByRole('list', { name: 'Run progress' }).getByText(/Brand identity —/),
+    ).toBeVisible()
 
     await finishJob(sections)
 

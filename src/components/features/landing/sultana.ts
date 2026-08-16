@@ -20,6 +20,18 @@ import { brandTheme } from '@/lib/brand-theme'
  * background baked in, which put a cream rectangle inside every white tile.
  * Traced, stripped of that paper and trimmed, each mark is transparent and
  * fills its tile, so every one of these carries its own ratio.
+ *
+ * Four files, two concepts. Read them: `wordmark` is the first concept — the
+ * figure above a patterned bowl, name set beside it. `icon` is the second — a
+ * woven roundel around a cooking pot, name stacked under it — and `symbol` is
+ * that same second concept with the name taken off. `name` is the wordmark
+ * alone, in the brand's own face, which both concepts share.
+ *
+ * **The order is load-bearing.** `Landing.kitLogoNames` names these by position,
+ * so a mark that moves here is a mark mislabelled on the page. That labelling is
+ * why the grid can claim two concepts over four tiles and be checkable by
+ * looking, which is what it was not when all four sat unlabelled under a heading
+ * saying "Two logo concepts".
  */
 export const LOGOS = [
   { src: '/marketing/sultana-wordmark.webp', width: 1200, height: 464 },

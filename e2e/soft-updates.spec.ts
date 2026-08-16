@@ -60,7 +60,9 @@ test.describe('soft updates', () => {
       RETURNING id`
 
     await page.goto(`/en/dashboard/projects/${projectId}`)
-    await expect(page.getByText(/Website content —/)).toBeVisible()
+    await expect(
+      page.getByRole('list', { name: 'Run progress' }).getByText(/Website content —/),
+    ).toBeVisible()
 
     const reloaded = await watchForReloads(page)
 

@@ -50,6 +50,7 @@ import type { RegisterName } from '@/lib/register'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { EmptyState } from '@/components/ui/empty-state'
+import { Eyebrow } from '@/components/ui/eyebrow'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
@@ -502,9 +503,7 @@ export function Builder({
      it is about rather than in a settings screen somewhere else. */
   const pageSettings = (
     <div className="space-y-3 border-t border-line pt-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-fg-muted">
-        {t('thisPage')}
-      </p>
+      <Eyebrow>{t('thisPage')}</Eyebrow>
       <Field label={t('pageMenuLabel')} hint={t('pageAddressFixed', { path: page === 'home' ? '/' : `/${page}` })}>
         <Input
           value={pageTitles[page] ?? ''}
@@ -526,9 +525,7 @@ export function Builder({
 
   const styles = (
     <div className="space-y-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-fg-muted">
-        {t('siteStyle')}
-      </p>
+      <Eyebrow>{t('siteStyle')}</Eyebrow>
 
       {(
         [
@@ -1471,13 +1468,13 @@ function Inspector({
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2">
         {showTitle ? (
-          <p
+          <Eyebrow
             data-inspector-title
             tabIndex={-1}
-            className="text-xs font-semibold uppercase tracking-[0.12em] text-fg-muted outline-none focus-visible:outline-2 focus-visible:outline-brand"
+            className="outline-none focus-visible:outline-2 focus-visible:outline-brand"
           >
             {t(`blocks.${block.type}`)}
-          </p>
+          </Eyebrow>
         ) : (
           <span />
         )}
@@ -1595,9 +1592,9 @@ function Inspector({
               {/* Its own title once there is one — the rule the project page
                   already follows for pages, for the same reason: "Item 3" is
                   the editor's word for a thing the customer has named. */}
-              <p className="truncate text-xs font-semibold uppercase tracking-[0.12em] text-fg-muted">
+              <Eyebrow className="truncate">
                 {item.title?.trim() || listWord('itemLabels', { number: itemIndex + 1 })}
-              </p>
+              </Eyebrow>
               <Field label={itemWord('title')}>
                 <Input
                   value={item.title}

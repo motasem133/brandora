@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server'
 
 import { Badge } from '@/components/ui/badge'
 import { CopyButton } from '@/components/ui/copy-button'
+import { Eyebrow } from '@/components/ui/eyebrow'
 import type { SocialMediaAsset } from '@/server/db/schema'
 
 /**
@@ -165,7 +166,7 @@ export async function SocialView({ social }: { social: SocialMediaAsset }) {
 function GroupHeading({ title, children }: { title: string; children?: React.ReactNode }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-line pb-2.5">
-      <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-fg-muted">{title}</h3>
+      <Eyebrow as="h3">{title}</Eyebrow>
       {children && <div className="flex items-center gap-2">{children}</div>}
     </div>
   )
