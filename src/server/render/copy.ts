@@ -63,29 +63,66 @@ export function bilingual(text: string) {
 }
 
 /** Words no headline should end on. */
-const DANGLING = /\s+(a|an|the|and|or|of|to|in|on|for|with|at|by|from|as|that|is|are|was|were)$/i
+const DANGLING =
+  /\s+(a|an|the|and|or|of|to|in|on|for|with|at|by|from|as|that|is|are|was|were|if|when|but|so|than|because|while|where|who|which)$/i
+
+/** A full stop, and the scripts' equivalents, followed by a space. */
+const SENTENCE_END = /[.!?؟۔](?=\s)/g
 
 /**
- * Trims to a clause a headline can hold, on a boundary rather than mid-word.
+ * Trims to something a headline can hold, on a boundary rather than mid-word.
  *
- * A comma is strongly preferred over a space, because it ends a clause where a
- * space just stops mid-thought: "In the alleyways of old Damascus, grandmothers
- * once rose before dawn to" is what the space produced, and the comma four
- * words earlier is the actual line. The threshold is low for that reason — a
- * short whole clause beats a long broken one.
+ * Three boundaries, in descending order of how finished the result reads:
+ *
+ * 1. **A sentence.** A caption's first sentence is almost always the line
+ *    somebody would have chosen by hand — "Roasting is mostly listening" —
+ *    and it is the only cut that leaves a complete thought. This was missing,
+ *    and its absence is what put "Roasting is mostly listening. The beans tell
+ *    you when they're done if" on a customer's post: a full stop sat 40
+ *    characters inside the window and nothing looked for it.
+ * 2. **A clause**, at a comma. "In the alleyways of old Damascus, grandmothers
+ *    once rose before dawn to" is what a space produced, and the comma four
+ *    words earlier is the actual line. The threshold is low for that reason —
+ *    a short whole clause beats a long broken one.
+ * 3. **A word**, at a space. The last resort, and the one that reads as
+ *    truncation, which is why `clean` reports it and `take` avoids it.
+ *
+ * The terminal punctuation goes with `tidy`: these are set as headlines beside
+ * a mark, where a trailing full stop reads as a typo rather than as grammar.
  */
-function fit(text: string, limit: number) {
-  const clean = text.trim().replace(/\s+$/, '')
+function fitDetail(text: string, limit: number): { line: string; clean: boolean } {
+  const source = text.trim().replace(/\s+$/, '')
   const tidy = (value: string) => value.replace(DANGLING, '').replace(/[.,;:،]$/, '').trim()
 
-  if (clean.length <= limit) return tidy(clean)
+  if (source.length <= limit) return { line: tidy(source), clean: true }
 
-  const window = clean.slice(0, limit)
+  /* One character of slack so a sentence ending exactly at the limit still
+     counts — its full stop is the character that would spill. */
+  const window = source.slice(0, limit + 1)
+
+  let sentence = -1
+  for (const match of window.matchAll(SENTENCE_END)) sentence = match.index
+  if (sentence > limit * 0.3) {
+    return { line: tidy(window.slice(0, sentence)), clean: true }
+  }
+
+  /* An em dash, which `sentences` already treats as a separator: the branding
+     and social models both write with it constantly, and the half in front of
+     it is a whole thought. "Single-origin means the beans come from one place"
+     is the line; cutting at the comma after it gives "…one place — one farm". */
+  let dash = -1
+  for (const match of window.matchAll(/\s[—–]\s/g)) dash = match.index
+  if (dash > limit * 0.3) return { line: tidy(window.slice(0, dash)), clean: true }
+
   const comma = Math.max(window.lastIndexOf(','), window.lastIndexOf('،'))
-  if (comma > limit * 0.35) return tidy(window.slice(0, comma))
+  if (comma > limit * 0.35) return { line: tidy(window.slice(0, comma)), clean: true }
 
   const space = window.lastIndexOf(' ')
-  return tidy(space > limit * 0.4 ? window.slice(0, space) : window)
+  return { line: tidy(space > limit * 0.4 ? window.slice(0, space) : window), clean: false }
+}
+
+function fit(text: string, limit: number) {
+  return fitDetail(text, limit).line
 }
 
 /**
@@ -111,12 +148,29 @@ export function buildCopy(sources: CopySources, layouts: string[]): Record<strin
   const story = sources.story ? sentences(sources.story) : []
   const used = new Set<string>()
 
+  /*
+   * The best line this pool can give, not the first one it happens to hold.
+   *
+   * Two passes. The first takes only candidates that end on a sentence or a
+   * clause; the second will accept a word-boundary cut. A kit has nine captions
+   * to choose from and five layouts to fill, so a caption whose first sentence
+   * is longer than the box can simply be passed over in favour of one that
+   * fits — which is how "There's a new room in Dubai where the coffee comes
+   * first and the noise" stops being the line a customer posts.
+   *
+   * The fallback pass still exists because a project that ran only the branding
+   * step has three story sentences and no captions, and a ragged line beats an
+   * empty poster.
+   */
   const take = (pool: string[], limit: number) => {
-    for (const candidate of pool) {
-      const line = fit(candidate, limit)
-      if (line && !used.has(line)) {
-        used.add(line)
-        return opening(line)
+    for (const wantClean of [true, false]) {
+      for (const candidate of pool) {
+        const { line, clean } = fitDetail(candidate, limit)
+        if (wantClean && !clean) continue
+        if (line && !used.has(line)) {
+          used.add(line)
+          return opening(line)
+        }
       }
     }
     return null
