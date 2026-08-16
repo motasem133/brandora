@@ -26,6 +26,7 @@
     "test:proxy": "tsx scripts/proxy-matcher-test.ts",
     "test:copy": "tsx scripts/copy-contract-test.ts",
     "test:brand-copy": "tsx scripts/brand-copy-test.ts",
+    "test:kit-copy": "tsx scripts/kit-copy-test.ts",
     "test:logo-progress": "tsx scripts/logo-progress-test.ts",
     "test:logo-icon": "tsx scripts/logo-icon-test.ts",
     "test:brand-nudge": "tsx scripts/brand-nudge-test.ts",
