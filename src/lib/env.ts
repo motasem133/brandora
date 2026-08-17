@@ -104,6 +104,22 @@ export const env = createEnv({
     // --- seeding ---
     SEED_ADMIN_EMAIL: z.string().email().optional(),
     SEED_ADMIN_PASSWORD: z.string().min(8).optional(),
+
+    /**
+     * Search Console's HTML verification token, if that method is used.
+     *
+     * Not a secret — it is served in the page — but deployment-specific, which
+     * is why it is a variable rather than a literal: a preview and production
+     * are different properties, and a token committed for one is wrong on the
+     * other.
+     *
+     * Optional, and unset it renders nothing. The domain is *already* verified
+     * by a DNS TXT record on `enigmitic.com`, which covers every subdomain, so
+     * this is a second method rather than the only one. Note the two tokens are
+     * not interchangeable: Google issues a different value per method, and the
+     * TXT record's value will not verify here.
+     */
+    GOOGLE_SITE_VERIFICATION: z.string().min(1).optional(),
   },
 
   client: {
@@ -151,6 +167,7 @@ export const env = createEnv({
     EMAIL_FROM: process.env.EMAIL_FROM,
     SEED_ADMIN_EMAIL: process.env.SEED_ADMIN_EMAIL,
     SEED_ADMIN_PASSWORD: process.env.SEED_ADMIN_PASSWORD,
+    GOOGLE_SITE_VERIFICATION: process.env.GOOGLE_SITE_VERIFICATION,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
     NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
