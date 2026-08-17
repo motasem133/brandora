@@ -9,10 +9,14 @@ future design work must not contradict.
 
 Brandora generates a complete brand identity from a short brief — what the
 business does, who it is for, and what makes it different, in the customer's
-own words. From that: business name
-ideas, four logo concepts, a colour palette, font pairings, a brand story and
-voice, a multi-page website, and a social media kit — in one run, from one
-brief.
+own words. From that: business name ideas, two logo concepts, a colour palette,
+font pairings, a brand story and voice, a multi-page website, and a social media
+kit — in one run, from one brief.
+
+Two concepts, not four. `CREDIT_COSTS.logos` is "six credits for two images" and
+`BRAND_COST` is commented "both logo concepts"; the four files a customer
+downloads per brand are variants of the chosen concept — wordmark, icon, symbol,
+name — not four separate concepts.
 
 ## Platform
 
@@ -56,20 +60,44 @@ Supporting truths, real but not the headline:
 - The full kit list above, because the pipeline produces every item.
 - Logos arrive as raster and traced SVG, plus favicon, avatars, an OG card, a
   monochrome mark and a brand-kit ZIP.
-- Published customer sites are live on a subdomain, and Business plans can
-  attach their own domain.
-- Pricing is real and seeded: Free, Creator $19, Pro $49, Agency $99 — monthly,
-  and only monthly.
+- Published customer sites are live on a subdomain. A custom domain is a paid
+  entitlement: `customDomain` is false on Free and true above it.
+- **The plan ladder is awaiting the owner's correction — do not rely on either
+  version below until this note is removed.** The record previously read "Free,
+  Creator $19, Pro $49, Agency $99". `src/server/db/seed.ts` and the live
+  database say something different: three plans — Free, Creator $19 (3 seats, 1
+  custom domain), Studio $49 (10 seats, unlimited domains) — plus three one-off
+  credit packs, $15/100, $39/300 and $110/1000. There is no Pro and no Agency
+  seeded. Billing is monthly either way.
 - **Plans are sold in AI credits, not in brands.** A brand count was the
   headline until it stopped describing the product: almost nobody makes twenty
   brands a month, and credits now buy content as well as brands. Surfaces still
   show what a balance is worth in brands, derived rather than restated.
-- A run costs credits per section: branding 1, logos 6, website 1, social 1. A
-  fresh set of logo concepts is therefore the most expensive thing a customer
-  can ask for, and the only one they ask for repeatedly.
-- Content Studio prices its own operations in `CONTENT_CREDIT_COSTS`, kept apart
-  from the brand run's `CREDIT_COSTS` because `GenerationSection` is derived
-  from the latter and reaches the Inngest pipeline.
+- A run costs credits per section: branding 1, logos 6, website 1, social 1,
+  kit 4 — **thirteen credits for a full brand** (`BRAND_COST`). A fresh set of
+  logo concepts is therefore the most expensive thing a customer can ask for,
+  and the only one they ask for repeatedly. The free plan's brand is a smaller
+  object and is counted at a smaller cost.
+- **Content Studio is a surface, not just a price table.** Customers come back to
+  it to keep producing content against a brand they already generated — which is
+  the reason credits, rather than a brand count, are what a plan sells. It prices
+  its own operations in `CONTENT_CREDIT_COSTS`, kept apart from the brand run's
+  `CREDIT_COSTS` because `GenerationSection` is derived from the latter and
+  reaches the Inngest pipeline.
+- **An account can have more than one person in it.** Plans carry seat counts,
+  teammates are invited by email through an `invitations` table, and
+  `/accept-invitation/[id]` is where they land. Collaboration is a real
+  capability, not a roadmap item.
+- **An abandoned brand gets one email.** `brand-nudge.ts` re-engages the owner
+  of a brand that generated *successfully* and was then left alone — not a run
+  that failed or stalled. It is due 48 hours after the first completed run
+  (`NUDGE_AFTER_HOURS`) and stops being worth sending after 14 days
+  (`NUDGE_BEFORE_DAYS`), so a long-cold brand is never woken up. Only verified,
+  unsubscribed accounts hear from us, and "came back" is read as having *done*
+  something with the brand — another run, content, the assistant, a publish, an
+  edit — because nothing here records a page view. It is the product's only
+  lifecycle nudge, one message per project ever rather than a sequence, and the
+  unique index on `project_emails` is what makes that true.
 - Generation is gated on a verified email address. Free credits are the obvious
   abuse target, so verification gates spending rather than sign-in.
 
@@ -108,12 +136,24 @@ labelled as generated output.
 Genuine product output already generated and stored, usable without spending new
 credits:
 
-- **Makān** — a coffee brand generated end to end. Slogan "Brewed for focus.";
-  palette `#6F4E37 / #D4A574 / #C08552` on `#FAF6F0`; Sora + Inter + DM Serif
-  Display; values "Intentional Restraint, Sensory Clarity, Modern Heritage,
-  Quiet Confidence"; alternative names including *Qahwa Sākin* with its
-  rationale. Four logo concepts as PNG and SVG, favicon, avatars and a brand kit
-  in R2. Its website is published and reachable.
+- **Sultana** — a Syrian kitchen, and the run the marketing pages are built out
+  of. It is the example that exercises everything the product now does: a name
+  with its reasoning ("the feminine of *sultan*"), palette `#1B3A3A / #D4A853 /
+  #F43F5E` on `#FEFAF5`, Reem Kufi Ink + El Messiri, four traced logo variants,
+  eight designed social posts and a brand-kit PDF. The files committed for
+  marketing use are in `public/marketing/` (`sultana-*.webp`,
+  `sultana-brand-kit.pdf`) and cost no credits to reuse.
+
+  Two gaps future work must not paper over: **none of its marks carry Arabic** —
+  all four are Latin — and **there is no screenshot of a generated website
+  anywhere in the repo**. Any surface that needs to show either must demonstrate
+  it some other honest way rather than mocking one up.
+
+- **Makān** — an earlier coffee brand, generated end to end. Slogan "Brewed for
+  focus."; palette `#6F4E37 / #D4A574 / #C08552` on `#FAF6F0`; Sora + Inter + DM
+  Serif Display. The marketing pages no longer use it; it is recorded here
+  because it was real output, but verify it still exists in R2 before relying on
+  it.
 
 ## Known limitations
 
@@ -163,29 +203,46 @@ not be re-taught the first.
    deliverable PDF. The logo rounds, the brand assistant and the website builder
    exist so the customer can move it afterwards.
 
+## Settled since this record was written
+
+Both of the decisions previously open here have been answered. Kept rather than
+deleted, because the reasoning is what stops them being reopened by accident.
+
+- **The website and social sections on a project page keep their detail.**
+  Answered by the owner: customers do read and copy from them, so the space they
+  take is earned. They are not to be compressed to a manifest. Presenting that
+  detail better is fair game; removing it is not.
+
+- **The icon is chosen automatically.** Shipped. `isIconStyle` in
+  `server/services/logos.ts` picks the icon-like concept out of the round, and
+  the favicon, avatars and OG card derive from that rather than from a wordmark
+  shrunk to 32px. The customer still makes exactly one choice — which logo —
+  which was the point.
+
 ## Open product decisions
 
 Recorded so future work does not mistake current behaviour for a settled answer.
 
-- **What the website and social sections on a project page are for.** They
-  render every page block and all nine posts read-only, duplicating what the
-  builder opens, and account for well over half the page. Whether customers
-  actually read and copy from there — making the detail worth its space — or
-  only need proof the run delivered, is not established. It decides whether
-  those sections shrink to a manifest or keep their detail and are presented
-  better, so it is worth an answer from real use rather than a guess.
-
-- **How the icon is chosen.** Choosing a logo is currently the only decision, and
-  the favicon, avatars and OG card all derive from it. That is deliberate — the
-  two-choice model was unusable — but it is not the end state: a wordmark shrunk
-  to 32px is an unreadable smudge, and the intended answer is to select the most
-  icon-like concept automatically rather than to hand the choice back.
+- **The plan ladder** — see the note under "What is true and may be claimed".
+  Awaiting the owner's correction.
 
 ## Brand commitments (client-pinned, recorded not expanded)
 
 Violet `#7240FF` → indigo `#5B5CFB` → blue `#3B82F6` on Dark Navy `#0B1020`;
 Plus Jakarta Sans; Lucide icons; Framer Motion; 20–24px radii; premium, modern,
 elegant, minimal, AI-first.
+
+Two notes on that pinned line, neither of them a change to it:
+
+- **The ground hex disagrees with what shipped.** This says `#0B1020`; the
+  implemented ground is Room Black `#05070f`, and has been since the reference
+  pass. DESIGN.md is authoritative on the built system, but a client-pinned
+  value is not ours to quietly overwrite — confirm which is the commitment.
+- **Plus Jakarta Sans is still the product's family.** A second Latin display
+  face, Bricolage Grotesque, was added on the marketing scopes only, by an
+  approved decision, and the app is untouched. Recorded here so the pinned
+  single-family line is not read as having been broken. The reasoning lives in
+  DESIGN.md under the Marketing Pairing Rule.
 
 The mark is a four-point star with a smaller four-point star cut out of its
 centre, hard-edged, sweeping blue to violet. It supersedes the traced "B" that
