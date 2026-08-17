@@ -129,9 +129,18 @@ async function main() {
    * quotes what the product actually charges. Billing is monthly: a page
    * offering an annual period would be pricing something nobody can buy.
    */
+  /*
+   * `is_active`, because the page renders active plans and this asserts against
+   * the page. Without it the query sorted a *retired* row first — a database
+   * carrying the old basic/business ladder answered "Basic, $29", the page
+   * quoted $19, and the assertion failed on correct behaviour. It passed in CI
+   * regardless: CI seeds a fresh database, which has no retired rows for the
+   * query to find. Green for the wrong reason, and red on any machine that had
+   * ever run the older seed.
+   */
   const [paid] = await sql`
     SELECT price_monthly, price_yearly FROM plans
-    WHERE price_monthly > 0 ORDER BY sort_order LIMIT 1`
+    WHERE price_monthly > 0 AND is_active ORDER BY sort_order LIMIT 1`
 
   if (paid) {
     const asMoney = (minor) => `$${(minor / 100).toLocaleString('en-US')}`

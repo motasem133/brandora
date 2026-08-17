@@ -1,4 +1,5 @@
 import { Check } from 'lucide-react'
+import type { Metadata } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import Image from 'next/image'
 
@@ -16,8 +17,10 @@ import { AfterHeadline, HeadlineWords } from '@/components/features/landing/moti
 import { buttonVariants } from '@/components/ui/button'
 import { Eyebrow } from '@/components/ui/eyebrow'
 import { Cell, Horizon, SectionArc, SectionReveal } from '@/components/ui/horizon'
+import { SiteJsonLd } from '@/components/seo/json-ld'
 import { LogoMark } from '@/components/ui/logo'
 import { Link } from '@/i18n/navigation'
+import { alternatesFor, socialMeta } from '@/lib/seo'
 import { getSession } from '@/server/session'
 
 /**
@@ -51,6 +54,41 @@ import { getSession } from '@/server/session'
  * customers yet, and inventing a "trusted by" row is the one thing on that page
  * we cannot honestly copy.
  */
+/**
+ * The landing page's own title, rather than the site default.
+ *
+ * `title.absolute` skips the `%s · Brandora` template: the template is right
+ * for a subpage and wrong here, where the brand name should not be paid for
+ * twice. What it buys is the words people actually search — "Brandora" is not
+ * one of them, and this page had no others.
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale } = await params
+  const t = await getTranslations({ locale, namespace: 'Meta' })
+  const common = await getTranslations({ locale, namespace: 'Common' })
+
+  const title = `${t('homeTitle')} · ${common('appName')}`
+  const description = t('homeDescription')
+
+  return {
+    title: { absolute: title },
+    description,
+    alternates: alternatesFor(locale, ''),
+    ...socialMeta({
+      locale,
+      path: '',
+      title,
+      description,
+      siteName: common('appName'),
+      imageAlt: t('ogAlt'),
+    }),
+  }
+}
+
 export default async function RunDirection({
   params,
 }: {
@@ -70,6 +108,8 @@ export default async function RunDirection({
   const t = await getTranslations('Landing')
   const tn = await getTranslations('Nav')
   const tp = await getTranslations('Pricing')
+  const tm = await getTranslations('Meta')
+  const tc = await getTranslations('Common')
   // Shared with StartCta's own lookup — getSession is cache()d per render.
   const session = await getSession()
   const steps = t.raw('steps') as { name: string; body: string }[]
@@ -114,6 +154,12 @@ export default async function RunDirection({
 
   return (
     <div className="world-dark min-h-dvh overflow-x-hidden">
+      <SiteJsonLd
+        locale={locale}
+        name={tc('appName')}
+        description={tm('homeDescription')}
+        category={tm('applicationCategory')}
+      />
       {/*
         Sticky, which it was not.
 

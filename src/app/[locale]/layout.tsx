@@ -12,6 +12,7 @@ import { notFound } from 'next/navigation'
 
 import { PostHogProvider } from '@/components/analytics/posthog-provider'
 import { isRtl, routing } from '@/i18n/routing'
+import { ogImage, ogLocale, siteUrl } from '@/lib/seo'
 import { themeInitScript } from '@/lib/theme'
 import '../globals.css'
 
@@ -96,9 +97,47 @@ const arabic = IBM_Plex_Sans_Arabic({
   display: 'swap',
 })
 
-export const metadata: Metadata = {
-  title: { default: 'Brandora', template: '%s · Brandora' },
-  description: 'Your entire brand identity, generated in 60 seconds.',
+/**
+ * The defaults every page under this layout inherits.
+ *
+ * Per-locale rather than static, for the reason the whole product exists:
+ * `/en` and `/ar` are two languages of one site, and a single hard-coded
+ * English description was being served on the Arabic page — the one line a
+ * crawler reads, in the wrong language, on a product whose durable constraint
+ * is that Arabic is not a translation layer.
+ *
+ * `metadataBase` is what makes every relative URL below absolute. Without it
+ * Next emits relative Open Graph image URLs, which no social platform resolves,
+ * so a share of this page rendered as a bare link.
+ *
+ * The signed-in routes inherit this too — they live under the same `[locale]`
+ * segment — and that is harmless: `app/robots.ts` keeps them out of the index,
+ * and metadata on a page a crawler never fetches costs nothing.
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale } = await params
+  const t = await getTranslations({ locale, namespace: 'Meta' })
+  const common = await getTranslations({ locale, namespace: 'Common' })
+
+  return {
+    metadataBase: new URL(siteUrl),
+    title: { default: common('appName'), template: `%s · ${common('appName')}` },
+    description: t('homeDescription'),
+    openGraph: {
+      type: 'website',
+      siteName: common('appName'),
+      locale: ogLocale(locale),
+      images: [{ ...ogImage, alt: t('ogAlt') }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      images: [{ url: ogImage.url, alt: t('ogAlt') }],
+    },
+  }
 }
 
 /** Pre-render both locales so the marketing shell can be static. */

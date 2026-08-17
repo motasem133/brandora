@@ -18,6 +18,7 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx src/server/db/seed.ts",
+    "og:card": "tsx scripts/og-card.ts",
     "auth:generate": "npx @better-auth/cli generate --config src/server/auth.ts",
     "test:system": "node scripts/system-test.mjs",
     "test:billing": "node scripts/billing-test.mjs",
