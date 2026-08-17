@@ -102,15 +102,31 @@ const COPY = {
       footer: 'Thank you for your patience with us early on. Reply to this email if anything is not right.',
     },
     'brand-nudge': {
-      subject: (brand: string) => `Your brand ${brand} is ready`,
-      heading: (brand: string) => `${brand} is ready`,
+      /*
+       * Not "your brand is ready" — `brand-ready` above already opens with that
+       * sentence, and a customer who has had both then holds two emails whose
+       * subjects are the same claim. It is also the wrong claim: this brand was
+       * ready days ago and its owner watched it finish, so announcing readiness
+       * reads as a duplicate of a mail they have already had rather than an
+       * invitation to come back.
+       */
+      subject: (brand: string) => `${brand} is ready when you are`,
+      heading: (brand: string) => `${brand} is ready when you are`,
       /*
        * Short, and careful about what it promises. A free brand has no website
        * and no designed kit, and this email is sent to every plan — so it names
        * the things every run produces and lets the page sell the rest.
+       *
+       * It also says nothing about how long the brand has been sitting there.
+       * The sweep normally fires at 48 hours, but the send is not bound to that
+       * — this template is reachable for any project, and was sent off-schedule
+       * on 17 August. Copy that asserts elapsed time ("waiting since you
+       * generated it") is then plainly false to someone who generated the brand
+       * that morning, which is a worse first impression than no reminder. "Still
+       * where you left it" is true at eleven hours and at thirteen days.
        */
       body: () =>
-        'Your brand has been waiting since you generated it. The mark, the palette and the words are all still there — see how it comes together.',
+        'Your brand is still where you left it — the mark, the palette and the words are all there. See how it comes together.',
       button: 'See your brand',
       footer:
         'You are getting this because you generated a brand on Brandora. It is the only reminder we send for it.',
@@ -164,10 +180,12 @@ const COPY = {
       footer: 'شكراً لصبرك معنا في بداياتنا. إن كان هناك أي خلل، ردّ على هذه الرسالة.',
     },
     'brand-nudge': {
-      subject: (brand: string) => `علامتك ${brand} جاهزة`,
-      heading: (brand: string) => `${brand} جاهزة`,
+      /* Not "علامتك جاهزة" — see the English note on the collision. */
+      subject: (brand: string) => `${brand} جاهزة متى شئت`,
+      heading: (brand: string) => `${brand} جاهزة متى شئت`,
+      /* No claim about elapsed time here either — see the English note. */
       body: () =>
-        'علامتك بانتظارك منذ أن ولّدتها. الشعار ولوحة الألوان والنصوص كلها ما زالت هناك — اطّلع على شكلها مجتمعة.',
+        'علامتك ما زالت كما تركتها — الشعار ولوحة الألوان والنصوص كلها هناك. اطّلع على شكلها مجتمعة.',
       button: 'اعرض علامتك',
       footer: 'وصلتك هذه الرسالة لأنك ولّدت علامة على براندورا، وهي التذكير الوحيد الذي نرسله عنها.',
     },
