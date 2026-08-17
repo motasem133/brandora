@@ -62,13 +62,19 @@ Supporting truths, real but not the headline:
   monochrome mark and a brand-kit ZIP.
 - Published customer sites are live on a subdomain. A custom domain is a paid
   entitlement: `customDomain` is false on Free and true above it.
-- **The plan ladder is awaiting the owner's correction — do not rely on either
-  version below until this note is removed.** The record previously read "Free,
-  Creator $19, Pro $49, Agency $99". `src/server/db/seed.ts` and the live
-  database say something different: three plans — Free, Creator $19 (3 seats, 1
-  custom domain), Studio $49 (10 seats, unlimited domains) — plus three one-off
-  credit packs, $15/100, $39/300 and $110/1000. There is no Pro and no Agency
-  seeded. Billing is monthly either way.
+- **Three plans: Free, Creator $19 and Studio $49.** Confirmed by the owner on
+  17 August 2026, and what `src/server/db/seed.ts` and the live database already
+  held. Free is 10 credits a month and one seat; Creator 200 credits, 3 seats
+  and one custom domain; Studio 700 credits, 10 seats and unlimited domains. In
+  AED, Creator is 69 and Studio 179. Three one-off credit packs sit alongside
+  them: 100 for $15, 300 for $39, 1000 for $110.
+
+  **There is no Pro plan and never was**, and Agency is a retired row
+  (`is_active` false) that can be neither bought nor seen — not an offer. An
+  earlier version of this file listed both at $49 and $99; anything still
+  repeating that ladder is quoting a record that was wrong, not a plan that was
+  withdrawn. Whether Agency is finished or deleted is an open piece of work, not
+  an open question about what we sell today — it is item 3 in BACKLOG.md.
 - **Plans are sold in AI credits, not in brands.** A brand count was the
   headline until it stopped describing the product: almost nobody makes twenty
   brands a month, and credits now buy content as well as brands. Surfaces still
@@ -205,8 +211,14 @@ not be re-taught the first.
 
 ## Settled since this record was written
 
-Both of the decisions previously open here have been answered. Kept rather than
-deleted, because the reasoning is what stops them being reopened by accident.
+Every decision previously open here has been answered. Kept rather than deleted,
+because the reasoning is what stops them being reopened by accident.
+
+- **The plan ladder is Free, Creator $19, Studio $49.** Answered by the owner on
+  17 August 2026, settling it in favour of the seed and the live database rather
+  than the record — this file was the thing that was wrong. The detail is under
+  "What is true and may be claimed"; what belongs here is that Pro and Agency are
+  not to be reintroduced from memory.
 
 - **The website and social sections on a project page keep their detail.**
   Answered by the owner: customers do read and copy from them, so the space they
@@ -223,8 +235,11 @@ deleted, because the reasoning is what stops them being reopened by accident.
 
 Recorded so future work does not mistake current behaviour for a settled answer.
 
-- **The plan ladder** — see the note under "What is true and may be claimed".
-  Awaiting the owner's correction.
+**None.** The plan ladder was the last one and was answered on 17 August 2026.
+The pinned ground hex under "Brand commitments" is still an open *question* —
+this file says `#0B1020`, the shipped ground is `#05070f` — but it is a
+disagreement between a client-pinned value and the built system rather than a
+product decision, so it is recorded there.
 
 ## Brand commitments (client-pinned, recorded not expanded)
 
