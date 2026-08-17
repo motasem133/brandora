@@ -1,18 +1,56 @@
 import { eq } from 'drizzle-orm'
+import type { Metadata } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { CurrencySwitch } from '@/components/features/billing/currency-switch'
 import { PricingFaq } from '@/components/features/landing/pricing-faq'
 import { PricingPlans } from '@/components/features/landing/pricing-plans'
+import { PlanOffersJsonLd } from '@/components/seo/json-ld'
 import { StartCta } from '@/components/features/landing/start-cta'
 import { buttonVariants } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Link } from '@/i18n/navigation'
+import { alternatesFor, socialMeta } from '@/lib/seo'
 import { formatPrice, isCurrency, pickPrice, type Currency } from '@/lib/utils'
 import { db } from '@/server/db'
 import { creditPacks, plans } from '@/server/db/schema'
 import { getSession } from '@/server/session'
 import { PlanComparison } from '@/components/features/billing/plan-comparison'
+
+/**
+ * Prices in the description, in the currency this locale is shown.
+ *
+ * `/ar` defaults to AED below, so its description quotes AED — a search result
+ * promising $19 to a reader whose page says 69 is a result that gets clicked
+ * once. The figures are the seeded ones and are checked by `test:copy`; if a
+ * price moves, that test is what says this string moved with it.
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale } = await params
+  const t = await getTranslations({ locale, namespace: 'Meta' })
+  const common = await getTranslations({ locale, namespace: 'Common' })
+
+  const title = t('pricingTitle')
+  const description = t('pricingDescription')
+
+  return {
+    title,
+    description,
+    alternates: alternatesFor(locale, '/pricing'),
+    ...socialMeta({
+      locale,
+      path: '/pricing',
+      title: `${title} · ${common('appName')}`,
+      description,
+      siteName: common('appName'),
+      imageAlt: t('ogAlt'),
+    }),
+  }
+}
 
 export default async function PricingPage({
   params,
@@ -37,6 +75,19 @@ export default async function PricingPage({
 
   return (
     <div className="world-dark min-h-dvh">
+      {/* Built from `ladder`, the same rows the cards below render. */}
+      <PlanOffersJsonLd
+        locale={locale}
+        name={t('title')}
+        description={t('subtitle')}
+        offers={ladder.map((plan) => {
+          const price = pickPrice(currency, {
+            usd: plan.priceMonthly,
+            aed: plan.priceMonthlyAed,
+          })
+          return { name: plan.name, price: price.amount, currency: price.currency }
+        })}
+      />
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
         <Link href="/" className="font-display text-xl font-bold accent-text">
           Brandora

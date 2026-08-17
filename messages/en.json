@@ -26,6 +26,14 @@
     "showPassword": "Show password",
     "hidePassword": "Hide password"
   },
+  "Meta": {
+    "homeTitle": "AI Brand Identity Generator",
+    "homeDescription": "One brief gives you names, logos, a colour palette, typography, a brand story, a live website and a social kit — generated together, so they actually match.",
+    "pricingTitle": "Pricing — plans from $19 a month",
+    "pricingDescription": "Start free. Creator $19 and Studio $49 a month, sold in AI credits you spend on brands and content. One-off credit packs too. Monthly billing, no annual lock-in.",
+    "ogAlt": "Brandora — one brief, your entire brand identity",
+    "applicationCategory": "DesignApplication"
+  },
   "Landing": {
     "heroTitle": "One brief. Your entire brand.",
     "heroLead": "Names, logos, a palette, typography, a brand story, a live website and a social kit — generated together from a single brief, so they actually match.",
