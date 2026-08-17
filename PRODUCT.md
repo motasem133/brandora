@@ -69,12 +69,13 @@ Supporting truths, real but not the headline:
   AED, Creator is 69 and Studio 179. Three one-off credit packs sit alongside
   them: 100 for $15, 300 for $39, 1000 for $110.
 
-  **There is no Pro plan and never was**, and Agency is a retired row
-  (`is_active` false) that can be neither bought nor seen — not an offer. An
-  earlier version of this file listed both at $49 and $99; anything still
-  repeating that ladder is quoting a record that was wrong, not a plan that was
-  withdrawn. Whether Agency is finished or deleted is an open piece of work, not
-  an open question about what we sell today — it is item 3 in BACKLOG.md.
+  **There is no Pro plan and never was, and Agency is gone.** An earlier version
+  of this file listed both, at $49 and $99. Pro was never seeded and never sold.
+  Agency was real but unbuyable — a row at $99 left inactive when the ladder was
+  renamed — and on 17 August 2026 it was deleted from `plans` and archived in
+  Polar, because nobody could say what it would include that Studio does not.
+  Three plans is the whole ladder; anything quoting a fourth is quoting a record
+  that was wrong.
 - **Plans are sold in AI credits, not in brands.** A brand count was the
   headline until it stopped describing the product: almost nobody makes twenty
   brands a month, and credits now buy content as well as brands. Surfaces still

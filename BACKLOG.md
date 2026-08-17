@@ -10,7 +10,7 @@ have been built on top of a product that was quietly losing customers' money.
 
 Times are working estimates, not commitments. Where one is uncertain it says so.
 
-*Last true on 16 August 2026.*
+*Last true on 17 August 2026.*
 
 ---
 
@@ -61,17 +61,7 @@ it settles the question either way.
 
 **Needs from you:** the decision, once there is data. It is a public price.
 
-### 3. Finish or delete the Agency plan — a day, or ten minutes
-
-A fourth plan sits in `plans` at $99 with a Polar product already created and
-`is_active = false`, so it can be neither bought nor seen. It is either a plan
-or it is not, and while it is neither it is a row that every plan query has to
-step around and a product in Polar nobody is watching.
-
-**Needs from you:** which one. Deleting it is ten minutes. Making it real is a
-day, and needs to answer what it includes that Studio does not.
-
-### 4. A real render, not a drawing, of the site a free customer is missing — 1–2 days
+### 3. A real render, not a drawing, of the site a free customer is missing — 1–2 days
 
 Shipped on 12 August, drawn rather than described: both sections render the
 thing in the customer's own palette, faces and mark. What is left is the step
@@ -549,3 +539,16 @@ a change rather than a decision. The eighth is the Arabic exemplar, above under
     both search and "by name" worked on `title` while the card's heading is
     `businessName || title`, so a brand's own name as displayed found nothing and
     the sort could not be checked against the screen.
+
+### 17 August
+
+43. **The Agency plan is gone, both halves of it.** It had sat at $99 with
+    `is_active = false` since the ladder was renamed — unbuyable, invisible, and
+    still a row every plan query stepped around plus a live product in the
+    production Polar catalogue. Deleted rather than finished: nobody could say
+    what it would include that Studio does not. Checked before removing it —
+    zero subscriptions pointed at it, and `subscriptions.plan_id` is the only
+    foreign key into `plans`, on `NO ACTION`, so the delete could not have
+    cascaded. The Polar product is archived rather than destroyed, which is all
+    Polar offers and is reversible from the dashboard. `plans` now holds exactly
+    the three plans we sell.
