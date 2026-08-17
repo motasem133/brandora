@@ -235,11 +235,10 @@ because the reasoning is what stops them being reopened by accident.
 
 Recorded so future work does not mistake current behaviour for a settled answer.
 
-**None.** The plan ladder was the last one and was answered on 17 August 2026.
-The pinned ground hex under "Brand commitments" is still an open *question* —
-this file says `#0B1020`, the shipped ground is `#05070f` — but it is a
-disagreement between a client-pinned value and the built system rather than a
-product decision, so it is recorded there.
+**None.** Both of the last two were answered on 17 August 2026 — the plan ladder,
+and the pinned ground hex under "Brand commitments", which turned out not to be a
+disagreement at all: `#0B1020` is the light theme's ink, and the dark ground was
+deepened to Room Black in the reference pass.
 
 ## Brand commitments (client-pinned, recorded not expanded)
 
@@ -249,10 +248,23 @@ elegant, minimal, AI-first.
 
 Two notes on that pinned line, neither of them a change to it:
 
-- **The ground hex disagrees with what shipped.** This says `#0B1020`; the
-  implemented ground is Room Black `#05070f`, and has been since the reference
-  pass. DESIGN.md is authoritative on the built system, but a client-pinned
-  value is not ours to quietly overwrite — confirm which is the commitment.
+- **The pinned navy became the ink, and the ground was deepened.** `#0B1020` was
+  not overwritten — it is `--text-primary` in the light theme, and the tint
+  behind that theme's borders and insets, so it is load-bearing rather than
+  discarded. What changed in the reference pass is the dark ground, which was
+  taken down to Room Black `#05070f`; the family is still named Dark Navy in
+  `globals.css`, and `.world-dark` exists on `/` and `/pricing` precisely
+  because a dark navy ground is a pinned commitment. The direction is kept, the
+  literal value moved.
+
+  Settled on 17 August 2026 in favour of Room Black, and not to be reopened by
+  someone reading the two hexes side by side. Every accent was measured against
+  Room Black, and the pinned navy is lighter and bluer, so restoring it costs
+  contrast everywhere: Signal Violet 3.73:1 → 3.51, Reading Grey 9.06 → 8.52,
+  Quiet Grey 5.51 → 5.19. Lit Violet is the one that decides it — it was
+  *derived* as the tint landing at 7.57:1 dark against 7.53:1 light, and on
+  `#0B1020` it falls to 7.13:1, which breaks a matched pair the whole accent
+  system is built on. See DESIGN.md's Readable Accent Rule.
 - **Plus Jakarta Sans is still the product's family.** A second Latin display
   face, Bricolage Grotesque, was added on the marketing scopes only, by an
   approved decision, and the app is untouched. Recorded here so the pinned
