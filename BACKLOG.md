@@ -123,12 +123,15 @@ apex ALIAS still resolves to Hostinger, and Vercel's default CAA records permit
 exercised until it happens. A certificate warning on `enigmitic.com` near that
 date starts here.
 
-### Preview deployments run against the retired database — 10 minutes, and it is costing something now
+### Preview deployments ran against the retired database — repointed 18 August
 
-The Neon–Vercel integration still points at the **old `us-east-2` project**, and
-this is no longer a suspicion. PR #67's preview branch was created there on
-18 August, in `noisy-king-93466632`, while the current production project
-`wandering-grass-71856823` received nothing.
+**Fixed on 18 August**: the Neon–Vercel integration was disconnected from the
+old project and connected to `wandering-grass-71856823`. What follows is what it
+cost while it was wrong, because the shape of it is worth keeping.
+
+The integration had pointed at the **old `us-east-2` project**, and it was not a
+suspicion by the end. Three preview branches were observed being created there —
+PRs #60, #67 and #68 — while the current production project received none.
 
 What previews therefore get is a branch of a database frozen on 5 August:
 
@@ -145,11 +148,11 @@ below, run against a preview URL, fails on a missing table and reads exactly
 like a code defect. CI is unaffected — it brings its own database — which is
 why this has stayed invisible.
 
-The fix is in the **Neon console**, not Vercel: disconnect the Vercel
-integration from the old project and connect it to `wandering-grass-71856823`.
-Neither `neonctl` nor `vercel integration` exposes it, and
-`vercel integration list brandora` reports no marketplace resource, so it is
-Neon's own integration and a browser is the only way in.
+The fix was in the **Neon console**, not Vercel. Neither `neonctl` nor
+`vercel integration` exposes the binding — `/projects/{id}/integrations` is not
+in Neon's public API and `vercel integration list brandora` reports no
+marketplace resource — so it is Neon's own integration and a browser is the only
+way in. Worth knowing if it ever drifts again.
 
 Then the rest of this item, which has not changed: the old project can be
 deleted once nobody wants the rollback, and the database password has been
