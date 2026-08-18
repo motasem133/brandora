@@ -177,9 +177,24 @@ in Neon's public API and `vercel integration list brandora` reports no
 marketplace resource — so it is Neon's own integration and a browser is the only
 way in. Worth knowing if it ever drifts again.
 
-Then the rest of this item, which has not changed: the old project can be
-deleted once nobody wants the rollback, and the database password has been
-through a chat transcript and is worth rotating.
+**The old project is deleted**, 18 August. Nothing referenced it by then:
+production `DATABASE_URL` resolves to `ep-sweet-wind-aw58yx99` and development to
+`ep-little-cake-awo51u7c`, both in `wandering-grass-71856823`, and the only
+mentions left in the repo were prose — a comment in `e2e/settings.spec.ts` and
+this file. A `pg_dump -Fc` was taken first and verified with `pg_restore -l`
+(48 archive entries, 24 tables with data), so the rollback survives as a 119K
+file at `~/Documents/brandora-neon-rollback/`. It is not in the repo and should
+not be — it is production data.
+
+Still outstanding: **the database password that went through a chat transcript
+is worth rotating**, and it needs saying which one. If it was the deleted
+project's, it died with the project. If it was the current one's, it stands, and
+rotating it means changing the Neon role password and the Vercel `DATABASE_URL`
+and `DATABASE_URL_UNPOOLED` together — production is down in between if they are
+done in the wrong order.
+
+`.env.deploy.bak-us-east-2` also still holds the deleted project's connection
+string. It is now useless and is a credential sitting on disk.
 
 **Preview branches themselves are no longer piling up.** Nine were listed as
 eligible for collection; Neon's own cleanup has taken them. As of 18 August the
