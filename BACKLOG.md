@@ -123,12 +123,43 @@ apex ALIAS still resolves to Hostinger, and Vercel's default CAA records permit
 exercised until it happens. A certificate warning on `enigmitic.com` near that
 date starts here.
 
-### After the database move — whenever
+### Preview deployments run against the retired database — 10 minutes, and it is costing something now
 
-The old `us-east-2` Neon project is still there as a rollback and can be deleted
-once nobody wants it. The database password has been through a chat transcript
-and is worth rotating. The Neon–Vercel integration still points at the old
-project, so preview branches are made in the wrong place.
+The Neon–Vercel integration still points at the **old `us-east-2` project**, and
+this is no longer a suspicion. PR #67's preview branch was created there on
+18 August, in `noisy-king-93466632`, while the current production project
+`wandering-grass-71856823` received nothing.
+
+What previews therefore get is a branch of a database frozen on 5 August:
+
+| | current production | what previews branch from |
+|---|---|---|
+| tables | 25 | 23 |
+| migrations | 19, latest 14 Aug | 13, latest 8 Aug |
+
+Six migrations and two tables behind, and Vercel never migrates, so nothing
+closes the gap at deploy time. The two missing tables are `site_messages`,
+which backs `src/app/sites/[subdomain]/contact/submit/route.ts`, and
+`project_emails`, which backs the brand-nudge job. So the contact form test
+below, run against a preview URL, fails on a missing table and reads exactly
+like a code defect. CI is unaffected — it brings its own database — which is
+why this has stayed invisible.
+
+The fix is in the **Neon console**, not Vercel: disconnect the Vercel
+integration from the old project and connect it to `wandering-grass-71856823`.
+Neither `neonctl` nor `vercel integration` exposes it, and
+`vercel integration list brandora` reports no marketplace resource, so it is
+Neon's own integration and a browser is the only way in.
+
+Then the rest of this item, which has not changed: the old project can be
+deleted once nobody wants the rollback, and the database password has been
+through a chat transcript and is worth rotating.
+
+**Preview branches themselves are no longer piling up.** Nine were listed as
+eligible for collection; Neon's own cleanup has taken them. As of 18 August the
+old project holds `production` and `vercel-dev`, the current one holds
+`production` alone — two and one against a cap of ten. `preview/wildcard-dns-done`
+was deleted by hand after #67 merged.
 
 ### The Google sign-in client — done, but write it down
 
@@ -183,6 +214,10 @@ Send a message through a real published site and check two things: the email
 arrives, and pressing reply answers the visitor rather than Brandora. It was
 verified end to end locally, but only against a fake `@brandora.local` address —
 real deliverability through Resend is the one part untested.
+
+Do this on **production**, not on a preview URL. `site_messages` does not exist
+in the database previews branch from — see *Preview deployments run against the
+retired database* above.
 
 ---
 
