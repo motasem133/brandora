@@ -103,9 +103,12 @@ it — orphaning the `brandora` app and its run history, and cutting off anythin
 in flight. There is no connect-my-existing-account flag. Connecting from inside
 Inngest keeps the account, the app id and the keys, which were left untouched.
 
-Not verifiable from the Vercel CLI: classic OAuth integrations do not appear in
-`vercel integration installations`, which lists marketplace installations only.
-The check is Inngest's own Apps page — `brandora`, last synced, and whether the
+**Verified 18 August**: merging #70 deployed production, and the `brandora` app
+synced from that deploy. Not verifiable from the Vercel CLI, which is worth
+knowing if it ever needs checking again — classic OAuth integrations do not
+appear in `vercel integration installations`, which lists marketplace
+installations only, and Inngest's introspection endpoint requires a signature.
+The check is Inngest's own Apps page: `brandora`, last synced, and whether the
 source reads Vercel rather than manual.
 
 All previews still register as the same `brandora-preview` app, so they
