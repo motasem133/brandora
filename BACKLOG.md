@@ -10,7 +10,7 @@ have been built on top of a product that was quietly losing customers' money.
 
 Times are working estimates, not commitments. Where one is uncertain it says so.
 
-*Last true on 17 August 2026.*
+*Last true on 18 August 2026.*
 
 ---
 
@@ -82,9 +82,9 @@ Nothing else is outstanding.
 
 ## Yours, not code
 
-Mostly small and recurring costs while they are left. Two are not: the wildcard
-DNS record is holding a shipped feature shut, and the Arabic exemplar is a
-standing claim the landing page cannot currently back.
+Mostly small and recurring costs while they are left. One is not: the Arabic
+exemplar is a standing claim the landing page cannot currently back. The
+wildcard DNS record was the other until 18 August; it is closed below.
 
 ### Vercel–Inngest integration — 10 minutes
 
@@ -106,22 +106,22 @@ Two open pull requests as of 16 August: #19, which has been a draft since
 #49 through #56 — so nine preview branches are eligible for collection. Worth a
 look before the next batch of previews rather than after one fails to build.
 
-### The wildcard DNS record — 5 minutes, and it is holding a feature shut
+### What the DNS move left to check — 5 minutes, and one date
 
-`*.brandora.enigmitic.com` does not resolve. The apex is a CNAME to
-`cname.vercel-dns.com` and Vercel already holds the wildcard alias on the
-production deployment, so the platform half is done and the DNS half was never
-made: `dig +short anything.brandora.enigmitic.com` returns nothing.
+The wildcard is closed (44 below), but two things it touched are not provable
+from DNS alone.
 
-Every published site is therefore reachable only at
-`brandora.enigmitic.com/sites/{subdomain}` — while the builder shows the
-customer their subdomain address and the publish dialog puts that address in
-front of them to confirm. What they are handed to share does not answer.
+**Send a real email, both directions.** One to `hello@enigmitic.com` and one out
+of Brandora — a password reset will do. Every record was verified answering
+identically from Vercel's nameservers before and after the switch, but records
+existing is not mail arriving, and no machine on this end can test SMTP.
 
-One record at whoever holds `enigmitic.com`: `*.brandora` CNAME
-`cname.vercel-dns.com`. The routing behind it is tested and works; the system
-test exercises it over raw HTTP with a `Host` header, which is why nothing ever
-went red over this.
+**6 October.** Hostinger renews the Enigmitic site's Let's Encrypt certificate
+around then, over an HTTP challenge against the apex. That still works — the
+apex ALIAS still resolves to Hostinger, and Vercel's default CAA records permit
+`letsencrypt.org` — but it is the one part of the move that will not be
+exercised until it happens. A certificate warning on `enigmitic.com` near that
+date starts here.
 
 ### After the database move — whenever
 
@@ -552,3 +552,39 @@ a change rather than a decision. The eighth is the Arabic exemplar, above under
     cascaded. The Polar product is archived rather than destroyed, which is all
     Polar offers and is reversible from the dashboard. `plans` now holds exactly
     the three plans we sell.
+
+### 18 August
+
+44. **Customer subdomains resolve, and it was never a five-minute DNS record.**
+    `*.brandora.enigmitic.com` now answers, holds a Let's Encrypt wildcard
+    certificate that auto-renews, and returns
+    `x-matched-path: /sites/[subdomain]/[[...path]]` — the proxy rewrite running
+    on a customer host. Every published site had been reachable only at
+    `brandora.enigmitic.com/sites/{subdomain}` while the builder handed the
+    customer the subdomain address.
+
+    The estimate here said one CNAME. It could not have worked: a wildcard
+    certificate needs a DNS-01 challenge, so Vercel would only issue one if it
+    controlled the zone, and the dashboard offered nameservers and no record.
+    Two cheaper routes were rejected — issuing by hand with
+    `vercel certs issue --challenge-only`, which needs redoing every ~90 days
+    and darkens every customer site if missed, and registering each subdomain
+    through the Vercel API on publish, which is a code change rather than a DNS
+    one. So the whole `enigmitic.com` zone moved to Vercel DNS. The nameservers
+    are changed at **GoDaddy**, which is the registrar; Hostinger only ran the
+    DNS.
+
+    Three things made it survivable and would matter again. The apex A records
+    **rotate** — TTL 60, four distinct IP pairs inside an hour — so the apex is
+    an ALIAS to `enigmitic.com.cdn.hstgr.net` and never copied A records. The
+    zone carries company email and every email Brandora sends, so all fourteen
+    were recreated and verified answering from Vercel's nameservers *before* the
+    switch, not after. And Vercel does not create `*.brandora` for
+    you: the zone's default wildcard sits at the apex, and DNS's
+    closest-encloser rule stops it applying below the `brandora` node, so
+    subdomains returned NXDOMAIN until an explicit record was added.
+
+    Verified 14 records against `ns1.vercel-dns.com` before the switch and 14
+    publicly after, fetching the Enigmitic homepage each time to prove the apex
+    still served Hostinger's site rather than Vercel's edge. What is left to
+    check is above, under *Yours, not code*.
