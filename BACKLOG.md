@@ -86,11 +86,31 @@ Mostly small and recurring costs while they are left. One is not: the Arabic
 exemplar is a standing claim the landing page cannot currently back. The
 wildcard DNS record was the other until 18 August; it is closed below.
 
-### Vercel–Inngest integration — 10 minutes
+### Vercel–Inngest integration — connected 18 August
 
 So syncs happen on deploy rather than by hand. This was blocked on Fix 1 — on a
 shared app id it made things worse by syncing every preview over production —
-and Fix 1 shipped on 10 August, so it is now safe.
+and Fix 1 shipped on 10 August. `APP_ID` in `src/server/inngest/client.ts` is
+now per-environment (`brandora` in production, `brandora-preview`, and
+`brandora-development` locally), so a preview can no longer take production's
+registration.
+
+Connected from **Inngest's dashboard**, not from Vercel, and the distinction
+matters. `vercel integration add inngest` installs the marketplace product
+`inngest/account`, which provisions a *new* Inngest account through Vercel
+billing and overwrites `INNGEST_EVENT_KEY` and `INNGEST_SIGNING_KEY` to point at
+it — orphaning the `brandora` app and its run history, and cutting off anything
+in flight. There is no connect-my-existing-account flag. Connecting from inside
+Inngest keeps the account, the app id and the keys, which were left untouched.
+
+Not verifiable from the Vercel CLI: classic OAuth integrations do not appear in
+`vercel integration installations`, which lists marketplace installations only.
+The check is Inngest's own Apps page — `brandora`, last synced, and whether the
+source reads Vercel rather than manual.
+
+All previews still register as the same `brandora-preview` app, so they
+overwrite each other. That is harmless for production and worth knowing before
+someone debugs two previews disagreeing.
 
 ### Neon preview branches — 5 minutes, recurring
 
