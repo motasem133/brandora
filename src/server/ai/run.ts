@@ -8,6 +8,7 @@ import { AppError } from '@/lib/errors'
 import { env } from '@/lib/env'
 import { db } from '@/server/db'
 import { aiUsage } from '@/server/db/schema'
+import { isNetworkError, isTimeoutError } from './failures'
 import { estimateCost, modelChain, type ModelTask } from './models'
 
 const openrouter = createOpenRouter({
@@ -66,12 +67,55 @@ export async function runModel<T extends z.ZodType>(options: RunOptions<T>): Pro
    *
    * A minute is right for a caption set and wrong for a whole website: the site
    * is four or five pages of real copy in one response, and a model that is
-   * writing steadily at fifty seconds is not stuck. Raised for that task alone,
-   * and no higher — three attempts have to finish inside the Inngest route's
-   * 300-second ceiling, or the function is killed with the work half done and
-   * the customer's credits already held.
+   * writing steadily at fifty seconds is not stuck.
+   *
+   * Branding joins it, and the reason is a customer's brand that came out
+   * empty. Branding is the heaviest thinking task here — five names with
+   * rationales, a story, a palette that has to pass a contrast rule, fonts,
+   * values and a voice, in one structured answer from a reasoning model — and
+   * it had the same minute as a caption set. All three models in its chain hit
+   * that minute in turn, so the run produced nothing at all.
+   *
+   * The numbers below used to argue that a minute was clear of honest work.
+   * Read again they argue the opposite: branding's median is thirty-one
+   * seconds, and social — median *two* seconds — reaches eighty-eight at the
+   * 90th percentile. A task fifteen times slower at the median does not have
+   * its long tail safely under sixty seconds. The cap was sitting inside
+   * branding's normal spread, not out past it.
+   *
+   * Ninety is a starting value, not a measured one. The figure that should set
+   * it is branding's own p95 in `ai_usage` — which, now that timeouts are
+   * recorded as timeouts rather than as errors, is finally a question that
+   * table can answer.
    */
-  const ATTEMPT_TIMEOUT_MS = options.task === 'website' ? 90_000 : 60_000
+  const ATTEMPT_TIMEOUT_MS =
+    options.task === 'website' || options.task === 'brandingEn' || options.task === 'brandingAr'
+      ? 90_000
+      : 60_000
+
+  /*
+   * What the whole call gets, across every model and every retry.
+   *
+   * Per-attempt limits alone cannot keep this inside the Inngest route's
+   * 300-second ceiling: raising branding to ninety seconds makes three attempts
+   * two hundred and seventy, and the backoff waits below sit on top of that.
+   * Overrunning the ceiling is the worst outcome available — the function is
+   * killed mid-step, so nothing records the failure and the customer's credits
+   * stay held until the nightly sweep finds them.
+   *
+   * A budget decouples "how long may one model take" from "how many models are
+   * in the chain", which is the coupling that forced the per-attempt value to
+   * be too tight in the first place. The last attempt may get less than the
+   * full ninety seconds as a result. That is the right way to be wrong: a
+   * shortened final attempt still might succeed, where a killed function
+   * cannot.
+   */
+  const CHAIN_BUDGET_MS = 255_000
+
+  /** Below this an attempt is not worth starting — it would only burn budget. */
+  const MIN_ATTEMPT_MS = 20_000
+
+  const deadline = Date.now() + CHAIN_BUDGET_MS
 
   /*
    * The chain answers "this model is having a bad day" by trying another one.
@@ -91,6 +135,14 @@ export async function runModel<T extends z.ZodType>(options: RunOptions<T>): Pro
   for (let pass = 0; pass <= BACKOFF_MS.length; pass += 1) {
     if (pass > 0) {
       const wait = BACKOFF_MS[pass - 1]
+
+      // Waiting only to be cut off on arrival helps nobody; stop while the
+      // failure can still be recorded and the hold released cleanly.
+      if (Date.now() + wait + MIN_ATTEMPT_MS > deadline) {
+        console.warn(`[ai] ${options.task}: out of budget, not retrying`)
+        break
+      }
+
       console.warn(`[ai] ${options.task}: the network is unreachable, retrying in ${wait / 1000}s`)
       await new Promise((resolve) => setTimeout(resolve, wait))
     }
@@ -112,6 +164,23 @@ export async function runModel<T extends z.ZodType>(options: RunOptions<T>): Pro
   for (const [attempt, model] of chain.entries()) {
     const startedAt = Date.now()
 
+    /*
+     * What is left of the budget, and whether it is enough to be worth using.
+     *
+     * Stopping early is deliberate: an attempt given eight seconds will fail on
+     * eight seconds and the only thing it changes is that the customer waits
+     * longer to be told so.
+     */
+    const remaining = deadline - startedAt
+    if (remaining < MIN_ATTEMPT_MS) {
+      console.warn(
+        `[ai] ${options.task}: budget spent, skipping ${chain.length - attempt} remaining model(s)`,
+      )
+      break
+    }
+
+    const attemptTimeoutMs = Math.min(ATTEMPT_TIMEOUT_MS, remaining)
+
     try {
       const result = await generateObject({
         model: openrouter(model),
@@ -126,18 +195,13 @@ export async function runModel<T extends z.ZodType>(options: RunOptions<T>): Pro
          * A hung provider used to own the whole run.
          *
          * There was no deadline here at all, so an attempt ran until something
-         * further out gave up. `ai_usage` shows what that costs: social has a
-         * median of two seconds and a 90th percentile of eighty-eight, website
-         * twelve and seventy-seven. Those are not slow answers, they are calls
-         * that stopped answering — and the chain below cannot try the next
-         * model while it is still waiting for this one.
+         * further out gave up — and the chain cannot try the next model while
+         * it is still waiting for this one.
          *
-         * Set well clear of honest work rather than tight: the slowest real
-         * median in the table is branding at thirty-one seconds, and cutting a
-         * call that was going to succeed trades a slow section for a failed
-         * one. This only ends the calls that were never coming back.
+         * Whichever is smaller: this task's own limit, or whatever is left of
+         * the call's total budget. See both notes at the top.
          */
-        abortSignal: AbortSignal.timeout(ATTEMPT_TIMEOUT_MS),
+        abortSignal: AbortSignal.timeout(attemptTimeoutMs),
       })
 
       const inputTokens = result.usage?.inputTokens ?? 0
@@ -161,6 +225,24 @@ export async function runModel<T extends z.ZodType>(options: RunOptions<T>): Pro
     } catch (error) {
       lastError = error
 
+      /*
+       * A model that ran out of time and a model that answered badly are not
+       * the same failure, and until now `ai_usage` called both of them `error`.
+       * The `timeout` value has existed in the `ai_status` enum from the start
+       * and nothing ever wrote it — so the one question worth asking of this
+       * table, "are we cutting calls off too early?", was the one question it
+       * could not answer. Diagnosing the brand that came out empty meant
+       * reading this file instead of reading a column.
+       *
+       * The zeros below are not a claim that a timed-out attempt was free. No
+       * response arrived, so there are no token counts to record and no cost to
+       * read from it — but the provider may well have billed for the work it
+       * did before we hung up. Labelled as a timeout, a row of zeros is at
+       * least legible as "spend we cannot see" rather than "spend that did not
+       * happen".
+       */
+      const timedOut = isTimeoutError(error)
+
       await recordUsage({
         ...options.context,
         model,
@@ -169,7 +251,7 @@ export async function runModel<T extends z.ZodType>(options: RunOptions<T>): Pro
         cachedTokens: 0,
         costUsd: 0,
         latencyMs: Date.now() - startedAt,
-        status: 'error',
+        status: timedOut ? 'timeout' : 'error',
       })
 
       /*
@@ -195,40 +277,6 @@ export async function runModel<T extends z.ZodType>(options: RunOptions<T>): Pro
 
     return { ok: false, error: lastError }
   }
-}
-
-/**
- * Could not reach the provider at all, as opposed to being answered badly.
- *
- * Matched on the codes the runtime actually raises — DNS, refused, reset,
- * timed out — rather than on message text, which changes between Node
- * versions and SDK releases. `AI_APICallError` wraps the cause, so the chain
- * is walked.
- */
-export function isNetworkError(error: unknown): boolean {
-  const CODES = new Set([
-    'ENOTFOUND',
-    'ECONNREFUSED',
-    'ECONNRESET',
-    'EAI_AGAIN',
-    'ETIMEDOUT',
-    'EHOSTUNREACH',
-    'ENETUNREACH',
-    'UND_ERR_CONNECT_TIMEOUT',
-    'UND_ERR_SOCKET',
-  ])
-
-  for (let current = error, depth = 0; current && depth < 5; depth += 1) {
-    const node = current as { code?: unknown; errors?: unknown[]; cause?: unknown }
-
-    if (typeof node.code === 'string' && CODES.has(node.code)) return true
-    // fetch wraps its attempts in an AggregateError.
-    if (Array.isArray(node.errors) && node.errors.some((inner) => isNetworkError(inner))) return true
-
-    current = node.cause
-  }
-
-  return false
 }
 
 /** OpenRouter reports real cost in provider metadata; shape is loosely typed. */
