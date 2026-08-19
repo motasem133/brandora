@@ -154,6 +154,50 @@ export const auth = betterAuth({
     },
   },
 
+  /**
+   * Where the client IP comes from — which is what every limit above is
+   * counted against.
+   *
+   * This is the default value, written out. Normally that would be noise; here
+   * it is the point, because the default only works by virtue of something
+   * about *this* host, and nothing in the file said so.
+   *
+   * Better Auth will not take a client IP from a forwarded chain it cannot
+   * attribute. With no `trustedProxies` set it accepts the header only when it
+   * holds exactly one address — anything longer is rejected, because the
+   * leftmost entry of an `X-Forwarded-For` chain is written by the client and
+   * a limiter keyed on it can be stepped around by rotating a header.
+   *
+   * On Vercel that single value is guaranteed: the platform overwrites this
+   * header at the edge and does not forward external ones, precisely to stop
+   * that spoof. So every rule above is per client IP, as intended.
+   *
+   * ## What breaks it
+   *
+   * Putting anything in front of Vercel — Cloudflare, a custom reverse proxy,
+   * an Enterprise trusted-proxy arrangement — makes the header a chain, and the
+   * chain is refused. The failure is not that limiting stops; it is that every
+   * request in the world falls into one shared bucket named `no-trusted-ip`, so
+   * `/sign-up/email` becomes **five sign-ups an hour for the entire product**
+   * rather than five per person. Signup is the whole funnel, and it would look
+   * from the outside like the product had simply stopped converting.
+   *
+   * It announces itself with a single `logger.warn` per instance and nothing
+   * else, which on serverless is close to invisible. `scripts/system-test.mjs`
+   * therefore asserts that the shared bucket is never written to — run against
+   * production, that check is the alarm this has no other way of raising.
+   *
+   * If a proxy is ever added, the fix is `trustedProxies` set to that proxy's
+   * actual addresses or CIDR ranges. Adding more header names here is not the
+   * fix and is worse than the problem: a header this host does not overwrite is
+   * one the client controls, and trusting it removes the limit altogether.
+   */
+  advanced: {
+    ipAddress: {
+      ipAddressHeaders: ["x-forwarded-for"],
+    },
+  },
+
   session: {
     expiresIn: 60 * 60 * 24 * 30, // 30 days
     updateAge: 60 * 60 * 24, // rolling refresh once per day
