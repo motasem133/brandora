@@ -26,6 +26,35 @@ import { adItemSchema, socialPostItemSchema } from '@/lib/content'
  * four name ideas when the UI renders five.
  */
 
+/**
+ * A string's minimum length, enforced here and never sent to the provider.
+ *
+ * `.min()` is serialised into the JSON schema as `minLength`, and Alibaba
+ * rejects the whole request when the value is large — measured, not guessed:
+ * on `qwen/qwen3.7-plus` a bare `z.string().min(150)` comes back in half a
+ * second as
+ *
+ *   [Alibaba] invalid_parameter_error … [Invalid request parameters.]
+ *
+ * while `.min(3)` is accepted and the same rule written as a refinement is
+ * accepted at any size. The threshold is undocumented, so the rule is not
+ * "keep minimums small" — it is "never serialise one", which is a rule that
+ * cannot be got wrong later by picking a number.
+ *
+ * This is the same trap `hashtag` below already documents for `.regex()`, and
+ * the same fix. It matters more than it looks: `qwen/qwen3.7-plus` is the
+ * primary for every social task, and this is why it answered 13 times and
+ * failed 37 — the schemas were tightened with minimums and it has been
+ * refusing the request outright ever since, rather than the output.
+ *
+ * A refinement is not serialised, so the constraint is enforced exactly as
+ * before and the provider never sees it.
+ */
+const atLeast = (min: number) => ({
+  check: (value: string) => value.length >= min,
+  message: `Must be at least ${min} characters`,
+})
+
 const hex = z
   .string()
   .regex(/^#[0-9a-fA-F]{6}$/, 'Must be a 6-digit hex colour')
@@ -35,13 +64,17 @@ export const brandingSchema = z.object({
   businessNameIdeas: z
     .array(
       z.object({
-        name: z.string().min(2).max(40),
+        name: z.string().max(40).refine(atLeast(2).check, atLeast(2).message),
         rationale: z.string().max(200).describe('One sentence on why this name works'),
       }),
     )
     .length(5),
-  slogan: z.string().min(3).max(80),
-  brandStory: z.string().min(150).max(1500).describe('Two or three short paragraphs'),
+  slogan: z.string().max(80).refine(atLeast(3).check, atLeast(3).message),
+  brandStory: z
+    .string()
+    .max(1500)
+    .refine(atLeast(150).check, atLeast(150).message)
+    .describe('Two or three short paragraphs'),
   colorPalette: z.object({
     primary: hex,
     secondary: hex,
@@ -77,8 +110,8 @@ export type BrandingOutput = z.infer<typeof brandingSchema>
 const filled = (min: number, max: number, description: string) =>
   z
     .string()
-    .min(min)
     .max(max)
+    .refine(atLeast(min).check, atLeast(min).message)
     .refine((value) => !MARKUP.test(value), NO_MARKUP_MESSAGE)
     .describe(description)
 
@@ -343,8 +376,8 @@ export type WebsiteOutput = z.infer<typeof websiteSchema>
 const plain = (min: number, max: number) =>
   z
     .string()
-    .min(min)
     .max(max)
+    .refine(atLeast(min).check, atLeast(min).message)
     .refine((value) => !MARKUP.test(value), NO_MARKUP_MESSAGE)
 
 /**
@@ -369,8 +402,8 @@ const plain = (min: number, max: number) =>
 const HASHTAG = /^[\p{L}\p{N}_]+$/u
 const hashtag = z
   .string()
-  .min(3)
   .max(30)
+  .refine(atLeast(3).check, atLeast(3).message)
   .refine((value) => HASHTAG.test(value), 'Letters, numbers and underscores only.')
 
 /** Ten of the same word is not a hashtag set. Case-insensitive, as Instagram is. */
@@ -384,8 +417,8 @@ export const socialSchema = z.object({
       z.object({
         type: z
           .string()
-          .min(3)
           .max(30)
+          .refine(atLeast(3).check, atLeast(3).message)
           .describe('e.g. introduction, product, testimonial, behind-the-scenes'),
         caption: plain(60, 600).describe('Plain text. Line breaks are newlines, never <br>.'),
         hashtags: z.array(hashtag).min(3).max(10).refine(distinct, 'Hashtags must be distinct.'),
@@ -436,7 +469,7 @@ export type SocialOutput = z.infer<typeof socialSchema>
  */
 export const contentSocialPostSchema = z.object({
   /** A few words to recognise this set by in the library, not a headline. */
-  title: z.string().min(1).max(80),
+  title: z.string().max(80).refine(atLeast(1).check, atLeast(1).message),
   items: z.array(socialPostItemSchema).min(1).max(5),
 })
 
@@ -450,7 +483,7 @@ export const contentSocialPostSchema = z.object({
  */
 export function contentSocialPostSchemaFor(variants: number) {
   return z.object({
-    title: z.string().min(1).max(80),
+    title: z.string().max(80).refine(atLeast(1).check, atLeast(1).message),
     items: z.array(socialPostItemSchema).length(variants),
   })
 }
@@ -470,7 +503,7 @@ export type ContentSocialPostOutput = z.infer<typeof contentSocialPostSchema>
  */
 export function contentAdSchemaFor(variants: number) {
   return z.object({
-    title: z.string().min(1).max(80),
+    title: z.string().max(80).refine(atLeast(1).check, atLeast(1).message),
     items: z.array(adItemSchema).length(variants),
   })
 }
@@ -493,7 +526,7 @@ export function contentAdSchemaFor(variants: number) {
  */
 export function contentCarouselSchemaFor(frames: number) {
   return z.object({
-    title: z.string().min(1).max(80),
+    title: z.string().max(80).refine(atLeast(1).check, atLeast(1).message),
     frames: z
       .array(
         z.object({
@@ -528,7 +561,7 @@ export type ContentCarouselOutput = z.infer<ReturnType<typeof contentCarouselSch
  * from what the artwork can hold.
  */
 export const contentStorySchema = z.object({
-  title: z.string().min(1).max(80),
+  title: z.string().max(80).refine(atLeast(1).check, atLeast(1).message),
   lead: plain(3, 70).describe('The line set large on the story'),
 })
 

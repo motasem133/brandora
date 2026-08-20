@@ -97,6 +97,12 @@ Create a complete brand identity for this business.
 ${projectBrief(project)}
 
 Give five distinct name directions rather than five variations of one idea.
+Each name's rationale is ONE sentence and at most 200 characters — not a
+paragraph. This is the field most often written too long, and an answer that
+overruns it is thrown away whole, taking the other four names with it.
+
+The brand story is two or three short paragraphs, at least 150 characters.
+
 The palette and fonts should express the "${project.brandStyle}" style without being generic.
 `.trim()
 }
