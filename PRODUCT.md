@@ -156,6 +156,24 @@ credits:
   anywhere in the repo**. Any surface that needs to show either must demonstrate
   it some other honest way rather than mocking one up.
 
+- **دار العُود والطّياف (Dar al-Oud wa al-Tayyaf)** — a Dubai perfume house, and the
+  first run generated **from an Arabic brief**, on 20 August 2026. It exists to
+  close the gap named above: Sultana was briefed in English and its marks are
+  Latin, so every Arabic claim on the site rested on a brief that could be
+  displayed RTL. Naming, story, palette and type are Arabic-native — the heading
+  face the run chose is **Aref Ruqaa**, a calligraphic Arabic type.
+
+  **One of its two logo concepts is usable and one is not.** The wordmark is
+  correctly shaped, connected Arabic with its diacritics intact, and is committed
+  as `public/marketing/dar-al-oud-wordmark.webp` (plus the traced `.svg`). The
+  second concept — the geometric icon — renders **malformed Arabic**: broken
+  letter joins, a stray fragment, and `ذ` where the name has `د`. It is
+  deliberately not committed, and nothing may show it.
+
+  That one-in-two rate is itself the finding. Arabic marks are not reliably
+  produced; they are produced often enough that a run yields one, which means any
+  surface built on them needs a human to look before it ships.
+
 - **Makān** — an earlier coffee brand, generated end to end. Slogan "Brewed for
   focus."; palette `#6F4E37 / #D4A574 / #C08552` on `#FAF6F0`; Sora + Inter + DM
   Serif Display. The marketing pages no longer use it; it is recorded here
