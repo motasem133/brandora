@@ -89,9 +89,17 @@ export async function generateLogos(params: {
    * Only the derived assets are replaced. They are one favicon, one avatar set
    * and one OG card — the current ones, by definition — and they are rewritten
    * below from whichever concept is chosen.
+   *
+   * Noted rather than deleted here. Deleting them at the top of the step took
+   * the customer's favicon and avatars away for the whole of it — two minutes
+   * of drawing and tracing during which the project has no icon, its published
+   * site has no icon, and the admin checklist reports them as never generated.
+   * The rebuild below is wrapped in a `catch` that treats derived assets as
+   * extras, so a failure there made that hole permanent.
    */
-  await db
-    .delete(generatedFiles)
+  const staleDerived = await db
+    .select({ id: generatedFiles.id })
+    .from(generatedFiles)
     .where(
       and(
         eq(generatedFiles.projectId, params.projectId),
@@ -319,6 +327,19 @@ export async function generateLogos(params: {
     }
 
     await buildBrandKit(params.projectId, kitFiles)
+
+    // The replacements are written, so the rows they replace can go. The keys
+    // are deterministic, so these point at objects already overwritten above.
+    // Only when something was actually derived — with nothing to replace them
+    // with, the old favicon and avatars are better than none.
+    if (primary && staleDerived.length) {
+      await db.delete(generatedFiles).where(
+        inArray(
+          generatedFiles.id,
+          staleDerived.map((row) => row.id),
+        ),
+      )
+    }
   } catch (error) {
     console.warn('[logos] derived assets failed; the concepts are saved', error)
   }
@@ -576,9 +597,25 @@ export async function rederivePrimaryAssets(projectId: string, primaryKey?: stri
     kitFiles.set(name.replace(/^logo-/, ''), bytes)
   }
 
-  // Replace rather than duplicate: the derived rows are regenerated each time.
-  await db
-    .delete(generatedFiles)
+  /*
+   * Replace rather than duplicate — but the old rows are dropped only once
+   * their replacements exist.
+   *
+   * Deleting first left the favicon, the avatars and the kit missing for the
+   * ten to twenty seconds this takes, which is long enough for a customer to
+   * refresh into a brand that appears to have lost them and for the admin
+   * checklist to report them as never generated. Worse, anything that threw in
+   * that window — one unreadable object, one bad colour — left them deleted
+   * for good, with no run to rebuild them: the concepts are still there, so
+   * `sectionsToRun` sees nothing missing.
+   *
+   * The keys are deterministic, so the uploads overwrite the same objects and
+   * these rows are stale only as duplicates. Whichever way this ends, the
+   * customer has a favicon.
+   */
+  const stale = await db
+    .select({ id: generatedFiles.id })
+    .from(generatedFiles)
     .where(
       and(
         eq(generatedFiles.projectId, projectId),
@@ -588,6 +625,15 @@ export async function rederivePrimaryAssets(projectId: string, primaryKey?: stri
 
   await derivePrimaryAssets({ projectId, primary, primarySvg, icon, background, kitFiles })
   await buildBrandKit(projectId, kitFiles)
+
+  if (stale.length) {
+    await db.delete(generatedFiles).where(
+      inArray(
+        generatedFiles.id,
+        stale.map((row) => row.id),
+      ),
+    )
+  }
 }
 
 /**
