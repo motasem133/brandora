@@ -120,6 +120,16 @@ export async function runModel<T extends z.ZodType>(options: RunOptions<T>): Pro
    * it is branding's own p95 in `ai_usage` — which, now that timeouts are
    * recorded as timeouts rather than as errors, is finally a question that
    * table can answer.
+   *
+   * Since that was written the reasoning setting below landed, and it changes
+   * what these numbers are protecting against. Measured after it, branding
+   * finishes in sixteen to twenty-four seconds where it previously spent the
+   * whole minute and produced nothing — so ninety is no longer a cap the work
+   * approaches, it is headroom for a provider having a bad day.
+   *
+   * Both are kept deliberately. Turning reasoning off is why the work now fits;
+   * the budget is what stops a slow provider from taking the run down with it,
+   * and a root-cause fix does not remove the need for the guard.
    */
   const ATTEMPT_TIMEOUT_MS =
     options.task === 'website' || options.task === 'brandingEn' || options.task === 'brandingAr'
