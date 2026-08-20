@@ -56,14 +56,19 @@ const PAGES = ['/', '/en/dashboard', '/dashboard/projects', '/pricing', '/ar/log
 /**
  * Must run through the proxy despite having a dot in them.
  *
- * These two are the exception to the file-extension rule. A crawler on a
+ * These three are the exception to the file-extension rule. A crawler on a
  * customer's own domain asks for `/sitemap.xml`, and if the proxy does not run
  * the request is never rewritten onto that customer's site — the answer is
  * whatever the app has at that path, which is Brandora's own file served under
- * someone else's domain. The proxy passes both through untouched on the app's
- * host, so being matched costs nothing there.
+ * someone else's domain. The proxy passes all three through untouched on the
+ * app's host, so being matched costs nothing there.
+ *
+ * `/llms.txt` is the newest and the one with no route behind it: it is a static
+ * file in `public/` describing Brandora, so on a customer's host the rewrite is
+ * what turns it into a 404 instead of Brandora's summary answering on someone
+ * else's domain.
  */
-const CRAWLERS = ['/sitemap.xml', '/robots.txt']
+const CRAWLERS = ['/sitemap.xml', '/robots.txt', '/llms.txt']
 
 let failures = 0
 

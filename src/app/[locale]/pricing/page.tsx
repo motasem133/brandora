@@ -64,6 +64,7 @@ export default async function PricingPage({
   setRequestLocale(locale)
 
   const t = await getTranslations('Pricing')
+  const common = await getTranslations('Common')
   const session = await getSession()
   const currency: Currency = isCurrency(requested) ? requested : locale === 'ar' ? 'aed' : 'usd'
 
@@ -75,10 +76,17 @@ export default async function PricingPage({
 
   return (
     <div className="world-dark min-h-dvh">
-      {/* Built from `ladder`, the same rows the cards below render. */}
+      {/*
+        Built from `ladder`, the same rows the cards below render.
+
+        `name` is the product's name, not the page's heading. It was `t('title')`
+        — "Create your brand. Then keep building it." — which is a good headline
+        and a nonsense value for `Product.name`: the one string a search engine
+        or an answer engine takes as what this thing is called.
+      */}
       <PlanOffersJsonLd
         locale={locale}
-        name={t('title')}
+        name={common('appName')}
         description={t('subtitle')}
         offers={ladder.map((plan) => {
           const price = pickPrice(currency, {

@@ -1,0 +1,42 @@
+# Brandora
+
+> Brandora generates a complete brand identity from one short brief. A single
+> run produces business name ideas, two logo concepts, a colour palette, font
+> pairings, a brand story and voice, a multi-page published website, and a
+> social media kit — decided together, so they agree with each other.
+
+Brandora is a web application. A brief of eight questions covers the business,
+industry, market, audience, style and language; one queued run then generates
+naming, identity, logos, site and social in sequence. Anything generated can be
+regenerated with a note on what to change, and every earlier version is kept.
+
+Arabic is an input language, not a translation layer: a brief written in Arabic
+is reasoned about in Arabic from the start, and produces Arabic naming, copy and
+type choices rather than a translated English result.
+
+Usage is metered in credits. What a plan grants, what each part of a run costs,
+and what is included at each tier are listed on the pricing page — this file
+deliberately quotes no figures, so it cannot contradict the page that bills.
+
+## Pages
+
+- [Home](https://brandora.enigmitic.com/en): what a run produces, how the brief works, and the Arabic case
+- [Pricing](https://brandora.enigmitic.com/en/pricing): plans, credit packs, a plan comparison, and the pricing FAQ
+- [Privacy](https://brandora.enigmitic.com/en/privacy): what is collected and what is done with it
+- [Terms](https://brandora.enigmitic.com/en/terms): terms of service, including rights to generated work
+
+## In Arabic
+
+- [الصفحة الرئيسية](https://brandora.enigmitic.com/ar)
+- [الأسعار](https://brandora.enigmitic.com/ar/pricing)
+- [الخصوصية](https://brandora.enigmitic.com/ar/privacy)
+- [الشروط](https://brandora.enigmitic.com/ar/terms)
+
+## Notes
+
+- Customer sites published by Brandora are served on their own subdomains and
+  attached domains. They are the customer's pages, not Brandora's, and nothing
+  in this file describes them.
+- Everything above is a fact stated somewhere in the interface. There are no
+  customer counts, ratings or usage figures here because there are none to
+  state.

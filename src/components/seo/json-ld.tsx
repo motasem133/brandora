@@ -128,3 +128,33 @@ export function PlanOffersJsonLd({
     />
   )
 }
+
+/**
+ * The FAQ, as questions and answers.
+ *
+ * Fed from the same array the disclosures render, for the reason the offers
+ * above are fed from the same rows the cards are: an answer that is one thing
+ * on the page and another in the markup is worse than no markup, because only
+ * the visible half ever gets corrected.
+ *
+ * Worth being clear about what this does not buy. Google narrowed FAQ *rich
+ * results* to government and health sites in 2023, so this draws no accordion
+ * into a search result and never will. It is here because the answer engines
+ * read it — a `Question`/`acceptedAnswer` pair is the shape a model quotes from
+ * when someone asks what a credit is, and that is now a real way people arrive.
+ */
+export function FaqJsonLd({ items }: { items: { q: string; a: string }[] }) {
+  return (
+    <Script
+      data={{
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: items.map((item) => ({
+          '@type': 'Question',
+          name: item.q,
+          acceptedAnswer: { '@type': 'Answer', text: item.a },
+        })),
+      }}
+    />
+  )
+}

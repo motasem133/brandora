@@ -12,7 +12,6 @@ import { notFound } from 'next/navigation'
 
 import { PostHogProvider } from '@/components/analytics/posthog-provider'
 import { isRtl, routing } from '@/i18n/routing'
-import { env } from '@/lib/env'
 import { ogImage, ogLocale, siteUrl } from '@/lib/seo'
 import { themeInitScript } from '@/lib/theme'
 import '../globals.css'
@@ -138,16 +137,6 @@ export async function generateMetadata({
       card: 'summary_large_image',
       images: [{ url: ogImage.url, alt: t('ogAlt') }],
     },
-    /*
-     * Search Console's HTML check, when a token is configured.
-     *
-     * Spread rather than set to `undefined`, so an unconfigured deployment
-     * emits no tag at all instead of an empty one — a `content=""` verification
-     * meta is a claim that fails rather than an absent claim.
-     */
-    ...(env.GOOGLE_SITE_VERIFICATION
-      ? { verification: { google: env.GOOGLE_SITE_VERIFICATION } }
-      : {}),
   }
 }
 

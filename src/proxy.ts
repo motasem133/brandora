@@ -145,12 +145,19 @@ export default function proxy(request: NextRequest) {
   }
 
   /*
-   * On the app's own host these two are not pages and must not be negotiated:
+   * On the app's own host these three are not pages and must not be negotiated:
    * /sitemap.xml would become /en/sitemap.xml, which is not an address any
    * crawler asks for. They are in the matcher only so that the rewrites above
    * can catch them on a customer's host — see the note there.
+   *
+   * /llms.txt is here for the rewrite alone. It is a static file in `public/`
+   * describing *Brandora*, and the matcher's file-extension exclusion would
+   * have served it on every customer subdomain — Brandora's summary answering
+   * on someone else's domain, which is the exact failure the note below
+   * describes for /sitemap.xml. Rewritten onto a customer's site it 404s,
+   * because a generated site has no such file, and that is the right answer.
    */
-  if (pathname === '/sitemap.xml' || pathname === '/robots.txt') {
+  if (pathname === '/sitemap.xml' || pathname === '/robots.txt' || pathname === '/llms.txt') {
     return NextResponse.next()
   }
 
@@ -203,6 +210,7 @@ export const config = {
   matcher: [
     '/sitemap.xml',
     '/robots.txt',
+    '/llms.txt',
     '/((?!api|monitoring|ingest|_vercel|_next/static|_next/image|favicon.ico|.*\\..*).*)',
   ],
 }
