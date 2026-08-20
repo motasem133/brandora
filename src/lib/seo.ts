@@ -24,8 +24,13 @@ export const siteUrl = env.NEXT_PUBLIC_APP_URL.replace(/\/+$/, '')
  * The empty string is the landing page. Kept as one list so the sitemap and the
  * alternates cannot drift apart: a page added here is announced in both places
  * or in neither.
+ *
+ * `/brand-kit` is the first page here written for a search rather than for a
+ * visitor who already arrived, and adding it was the whole cost of announcing
+ * it — the sitemap iterates this list and `alternatesFor` reads it, so both
+ * languages and every reciprocal `hreflang` followed from this line.
  */
-export const marketingPaths = ['', '/pricing', '/privacy', '/terms'] as const
+export const marketingPaths = ['', '/pricing', '/brand-kit', '/privacy', '/terms'] as const
 
 export type MarketingPath = (typeof marketingPaths)[number]
 

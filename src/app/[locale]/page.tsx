@@ -628,6 +628,11 @@ export default async function RunDirection({
               { key: 'kit', href: '#kit', label: t('navKit'), external: true },
               { key: 'how', href: '#how', label: t('navHow'), external: true },
               { key: 'pricing', href: '/pricing', label: t('navPricing') },
+              /* The deliverables page. It is announced in the sitemap, but a
+                 page nothing links to is a page a crawler reaches last and
+                 trusts least — and this is the only marketing page on the site
+                 written for a search rather than for someone already here. */
+              { key: 'brandKit', href: '/brand-kit', label: tn('brandKit') },
               ...(session ? [] : [{ key: 'login', href: '/login', label: tn('signIn') }]),
               /* Reachable from the page a visitor is on when they decide whether
                  to trust the product with a card — and from the only page Google

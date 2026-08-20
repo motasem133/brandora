@@ -4,10 +4,17 @@ import { brandTheme } from '@/lib/brand-theme'
  * The one run this page is built out of.
  *
  * Sultana — a Syrian kitchen — rather than the earlier coffee brand, because it
- * is the project that exercises everything the product now does: two concepts at
- * 1536, a true vector trace, transparent variants, an Arabic wordmark that has
- * to shape correctly, and a social kit. Nothing here is a mockup; every file is
- * what a customer downloads.
+ * is the project that exercises most of what the product now does: two concepts
+ * at 1536, a true vector trace, transparent variants, and a social kit. Nothing
+ * here is a mockup; every file is what a customer downloads.
+ *
+ * It does *not* exercise Arabic. This comment used to claim "an Arabic wordmark
+ * that has to shape correctly" and there is no such file: open
+ * `sultana-wordmark.webp` and `sultana-name.webp` and both are Latin, which is
+ * what PRODUCT.md, the memory of the 15 Aug critique and `arabic-proof.tsx` all
+ * say too. The brief was written in English. Anything selling native Arabic has
+ * to demonstrate it some other honest way until a run from an Arabic brief
+ * exists — see the note in `arabic-proof.tsx` for the one currently used.
  *
  * These constants were declared at the top of `page.tsx` and are now read by the
  * hero's replay, the contact sheet and the Arabic panel. Three copies of an
@@ -63,10 +70,13 @@ export const BRAND_KIT_PDF = '/marketing/sultana-brand-kit.pdf'
 /**
  * The address shape a published site takes.
  *
- * Illustrative chrome, deliberately not a link: customer subdomains do not
- * resolve yet, and a dead href on the tile that promises a live website is
- * worse than no href. What the tile has to make clear is the *form* of the
- * address, and this says it.
+ * Illustrative chrome, deliberately not a link — but no longer for the reason
+ * this comment gave. Customer subdomains resolve since the zone move on 18 Aug
+ * 2026; `zzznotreal.brandora.enigmitic.com` answers 404 from the app rather
+ * than failing to resolve. What is true is narrower: *Sultana* is a marketing
+ * example and was never published, so its address 404s, and a dead href on the
+ * tile that promises a live website is worse than no href. What the tile has to
+ * make clear is the *form* of the address, and this says it.
  */
 export const SITE_ADDRESS = 'sultana.brandora.enigmitic.com'
 
