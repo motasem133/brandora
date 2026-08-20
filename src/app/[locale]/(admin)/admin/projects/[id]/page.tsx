@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation'
 import { BrandCopy } from '@/components/features/projects/brand-copy'
 import { BrandFonts } from '@/components/features/projects/brand-fonts'
 import { IdentityPlate } from '@/components/features/projects/identity-plate'
+import { LogoVariations } from '@/components/features/projects/logo-variations'
 import { PaletteGrid } from '@/components/features/projects/palette-grid'
 import { SocialView } from '@/components/features/projects/social-view'
 import { ContentLibrary } from '@/components/features/studio/content-library'
@@ -39,6 +40,24 @@ import { publicUrl } from '@/server/storage/r2'
  * "Everything generated right" is not a feeling about a page, it is a list with
  * nothing missing from it.
  */
+/**
+ * A file size somebody can read, from `Intl` rather than a helper of our own.
+ *
+ * Compact byte notation is a thing the platform already knows how to do in
+ * every locale — 1.5KB, 3.4MB — and it is wanted in exactly one place.
+ */
+function byteSize(bytes: number | null, locale: string) {
+  if (!bytes) return null
+
+  return new Intl.NumberFormat(locale, {
+    notation: 'compact',
+    style: 'unit',
+    unit: 'byte',
+    unitDisplay: 'narrow',
+    maximumFractionDigits: 1,
+  }).format(bytes)
+}
+
 export default async function AdminProjectPage({
   params,
 }: {
@@ -349,6 +368,30 @@ export default async function AdminProjectPage({
         </section>
       )}
 
+      {/*
+        Everything cut from the chosen concept: the vector, the mark, the
+        favicon, the avatars at every size, the share card, the monochrome
+        stamp.
+
+        The checklist above counted these and the page then showed none of
+        them, so "is the favicon right?" — the question most often asked about
+        a brand, and the one this screen exists to answer — could only be
+        answered by downloading the kit ZIP and opening it. The customer's own
+        component, which draws each file at its true size and links the
+        original; it writes nothing, so it is safe here. See the note at the
+        top of this file.
+
+        `primaryLogo` rather than the stored choice, so a project where nobody
+        has picked yet still shows what the run derived — the same fallback the
+        identity plate above uses.
+      */}
+      <LogoVariations
+        files={files}
+        primaryLogoFileId={primaryLogo?.id ?? null}
+        markLogoFileId={brandingAsset?.markLogoFileId ?? null}
+        open
+      />
+
       {of('social_post').length > 0 && (
         <section className="space-y-3">
           <CardTitle>{t('kitPosts')}</CardTitle>
@@ -387,6 +430,65 @@ export default async function AdminProjectPage({
           emptyBody={t('contentNone')}
         />
       </section>
+
+      {/*
+        Every file this project owns, including the kinds nothing above draws.
+
+        The sections are the deliverables as a customer reads them, and they
+        are selective by design — logo rounds, kit posts, the variations. That
+        left the brand kit ZIP, the brand document, the letterhead, the
+        photography a post was built on and every carousel frame visible only
+        as a number in the checklist. Support cannot answer "send me what they
+        got" from a count.
+
+        So this is the raw list: whatever is on disk, whatever kind it is,
+        newest kinds included without anyone remembering to add them here. The
+        kind is printed unlocalised on purpose — it is the column name, and it
+        is what a support conversation and a database row both call it.
+      */}
+      {files.length > 0 && (
+        <section className="space-y-3">
+          <CardTitle>{t('files')}</CardTitle>
+          <Card className="p-0">
+            <Table caption={t('files')}>
+              <THead>
+                <TH>{t('files')}</TH>
+                <TH align="end">{tb('download')}</TH>
+              </THead>
+              <TBody>
+                {[...files]
+                  .sort((a, b) => a.kind.localeCompare(b.kind) || a.r2Key.localeCompare(b.r2Key))
+                  .map((file) => (
+                    <tr key={file.id}>
+                      <TD>
+                        <span className="block truncate text-sm">
+                          {file.r2Key.split('/').pop()}
+                        </span>
+                        <span className="text-xs text-fg-muted">
+                          {[
+                            file.kind,
+                            file.width && file.height ? `${file.width}\u00d7${file.height}` : null,
+                            byteSize(file.sizeBytes, locale),
+                          ]
+                            .filter(Boolean)
+                            .join(' \u00b7 ')}
+                        </span>
+                      </TD>
+                      <TD align="end">
+                        <a
+                          href={`/api/files/${file.id}?download`}
+                          className="inline-flex min-h-6 items-center text-xs accent-text hover:underline"
+                        >
+                          {tb('download')}
+                        </a>
+                      </TD>
+                    </tr>
+                  ))}
+              </TBody>
+            </Table>
+          </Card>
+        </section>
+      )}
 
       {/* ------------------------------------------------------- what they asked */}
       <Disclosure title={tp('brief')} open={!brandingAsset}>
