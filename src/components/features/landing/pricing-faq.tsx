@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server'
 
 import { Disclosure } from '@/components/ui/disclosure'
+import { FaqJsonLd } from '@/components/seo/json-ld'
 
 /**
  * The questions someone asks before paying, answered once.
@@ -33,6 +34,13 @@ export async function PricingFaq({
 
   return (
     <div className={className}>
+      {/*
+        Emitted here rather than from the two pages, so the markup is fed by the
+        same `items` the disclosures below render and a question cannot be
+        answered one way on the page and another in the JSON.
+      */}
+      <FaqJsonLd items={items} />
+
       {columns ? (
         <h2 className="type-section">{t('faqTitle')}</h2>
       ) : (
