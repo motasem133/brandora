@@ -10,13 +10,61 @@ have been built on top of a product that was quietly losing customers' money.
 
 Times are working estimates, not commitments. Where one is uncertain it says so.
 
-*Last true on 18 August 2026.*
+*Last true on 20 August 2026.*
 
 ---
 
 ## Fixes
 
-**Empty**, and it has stayed empty since 13 August. The CI suite
+### 1. English branding truncates its answer about half the time — half a day, maybe less
+
+`deepseek/deepseek-v4-pro` is the primary for `brandingEn`, and roughly one
+attempt in two comes back as unparseable JSON — the object simply stops
+mid-value:
+
+```
+No object generated: could not parse the response.
+SyntaxError: Expected ',' or '}' after property value in JSON at position 1896
+```
+
+Branding is the section everything else is built on, so its first attempt
+failing is the difference between a run that takes twenty seconds and one that
+takes a retry cycle. It is survivable today only because the chain now has two
+working fallbacks behind it — before 20 August all three were failing and the
+run completed only when Inngest retried the whole step.
+
+The shape of it says the completion is running out of room rather than the model
+answering badly: it is not a schema rejection, it is a sentence that stopped. No
+`maxOutputTokens` is set anywhere in `runModel`, so whatever the provider
+defaults to is what branding gets, and branding is the largest single answer the
+product asks for. Start there before touching the model choice.
+
+Two of the three causes behind this class were fixed on 20 August — a serialised
+`minLength` that Alibaba refused outright, and a 200-character cap the prompt
+never mentioned. This is the third, and it is the one left.
+
+### 2. Inngest rejects requests it should accept — 30 minutes to diagnose, unknown to fix
+
+`/api/inngest` logs `Signature validation failed` and `Error: Invalid signature`
+in production. Low volume — single figures — but continuous since 5 August, and
+still appearing on 20 August after four deploys.
+
+It is on the endpoint that runs brand generation, which is the reason it is a
+fix rather than a curiosity: a signing-key mismatch is exactly how a run ends up
+queued forever with a customer's credits held, and that has already happened
+once on 9 August for a different reason. Nothing currently says whether these
+are real invocations being rejected or unsigned probes being correctly refused,
+and the difference is the whole question.
+
+Check `INNGEST_SIGNING_KEY` in production against the key the synced app
+expects, and look at whether the rejected requests correlate with any run that
+stalled. See the Inngest note under *Yours, not code*.
+
+---
+
+Fixes had been **empty since 13 August**, and both entries above were found on
+20 August by reading production telemetry rather than from a customer report.
+The CI suite
 that had been red for days is green again — three causes, one of them a real
 defect: choosing a logo failed *after* it had worked, because the derived assets
 were rebuilt inline and unguarded, so a customer saw an error for something that
@@ -231,23 +279,65 @@ durable version is to add one in the console, paste it straight into Vercel's
 own settings, redeploy, and then delete the old one. Nothing needs to see it in
 between. Same reasoning as the database password below.
 
-### The Arabic the landing page cannot prove — a run, and a decision
+### The Arabic the landing page still cannot prove — the run is done, the decision is not
 
-Arabic is the sharpest differentiator the product has, and the brand the page
-shows in full does not exercise it. Sultana was briefed in English and all four
-of its marks are Latin, so the Arabic section can only demonstrate that a brief
-is *displayed* right-to-left — which every internationalised site does, and
-which proves nothing about generated Arabic.
+**The run happened on 20 August.** دار العُود والطّياف, a Dubai perfume house,
+briefed in Arabic: Arabic naming, story, palette and an Arabic calligraphic
+heading face. Its wordmark is committed as
+`public/marketing/dar-al-oud-wordmark.webp` with the traced `.svg` beside it.
+Nine credits, and it closed the evidence half of this entry.
 
-Nothing in code fixes this honestly. It needs a real run from an Arabic brief,
-kept as the page's exemplar the way Sultana is now: the files, the marks and the
-copy all coming out of one generation. That costs credits and it is a decision
-about what the product shows itself doing, which is why it is here rather than
-in Improvements.
+**Nothing renders it.** The Arabic section still shows only the bilingual brief
+panel, so the page still proves only that a brief is *displayed* right-to-left.
+What is left is not evidence, it is design: where a real Arabic mark belongs on
+a page whose exemplar is Sultana, and whether Sultana stays the exemplar at all.
+Mixing the two brands in one section is the obvious move and probably the wrong
+one — the whole argument of the kit section is that one run produced things that
+agree with each other.
 
-The seven findings around it are in #57. This is the one left, and it was left
-deliberately — the alternative was mocking up Arabic marks on the page that
-sells generated ones.
+One caveat that has to survive into whatever is built: **the run produced two
+concepts and only one is usable.** The wordmark is correctly shaped, connected
+Arabic. The second concept renders malformed Arabic — broken joins, a stray
+fragment, `ذ` where the name has `د` — and is deliberately not committed. That
+one-in-two rate is recorded in PRODUCT.md; anything built here needs a human to
+look before it ships.
+
+The seven findings around this are in #57.
+
+### GitHub Actions is blocked on billing — minutes, and it is blocking everything else
+
+Every CI job has failed in **about two seconds** since roughly 19 August:
+
+> The job was not started because recent account payments have failed or your
+> spending limit needs to be increased.
+
+Both jobs, on every PR, including ones nobody touched. The red X says nothing
+about the code — and that is the danger in both directions: read as "broken" it
+blocks correct work, read as "fine" it ships unverified.
+
+Five PRs were merged to production on 20 August with CI red. Each was checked by
+running the workflow's own steps locally against a throwaway database —
+typecheck, lint, migrate, seed, the missing-migration check, build, 62 system
+tests and 76 browser tests — which takes about ten minutes and is the only
+reason those merges were defensible. That is not a sustainable substitute.
+
+### Search Console has never been given the sitemap — 5 minutes
+
+The site is verified — `public/googlea59464b81181ee2d.html` answers, and there
+is a TXT record on the apex — but two things have never been done.
+
+**Submit the sitemap.** `https://brandora.enigmitic.com/sitemap.xml`, under
+Sitemaps. It has ten URLs now: four marketing pages plus `/brand-kit`, each in
+both languages, with reciprocal hreflang. Nothing has told Google it exists.
+
+**Check the property type.** If it is a URL-prefix property for
+`brandora.enigmitic.com`, it does not cover customer sites, which live on
+`*.brandora.enigmitic.com`. A **Domain property on `enigmitic.com`** would show
+those too — worth having before customer sites start being indexed, not after.
+
+Then look at Pages: how many of the ten are indexed against how many are
+"Discovered – not indexed" is the only real measure of whether any of the SEO
+work landed.
 
 ### The contact form, once — 2 minutes
 
@@ -664,3 +754,54 @@ a change rather than a decision. The eighth is the Arabic exemplar, above under
     publicly after, fetching the Enigmitic homepage each time to prove the apex
     still served Hostinger's site rather than Vercel's edge. What is left to
     check is above, under *Yours, not code*.
+
+### The AI chain and the marketing pages, 20 August
+
+Five PRs. The chains had been running at roughly a coin flip — glm-5.2 34
+success to 33 error, deepseek-v4-pro 16 to 12, qwen3.7-plus 13 to 37,
+qwen3.7-max 0 to 3 — and it was never one bug.
+
+**#73 + #78, the run's deadline and its cause.** #73 raised branding's
+per-attempt limit and added a whole-chain budget, so three attempts cannot
+overrun the Inngest route's 300-second ceiling and leave a hold nothing
+releases. #78 removed the reason the attempts were slow: every call in
+`runModel` is `generateObject` against a schema, and a reasoning model spends
+the completion on thinking that `result.object` then throws away. With
+`reasoning: { effort: 'none' }`, two 90-second timeouts became 20.9s and 13.7s
+and the English primary halved. The two were rebased into one stack rather than
+merged as rivals — the budget is the guard, the setting is the cause, and a
+root-cause fix does not remove the need for a guard.
+
+**#80, two failures the logs had been hiding.** `.min()` on a string is
+serialised as `minLength`, and Alibaba refuses the *request* — half a second,
+`invalid_parameter_error`, never reads the brief. Bisected live: `.min(150)`
+refused, `.min(3)` accepted, the same rule as a refinement accepted at any size.
+That is why qwen3.7-plus — **the primary for every social task** — sat at 13
+against 37: the schemas were tightened with minimums, correctly, and it has been
+refusing ever since. `atLeast` is now the only way to write a string minimum.
+Separately, `rationale` is capped at 200 and the prompt said only that character
+limits are a ceiling, naming none; all five overran and one bad field discards
+the whole answer. Stated in words, they come back at 84–156.
+
+Neither was findable until #78 also fixed the failure log, which had been
+printing the *tail* of the cause message — the rejected value, not the reason.
+It mislabelled a plain timeout as a schema bug for most of an afternoon.
+
+**#75 + #76, the marketing pages.** The FAQ had nine answers and no markup;
+`Product.name` on the pricing page was the headline sentence rather than the
+product's name; `/llms.txt` describes the product for answer engines and needed
+a proxy change so it does not answer on customer domains. And `/brand-kit` — the
+first page on this site written for a search rather than for a visitor who
+already arrived, in both languages, sharing `ContactSheet` with the landing page
+so the two cannot disagree about how many logo concepts there are.
+
+**#79 and three stale comments.** `sultana.ts` claimed an Arabic wordmark that
+does not exist and said customer subdomains do not resolve, which stopped being
+true on 18 August. `arabic-proof.tsx` said there is no generated Arabic artwork
+in the repo, which stopped being true the same day it was written down. All
+three were notes describing the repo as it used to be — the cheapest possible
+way to send the next person somewhere wrong.
+
+CI could not run for any of it: Actions has been blocked on billing since about
+19 August. Each merge was checked by running the workflow's own steps locally —
+62 system tests and 76 browser tests among them. See *Yours, not code*.
