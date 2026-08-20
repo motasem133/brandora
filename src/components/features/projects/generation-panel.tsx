@@ -315,7 +315,23 @@ export function GenerationPanel({
       router.refresh()
     })
 
+    /*
+     * A dropped connection is not the end of the run.
+     *
+     * EventSource reconnects on its own — that is what `readyState` being
+     * CONNECTING means here — and closing on every `error` killed that retry,
+     * so the panel went deaf and sat on whatever step it had last been told
+     * about. On this product that is almost always the logo step: it is the
+     * long pole at about a hundred seconds, and the stream also ends by itself
+     * at the route's five-minute ceiling. Either way the run finished and the
+     * page never heard, which is the "stuck on logos" report.
+     *
+     * CLOSED is the browser giving up, and only then is there nothing to wait
+     * for — the `done` handler closes the source itself, so a finished run
+     * lands there rather than here and does not reconnect.
+     */
     source.addEventListener('error', () => {
+      if (source.readyState !== EventSource.CLOSED) return
       source.close()
       sourceRef.current = null
     })
