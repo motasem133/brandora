@@ -45,6 +45,18 @@ export async function LogoUsage({
 
   const name = businessName || t('varFullLogo')
 
+  /*
+   * What each frame's artwork was really cut from.
+   *
+   * These two captions said "from your icon" unconditionally, which is false
+   * for a round that produced no icon — `derivePrimaryAssets` falls back to the
+   * lockup there, and the frame then shows the wordmark under a label denying
+   * it. `source` is written when the file is derived and cannot disagree with
+   * the picture beside it.
+   */
+  const from = (file: GeneratedFile) =>
+    file.metadata?.source === 'icon' ? t('usageFromIcon') : t('usageFromFullLogo')
+
   return (
     <Card className="space-y-4">
       <div>
@@ -85,7 +97,7 @@ export async function LogoUsage({
               </div>
             </div>
             <figcaption className="text-xs text-fg-secondary">
-              {t('usageTab')} <span className="text-fg-muted">· {t('usageFromIcon')}</span>
+              {t('usageTab')} <span className="text-fg-muted">· {from(favicon)}</span>
             </figcaption>
           </figure>
         )}
@@ -106,7 +118,7 @@ export async function LogoUsage({
               </div>
             </div>
             <figcaption className="text-xs text-fg-secondary">
-              {t('usageAvatar')} <span className="text-fg-muted">· {t('usageFromIcon')}</span>
+              {t('usageAvatar')} <span className="text-fg-muted">· {from(avatar)}</span>
             </figcaption>
           </figure>
         )}
@@ -129,20 +141,21 @@ export async function LogoUsage({
               </div>
             </div>
             <figcaption className="text-xs text-fg-secondary">
-              {t('usageCard')} <span className="text-fg-muted">· {t('usageFromLogo')}</span>
+              {t('usageCard')} <span className="text-fg-muted">· {t('usageFromFullLogo')}</span>
             </figcaption>
           </figure>
         )}
       </div>
 
       {/*
-        Which artwork the small formats are cut from, in words, next to the
-        proof. Without a chosen mark this says so plainly rather than leaving
-        the customer to infer it from a control they never pressed.
+        The footer sentence that used to sit here said "your favicon, avatars
+        and link preview are cut from the logo you choose", and it contradicted
+        the two captions directly above it — both of which correctly say "from
+        your icon". The rule is already stated once at the top of this card and
+        once per frame, at the frame, which is where it is actually read. A
+        third copy that has to be true in every state is a third copy to get
+        wrong, so it is gone rather than reworded.
       */}
-      <p className="border-t border-line pt-4 text-sm text-fg-secondary">
-        {t('usageFromLogo')}
-      </p>
     </Card>
   )
 }
