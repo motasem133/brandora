@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { createOpenRouter } from '@openrouter/ai-sdk-provider'
+import { createOpenRouter, type OpenRouterProviderOptions } from '@openrouter/ai-sdk-provider'
 import { generateObject } from 'ai'
 import type { z } from 'zod'
 
@@ -19,6 +19,39 @@ const openrouter = createOpenRouter({
     'X-Title': 'Brandora',
   },
 })
+
+/**
+ * Reasoning off, for every call that goes through here.
+ *
+ * Everything in this file is `generateObject` against a strict schema. A
+ * reasoning model emits its chain of thought *before* the answer and out of the
+ * same budget, and none of it is kept — `result.object` is the schema, the
+ * reasoning is discarded. So it was being paid for in latency and tokens and
+ * then thrown away, and on the Arabic chain it was not merely wasted: the
+ * reasoning consumed the whole completion and the answer never arrived.
+ *
+ * Measured against the real `brandingSchema` and a real Arabic brief, 90-second
+ * ceiling, before and after:
+ *
+ *   qwen/qwen3.7-max     timeout at 90s  ->  ok in 20.9s
+ *   z-ai/glm-5.2         timeout at 90s  ->  ok in 13.7s
+ *   deepseek/deepseek-v4-pro   ok 32.5s  ->  ok in 16.1s
+ *
+ * The English primary was not failing, and halving it still matters: its
+ * successes averaged 43 seconds against the 60-second deadline below, which is
+ * a task that succeeds until the day the provider is slightly slow.
+ *
+ * `none` rather than a `max_tokens` budget because there is no amount of
+ * discarded reasoning worth waiting for on a call whose entire output is a
+ * filled-in schema. Note this does not touch the assistant: that streams
+ * through `streamText` in `app/api/assistant/route.ts` and never comes here,
+ * which is right — it is a conversation, and reasoning is worth having in one.
+ *
+ * Typed rather than inlined so the provider's own types check the shape. The
+ * realistic regression is a typo in a key that would otherwise be accepted and
+ * silently ignored, putting the timeouts back with nothing to show why.
+ */
+const NO_REASONING: OpenRouterProviderOptions = { reasoning: { effort: 'none' } }
 
 type UsageContext = {
   organizationId: string
@@ -191,6 +224,7 @@ export async function runModel<T extends z.ZodType>(options: RunOptions<T>): Pro
         // One retry inside the SDK for transient network errors; anything
         // structural falls through to the next model instead.
         maxRetries: 1,
+        providerOptions: { openrouter: NO_REASONING },
         /*
          * A hung provider used to own the whole run.
          *
