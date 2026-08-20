@@ -35,10 +35,13 @@ export async function LogoVariations({
   files,
   primaryLogoFileId,
   markLogoFileId,
+  open,
 }: {
   files: GeneratedFile[]
   primaryLogoFileId: string | null
   markLogoFileId: string | null
+  /** Folded shut for a customer, open on the support view — see below. */
+  open?: boolean
 }) {
   const t = await getTranslations('Branding')
 
@@ -107,9 +110,17 @@ export async function LogoVariations({
    * These are consulted — "is the favicon right?" — not decided on, and open
    * they were a screenful of near-identical tiles between the palette and
    * everything below it.
+   *
+   * The support view opens it, because there the question is the whole reason
+   * for the screen: somebody is looking for the favicon, and a fold that hides
+   * it is the same as not having it on the page.
    */
   return (
-    <Disclosure title={t('variations')} meta={t('fileCount', { count: variations.length })}>
+    <Disclosure
+      title={t('variations')}
+      meta={t('fileCount', { count: variations.length })}
+      open={open}
+    >
       <p className="text-sm text-fg-secondary">
         {mark ? t('variationsHintWithIcon') : t('variationsHint')}
       </p>
