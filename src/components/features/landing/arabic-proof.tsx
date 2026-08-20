@@ -12,11 +12,19 @@ import { cn } from '@/lib/utils'
  * catalogues while the page never mentioned that the thing works in Arabic.
  *
  * What this does *not* do is invent an Arabic wordmark. Sultana's run produced
- * four marks and all four are Latin; there is no generated Arabic artwork in
- * this repo, and manufacturing one for the section that promises native Arabic
- * generation would be the worst possible place to put a mockup.
+ * four marks and all four are Latin, and manufacturing one for the section that
+ * promises native Arabic generation would be the worst possible place to put a
+ * mockup.
  *
- * So the demonstration is the honest one available: the brief itself, in both
+ * This comment used to add "there is no generated Arabic artwork in this repo",
+ * and that stopped being true on 20 August 2026: a run from an Arabic brief
+ * produced `public/marketing/dar-al-oud-wordmark.webp`, real generated output
+ * in Arabic script. Nothing renders it yet, and what this panel should become
+ * once it does is a design decision rather than a swap — so the note is
+ * corrected rather than acted on, because a false "there is none" is exactly
+ * how the asset stays unused and the claim stays unproven.
+ *
+ * So the demonstration is, for now, the honest one available: the brief itself, in both
  * languages, with the panel's direction, alignment and font stack all following
  * the language rather than being mirrored afterwards. That is exactly the claim
  * — the run starts in the language it was briefed in — and every string here is

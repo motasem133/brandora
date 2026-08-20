@@ -156,6 +156,11 @@ credits:
   anywhere in the repo**. Any surface that needs to show either must demonstrate
   it some other honest way rather than mocking one up.
 
+  The first of those is no longer repo-wide: Dar al-Oud below is a real Arabic
+  mark. It remains true of *Sultana*, which is what the marketing pages are
+  built out of, so a Sultana surface still may not show an Arabic mark — it
+  would have to show Dar al-Oud's.
+
 - **دار العُود والطّياف (Dar al-Oud wa al-Tayyaf)** — a Dubai perfume house, and the
   first run generated **from an Arabic brief**, on 20 August 2026. It exists to
   close the gap named above: Sultana was briefed in English and its marks are
