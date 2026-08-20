@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { createOpenRouter } from '@openrouter/ai-sdk-provider'
+import { createOpenRouter, type OpenRouterProviderOptions } from '@openrouter/ai-sdk-provider'
 import { generateObject } from 'ai'
 import type { z } from 'zod'
 
@@ -19,6 +19,39 @@ const openrouter = createOpenRouter({
     'X-Title': 'Brandora',
   },
 })
+
+/**
+ * Reasoning off, for every call that goes through here.
+ *
+ * Everything in this file is `generateObject` against a strict schema. A
+ * reasoning model emits its chain of thought *before* the answer and out of the
+ * same budget, and none of it is kept — `result.object` is the schema, the
+ * reasoning is discarded. So it was being paid for in latency and tokens and
+ * then thrown away, and on the Arabic chain it was not merely wasted: the
+ * reasoning consumed the whole completion and the answer never arrived.
+ *
+ * Measured against the real `brandingSchema` and a real Arabic brief, 90-second
+ * ceiling, before and after:
+ *
+ *   qwen/qwen3.7-max     timeout at 90s  ->  ok in 20.9s
+ *   z-ai/glm-5.2         timeout at 90s  ->  ok in 13.7s
+ *   deepseek/deepseek-v4-pro   ok 32.5s  ->  ok in 16.1s
+ *
+ * The English primary was not failing, and halving it still matters: its
+ * successes averaged 43 seconds against the 60-second deadline below, which is
+ * a task that succeeds until the day the provider is slightly slow.
+ *
+ * `none` rather than a `max_tokens` budget because there is no amount of
+ * discarded reasoning worth waiting for on a call whose entire output is a
+ * filled-in schema. Note this does not touch the assistant: that streams
+ * through `streamText` in `app/api/assistant/route.ts` and never comes here,
+ * which is right — it is a conversation, and reasoning is worth having in one.
+ *
+ * Typed rather than inlined so the provider's own types check the shape. The
+ * realistic regression is a typo in a key that would otherwise be accepted and
+ * silently ignored, putting the timeouts back with nothing to show why.
+ */
+const NO_REASONING: OpenRouterProviderOptions = { reasoning: { effort: 'none' } }
 
 type UsageContext = {
   organizationId: string
@@ -87,6 +120,16 @@ export async function runModel<T extends z.ZodType>(options: RunOptions<T>): Pro
    * it is branding's own p95 in `ai_usage` — which, now that timeouts are
    * recorded as timeouts rather than as errors, is finally a question that
    * table can answer.
+   *
+   * Since that was written the reasoning setting below landed, and it changes
+   * what these numbers are protecting against. Measured after it, branding
+   * finishes in sixteen to twenty-four seconds where it previously spent the
+   * whole minute and produced nothing — so ninety is no longer a cap the work
+   * approaches, it is headroom for a provider having a bad day.
+   *
+   * Both are kept deliberately. Turning reasoning off is why the work now fits;
+   * the budget is what stops a slow provider from taking the run down with it,
+   * and a root-cause fix does not remove the need for the guard.
    */
   const ATTEMPT_TIMEOUT_MS =
     options.task === 'website' || options.task === 'brandingEn' || options.task === 'brandingAr'
@@ -191,6 +234,7 @@ export async function runModel<T extends z.ZodType>(options: RunOptions<T>): Pro
         // One retry inside the SDK for transient network errors; anything
         // structural falls through to the next model instead.
         maxRetries: 1,
+        providerOptions: { openrouter: NO_REASONING },
         /*
          * A hung provider used to own the whole run.
          *
@@ -260,17 +304,23 @@ export async function runModel<T extends z.ZodType>(options: RunOptions<T>): Pro
        * It is the most common way a model fails here and the message says
        * nothing about which field, so diagnosing one meant re-running the call
        * by hand with a debugger attached. The AI SDK carries the validation
-       * error underneath; a few lines of it name the field, which is usually
-       * the whole diagnosis.
+       * error underneath, and it names the field.
+       *
+       * Printing the tail of the cause's *message* was the previous attempt at
+       * that, and it does not work: the message is the rejected value followed
+       * by the reason, both truncated to whatever 500 characters happened to
+       * land there. Chasing a website failure through it yielded half a
+       * paragraph of Arabic copy and no field name, which is how a run that was
+       * simply timing out got mistaken for a schema bug.
+       *
+       * The issues are structured, and they are nested — a `NoObjectGenerated`
+       * wraps a `TypeValidation` wraps the `ZodError` — so this walks the cause
+       * chain for the first thing carrying `issues` and prints the paths.
        */
-      const cause = error instanceof Error ? (error.cause as Error | undefined) : undefined
-
       console.warn(
         `[ai] ${options.task} failed on ${model} (attempt ${attempt + 1}/${chain.length})`,
         error instanceof Error ? error.message : error,
-        /* The tail, not the head: the SDK prints the whole rejected value
-           first and the reason it was rejected last. */
-        cause?.message ? `— ${cause.message.slice(-500)}` : '',
+        formatIssues(error),
       )
     }
   }
@@ -332,4 +382,41 @@ export async function recordUsage(row: {
     // Telemetry must never take down a generation that otherwise succeeded.
     console.error('[ai] failed to record usage', error)
   }
+}
+
+
+/**
+ * The field names out of a schema failure, or the message tail when there are
+ * none.
+ *
+ * Six levels because the nesting is not contractual — the SDK is free to add a
+ * wrapper — and a diagnostic that stops working after a minor upgrade is worse
+ * than no diagnostic, because nothing announces that it stopped.
+ *
+ * Five issues, because a model that got twenty fields wrong got the shape wrong,
+ * and the first few say so just as well as all twenty.
+ */
+function formatIssues(error: unknown): string {
+  let current: unknown = error
+
+  for (let depth = 0; depth < 6 && current; depth += 1) {
+    const node = current as {
+      issues?: { path?: unknown[]; message?: string }[]
+      cause?: unknown
+    }
+
+    if (Array.isArray(node.issues) && node.issues.length > 0) {
+      const named = node.issues
+        .slice(0, 5)
+        .map((issue) => `${(issue.path ?? []).join('.') || '(root)'}: ${issue.message ?? '?'}`)
+        .join('; ')
+
+      return `— ${named}${node.issues.length > 5 ? ` (+${node.issues.length - 5} more)` : ''}`
+    }
+
+    current = node.cause
+  }
+
+  const cause = error instanceof Error ? (error.cause as Error | undefined) : undefined
+  return cause?.message ? `— ${cause.message.slice(-300)}` : ''
 }
