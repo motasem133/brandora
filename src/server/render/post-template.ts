@@ -180,6 +180,44 @@ export function fontFace(family: string, ttf: Buffer) {
   return `@font-face{font-family:'${family.replace(/'/g, '')}';src:url(data:font/ttf;base64,${ttf.toString('base64')}) format('truetype');font-display:block}`
 }
 
+/**
+ * A brand's real typeface, as bytes.
+ *
+ * Google's CSS API serves woff2 to a modern browser and TrueType to an old
+ * one, and only TrueType goes into a `@font-face` data URI that Chromium will
+ * accept without a fetch. Hence the antique user agent — it is load-bearing,
+ * not cargo.
+ *
+ * Here rather than in `social-post.ts`, where it started, because the share
+ * card needs the same bytes and the pair of this and `fontFace` is the whole
+ * mechanism by which a brand's own face reaches a render.
+ */
+const fontCache = new Map<string, Buffer | null>()
+
+export async function loadFont(family: string): Promise<Buffer | null> {
+  if (fontCache.has(family)) return fontCache.get(family) ?? null
+
+  try {
+    const css = await fetch(
+      `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family)}`,
+      { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 6.1)' } },
+    )
+    const url = (await css.text()).match(/https:\/\/[^)]+/)?.[0]
+    if (!url) throw new Error(`no source for ${family}`)
+
+    const file = Buffer.from(await (await fetch(url)).arrayBuffer())
+    fontCache.set(family, file)
+    return file
+  } catch (error) {
+    // A missing face is a worse-looking render, not a failed one: Chromium
+    // falls back and the image still carries the brand's colours, mark and
+    // words.
+    console.warn(`[render] could not load "${family}"`, error)
+    fontCache.set(family, null)
+    return null
+  }
+}
+
 export function squarePost(params: {
   brand: PostBrand
   /** The name alone, trimmed — this is the chip, so the full square would land as a dot. */
