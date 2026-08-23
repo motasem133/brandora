@@ -1,6 +1,10 @@
 import 'server-only'
 
-import { createOpenRouter, type OpenRouterProviderOptions } from '@openrouter/ai-sdk-provider'
+import {
+  createOpenRouter,
+  type OpenRouterChatSettings,
+  type OpenRouterProviderOptions,
+} from '@openrouter/ai-sdk-provider'
 import { generateObject } from 'ai'
 import type { z } from 'zod'
 
@@ -47,11 +51,53 @@ const openrouter = createOpenRouter({
  * through `streamText` in `app/api/assistant/route.ts` and never comes here,
  * which is right — it is a conversation, and reasoning is worth having in one.
  *
+ * And only providers that will honour the schema.
+ *
+ * OpenRouter serves one model id from many providers — seventeen for
+ * `deepseek-v4-pro` — and picks per request. Six of those seventeen do not
+ * support `structured_outputs`, and `require_parameters` defaults to *false*:
+ * so the request goes out carrying a JSON schema, lands on a provider that
+ * cannot enforce one, and the model answers the brief in prose. Measured, by
+ * pinning the route:
+ *
+ *   baseten      markdown — "**Five Name Directions** 1. **Tidal Roast Works**"
+ *   novita       refused — "does not support 'json_schema' response format"
+ *   alibaba      16 of 16 valid
+ *
+ * That is the "branding truncates about half the time" report. Nothing was
+ * truncated: `finishReason` is `stop` and the answer is complete, it is simply
+ * not JSON, and the parser gives up partway through — which is why the reported
+ * position landed mid-range of a normal answer rather than at any cap. Setting
+ * `maxOutputTokens` would have changed nothing; real answers finish in about
+ * six hundred tokens against a ceiling in the hundreds of thousands.
+ *
+ * With the flag on, those providers are dropped from routing rather than
+ * returning something unusable — pinned to one of them the request now fails
+ * as `No endpoints found that can handle the requested parameters`, which is
+ * the correct answer to asking a provider for a guarantee it does not offer.
+ *
+ * This is the whole chain's problem and not branding's: every task here sends a
+ * schema, so every task has been playing the same lottery, and a fallback model
+ * can lose it just as easily as a primary.
+ *
  * Typed rather than inlined so the provider's own types check the shape. The
  * realistic regression is a typo in a key that would otherwise be accepted and
- * silently ignored, putting the timeouts back with nothing to show why.
+ * silently ignored, putting the timeouts back with nothing to show why. It is
+ * The two halves come from two of the package's types: routing is declared on
+ * `OpenRouterChatSettings`, which is the model's own settings object and not
+ * JSON-serialisable, so `providerOptions` will not take it whole. Borrowing the
+ * one field keeps the package checking the shape — which is the check earning
+ * its keep, since the request is accepted either way at runtime and a misspelt
+ * routing key would simply be ignored.
  */
-const NO_REASONING: OpenRouterProviderOptions = { reasoning: { effort: 'none' } }
+type RunProviderOptions = OpenRouterProviderOptions & {
+  provider?: NonNullable<OpenRouterChatSettings['provider']>
+}
+
+const OPENROUTER_OPTIONS: RunProviderOptions = {
+  reasoning: { effort: 'none' },
+  provider: { require_parameters: true },
+}
 
 type UsageContext = {
   organizationId: string
@@ -234,7 +280,7 @@ export async function runModel<T extends z.ZodType>(options: RunOptions<T>): Pro
         // One retry inside the SDK for transient network errors; anything
         // structural falls through to the next model instead.
         maxRetries: 1,
-        providerOptions: { openrouter: NO_REASONING },
+        providerOptions: { openrouter: OPENROUTER_OPTIONS },
         /*
          * A hung provider used to own the whole run.
          *
