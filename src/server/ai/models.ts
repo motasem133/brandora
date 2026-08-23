@@ -54,11 +54,29 @@ export const MODELS: Record<ModelTask, ModelSpec> = {
     fallbacks: ['z-ai/glm-5.2', 'deepseek/deepseek-v4-flash'],
   },
 
-  // Classification, tagging, titles. Effectively free — never spend a flagship
-  // model on a task like this.
+  /*
+   * Classification, tagging, titles. Effectively free — never spend a flagship
+   * model on a task like this.
+   *
+   * `qwen/qwen3.7-flash` was the primary and cannot be, since `runModel` began
+   * requiring providers that support the schema it sends. It has exactly one
+   * provider, and that provider does not advertise `structured_outputs` for
+   * this model — so every utility call was refused in under 200ms and fell to
+   * the model below. It answered valid JSON when it was allowed to, which is
+   * the tempting part: what it does not offer is the *guarantee*, and a task
+   * that silently depends on a provider's good behaviour is the fault this
+   * whole change exists to remove. Listing it as a fallback would only buy a
+   * refused round trip and an `error` row on every call.
+   *
+   * The replacement was already this chain's fallback, so no new model enters
+   * the product: 12 of its 17 providers keep the guarantee, measured. It is
+   * roughly 4x the token price of what it replaces and that is a rounding
+   * error here — a title is a couple of hundred tokens, so this is hundredths
+   * of a cent a call.
+   */
   utility: {
-    primary: 'qwen/qwen3.7-flash',
-    fallbacks: ['deepseek/deepseek-v4-flash'],
+    primary: 'deepseek/deepseek-v4-flash',
+    fallbacks: ['z-ai/glm-5.2'],
   },
 
   // Most reliable tool-calling of the Chinese models, and cheap enough that
