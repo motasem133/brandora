@@ -103,6 +103,11 @@ export async function BrandSheet({
         files={files}
         primaryLogoFileId={branding.primaryLogoFileId}
         markLogoFileId={branding.markLogoFileId}
+        /* The marks are drawn on this brand's own paper, and the mock scenes
+           set its name in its own heading face. See the note in that file. */
+        palette={branding.colorPalette}
+        fonts={branding.fontRecommendations}
+        brandName={chosenName}
       />
     </div>
   )

@@ -654,7 +654,6 @@
     "varSocialCard": "Social card",
     "varMonochrome": "Monochrome",
     "varOther": "Variant",
-    "shownSmaller": "shown smaller",
     "paletteHint": "Click a colour to copy its hex code.",
     "fontsHint": "The faces your brand is set in. Copy a name to find it, or install it from Google Fonts.",
     "findFont": "Find on Google Fonts",
@@ -675,7 +674,15 @@
     "fontsSpecimen": "The quick brown fox jumps over the lazy dog.",
     "notEnoughCreditsHint": "A new round costs {credits} credits and you have {balance}.",
     "topUp": "Add credits",
-    "generating": "Generating logo concepts"
+    "generating": "Generating logo concepts",
+    "varsMarks": "Marks",
+    "varsInUse": "In use",
+    "varFaviconHint": "At 16px in a browser tab, light and dark.",
+    "varAvatarHint": "Circle-cropped, the way every platform crops it.",
+    "varAvatarHandle": "Profile",
+    "varSocialCardHint": "How a link to your site unfurls when it is shared.",
+    "varSocialCardFallbackDomain": "your-site.com",
+    "varsOther": "Other files"
   },
   "Social": {
     "bio": "Instagram bio",

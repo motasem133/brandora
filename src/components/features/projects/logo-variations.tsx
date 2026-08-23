@@ -1,48 +1,234 @@
+import { X } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 
 import { Disclosure } from '@/components/ui/disclosure'
+import { Eyebrow } from '@/components/ui/eyebrow'
+import { brandTheme, fontStack, type BrandFonts, type BrandPalette } from '@/lib/brand-theme'
+import { cn } from '@/lib/utils'
 import type { GeneratedFile } from '@/server/db/schema'
 import { publicUrl } from '@/server/storage/r2'
 
 /**
- * Every file that exists for the chosen logo, in one place.
+ * Every file that exists for the chosen logo, shown where it is going to live.
  *
  * These were all being produced already — favicon, avatars at four sizes, the
  * social card, the monochrome mark, the traced SVG — and none of them were
  * visible anywhere. The only way to see one was to download the brand kit ZIP
  * and open it, which is a poor way to find out that the favicon is wrong.
+ *
+ * The first version of this put all of them in one grid of equal tiles, each
+ * drawn at its true pixel size on a white plate. Both halves of that were
+ * defensible and both were wrong in practice:
+ *
+ * - **True scale made the favicon look broken.** A 32px image centred in a
+ *   176px plate covers 3% of it and reads as a failed load. It was honest about
+ *   size and useless about the only question anyone asks of a favicon, which is
+ *   whether the mark survives being that small.
+ * - **Four avatar sizes were four near-identical tiles**, and with the logo,
+ *   the vector, the icon and the monochrome beside them the section was ten
+ *   squares of the same artwork. DESIGN.md names a grid of same-size cards as
+ *   its anti-reference, and this was one.
+ * - **Every plate was forced white**, on the one surface in the product showing
+ *   a brand's own marks. Paper White is what a brand *without* a ground gets;
+ *   here the brand has one.
+ *
+ * So: the marks that are artwork are shown as artwork on the brand's own paper,
+ * and everything derived is shown inside the thing it was cut for — a browser
+ * tab, a profile row, a shared link. Scale stops being a caption and becomes
+ * the picture. Nothing was dropped; every file is still one click from here.
  */
 
-type Variation = {
-  file: GeneratedFile
-  label: string
-  detail: string
-  /** Small marks look lost on a large tile; large ones need the room. */
-  wide?: boolean
+type Props = {
+  files: GeneratedFile[]
+  primaryLogoFileId: string | null
+  markLogoFileId: string | null
+  /** The brand's own palette. Absent falls back to white paper — see `brandTheme`. */
+  palette?: BrandPalette
+  /** Sets the brand's name in its own face inside the mock scenes. */
+  fonts?: BrandFonts
+  /** What the tab and the profile row are named. Falls back to the label alone. */
+  brandName?: string | null
+  /** The published site, for the link unfurl. Absent shows no domain line. */
+  domain?: string | null
+  /** Folded shut for a customer, open on the support view — see below. */
+  open?: boolean
 }
-
-/*
- * One file can legitimately appear under two labels — the same concept chosen
- * as both the logo and the icon — so the file id alone is not a unique key.
- */
-const keyOf = (variation: Variation) => `${variation.label}:${variation.file.id}`
 
 function dimensions(file: GeneratedFile) {
   return file.width && file.height ? `${file.width}×${file.height}` : null
+}
+
+function fileSrc(file: GeneratedFile) {
+  return publicUrl(file.r2Key) ?? `/api/files/${file.id}`
+}
+
+/**
+ * A download that is a row action rather than a link inside a sentence, so
+ * WCAG 2.5.8's inline exception does not cover it. The floor is 24px.
+ */
+function DownloadLink({ file, children }: { file: GeneratedFile; children: React.ReactNode }) {
+  return (
+    <a
+      href={`/api/files/${file.id}?download`}
+      className="inline-flex min-h-6 shrink-0 items-center text-xs accent-text hover:underline"
+    >
+      {children}
+    </a>
+  )
+}
+
+/** A mark shown as artwork: fitted to the plate, on the brand's own ground. */
+function MarkPlate({
+  file,
+  label,
+  detail,
+  download,
+}: {
+  file: GeneratedFile
+  label: string
+  detail: string
+  download: string
+}) {
+  return (
+    <figure className="space-y-2">
+      <div
+        className={cn(
+          'grid place-items-center overflow-hidden rounded-control p-6',
+          'bg-[var(--guest-paper)] ring-1 ring-[var(--guest-line)]',
+        )}
+        style={{ minHeight: 168 }}
+      >
+        {/* Generated assets are arbitrary user content, so next/image
+            optimisation is skipped in favour of a plain img. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={fileSrc(file)}
+          alt={label}
+          width={file.width ?? undefined}
+          height={file.height ?? undefined}
+          loading="lazy"
+          /*
+           * Fitted rather than pinned to its own pixel width. The old rule drew
+           * everything at true size to stop a 32px favicon reading as a
+           * full-size logo; the derived files have their own scenes below now,
+           * so what is left here is artwork worth seeing at a usable size, and
+           * the pixel dimensions are in the caption where they can be read.
+           *
+           * Both bounds are pixel values, deliberately. `max-h-full` was tried
+           * first and measured wrong in a browser — a 1024 mark laid out 244px
+           * tall inside a 176px plate — because the percentage never resolved
+           * against the plate. A number cannot fail to.
+           */
+          className="max-w-full object-contain"
+          style={{ maxHeight: 120 }}
+        />
+      </div>
+      <figcaption>
+        <div className="flex items-baseline justify-between gap-2">
+          <span className="truncate text-xs font-medium">{label}</span>
+          <DownloadLink file={file}>{download}</DownloadLink>
+        </div>
+        <p className="text-xs text-fg-muted">{detail}</p>
+      </figcaption>
+    </figure>
+  )
+}
+
+/**
+ * One browser tab, drawn.
+ *
+ * The colours here are literals and they are the one legitimate place for them:
+ * they depict Chrome's own chrome, which is not ours to hold a token for. Light
+ * and dark are both shown because both ship, and a mark that disappears on one
+ * of them is exactly the defect this section exists to surface — at 16px, which
+ * is the size a tab actually renders a favicon.
+ */
+function BrowserTab({
+  file,
+  name,
+  dark,
+}: {
+  file: GeneratedFile
+  name: string
+  dark?: boolean
+}) {
+  return (
+    <div
+      className="rounded-t-control px-2 pt-2"
+      style={{ backgroundColor: dark ? '#202124' : '#dee1e6' }}
+    >
+      <div
+        className="flex items-center gap-2 rounded-t-[0.5rem] px-3 py-2"
+        style={{ backgroundColor: dark ? '#35363a' : '#ffffff' }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={fileSrc(file)}
+          alt=""
+          width={16}
+          height={16}
+          loading="lazy"
+          className="shrink-0 object-contain"
+          style={{ width: 16, height: 16 }}
+        />
+        <span
+          className="truncate text-xs"
+          style={{ color: dark ? '#e8eaed' : '#3c4043' }}
+        >
+          {name}
+        </span>
+        <X className="ms-auto size-3 shrink-0" style={{ color: dark ? '#9aa0a6' : '#5f6368' }} />
+      </div>
+    </div>
+  )
+}
+
+/**
+ * A scene: the derived file inside the thing it was cut for, with every size of
+ * it reachable underneath.
+ */
+function Scene({
+  title,
+  hint,
+  files,
+  sized,
+  children,
+}: {
+  title: string
+  hint: string
+  files: GeneratedFile[]
+  /** Labels each download by its pixel width, for a file that ships at several. */
+  sized?: boolean
+  children: React.ReactNode
+}) {
+  return (
+    <figure className="space-y-3">
+      <div>{children}</div>
+      <figcaption className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <span className="text-xs font-medium">{title}</span>
+        <span className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          {files.map((file) => (
+            <DownloadLink key={file.id} file={file}>
+              {sized ? (file.width ?? dimensions(file) ?? '—') : dimensions(file) ?? 'PNG'}
+            </DownloadLink>
+          ))}
+        </span>
+        <p className="w-full text-xs text-fg-muted">{hint}</p>
+      </figcaption>
+    </figure>
+  )
 }
 
 export async function LogoVariations({
   files,
   primaryLogoFileId,
   markLogoFileId,
+  palette,
+  fonts,
+  brandName,
+  domain,
   open,
-}: {
-  files: GeneratedFile[]
-  primaryLogoFileId: string | null
-  markLogoFileId: string | null
-  /** Folded shut for a customer, open on the support view — see below. */
-  open?: boolean
-}) {
+}: Props) {
   const t = await getTranslations('Branding')
 
   const logo = files.find((file) => file.id === primaryLogoFileId)
@@ -68,41 +254,42 @@ export async function LogoVariations({
   const byVariant = (variant: string) =>
     derived.filter((file) => file.metadata?.variant === variant)
 
-  const variations: Variation[] = []
-
-  variations.push({ file: logo, label: t('varFullLogo'), detail: `PNG · ${dimensions(logo) ?? '—'}` })
-  if (svg) variations.push({ file: svg, label: t('varVector'), detail: 'SVG · ∞' })
-
-  // Choosing one concept as both is allowed — it means "use the logo where text
-  // will not fit" — but it is one piece of artwork, so it gets one tile.
-  if (mark && mark.id !== logo.id) {
-    variations.push({ file: mark, label: t('varIcon'), detail: `PNG · ${dimensions(mark) ?? '—'}` })
-  }
-
-  for (const file of byVariant('favicon')) {
-    variations.push({ file, label: t('varFavicon'), detail: `PNG · ${dimensions(file) ?? '32×32'}` })
-  }
-
-  for (const file of byVariant('avatar').sort((a, b) => (b.width ?? 0) - (a.width ?? 0))) {
-    variations.push({ file, label: t('varAvatar'), detail: `PNG · ${dimensions(file) ?? '—'}` })
-  }
-
-  for (const file of byVariant('og')) {
-    variations.push({ file, label: t('varSocialCard'), detail: 'PNG · 1200×630', wide: true })
-  }
-
-  for (const file of byVariant('monochrome')) {
-    variations.push({ file, label: t('varMonochrome'), detail: 'PNG' })
-  }
+  const favicons = byVariant('favicon')
+  const avatars = byVariant('avatar').sort((a, b) => (b.width ?? 0) - (a.width ?? 0))
+  const cards = byVariant('og')
+  const monochrome = byVariant('monochrome')
 
   /*
    * Files written before variants were labelled carry no metadata. Rather than
    * guess at their filenames, they are listed plainly — every one of them is
    * replaced the next time a logo or icon is chosen.
    */
-  for (const file of derived.filter((f) => !f.metadata?.variant)) {
-    variations.push({ file, label: t('varOther'), detail: `PNG · ${dimensions(file) ?? '—'}` })
+  const unlabelled = derived.filter((file) => !file.metadata?.variant)
+
+  const theme = brandTheme(palette ?? null)
+  const name = brandName?.trim() || t('varFullLogo')
+
+  /* Marks are artwork; everything below is a file with a destination. */
+  const marks: { file: GeneratedFile; label: string; detail: string }[] = [
+    { file: logo, label: t('varFullLogo'), detail: `PNG · ${dimensions(logo) ?? '—'}` },
+  ]
+  if (svg) marks.push({ file: svg, label: t('varVector'), detail: 'SVG · ∞' })
+  // Choosing one concept as both is allowed — it means "use the logo where text
+  // will not fit" — but it is one piece of artwork, so it gets one plate.
+  if (mark && mark.id !== logo.id) {
+    marks.push({ file: mark, label: t('varIcon'), detail: `PNG · ${dimensions(mark) ?? '—'}` })
   }
+  for (const file of monochrome) {
+    marks.push({ file, label: t('varMonochrome'), detail: `PNG · ${dimensions(file) ?? '—'}` })
+  }
+
+  const total =
+    marks.length + favicons.length + avatars.length + cards.length + unlabelled.length
+
+  const avatar = avatars[0]
+  const favicon = favicons[0]
+  const card = cards[0]
+  const hasScenes = Boolean(favicon || avatar || card)
 
   /*
    * Folded shut by default.
@@ -116,98 +303,148 @@ export async function LogoVariations({
    * it is the same as not having it on the page.
    */
   return (
-    <Disclosure
-      title={t('variations')}
-      meta={t('fileCount', { count: variations.length })}
-      open={open}
-    >
+    <Disclosure title={t('variations')} meta={t('fileCount', { count: total })} open={open}>
       <p className="text-sm text-fg-secondary">
         {mark ? t('variationsHintWithIcon') : t('variationsHint')}
       </p>
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-3 lg:grid-cols-4">
-        {variations.map((variation) => {
-          const { file, label, detail, wide } = variation
-          const src = publicUrl(file.r2Key) ?? `/api/files/${file.id}`
+      {/* The brand's ground travels through CSS rather than through props, so
+          every plate and every scene below inherits it from one declaration. */}
+      <div style={theme.vars} className="mt-6 space-y-8">
+        <section className="space-y-3">
+          <Eyebrow as="h3" className="text-fg-muted">
+            {t('varsMarks')}
+          </Eyebrow>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {marks.map(({ file, label, detail }) => (
+              <MarkPlate
+                key={`${label}:${file.id}`}
+                file={file}
+                label={label}
+                detail={detail}
+                download={t('download')}
+              />
+            ))}
+          </div>
+        </section>
 
-          /*
-           * Drawn at the size it actually is.
-           *
-           * Every tile used to be `aspect-square w-full`, which scaled a 32x32
-           * favicon up to the same 200-odd pixels as the 1024 logo. They looked
-           * identical, so the only way to tell which file was which was to
-           * download one and look — and downloading the wrong one is exactly
-           * how a 32x32 favicon gets mistaken for a logo that "downloaded at
-           * quality 0". At its own size the favicon reads as a favicon.
-           *
-           * The cap is the tile width: past that there is no room to be honest
-           * about scale, and 1080 next to 32 would make the small ones
-           * invisible anyway. `PLATE` is tall enough to hold a 256 avatar, so
-           * everything below that sits at true size with room around it.
-           */
-          const PLATE = 176
-          // The plate's inner height, less its `p-2` padding on both sides.
-          const FIT = PLATE - 16
-          const natural = file.width ?? null
-          const atNaturalSize = natural !== null && natural <= FIT
+        {hasScenes && (
+          <section className="space-y-3">
+            <Eyebrow as="h3" className="text-fg-muted">
+              {t('varsInUse')}
+            </Eyebrow>
 
-          return (
-            <figure
-              key={keyOf(variation)}
-              className={wide ? 'space-y-2 sm:col-span-2' : 'space-y-2'}
-            >
-              <div
-                className="grid place-items-center overflow-hidden rounded-control border border-line bg-white p-2"
-                style={{ height: PLATE }}
-              >
-                {/* Generated assets are arbitrary user content, so next/image
-                    optimisation is skipped in favour of a plain img. */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={src}
-                  alt={label}
-                  width={file.width ?? undefined}
-                  height={file.height ?? undefined}
-                  /*
-                   * Two cases, and only two: pinned to its own pixel width when
-                   * it fits, capped to the plate when it does not.
-                   *
-                   * Both are pixel values, deliberately. `max-h-full` and
-                   * `h-full` were each tried first and each measured wrong in a
-                   * browser — a 1024 mark laid out 244px tall inside a 176px
-                   * plate both times, and because the plate clips its overflow
-                   * that cropped the logo instead of fitting it. The percentage
-                   * never resolved against the plate; a number in pixels cannot
-                   * fail to.
-                   */
-                  className="max-w-full object-contain"
-                  style={atNaturalSize ? { width: natural } : { maxHeight: FIT }}
-                  loading="lazy"
-                />
-              </div>
-              <figcaption>
-                <div className="flex items-center justify-between gap-2">
-                  <span className="truncate text-xs font-medium">{label}</span>
-                  <a
-                    href={`/api/files/${file.id}?download`}
-                    /* A row action, not a link inside a sentence, so WCAG
-                       2.5.8's inline exception does not cover it. Measured
-                       59x16; the floor is 24. */
-                    className="inline-flex min-h-6 shrink-0 items-center text-xs accent-text hover:underline"
+            {/*
+              Three different shapes, deliberately. A tab, a profile row and an
+              unfurl are not the same object, and drawing them as three equal
+              cards would put back the grid this section was rebuilt to lose.
+            */}
+            <div className="grid gap-6 lg:grid-cols-2">
+              {favicon && (
+                <Scene title={t('varFavicon')} hint={t('varFaviconHint')} files={favicons}>
+                  <div className="flex items-end gap-3">
+                    <div className="min-w-0 flex-1">
+                      <BrowserTab file={favicon} name={name} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <BrowserTab file={favicon} name={name} dark />
+                    </div>
+                  </div>
+                </Scene>
+              )}
+
+              {avatar && (
+                <Scene title={t('varAvatar')} hint={t('varAvatarHint')} files={avatars} sized>
+                  <div
+                    className={cn(
+                      'flex items-center gap-3 rounded-control p-4',
+                      'bg-[var(--guest-paper)] ring-1 ring-[var(--guest-line)]',
+                    )}
                   >
-                    {t('download')}
-                  </a>
-                </div>
-                <p className="text-xs text-fg-muted">
-                  {detail}
-                  {/* Says so when the tile is not showing true scale, rather
-                      than quietly implying it is. */}
-                  {!atNaturalSize && natural !== null ? ` · ${t('shownSmaller')}` : ''}
-                </p>
-              </figcaption>
-            </figure>
-          )
-        })}
+                    {/*
+                      Circle-cropped, because that is what every platform does
+                      to it — and it is the one view that shows a mark drawn
+                      without breathing room losing its edges.
+                    */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={fileSrc(avatar)}
+                      alt=""
+                      loading="lazy"
+                      className="size-12 shrink-0 rounded-full object-cover"
+                    />
+                    <div className="min-w-0">
+                      <p
+                        className="truncate text-sm font-semibold"
+                        style={{
+                          color: 'var(--guest-ink)',
+                          fontFamily: fontStack(fonts?.heading),
+                        }}
+                      >
+                        {name}
+                      </p>
+                      <p className="truncate text-xs" style={{ color: 'var(--guest-ink-soft)' }}>
+                        {domain ?? t('varAvatarHandle')}
+                      </p>
+                    </div>
+                  </div>
+                </Scene>
+              )}
+
+              {card && (
+                <Scene
+                  title={t('varSocialCard')}
+                  hint={t('varSocialCardHint')}
+                  files={cards}
+                >
+                  <div className="overflow-hidden rounded-control ring-1 ring-line">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={fileSrc(card)}
+                      alt=""
+                      loading="lazy"
+                      className="block w-full object-cover"
+                      style={{ aspectRatio: '1200 / 630' }}
+                    />
+                    <div className="bg-raised px-4 py-3">
+                      <p className="truncate text-xs uppercase tracking-[0.12em] text-fg-muted">
+                        {domain ?? t('varSocialCardFallbackDomain')}
+                      </p>
+                      <p className="truncate text-sm font-medium">{name}</p>
+                    </div>
+                  </div>
+                </Scene>
+              )}
+            </div>
+          </section>
+        )}
+
+        {unlabelled.length > 0 && (
+          <section className="space-y-3">
+            <Eyebrow as="h3" className="text-fg-muted">
+              {t('varsOther')}
+            </Eyebrow>
+            <ul className="divide-y divide-line border-y border-line">
+              {unlabelled.map((file) => (
+                <li key={file.id} className="flex items-center justify-between gap-3 py-2.5">
+                  <span className="flex min-w-0 items-center gap-3">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={fileSrc(file)}
+                      alt=""
+                      loading="lazy"
+                      className="size-8 shrink-0 rounded-[0.25rem] bg-[var(--guest-paper)] object-contain p-1"
+                    />
+                    <span className="truncate text-xs text-fg-muted">
+                      {dimensions(file) ?? 'PNG'}
+                    </span>
+                  </span>
+                  <DownloadLink file={file}>{t('download')}</DownloadLink>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
       </div>
     </Disclosure>
   )
