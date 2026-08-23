@@ -654,7 +654,6 @@
     "varSocialCard": "بطاقة المشاركة",
     "varMonochrome": "أحادي اللون",
     "varOther": "اشتقاق",
-    "shownSmaller": "معروض مصغّراً",
     "paletteHint": "اضغط على أي لون لنسخ رمزه.",
     "fontsHint": "الخطوط التي تُكتب بها علامتك. انسخ الاسم للبحث عنه، أو ثبّته من Google Fonts.",
     "findFont": "ابحث عنه في Google Fonts",
@@ -675,7 +674,15 @@
     "fontsSpecimen": "نص تجريبي يعرض شكل الحروف في هذا الخط.",
     "notEnoughCreditsHint": "الجولة الجديدة تكلف {credits} رصيد ولديك {balance}.",
     "topUp": "أضف رصيداً",
-    "generating": "جارٍ توليد مفاهيم الشعار"
+    "generating": "جارٍ توليد مفاهيم الشعار",
+    "varsMarks": "العلامات",
+    "varsInUse": "قيد الاستخدام",
+    "varFaviconHint": "بحجم ١٦ بكسل في تبويب المتصفح، فاتحاً وداكناً.",
+    "varAvatarHint": "مقصوصة دائرياً، كما تقصّها كل المنصات.",
+    "varAvatarHandle": "الحساب",
+    "varSocialCardHint": "كيف يظهر رابط موقعك عند مشاركته.",
+    "varSocialCardFallbackDomain": "your-site.com",
+    "varsOther": "ملفات أخرى"
   },
   "Social": {
     "bio": "نبذة إنستغرام",

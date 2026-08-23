@@ -389,6 +389,9 @@ export default async function AdminProjectPage({
         files={files}
         primaryLogoFileId={primaryLogo?.id ?? null}
         markLogoFileId={brandingAsset?.markLogoFileId ?? null}
+        palette={brandingAsset?.colorPalette}
+        fonts={brandingAsset?.fontRecommendations}
+        brandName={project.business_name}
         open
       />
 
