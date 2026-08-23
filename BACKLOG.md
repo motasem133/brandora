@@ -10,17 +10,40 @@ have been built on top of a product that was quietly losing customers' money.
 
 Times are working estimates, not commitments. Where one is uncertain it says so.
 
-*Last true on 18 August 2026.*
+*Last true on 23 August 2026.*
 
 ---
 
 ## Fixes
 
-**Empty**, and it has stayed empty since 13 August. The CI suite
-that had been red for days is green again — three causes, one of them a real
-defect: choosing a logo failed *after* it had worked, because the derived assets
-were rebuilt inline and unguarded, so a customer saw an error for something that
-had succeeded.
+### 1. Inngest rejects requests it should accept — 30 minutes to diagnose, unknown to fix
+
+`/api/inngest` logs `Signature validation failed` and `Error: Invalid signature`
+in production. Low volume — single figures — but continuous since 5 August, and
+still appearing on 20 August after four deploys.
+
+It is on the endpoint that runs brand generation, which is the reason it is a
+fix rather than a curiosity: a signing-key mismatch is exactly how a run ends up
+queued forever with a customer's credits held, and that has already happened
+once on 9 August for a different reason. Nothing currently says whether these
+are real invocations being rejected or unsigned probes being correctly refused,
+and the difference is the whole question.
+
+Check `INNGEST_SIGNING_KEY` in production against the key the synced app
+expects, and look at whether the rejected requests correlate with any run that
+stalled. See the Inngest note under *Yours, not code*.
+
+---
+
+Fixes had been **empty since 13 August**. Two entries were found on 20 August by
+reading production telemetry rather than from a customer report; the other was
+English branding returning unparseable JSON, which is closed — the cause was not
+the one written down here, and the correction is under *Closed* below.
+
+The CI suite that had been red for days is green again — three causes, one of
+them a real defect: choosing a logo failed *after* it had worked, because the
+derived assets were rebuilt inline and unguarded, so a customer saw an error for
+something that had succeeded.
 
 One more of the same shape was found on 15 August and fixed the same day: two
 tests had a three-item string typed into them and were only ever green because
@@ -76,7 +99,12 @@ customer is missing can be shown by rendering it rather than by drawing it.
 ## In review
 
 **#19**, the social kit reprice, held as a draft on purpose — see Improvement 2.
-Nothing else is outstanding.
+
+Open alongside it, as of 23 August: **#87** (the routing fix above), **#86**
+(a brand's share card drawn from the brand), **#84** (which concept each mark
+was cut from), **#74** (where the client IP comes from), and this file.
+Actions is blocked on billing, so every one of them will show a red check that
+means nothing — see *Yours, not code*.
 
 ---
 
@@ -231,23 +259,65 @@ durable version is to add one in the console, paste it straight into Vercel's
 own settings, redeploy, and then delete the old one. Nothing needs to see it in
 between. Same reasoning as the database password below.
 
-### The Arabic the landing page cannot prove — a run, and a decision
+### The Arabic the landing page still cannot prove — the run is done, the decision is not
 
-Arabic is the sharpest differentiator the product has, and the brand the page
-shows in full does not exercise it. Sultana was briefed in English and all four
-of its marks are Latin, so the Arabic section can only demonstrate that a brief
-is *displayed* right-to-left — which every internationalised site does, and
-which proves nothing about generated Arabic.
+**The run happened on 20 August.** دار العُود والطّياف, a Dubai perfume house,
+briefed in Arabic: Arabic naming, story, palette and an Arabic calligraphic
+heading face. Its wordmark is committed as
+`public/marketing/dar-al-oud-wordmark.webp` with the traced `.svg` beside it.
+Nine credits, and it closed the evidence half of this entry.
 
-Nothing in code fixes this honestly. It needs a real run from an Arabic brief,
-kept as the page's exemplar the way Sultana is now: the files, the marks and the
-copy all coming out of one generation. That costs credits and it is a decision
-about what the product shows itself doing, which is why it is here rather than
-in Improvements.
+**Nothing renders it.** The Arabic section still shows only the bilingual brief
+panel, so the page still proves only that a brief is *displayed* right-to-left.
+What is left is not evidence, it is design: where a real Arabic mark belongs on
+a page whose exemplar is Sultana, and whether Sultana stays the exemplar at all.
+Mixing the two brands in one section is the obvious move and probably the wrong
+one — the whole argument of the kit section is that one run produced things that
+agree with each other.
 
-The seven findings around it are in #57. This is the one left, and it was left
-deliberately — the alternative was mocking up Arabic marks on the page that
-sells generated ones.
+One caveat that has to survive into whatever is built: **the run produced two
+concepts and only one is usable.** The wordmark is correctly shaped, connected
+Arabic. The second concept renders malformed Arabic — broken joins, a stray
+fragment, `ذ` where the name has `د` — and is deliberately not committed. That
+one-in-two rate is recorded in PRODUCT.md; anything built here needs a human to
+look before it ships.
+
+The seven findings around this are in #57.
+
+### GitHub Actions is blocked on billing — minutes, and it is blocking everything else
+
+Every CI job has failed in **about two seconds** since roughly 19 August:
+
+> The job was not started because recent account payments have failed or your
+> spending limit needs to be increased.
+
+Both jobs, on every PR, including ones nobody touched. The red X says nothing
+about the code — and that is the danger in both directions: read as "broken" it
+blocks correct work, read as "fine" it ships unverified.
+
+Five PRs were merged to production on 20 August with CI red. Each was checked by
+running the workflow's own steps locally against a throwaway database —
+typecheck, lint, migrate, seed, the missing-migration check, build, 62 system
+tests and 76 browser tests — which takes about ten minutes and is the only
+reason those merges were defensible. That is not a sustainable substitute.
+
+### Search Console has never been given the sitemap — 5 minutes
+
+The site is verified — `public/googlea59464b81181ee2d.html` answers, and there
+is a TXT record on the apex — but two things have never been done.
+
+**Submit the sitemap.** `https://brandora.enigmitic.com/sitemap.xml`, under
+Sitemaps. It has ten URLs now: four marketing pages plus `/brand-kit`, each in
+both languages, with reciprocal hreflang. Nothing has told Google it exists.
+
+**Check the property type.** If it is a URL-prefix property for
+`brandora.enigmitic.com`, it does not cover customer sites, which live on
+`*.brandora.enigmitic.com`. A **Domain property on `enigmitic.com`** would show
+those too — worth having before customer sites start being indexed, not after.
+
+Then look at Pages: how many of the ten are indexed against how many are
+"Discovered – not indexed" is the only real measure of whether any of the SEO
+work landed.
 
 ### The contact form, once — 2 minutes
 
@@ -664,3 +734,117 @@ a change rather than a decision. The eighth is the Arabic exemplar, above under
     publicly after, fetching the Enigmitic homepage each time to prove the apex
     still served Hostinger's site rather than Vercel's edge. What is left to
     check is above, under *Yours, not code*.
+
+### The branding chain's last cause, 23 August
+
+Written up here rather than as a fix because the entry that described it was
+wrong about what it was, and the wrong version is the more useful thing to keep.
+
+It was recorded as **English branding truncating its answer about half the
+time** — `deepseek/deepseek-v4-pro` returning an object that stops mid-value,
+`SyntaxError … at position 1896` — and read as a completion running out of room,
+since no `maxOutputTokens` is set anywhere in `runModel` and branding is the
+largest answer the product asks for.
+
+Nothing was running out of room. Sixteen consecutive real branding calls
+finished at about **six hundred output tokens** with `finishReason: stop`,
+against a provider ceiling in the hundreds of thousands, and 1896 characters is
+mid-range of a perfectly normal answer rather than the end of a long one.
+`maxOutputTokens` would have changed nothing.
+
+**OpenRouter serves one model id from many machines.** Seventeen of them serve
+`deepseek-v4-pro`, it picks per request, six of the seventeen do not support
+`structured_outputs` — and `require_parameters` **defaults to false**. So a
+request carrying a JSON schema was free to land somewhere that cannot enforce
+one, and there the model answers the brief in prose. Pinned to a single
+provider, with the same schema and the same brief:
+
+| provider | what comes back |
+|---|---|
+| `baseten` | markdown — `**Five Name Directions** 1. **Tidal Roast Works** — Evokes the…` |
+| `novita` | refused — `does not support 'json_schema' response format` |
+| `siliconflow` | valid, slower |
+| `alibaba` | 16 of 16 valid |
+
+A complete answer that is not JSON, and a parser giving up partway through it.
+`runModel` now sends `provider: { require_parameters: true }`, which drops those
+providers from routing rather than letting them answer. **This was never
+branding's bug** — every task here sends a schema, so all four chains have been
+playing the same lottery and a fallback could lose it as easily as a primary.
+
+It cost `utility` its primary. `qwen/qwen3.7-flash` has one provider, which does
+not advertise the guarantee for that model, so under the flag every utility call
+is refused in under two hundred milliseconds and falls through. It answers valid
+JSON when it is allowed to, which is the tempting part; the guarantee is the
+thing it does not offer. It moved to `deepseek/deepseek-v4-flash`, already that
+chain's own fallback, so no new model entered the product.
+
+`pnpm test:model-routing` keeps the same thing from happening quietly again: it
+asks OpenRouter what its endpoints support and fails if any model in the
+registry has no provider that can serve it. It spends no tokens, and it fails on
+the registry as it stood before the change.
+
+**What is not proven, and it matters.** Nobody has reproduced the original
+failure under normal routing — 21 calls in a probe on 22 August, 22 more on
+23 August, not one failure between them. What is proven is that a provider in
+the pool returns non-JSON for this exact request and that the flag removes it;
+what is not is that production ever drew that provider. The log line it was
+first read from has since expired.
+
+So this closes a reachable failure mode at no real cost, and it is not proof of
+the incident. **Settling that needs two nullable columns on `ai_usage`,
+`error_text` and `upstream_provider`** — `runModel` already has both to hand, in
+its catch and in `providerMetadata`. Until they exist, nobody can tell whether
+this worked, and the same question will be asked again from the same absent
+data. It is a migration, so it is a deploy before it is a diff.
+
+### The AI chain and the marketing pages, 20 August
+
+Five PRs. The chains had been running at roughly a coin flip — glm-5.2 34
+success to 33 error, deepseek-v4-pro 16 to 12, qwen3.7-plus 13 to 37,
+qwen3.7-max 0 to 3 — and it was never one bug.
+
+**#73 + #78, the run's deadline and its cause.** #73 raised branding's
+per-attempt limit and added a whole-chain budget, so three attempts cannot
+overrun the Inngest route's 300-second ceiling and leave a hold nothing
+releases. #78 removed the reason the attempts were slow: every call in
+`runModel` is `generateObject` against a schema, and a reasoning model spends
+the completion on thinking that `result.object` then throws away. With
+`reasoning: { effort: 'none' }`, two 90-second timeouts became 20.9s and 13.7s
+and the English primary halved. The two were rebased into one stack rather than
+merged as rivals — the budget is the guard, the setting is the cause, and a
+root-cause fix does not remove the need for a guard.
+
+**#80, two failures the logs had been hiding.** `.min()` on a string is
+serialised as `minLength`, and Alibaba refuses the *request* — half a second,
+`invalid_parameter_error`, never reads the brief. Bisected live: `.min(150)`
+refused, `.min(3)` accepted, the same rule as a refinement accepted at any size.
+That is why qwen3.7-plus — **the primary for every social task** — sat at 13
+against 37: the schemas were tightened with minimums, correctly, and it has been
+refusing ever since. `atLeast` is now the only way to write a string minimum.
+Separately, `rationale` is capped at 200 and the prompt said only that character
+limits are a ceiling, naming none; all five overran and one bad field discards
+the whole answer. Stated in words, they come back at 84–156.
+
+Neither was findable until #78 also fixed the failure log, which had been
+printing the *tail* of the cause message — the rejected value, not the reason.
+It mislabelled a plain timeout as a schema bug for most of an afternoon.
+
+**#75 + #76, the marketing pages.** The FAQ had nine answers and no markup;
+`Product.name` on the pricing page was the headline sentence rather than the
+product's name; `/llms.txt` describes the product for answer engines and needed
+a proxy change so it does not answer on customer domains. And `/brand-kit` — the
+first page on this site written for a search rather than for a visitor who
+already arrived, in both languages, sharing `ContactSheet` with the landing page
+so the two cannot disagree about how many logo concepts there are.
+
+**#79 and three stale comments.** `sultana.ts` claimed an Arabic wordmark that
+does not exist and said customer subdomains do not resolve, which stopped being
+true on 18 August. `arabic-proof.tsx` said there is no generated Arabic artwork
+in the repo, which stopped being true the same day it was written down. All
+three were notes describing the repo as it used to be — the cheapest possible
+way to send the next person somewhere wrong.
+
+CI could not run for any of it: Actions has been blocked on billing since about
+19 August. Each merge was checked by running the workflow's own steps locally —
+62 system tests and 76 browser tests among them. See *Yours, not code*.
