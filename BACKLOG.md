@@ -10,40 +10,13 @@ have been built on top of a product that was quietly losing customers' money.
 
 Times are working estimates, not commitments. Where one is uncertain it says so.
 
-*Last true on 20 August 2026.*
+*Last true on 23 August 2026.*
 
 ---
 
 ## Fixes
 
-### 1. English branding truncates its answer about half the time — half a day, maybe less
-
-`deepseek/deepseek-v4-pro` is the primary for `brandingEn`, and roughly one
-attempt in two comes back as unparseable JSON — the object simply stops
-mid-value:
-
-```
-No object generated: could not parse the response.
-SyntaxError: Expected ',' or '}' after property value in JSON at position 1896
-```
-
-Branding is the section everything else is built on, so its first attempt
-failing is the difference between a run that takes twenty seconds and one that
-takes a retry cycle. It is survivable today only because the chain now has two
-working fallbacks behind it — before 20 August all three were failing and the
-run completed only when Inngest retried the whole step.
-
-The shape of it says the completion is running out of room rather than the model
-answering badly: it is not a schema rejection, it is a sentence that stopped. No
-`maxOutputTokens` is set anywhere in `runModel`, so whatever the provider
-defaults to is what branding gets, and branding is the largest single answer the
-product asks for. Start there before touching the model choice.
-
-Two of the three causes behind this class were fixed on 20 August — a serialised
-`minLength` that Alibaba refused outright, and a 200-character cap the prompt
-never mentioned. This is the third, and it is the one left.
-
-### 2. Inngest rejects requests it should accept — 30 minutes to diagnose, unknown to fix
+### 1. Inngest rejects requests it should accept — 30 minutes to diagnose, unknown to fix
 
 `/api/inngest` logs `Signature validation failed` and `Error: Invalid signature`
 in production. Low volume — single figures — but continuous since 5 August, and
@@ -62,13 +35,15 @@ stalled. See the Inngest note under *Yours, not code*.
 
 ---
 
-Fixes had been **empty since 13 August**, and both entries above were found on
-20 August by reading production telemetry rather than from a customer report.
-The CI suite
-that had been red for days is green again — three causes, one of them a real
-defect: choosing a logo failed *after* it had worked, because the derived assets
-were rebuilt inline and unguarded, so a customer saw an error for something that
-had succeeded.
+Fixes had been **empty since 13 August**. Two entries were found on 20 August by
+reading production telemetry rather than from a customer report; the other was
+English branding returning unparseable JSON, which is closed — the cause was not
+the one written down here, and the correction is under *Closed* below.
+
+The CI suite that had been red for days is green again — three causes, one of
+them a real defect: choosing a logo failed *after* it had worked, because the
+derived assets were rebuilt inline and unguarded, so a customer saw an error for
+something that had succeeded.
 
 One more of the same shape was found on 15 August and fixed the same day: two
 tests had a three-item string typed into them and were only ever green because
@@ -124,7 +99,12 @@ customer is missing can be shown by rendering it rather than by drawing it.
 ## In review
 
 **#19**, the social kit reprice, held as a draft on purpose — see Improvement 2.
-Nothing else is outstanding.
+
+Open alongside it, as of 23 August: **#87** (the routing fix above), **#86**
+(a brand's share card drawn from the brand), **#84** (which concept each mark
+was cut from), **#74** (where the client IP comes from), and this file.
+Actions is blocked on billing, so every one of them will show a red check that
+means nothing — see *Yours, not code*.
 
 ---
 
@@ -754,6 +734,69 @@ a change rather than a decision. The eighth is the Arabic exemplar, above under
     publicly after, fetching the Enigmitic homepage each time to prove the apex
     still served Hostinger's site rather than Vercel's edge. What is left to
     check is above, under *Yours, not code*.
+
+### The branding chain's last cause, 23 August
+
+Written up here rather than as a fix because the entry that described it was
+wrong about what it was, and the wrong version is the more useful thing to keep.
+
+It was recorded as **English branding truncating its answer about half the
+time** — `deepseek/deepseek-v4-pro` returning an object that stops mid-value,
+`SyntaxError … at position 1896` — and read as a completion running out of room,
+since no `maxOutputTokens` is set anywhere in `runModel` and branding is the
+largest answer the product asks for.
+
+Nothing was running out of room. Sixteen consecutive real branding calls
+finished at about **six hundred output tokens** with `finishReason: stop`,
+against a provider ceiling in the hundreds of thousands, and 1896 characters is
+mid-range of a perfectly normal answer rather than the end of a long one.
+`maxOutputTokens` would have changed nothing.
+
+**OpenRouter serves one model id from many machines.** Seventeen of them serve
+`deepseek-v4-pro`, it picks per request, six of the seventeen do not support
+`structured_outputs` — and `require_parameters` **defaults to false**. So a
+request carrying a JSON schema was free to land somewhere that cannot enforce
+one, and there the model answers the brief in prose. Pinned to a single
+provider, with the same schema and the same brief:
+
+| provider | what comes back |
+|---|---|
+| `baseten` | markdown — `**Five Name Directions** 1. **Tidal Roast Works** — Evokes the…` |
+| `novita` | refused — `does not support 'json_schema' response format` |
+| `siliconflow` | valid, slower |
+| `alibaba` | 16 of 16 valid |
+
+A complete answer that is not JSON, and a parser giving up partway through it.
+`runModel` now sends `provider: { require_parameters: true }`, which drops those
+providers from routing rather than letting them answer. **This was never
+branding's bug** — every task here sends a schema, so all four chains have been
+playing the same lottery and a fallback could lose it as easily as a primary.
+
+It cost `utility` its primary. `qwen/qwen3.7-flash` has one provider, which does
+not advertise the guarantee for that model, so under the flag every utility call
+is refused in under two hundred milliseconds and falls through. It answers valid
+JSON when it is allowed to, which is the tempting part; the guarantee is the
+thing it does not offer. It moved to `deepseek/deepseek-v4-flash`, already that
+chain's own fallback, so no new model entered the product.
+
+`pnpm test:model-routing` keeps the same thing from happening quietly again: it
+asks OpenRouter what its endpoints support and fails if any model in the
+registry has no provider that can serve it. It spends no tokens, and it fails on
+the registry as it stood before the change.
+
+**What is not proven, and it matters.** Nobody has reproduced the original
+failure under normal routing — 21 calls in a probe on 22 August, 22 more on
+23 August, not one failure between them. What is proven is that a provider in
+the pool returns non-JSON for this exact request and that the flag removes it;
+what is not is that production ever drew that provider. The log line it was
+first read from has since expired.
+
+So this closes a reachable failure mode at no real cost, and it is not proof of
+the incident. **Settling that needs two nullable columns on `ai_usage`,
+`error_text` and `upstream_provider`** — `runModel` already has both to hand, in
+its catch and in `providerMetadata`. Until they exist, nobody can tell whether
+this worked, and the same question will be asked again from the same absent
+data. It is a migration, so it is a deploy before it is a diff.
 
 ### The AI chain and the marketing pages, 20 August
 
