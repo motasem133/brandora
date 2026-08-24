@@ -10,7 +10,7 @@ import { Field } from '@/components/ui/field'
 import { FieldError } from '@/components/ui/field-error'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { useRouter } from '@/i18n/navigation'
+import { Link, useRouter } from '@/i18n/navigation'
 import { EVENTS, capture } from '@/lib/analytics'
 import {
   BUILT_CONTENT_TYPES,
@@ -37,11 +37,22 @@ export function ContentComposer({
   balance,
   costs,
   variantCost,
+  hasPhotography,
 }: {
   projectId: string
   balance: number
   costs: Record<BuiltContentType, number>
   variantCost: number
+  /**
+   * Whether this brand's social kit has been generated.
+   *
+   * A carousel is drawn from the kit's photographs — most of the frames need
+   * one — so a brand without them draws a shorter sequence. Said here because
+   * this is the control that spends, and finding out afterwards that a piece
+   * came back shorter than the price implies is exactly the surprise the
+   * product's own rule about credits exists to prevent.
+   */
+  hasPhotography: boolean
 }) {
   const t = useTranslations('Studio')
   const router = useRouter()
@@ -62,6 +73,9 @@ export function ContentComposer({
   const rendered = isRenderedType(type)
   const estimate = costs[type] + (rendered ? 0 : (variants - 1) * variantCost)
   const affordable = balance >= estimate
+  /* Only the drawn types are built out of photography, and a story is refused
+     outright without it — so this is the carousel's warning. */
+  const short = type === 'carousel' && !hasPhotography
   const ready = brief.trim().length >= 3 && affordable && !isPending
 
   /* The same wall as the generation panel's, at the other control that spends. */
@@ -143,6 +157,15 @@ export function ContentComposer({
         sentence someone writes and reads back before it spends credits, not a
         slot they fill.
       */}
+      {short && (
+        <p className="text-sm text-fg-secondary">
+          {t('carouselShort')}{' '}
+          <Link href={`/dashboard/projects/${projectId}`} className="accent-text hover:underline">
+            {t('carouselShortCta')}
+          </Link>
+        </p>
+      )}
+
       <Field label={t('briefLabel')} hint={t('briefHint')}>
         <Textarea
           value={brief}

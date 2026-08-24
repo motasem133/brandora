@@ -28,6 +28,8 @@
     "test:copy": "tsx scripts/copy-contract-test.ts",
     "test:brand-copy": "tsx scripts/brand-copy-test.ts",
     "test:kit-copy": "tsx scripts/kit-copy-test.ts",
+    "test:layouts": "tsx scripts/layout-copy-test.ts",
+    "test:kit-scope": "tsx scripts/kit-scope-test.ts",
     "test:logo-progress": "tsx scripts/logo-progress-test.ts",
     "test:logo-icon": "tsx scripts/logo-icon-test.ts",
     "test:ai-timeout": "tsx scripts/ai-timeout-test.ts",

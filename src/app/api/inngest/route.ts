@@ -3,6 +3,7 @@ import { serve } from 'inngest/next'
 import { inngest } from '@/server/inngest/client'
 import { generateRenderedContent } from '@/server/inngest/content'
 import { generateBrand } from '@/server/inngest/generate'
+import { redrawKitPosts } from '@/server/inngest/logo'
 import { sendBrandNudges } from '@/server/inngest/nudge'
 
 /**
@@ -37,5 +38,5 @@ export const maxDuration = 300
  */
 export const { GET, POST, PUT } = serve({
   client: inngest,
-  functions: [generateBrand, generateRenderedContent, sendBrandNudges],
+  functions: [generateBrand, generateRenderedContent, redrawKitPosts, sendBrandNudges],
 })

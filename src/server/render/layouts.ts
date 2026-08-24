@@ -18,17 +18,45 @@ import { deviceFor, registerFor, SHAPE_DEVICES, splitHeadline, type PostBrand } 
 
 export type LayoutKind =
   | 'hero' | 'feature' | 'statement' | 'detail' | 'story'
-  | 'about' | 'palette' | 'identity'
+  | 'about' | 'palette' | 'identity' | 'closing'
 
-export const LAYOUTS: Record<LayoutKind, { label: string; needs: 'hero' | 'people' | 'detail' | null; size: { width: number; height: number } }> = {
-  hero: { label: 'Opening post', needs: 'hero', size: { width: 1080, height: 1080 } },
-  feature: { label: 'Who we are', needs: 'people', size: { width: 1080, height: 1080 } },
-  statement: { label: 'Statement', needs: null, size: { width: 1080, height: 1080 } },
-  detail: { label: 'Close up', needs: 'detail', size: { width: 1080, height: 1080 } },
-  story: { label: 'Story', needs: 'hero', size: { width: 1080, height: 1920 } },
-  about: { label: 'Our story', needs: 'detail', size: { width: 1080, height: 1080 } },
-  palette: { label: 'Colours & type', needs: null, size: { width: 1080, height: 1080 } },
-  identity: { label: 'The mark', needs: null, size: { width: 1080, height: 1080 } },
+/**
+ * `copy` is a contract, not a description.
+ *
+ * A layout that says `none` draws no words at all — it is a specimen, and the
+ * artwork is the content. That was already true of `palette` and `identity`
+ * and it was written down nowhere, so Content Studio planned carousels out of
+ * them: the model was asked for a three-beat sequence, charged for it, and two
+ * of the three lines were dropped silently at render time. The customer got
+ * their line, then a logo with no words, then a sheet of hex codes — for a
+ * brief that said "we are launching soon".
+ *
+ * Anything choosing layouts for a piece of content reads this field and takes
+ * only the ones that can carry what it is about. See `carouselPlan`.
+ */
+export const LAYOUTS: Record<LayoutKind, {
+  label: string
+  needs: 'hero' | 'people' | 'detail' | null
+  /** What this layout does with the words it is handed. */
+  copy: 'lead' | 'lead+body' | 'none'
+  size: { width: number; height: number }
+}> = {
+  hero: { label: 'Opening post', needs: 'hero', copy: 'lead', size: { width: 1080, height: 1080 } },
+  feature: { label: 'Who we are', needs: 'people', copy: 'lead', size: { width: 1080, height: 1080 } },
+  statement: { label: 'Statement', needs: null, copy: 'lead', size: { width: 1080, height: 1080 } },
+  detail: { label: 'Close up', needs: 'detail', copy: 'lead', size: { width: 1080, height: 1080 } },
+  story: { label: 'Story', needs: 'hero', copy: 'lead', size: { width: 1080, height: 1920 } },
+  about: { label: 'Our story', needs: 'detail', copy: 'lead+body', size: { width: 1080, height: 1080 } },
+  palette: { label: 'Colours & type', needs: null, copy: 'none', size: { width: 1080, height: 1080 } },
+  identity: { label: 'The mark', needs: null, copy: 'none', size: { width: 1080, height: 1080 } },
+  /*
+   * The frame a sequence ends on: the mark, and the line that asks for
+   * something. The carousel prompt has always promised this — "the last asks
+   * for something" — and there was no layout that could keep the promise
+   * without a photograph, which is why a carousel for a brand with no kit
+   * ended on a colour specification instead.
+   */
+  closing: { label: 'Closing', needs: null, copy: 'lead', size: { width: 1080, height: 1080 } },
 }
 
 const hasArabic = (value: string) => /[؀-ۿ]/.test(value)
@@ -51,6 +79,13 @@ type Parts = {
   height: number
   /** What this particular post says. Falls back to the slogan when absent. */
   copy?: { lead: string; tail: string | null; body?: string }
+  /**
+   * How light the mark's own ink is, 0 to 1, from `inkLuminance`.
+   *
+   * Optional only so an older caller still renders; absent is read as dark
+   * ink, which is what a generated logo almost always has.
+   */
+  ink?: number
   /** Forces a register instead of deriving one — local comparison only. */
   register?: 'editorial' | 'loud' | 'refined' | 'organic'
   /**
@@ -80,11 +115,51 @@ const scaler = (width: number) => (n: number) => Math.round((n / 1080) * width)
  *
  * On a light ground the lockup stands in its own colour with nothing behind it.
  */
+/**
+ * What the mark can stand on, given a ground.
+ *
+ * Returns a colour to set behind it, or null when it reads as it is.
+ *
+ * This replaces `filter:brightness(0) invert(1)`, which was on every lockup in
+ * the kit and unconditional on the one post whose subject is the mark. That
+ * filter does not place a logo, it destroys one: it flattens the artwork to a
+ * silhouette, so a two-tone mark loses its second colour and every shape cut
+ * into it fills solid. Measured on a real brand, a purple sun with a navy star
+ * cut out of its centre rendered as a plain white blob — the customer's
+ * complaint was, exactly, "the carousel is not using the logo I chose".
+ *
+ * A mark that already contrasts with its ground is drawn untouched. One that
+ * would disappear is given a plate of the brand's own paper — which is what a
+ * brand book does with a reversed mark, and it keeps the artwork true.
+ *
+ * 3:1 is WCAG's floor for a graphic that has to be made out, and the mark is
+ * one.
+ */
+function markPlate(p: Parts, ground: string): string | null {
+  const level = Math.round((p.ink ?? 0) * 255)
+  const ink = `#${level.toString(16).padStart(2, '0').repeat(3)}`
+
+  if (contrast(ink, ground) >= 3) return null
+
+  const c = p.brand.palette
+  /* The brand's own surfaces first, white last: a plate is a small piece of
+     the brand appearing on the post, not a hole cut in it. */
+  return [c.background, c.text, c.primary, '#ffffff']
+    .map((option) => ({ option, ratio: contrast(ink, option) }))
+    .sort((a, b) => b.ratio - a.ratio)[0].option
+}
+
+/** The plate as CSS, or nothing. Shared so every mark on a post agrees. */
+function plateStyle(plate: string | null, u: (n: number) => number, pad = 14) {
+  return plate ? `;background:${plate};padding:${u(pad)}px ${u(pad * 1.3)}px;border-radius:${u(12)}px` : ''
+}
+
 function lockup(p: Parts, u: (n: number) => number, rtl: boolean, ground: string) {
   const place = `position:absolute;top:${u(70)}px;${rtl ? `right:${u(88)}px` : `left:${u(88)}px`}`
 
   /*
-   * Reversed or not is read off the ground rather than passed in by the caller.
+   * Whether the mark needs a plate is read off the ground rather than passed
+   * in by the caller.
    *
    * It was a boolean each layout set by hand, and it was wrong the moment a
    * register changed a field's colour underneath it: a white lockup on a brand
@@ -92,10 +167,10 @@ function lockup(p: Parts, u: (n: number) => number, rtl: boolean, ground: string
    * brands rendered side by side showed immediately. The ground is the only
    * thing that knows.
    */
-  const invert = contrast('#ffffff', ground) >= contrast('#000000', ground)
-  return `<div style="display:flex;${place};align-items:center">
+  const plate = markPlate(p, ground)
+  return `<div style="display:flex;${place};align-items:center${plateStyle(plate, u)}">
       <img src="${p.wordmark}" width="${u(210)}" height="${u(80)}"
-        style="object-fit:contain${invert ? ';filter:brightness(0) invert(1)' : ''}"/></div>`
+        style="object-fit:contain"/></div>`
 }
 
 /**
@@ -445,9 +520,13 @@ export function renderLayout(kind: LayoutKind, p: Parts) {
         <div style="display:flex;margin-top:${u(30)}px;font-family:'${p.brand.fonts.heading}';
           font-size:${u(52)}px;line-height:1.18;color:${c.text};${rtl ? 'direction:rtl' : ''}"
           >${escape(lead)}</div>
-        <div style="display:flex;margin-top:${u(26)}px;font-size:${u(32)}px;line-height:1.6;
-          color:${c.primary};opacity:.86;${rtl ? 'direction:rtl' : ''}"
-          >${escape(p.copy?.body ?? '')}</div>
+        ${/* Only when there is prose. Content Studio hands this layout a
+             headline and no body, and an empty block still took its space —
+             one frame in five of every carousel that had photography to draw
+             from was a headline with a gap under it. */ ''}
+        ${p.copy?.body ? `<div style="display:flex;margin-top:${u(26)}px;font-size:${u(32)}px;
+          line-height:1.6;color:${c.primary};opacity:.86;${rtl ? 'direction:rtl' : ''}"
+          >${escape(p.copy.body)}</div>` : ''}
       </div>`
   }
 
@@ -517,6 +596,38 @@ export function renderLayout(kind: LayoutKind, p: Parts) {
       ${lockup(p, u, rtl, c.primary)}`
   }
 
+  if (kind === 'closing') {
+    /*
+     * The mark, and the line that asks for something.
+     *
+     * Content Studio's own frame rather than one of the kit's: a carousel is a
+     * sequence, its prompt promises that the last frame closes it, and until
+     * now the only frames that needed no photograph were the two specimen
+     * pages — so a brand with no kit ended its launch announcement on a sheet
+     * of hex codes.
+     *
+     * Deliberately the quietest composition in the file. It is the frame after
+     * the argument has been made, and it carries the mark, so it is the one
+     * place a plate is the whole design rather than a rescue.
+     */
+    const platedMark = markPlate(p, c.background)
+
+    body = `
+      <div style="display:flex;position:absolute;inset:0;background:${c.background}"></div>
+      <div style="display:flex;flex-direction:column;position:absolute;left:${m}px;right:${m}px;
+        top:${u(180)}px;bottom:${u(180)}px;align-items:${ranged};justify-content:center">
+        <div style="display:flex;align-items:center;justify-content:center${plateStyle(platedMark, u, 34)}">
+          <img src="${p.wordmark}" width="${u(520)}" height="${u(210)}"
+            style="object-fit:contain"/>
+        </div>
+        <div style="display:flex;margin-top:${u(56)}px">${bar(p, u, c.secondary)}</div>
+        <div style="display:flex;margin-top:${u(40)}px;width:100%">
+          ${headline(p, u, { size: fitted(Math.round(66 * r.scale), lead, 34), lead, tail,
+            colour: c.text, tailColour: c.primary, align: r.align, rtl })}
+        </div>
+      </div>`
+  }
+
   if (kind === 'identity') {
     /*
      * The logo, presented rather than applied.
@@ -529,17 +640,24 @@ export function renderLayout(kind: LayoutKind, p: Parts) {
      * has the caption under it — the subject of this post is the mark, and a
      * post that labels its own subject is a post that does not trust it.
      *
-     * The reversed lockup, because both fields are dark; that is a file the kit
-     * already produces and the reason it produces it.
+     * The mark is measured against the field it sits on and given the brand's
+     * paper when it would otherwise vanish. It used to be knocked out to a
+     * white silhouette here unconditionally — on the one post whose entire
+     * subject is the artwork — so a two-tone mark lost its second colour and
+     * every shape cut into it filled solid. See `markPlate`.
      */
+    const platedMark = markPlate(p, c.primary)
+
     body = `
       <div style="display:flex;position:absolute;inset:0;background:${c.primary}"></div>
       <div style="display:flex;position:absolute;left:0;top:${u(760)}px;width:${p.width}px;
         height:${u(320)}px;background:${c.secondary}"></div>
       <div style="display:flex;position:absolute;left:0;top:${u(140)}px;width:${p.width}px;
         height:${u(560)}px;align-items:center;justify-content:center;padding:0 ${u(150)}px">
-        <img src="${p.wordmark}" width="${u(780)}" height="${u(300)}"
-          style="object-fit:contain;filter:brightness(0) invert(1)"/>
+        <div style="display:flex;align-items:center;justify-content:center${plateStyle(platedMark, u, 44)}">
+          <img src="${p.wordmark}" width="${u(700)}" height="${u(280)}"
+            style="object-fit:contain"/>
+        </div>
       </div>`
   }
 

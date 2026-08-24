@@ -6,7 +6,7 @@ import { db } from '@/server/db'
 import { brandingAssets, generatedFiles, projects, socialMediaAssets } from '@/server/db/schema'
 import { AppError } from '@/lib/errors'
 import { signedDownloadUrl } from '@/server/storage/r2'
-import { liftBackground, splitLockup, trim } from '@/server/services/logo-parts'
+import { inkLuminance, liftBackground, splitLockup, trim } from '@/server/services/logo-parts'
 import { renderToPng } from './browser'
 import { fontFace, type PostBrand } from './post-template'
 import { LAYOUTS, renderLayout, type LayoutKind } from './layouts'
@@ -194,6 +194,7 @@ export async function renderSocialPost(
     copy,
     wordmark: uri(parts ? parts.text.buffer : trimmed!),
     mark: uri(parts ? parts.icon.buffer : trimmed!),
+    ink: await inkLuminance(transparent),
     photo: needs ? (options.photos?.[needs] ?? null) : null,
   })
 
