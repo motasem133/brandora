@@ -8,6 +8,7 @@ import { AppError } from '@/lib/errors'
 import { brandCopyPatch } from '@/lib/validations/brand'
 import { orgAction } from '@/server/actions/safe-action'
 import { db } from '@/server/db'
+import { inngest, logoChanged } from '@/server/inngest/client'
 import { brandingAssets, generatedFiles, projects } from '@/server/db/schema'
 import { rederivePrimaryAssets } from '@/server/services/logos'
 
@@ -151,6 +152,29 @@ export const selectPrimaryLogo = orgAction
       await rederivePrimaryAssets(parsedInput.projectId)
     } catch (error) {
       console.warn('[branding] the logo is chosen; its derived assets failed', error)
+    }
+
+    /*
+     * The posts are redrawn on a queue, not here.
+     *
+     * They were not redrawn at all, which is why a customer who chose a
+     * different mark kept the old one on every social post they owned — the
+     * kit stopped agreeing with the brand at the exact moment of the decision
+     * the screen exists to support. Eight posts is eight browser launches, so
+     * it cannot join the work above; `redrawKitPosts` reuses the photography
+     * and charges nothing.
+     *
+     * Sent after the choice is written and outside its try, so a queue that is
+     * unreachable delays a redraw rather than failing a decision that has
+     * already been saved.
+     */
+    try {
+      await inngest.send({
+        name: logoChanged.event,
+        data: { projectId: parsedInput.projectId, organizationId: ctx.orgId },
+      })
+    } catch (error) {
+      console.warn('[branding] the posts could not be queued for redraw', error)
     }
 
     revalidatePath('/[locale]/dashboard', 'layout')

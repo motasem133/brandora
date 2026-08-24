@@ -206,6 +206,44 @@ export async function trim(transparent: Buffer): Promise<Buffer> {
 }
 
 /**
+ * How light or dark the mark's own ink is, from 0 (black) to 1 (white).
+ *
+ * The layouts need to know whether a mark can be seen on a given ground. They
+ * used to answer that with `filter:brightness(0) invert(1)` — which does not
+ * place the mark, it replaces it with its own silhouette. A two-tone logo lost
+ * its second colour, and every counter-shape cut into it filled solid; the one
+ * post whose entire subject is the mark drew a logo the customer never chose.
+ *
+ * A single number is enough for the question actually being asked: is there
+ * contrast between this artwork and what is behind it. Averaged over the
+ * pixels the backdrop key left opaque, so the transparent air around a mark
+ * does not vote. Relative luminance, the same weighting `contrast` uses, so
+ * the two agree.
+ */
+export async function inkLuminance(transparent: Buffer): Promise<number> {
+  const { Jimp } = await import('jimp')
+  const { data, width, height } = (await Jimp.read(transparent)).bitmap
+
+  let sum = 0
+  let seen = 0
+
+  /* Every fourth row and column: a logo is flat artwork, and sampling it at
+     full resolution costs a megapixel loop to move the mean by nothing. */
+  for (let y = 0; y < height; y += 4) {
+    for (let x = 0; x < width; x += 4) {
+      const i = (y * width + x) * 4
+      if (data[i + 3] < 128) continue
+      sum += (0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2]) / 255
+      seen++
+    }
+  }
+
+  // No opaque pixels at all means the key ate the artwork. Black is the safer
+  // guess: it asks for a light ground, which is where a mark is normally shown.
+  return seen === 0 ? 0 : sum / seen
+}
+
+/**
  * Splits a lockup into its name and its symbol.
  *
  * A lockup is two things with air between them, and after the backdrop is gone

@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { and, eq } from 'drizzle-orm'
+import { and, eq, sql } from 'drizzle-orm'
 
 import { generateSceneImage } from '@/server/ai/image'
 import { db } from '@/server/db'
@@ -11,7 +11,7 @@ import { renderKitPdf } from '@/server/render/kit-pdf'
 import { LAYOUTS, renderLayout, type LayoutKind } from '@/server/render/layouts'
 import { fontFace, type PostBrand } from '@/server/render/post-template'
 import { scenePrompt, SCENES, type SceneKind } from '@/server/render/scenery'
-import { liftBackground, splitLockup, trim } from '@/server/services/logo-parts'
+import { inkLuminance, liftBackground, splitLockup, trim } from '@/server/services/logo-parts'
 import { shrinkPng, toJpeg } from '@/server/services/vectorize'
 import { objectKey, signedDownloadUrl, uploadObject } from '@/server/storage/r2'
 
@@ -67,6 +67,24 @@ const pngUri = (buffer: Buffer) => `data:image/png;base64,${buffer.toString('bas
  */
 const jpegUri = async (buffer: Buffer, quality = 82, fit = 1080) =>
   `data:image/jpeg;base64,${(await toJpeg(buffer, quality, fit)).toString('base64')}`
+
+/**
+ * The kit's own posts, as opposed to a piece of content's frames.
+ *
+ * Both are stored as `social_post`; a carousel's frames carry the item they
+ * belong to in their metadata. The distinction lives here as one predicate
+ * because getting it wrong destroys a customer's work: the kit's delete was
+ * scoped only by kind, so rebuilding a kit deleted the pictures of every
+ * carousel and story that project had ever made, leaving the `content_items`
+ * rows pointing at ids that no longer existed.
+ */
+export function kitPostsOf(projectId: string) {
+  return and(
+    eq(generatedFiles.projectId, projectId),
+    eq(generatedFiles.kind, 'social_post'),
+    sql`${generatedFiles.metadata}->>'contentItemId' IS NULL`,
+  )
+}
 
 /** Everything the renderer needs about a brand, loaded once per step. */
 async function loadBrand(projectId: string) {
@@ -136,6 +154,9 @@ async function loadMarks(primaryLogoFileId: string | null, fit?: number) {
     logo: pngUri(await cap(transparent)),
     wordmark: pngUri(await cap(wordmark)),
     mark: pngUri(await cap(mark)),
+    /* How light the artwork is, so a layout can decide what to stand it on
+       instead of knocking it out to a silhouette. See `markPlate`. */
+    ink: await inkLuminance(transparent),
   }
 }
 
@@ -322,14 +343,20 @@ export async function renderKitPosts(params: {
     ...(params.copy ?? {}),
   }
 
-  // Replaced, not appended: a rerun means "these instead". Only the first
-  // slice clears, or the second would delete what the first just made.
+  /*
+   * Replaced, not appended: a rerun means "these instead". Only the first
+   * slice clears, or the second would delete what the first just made.
+   *
+   * Scoped to the kit's own posts. Content Studio stores a carousel's frames
+   * as `social_post` too, tagged with the item they belong to, and this delete
+   * took them with it — so rebuilding a kit destroyed the pictures of every
+   * carousel and story the customer had ever made, while the `content_items`
+   * rows survived pointing at ids that no longer existed. One project in the
+   * local database has a carousel from 10 August whose three frames were
+   * deleted by a kit rerun seven minutes later.
+   */
   if (params.replace !== false) {
-    await db
-      .delete(generatedFiles)
-      .where(
-        and(eq(generatedFiles.projectId, params.projectId), eq(generatedFiles.kind, 'social_post')),
-      )
+    await db.delete(generatedFiles).where(kitPostsOf(params.projectId))
   }
 
   const sceneUris: Partial<Record<SceneKind, string>> = {}
@@ -356,6 +383,7 @@ export async function renderKitPosts(params: {
         copy: copy[layout],
         wordmark: marks.wordmark,
         mark: marks.mark,
+        ink: marks.ink,
         photo: meta.needs ? sceneUris[meta.needs]! : null,
         width: meta.size.width,
         height: meta.size.height,

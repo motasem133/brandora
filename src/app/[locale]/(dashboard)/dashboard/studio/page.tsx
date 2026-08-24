@@ -96,6 +96,7 @@ export default async function StudioPage({
           balance={org.creditBalance}
           costs={costs}
           variantCost={CONTENT_VARIANT_COST}
+          hasPhotography={selected.hasPhotography}
         />
       </Card>
 

@@ -371,6 +371,8 @@
     "ad_cta": "Button",
     "copyWhole": "Copy the whole thing",
     "carouselQueued": "Being drawn — this takes a minute or two. It appears below when it is ready.",
+    "carouselShort": "This brand has no social kit yet, so a carousel draws two frames instead of five — the rest are built on the kit’s photography.",
+    "carouselShortCta": "Generate the kit first",
     "frames": "{count} frames",
     "briefLabel": "Topic",
     "briefPlaceholder": "e.g. launching our summer collection next Thursday",

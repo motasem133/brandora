@@ -57,4 +57,25 @@ export const renderedContentRequested = eventType('content/rendered.requested', 
   }>(),
 })
 
+/**
+ * The chosen logo changed, so everything drawn with the old one is stale.
+ *
+ * `rederivePrimaryAssets` rebuilds the favicon, the avatars, the OG card, the
+ * monochrome mark and the kit ZIP inside the request that made the choice.
+ * It has never rebuilt the kit's posts, because eight posts is eight Chromium
+ * launches — so a customer who picked a different mark kept the old one on
+ * every social post they had, indefinitely, until they paid for a kit rerun.
+ * The product's first principle is that the kit agrees with itself.
+ *
+ * A queue is the only place that work fits. Nothing here is paid: the
+ * photography is reused and the copy is already written, so this re-renders
+ * from bytes the customer already owns.
+ */
+export const logoChanged = eventType('brand/logo.changed', {
+  schema: staticSchema<{
+    projectId: string
+    organizationId: string
+  }>(),
+})
+
 export const inngest = new Inngest({ id: APP_ID })

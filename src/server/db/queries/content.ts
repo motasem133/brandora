@@ -3,7 +3,13 @@ import 'server-only'
 import { and, desc, eq, isNull, sql } from 'drizzle-orm'
 
 import { db } from '@/server/db'
-import { brandingAssets, contentItems, projects, type ContentItem } from '@/server/db/schema'
+import {
+  brandingAssets,
+  contentItems,
+  generatedFiles,
+  projects,
+  type ContentItem,
+} from '@/server/db/schema'
 
 /**
  * Reads for Content Studio.
@@ -19,6 +25,15 @@ export type StudioBrand = {
   id: string
   name: string
   updatedAt: Date
+  /**
+   * Whether this brand has kit photography.
+   *
+   * A carousel reuses the kit's photographs rather than buying new ones, and
+   * most of the layouts need one — so a brand without a kit draws a short
+   * sequence. That is a fact about the piece someone is about to pay for, so
+   * it belongs in the composer rather than in the result.
+   */
+  hasPhotography: boolean
 }
 
 /**
@@ -35,6 +50,11 @@ export async function listStudioBrands(organizationId: string): Promise<StudioBr
       title: projects.title,
       businessName: projects.businessName,
       updatedAt: projects.updatedAt,
+      photographs: sql<number>`(
+        SELECT count(*) FROM ${generatedFiles}
+        WHERE ${generatedFiles.projectId} = ${projects.id}
+          AND ${generatedFiles.kind} = 'social_scene'
+      )`,
     })
     .from(projects)
     .innerJoin(brandingAssets, eq(brandingAssets.projectId, projects.id))
@@ -46,6 +66,7 @@ export async function listStudioBrands(organizationId: string): Promise<StudioBr
     id: row.id,
     name: row.businessName || row.title,
     updatedAt: row.updatedAt,
+    hasPhotography: Number(row.photographs) > 0,
   }))
 }
 

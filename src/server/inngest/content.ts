@@ -20,32 +20,51 @@ import { renderKitPosts, type SceneKeys } from '@/server/services/social-kit'
 import { renderedContentRequested, inngest } from './client'
 
 /**
- * The order frames are considered in.
+ * The order frames are considered in, before the closing frame is added.
  *
  * A sequence, not a set: the opening earns the swipe, the middle carries the
  * argument, and the mark closes it. `story` is deliberately absent — it is the
  * 1080×1920 layout, and a portrait frame in a square carousel is cropped by
  * every client that shows it.
+ *
+ * `identity` and `palette` are absent now too, and that is the fix rather than
+ * an omission. Both are specimens — `LAYOUTS[…].copy` says `none`, they draw no
+ * words at all — so every carousel that reached them spent a model call on a
+ * line, charged for it, and dropped it at render time. A brand with no kit
+ * photography could only reach those two, which is how "we are launching soon"
+ * came back as a logo with no words and a sheet of hex codes. The sequence now
+ * ends on `closing`, which is the frame that promise always needed.
  */
-const FRAME_ORDER: LayoutKind[] = [
-  'hero',
-  'statement',
-  'feature',
-  'detail',
-  'about',
-  'identity',
-  'palette',
-]
+const FRAME_ORDER: LayoutKind[] = ['hero', 'statement', 'feature', 'detail', 'about']
+
+/** Every frame in a carousel ends here: the mark, and the line that asks. */
+const CLOSING_FRAME: LayoutKind = 'closing'
 
 /**
  * Which layouts this project can actually fill.
  *
- * Three of them need a photograph, and photography is the only part of a kit
+ * Most of them need a photograph, and photography is the only part of a kit
  * that costs money — so a carousel reuses what the kit already generated
  * rather than reshooting. A project with no kit is not refused: it gets the
- * layouts that need no photograph, which is three of them, and the model is
- * asked for that many frames rather than five it cannot draw.
+ * frames that need no photograph, and the model is asked for exactly that many
+ * lines rather than for lines nothing will draw.
+ *
+ * Every layout returned here carries copy. That is asserted rather than
+ * assumed — see the filter below — because the alternative is what shipped:
+ * frames planned out of layouts that cannot say anything.
  */
+export function carouselPlan(scenes: SceneKeys): LayoutKind[] {
+  const usable = FRAME_ORDER.filter((layout) => {
+    const needs = LAYOUTS[layout].needs
+    return LAYOUTS[layout].copy !== 'none' && (!needs || Boolean(scenes[needs]))
+  })
+
+  /* The closing frame is the last one and is always drawn: it needs no
+     photograph, so it is the one frame every brand can end on. */
+  return [...usable.slice(0, CAROUSEL_FRAMES - 1), CLOSING_FRAME]
+}
+
+/** The plan for one project, with the photography it has to draw from. */
 async function availableLayouts(projectId: string) {
   const scenes = await db
     .select({ r2Key: generatedFiles.r2Key, metadata: generatedFiles.metadata })
@@ -58,12 +77,7 @@ async function availableLayouts(projectId: string) {
     if (scene) keys[scene] = file.r2Key
   }
 
-  const usable = FRAME_ORDER.filter((layout) => {
-    const needs = LAYOUTS[layout].needs
-    return !needs || Boolean(keys[needs])
-  })
-
-  return { scenes: keys, layouts: usable.slice(0, CAROUSEL_FRAMES) }
+  return { scenes: keys, layouts: carouselPlan(keys) }
 }
 
 export const generateRenderedContent = inngest.createFunction(
