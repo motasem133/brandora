@@ -5,6 +5,7 @@ import { generateRenderedContent } from '@/server/inngest/content'
 import { generateBrand } from '@/server/inngest/generate'
 import { redrawKitPosts } from '@/server/inngest/logo'
 import { sendBrandNudges } from '@/server/inngest/nudge'
+import { sendVerifyReminders } from '@/server/inngest/verify'
 
 /**
  * The kit's photography step runs three image generations in parallel, each
@@ -38,5 +39,11 @@ export const maxDuration = 300
  */
 export const { GET, POST, PUT } = serve({
   client: inngest,
-  functions: [generateBrand, generateRenderedContent, redrawKitPosts, sendBrandNudges],
+  functions: [
+    generateBrand,
+    generateRenderedContent,
+    redrawKitPosts,
+    sendBrandNudges,
+    sendVerifyReminders,
+  ],
 })

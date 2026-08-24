@@ -779,6 +779,34 @@ export const projectEmails = pgTable(
   (t) => [uniqueIndex('project_emails_project_kind_key').on(t.projectId, t.kind)],
 )
 
+/**
+ * Lifecycle mail that belongs to a person rather than to a brand.
+ *
+ * `project_emails` records what has been said about a project; this records
+ * what has been said to an account. The two are separate because the reminder
+ * below is owed to someone who may have no project at all — and because the
+ * uniqueness that makes "at most once, ever" true has to be keyed on whatever
+ * the message is about.
+ */
+export const userEmailKindEnum = pgEnum('user_email_kind', ['verify_reminder'])
+
+export const userEmails = pgTable(
+  'user_emails',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    kind: userEmailKindEnum('kind').notNull(),
+
+    /** Claimed at, not delivered at — the claim is what stops a second send. */
+    sentAt: timestamp('sent_at', { withTimezone: true }).notNull().defaultNow(),
+    /** False when Resend refused it, so a failure is visible rather than silent. */
+    delivered: boolean('delivered').notNull().default(false),
+  },
+  (t) => [uniqueIndex('user_emails_user_kind_key').on(t.userId, t.kind)],
+)
+
 /** One row per model call. This is how per-customer margin becomes knowable. */
 export const aiUsage = pgTable(
   'ai_usage',

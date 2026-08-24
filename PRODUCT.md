@@ -255,6 +255,20 @@ because the reasoning is what stops them being reopened by accident.
   shrunk to 32px. The customer still makes exactly one choice — which logo —
   which was the point.
 
+- **The first run stays ungated; verification falls after it.** Answered by the
+  owner on 24 August 2026, when the alternative was on the table: three of the
+  six sign-ups before it took a free brand and never verified, and gating the
+  first run would have been a one-line change to `mustVerifyEmail`. It was kept
+  as it is. Somebody meets the product before it asks anything of them, and the
+  gate arrives when they come back for a second run — which is also when they
+  have a reason to answer it.
+
+  What changed instead is that the ask now works: a blocking gate sends a code
+  if none is live, because sign-up's code has expired long before anyone is
+  asked for it, and an account that drifts away unverified gets exactly one
+  reminder. See `services/verify-reminder.ts`. Anything proposing to gate the
+  first run again is reopening a decision, not fixing an oversight.
+
 ## Open product decisions
 
 Recorded so future work does not mistake current behaviour for a settled answer.

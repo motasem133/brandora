@@ -1372,6 +1372,7 @@
     "appearanceHint": "Applies to this browser.",
     "toggleTheme": "Switch theme",
     "resendVerification": "Send a new code",
+    "codeLife": "Codes expire after {minutes} minutes. Send a new one if yours has.",
     "codeLabel": "Confirmation code",
     "codeDigit": "Digit {position} of {total}",
     "codeChecking": "Checking…",

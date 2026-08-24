@@ -9,6 +9,7 @@ import { asc, eq } from "drizzle-orm";
 import { APIError } from "better-auth/api";
 
 import { env } from "@/lib/env";
+import { OTP_MINUTES } from "@/lib/otp";
 import { db, schema } from "./db";
 import { seatsForOrg, seatUsage } from "./db/queries/plans";
 import { sendEmail } from "./email/send";
@@ -38,15 +39,6 @@ async function organizationLocale(
 export const hasGoogle = Boolean(
   env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET,
 );
-
-/**
- * How long a verification code stays good for.
- *
- * Long enough to switch to a mail app, wait for delivery and come back;
- * short enough that a code left visible on a shared screen stops working. The
- * same number is written into the email, so the two cannot disagree.
- */
-export const OTP_MINUTES = 10;
 
 /**
  * The hostnames a preview deployment answers on.
@@ -120,6 +112,16 @@ export const auth = betterAuth({
      */
     sendOnSignUp: false,
     autoSignInAfterVerification: true,
+    /*
+     * A day, not the default hour.
+     *
+     * The only thing that sends a link now is the reminder sweep, which runs at
+     * a fixed hour and reaches people while they are asleep or at work. An hour
+     * would expire most of them before they were read — and a verification mail
+     * whose link is dead on arrival is worse than none, because it teaches the
+     * customer the product is broken rather than that they were slow.
+     */
+    expiresIn: 60 * 60 * 24,
     sendVerificationEmail: async ({ user, url }) => {
       await sendEmail({
         to: user.email,
