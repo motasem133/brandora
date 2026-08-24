@@ -648,6 +648,8 @@
     "variationsHintWithIcon": "Every size and format. The favicon and avatars use your chosen icon; the social card uses the full logo.",
     "varFullLogo": "Full logo",
     "varVector": "Vector",
+    "varVectorLocked": "SVG · Creator and above",
+    "unlock": "Upgrade",
     "varIcon": "Icon",
     "varFavicon": "Favicon",
     "varAvatar": "Profile picture",

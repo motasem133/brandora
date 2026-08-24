@@ -1,8 +1,9 @@
-import { X } from 'lucide-react'
+import { Lock, X } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 
 import { Disclosure } from '@/components/ui/disclosure'
 import { Eyebrow } from '@/components/ui/eyebrow'
+import { Link } from '@/i18n/navigation'
 import { brandTheme, fontStack, type BrandFonts, type BrandPalette } from '@/lib/brand-theme'
 import { cn } from '@/lib/utils'
 import type { GeneratedFile } from '@/server/db/schema'
@@ -50,6 +51,18 @@ type Props = {
   brandName?: string | null
   /** The published site, for the link unfurl. Absent shows no domain line. */
   domain?: string | null
+  /**
+   * Whether this project's owner has paid for the vector.
+   *
+   * `/api/files` refuses `logo_svg` to a plan without `vectorExport`, and this
+   * panel listed it regardless: the plate drew a broken image — the bucket is
+   * private, so the `<img>` source is that same route — beside a Download link
+   * that navigated to a page of JSON. A customer reported exactly that. The
+   * gate is enforced on the route either way; this only stops the page offering
+   * what the route will refuse. The support view passes `true`, because an
+   * administrator is exempt there for the same reason it is exempt here.
+   */
+  vectorExport: boolean
   /** Folded shut for a customer, open on the support view — see below. */
   open?: boolean
 }
@@ -83,11 +96,14 @@ function MarkPlate({
   label,
   detail,
   download,
+  locked,
 }: {
   file: GeneratedFile
   label: string
   detail: string
   download: string
+  /** Sold, not owned: a lock and a way to buy it, in place of the file. */
+  locked?: { label: string }
 }) {
   return (
     <figure className="space-y-2">
@@ -98,35 +114,53 @@ function MarkPlate({
         )}
         style={{ minHeight: 168 }}
       >
-        {/* Generated assets are arbitrary user content, so next/image
-            optimisation is skipped in favour of a plain img. */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={fileSrc(file)}
-          alt={label}
-          width={file.width ?? undefined}
-          height={file.height ?? undefined}
-          loading="lazy"
-          /*
-           * Fitted rather than pinned to its own pixel width. The old rule drew
-           * everything at true size to stop a 32px favicon reading as a
-           * full-size logo; the derived files have their own scenes below now,
-           * so what is left here is artwork worth seeing at a usable size, and
-           * the pixel dimensions are in the caption where they can be read.
-           *
-           * Both bounds are pixel values, deliberately. `max-h-full` was tried
-           * first and measured wrong in a browser — a 1024 mark laid out 244px
-           * tall inside a 176px plate — because the percentage never resolved
-           * against the plate. A number cannot fail to.
-           */
-          className="max-w-full object-contain"
-          style={{ maxHeight: 120 }}
-        />
+        {/* No <img> when it is locked: its source is a route that answers 403
+            for this file, so the only thing it could draw is a broken image. */}
+        {locked ? (
+          <Lock className="size-5 text-fg-muted" aria-hidden />
+        ) : (
+        <>
+          {/* Generated assets are arbitrary user content, so next/image
+              optimisation is skipped in favour of a plain img. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={fileSrc(file)}
+            alt={label}
+            width={file.width ?? undefined}
+            height={file.height ?? undefined}
+            loading="lazy"
+            /*
+             * Fitted rather than pinned to its own pixel width. The old rule drew
+             * everything at true size to stop a 32px favicon reading as a
+             * full-size logo; the derived files have their own scenes below now,
+             * so what is left here is artwork worth seeing at a usable size, and
+             * the pixel dimensions are in the caption where they can be read.
+             *
+             * Both bounds are pixel values, deliberately. `max-h-full` was tried
+             * first and measured wrong in a browser — a 1024 mark laid out 244px
+             * tall inside a 176px plate — because the percentage never resolved
+             * against the plate. A number cannot fail to.
+             */
+            className="max-w-full object-contain"
+            style={{ maxHeight: 120 }}
+          />
+        </>
+        )}
       </div>
       <figcaption>
         <div className="flex items-baseline justify-between gap-2">
           <span className="truncate text-xs font-medium">{label}</span>
-          <DownloadLink file={file}>{download}</DownloadLink>
+          {locked ? (
+            /* Where every other locked surface in the product points. */
+            <Link
+              href="/dashboard/billing"
+              className="inline-flex min-h-6 shrink-0 items-center text-xs accent-text hover:underline"
+            >
+              {locked.label}
+            </Link>
+          ) : (
+            <DownloadLink file={file}>{download}</DownloadLink>
+          )}
         </div>
         <p className="text-xs text-fg-muted">{detail}</p>
       </figcaption>
@@ -223,6 +257,7 @@ export async function LogoVariations({
   files,
   primaryLogoFileId,
   markLogoFileId,
+  vectorExport,
   palette,
   fonts,
   brandName,
@@ -270,10 +305,20 @@ export async function LogoVariations({
   const name = brandName?.trim() || t('varFullLogo')
 
   /* Marks are artwork; everything below is a file with a destination. */
-  const marks: { file: GeneratedFile; label: string; detail: string }[] = [
-    { file: logo, label: t('varFullLogo'), detail: `PNG · ${dimensions(logo) ?? '—'}` },
-  ]
-  if (svg) marks.push({ file: svg, label: t('varVector'), detail: 'SVG · ∞' })
+  const marks: {
+    file: GeneratedFile
+    label: string
+    detail: string
+    locked?: { label: string }
+  }[] = [{ file: logo, label: t('varFullLogo'), detail: `PNG · ${dimensions(logo) ?? '—'}` }]
+  if (svg) {
+    marks.push({
+      file: svg,
+      label: t('varVector'),
+      detail: vectorExport ? 'SVG · ∞' : t('varVectorLocked'),
+      locked: vectorExport ? undefined : { label: t('unlock') },
+    })
+  }
   // Choosing one concept as both is allowed — it means "use the logo where text
   // will not fit" — but it is one piece of artwork, so it gets one plate.
   if (mark && mark.id !== logo.id) {
@@ -316,13 +361,14 @@ export async function LogoVariations({
             {t('varsMarks')}
           </Eyebrow>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {marks.map(({ file, label, detail }) => (
+            {marks.map(({ file, label, detail, locked }) => (
               <MarkPlate
                 key={`${label}:${file.id}`}
                 file={file}
                 label={label}
                 detail={detail}
                 download={t('download')}
+                locked={locked}
               />
             ))}
           </div>
