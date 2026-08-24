@@ -40,6 +40,7 @@ export async function BrandingView({
   language,
   mustVerify,
   userEmail,
+  vectorExport,
   renameImpact,
 }: {
   branding: BrandingAsset
@@ -60,6 +61,8 @@ export async function BrandingView({
   language: string
   mustVerify: boolean
   userEmail: string
+  /** Whether the plan includes the vector export, for the variations panel. */
+  vectorExport: boolean
   /** What a rename would leave carrying the old name. Absent when nothing does. */
   renameImpact?: RenameImpact
 }) {
@@ -166,6 +169,7 @@ export async function BrandingView({
         files={files}
         projectId={projectId}
         chosenName={chosenName}
+        vectorExport={vectorExport}
         renameImpact={renameImpact}
       />
     </div>

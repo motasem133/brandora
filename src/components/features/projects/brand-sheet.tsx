@@ -21,12 +21,15 @@ export async function BrandSheet({
   files,
   projectId,
   chosenName,
+  vectorExport,
   renameImpact,
 }: {
   branding: BrandingAsset
   files: GeneratedFile[]
   projectId: string
   chosenName: string | null
+  /** The owner's plan, for the one file in the panel that is sold. */
+  vectorExport: boolean
   /** What a rename would leave carrying the old name. Absent when nothing does. */
   renameImpact?: RenameImpact
 }) {
@@ -103,6 +106,7 @@ export async function BrandSheet({
         files={files}
         primaryLogoFileId={branding.primaryLogoFileId}
         markLogoFileId={branding.markLogoFileId}
+        vectorExport={vectorExport}
         /* The marks are drawn on this brand's own paper, and the mock scenes
            set its name in its own heading face. See the note in that file. */
         palette={branding.colorPalette}

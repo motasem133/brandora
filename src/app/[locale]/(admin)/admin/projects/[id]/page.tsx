@@ -392,6 +392,10 @@ export default async function AdminProjectPage({
         palette={brandingAsset?.colorPalette}
         fonts={brandingAsset?.fontRecommendations}
         brandName={project.business_name}
+        /* Support sees the vector whatever the customer's plan is: `/api/files`
+           exempts an administrator, and "did the trace actually run?" is the
+           question this screen exists to answer. */
+        vectorExport
         open
       />
 

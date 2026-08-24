@@ -367,6 +367,7 @@ export default async function ProjectDetailPage({
           chosenId={chosenId}
           language={project.language}
           mustVerify={mustVerify}
+          vectorExport={Boolean(plan?.vectorExport)}
           userEmail={user.email}
           renameImpact={renameImpact}
         />
