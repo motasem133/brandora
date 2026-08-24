@@ -2,12 +2,14 @@
 
 import { Check, Loader2, Mail } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { useRouter } from '@/i18n/navigation'
 import { authClient } from '@/lib/auth-client'
+import { OTP_MINUTES } from '@/lib/otp'
 import { cn } from '@/lib/utils'
+import { ensureVerificationCode } from '@/server/actions/settings'
 
 const LENGTH = 6
 
@@ -21,10 +23,27 @@ const LENGTH = 6
  * the button was still disabled was that they needed to reload. A code is typed
  * into the blocked page, so that page is told directly and unlocks itself.
  *
- * Sign-up already sent one, so this opens ready to receive it rather than
- * asking for it to be sent again.
+ * `autoSend` is set where this panel is *blocking* something. Sign-up sends a
+ * code that lives ten minutes, and the first run is not gated — so the box a
+ * customer actually meets is the one in front of their second run, hours or
+ * days later, by which time the code they were sent is always dead. It used to
+ * open "ready to receive" that code and say nothing, which left the secondary
+ * button as the real first step and no reason to press it. The action behind
+ * this sends only when no live code exists, so a reload cannot mail anyone
+ * twice.
+ *
+ * Off where the panel is an invitation rather than a wall — the settings page
+ * and the dashboard card — because sending an email to someone who is reading
+ * a page is not the same as sending one to someone who is stuck.
  */
-export function EmailVerification({ email }: { email: string }) {
+export function EmailVerification({
+  email,
+  autoSend = false,
+}: {
+  email: string
+  /** True where this panel blocks something the customer is trying to do. */
+  autoSend?: boolean
+}) {
   const t = useTranslations('Settings')
   const router = useRouter()
 
@@ -34,6 +53,21 @@ export function EmailVerification({ email }: { email: string }) {
   const inputs = useRef<(HTMLInputElement | null)[]>([])
 
   const focus = (index: number) => inputs.current[Math.min(Math.max(index, 0), LENGTH - 1)]?.focus()
+
+  /*
+   * Once per mount, and only ever once. React's strict mode runs effects twice
+   * in development, and the second run would be a second email.
+   */
+  const asked = useRef(false)
+
+  useEffect(() => {
+    if (!autoSend || asked.current) return
+    asked.current = true
+
+    void ensureVerificationCode({}).then((outcome) => {
+      if (outcome?.data?.sent) setState((current) => (current === 'idle' ? 'sent' : current))
+    })
+  }, [autoSend])
 
   async function verify(code: string) {
     setState('verifying')
@@ -184,6 +218,11 @@ export function EmailVerification({ email }: { email: string }) {
       </div>
 
       {error && <p className="text-sm text-danger">{error}</p>}
+
+      {/* The one fact that decides whether the code in their inbox is any use.
+          It was nowhere on this panel, and it is the reason most codes typed
+          into it were refused. */}
+      <p className="text-sm text-fg-muted">{t('codeLife', { minutes: OTP_MINUTES })}</p>
 
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
         <Button variant="secondary" size="sm" onClick={resend} disabled={state === 'sending' || busy}>

@@ -164,7 +164,8 @@ export function SocialKit({
                   {ts('unverifiedBody', { email: userEmail })}
                 </p>
                 <div className="mt-3.5">
-                  <EmailVerification email={userEmail} />
+                  {/* Blocking, so it sends a code if none is live — see the panel. */}
+                  <EmailVerification email={userEmail} autoSend />
                 </div>
               </div>
             </div>

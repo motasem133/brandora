@@ -645,7 +645,8 @@ export function OnboardingWizard({
             {mustVerify && (
               <div className="space-y-3 border-t border-line pt-4">
                 <p className="text-sm text-warning">{t('verifyFirst')}</p>
-                <EmailVerification email={userEmail} />
+                {/* Blocking, so it sends a code if none is live — see the panel. */}
+                <EmailVerification email={userEmail} autoSend />
               </div>
             )}
 

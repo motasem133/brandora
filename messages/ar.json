@@ -1372,6 +1372,7 @@
     "appearanceHint": "يُطبَّق على هذا المتصفح.",
     "toggleTheme": "تبديل المظهر",
     "resendVerification": "أرسل رمزاً جديداً",
+    "codeLife": "ينتهي الرمز بعد {minutes} دقائق. اطلب رمزًا جديدًا إذا انتهى رمزك.",
     "codeLabel": "رمز التأكيد",
     "codeDigit": "الخانة {position} من {total}",
     "codeChecking": "جارٍ التحقق…",
