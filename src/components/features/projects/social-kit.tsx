@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useAction } from 'next-safe-action/hooks'
 
 import { EmptyPin } from '@/components/features/projects/empty-pin'
+import { HoldUp } from '@/components/ui/hold-up'
 import { EmailVerification } from '@/components/features/settings/email-verification'
 import { Button } from '@/components/ui/button'
 import { Disclosure } from '@/components/ui/disclosure'
@@ -90,15 +91,25 @@ export function SocialKit({
         <div className="mt-5 grid gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {posts.map((post) => (
             <figure key={post.id} className="space-y-2">
-              {/* Generated assets are arbitrary user content, so next/image
-                  optimisation is skipped in favour of a plain img. */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={`/api/files/${post.id}`}
-                alt={String(post.metadata?.label ?? t('kit'))}
-                className="w-full rounded-control border border-line bg-white object-contain"
-                loading="lazy"
-              />
+              {/*
+                Eight posts at 180 pixels is a customer checking that files
+                exist, not looking at them. Holding one up is the only way this
+                page shows the thing it is selling at a size worth judging.
+              */}
+              <HoldUp
+                label={t('holdUp', { what: String(post.metadata?.label ?? t('kit')) })}
+                frameClassName="rounded-card bg-white shadow-[var(--shadow-lifted)] overflow-hidden"
+              >
+                {/* Generated assets are arbitrary user content, so next/image
+                    optimisation is skipped in favour of a plain img. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`/api/files/${post.id}`}
+                  alt={String(post.metadata?.label ?? t('kit'))}
+                  className="w-full max-h-[80dvh] rounded-control border border-line bg-white object-contain"
+                  loading="lazy"
+                />
+              </HoldUp>
               <figcaption className="flex items-center justify-between gap-2">
                 <span className="truncate text-xs font-medium">
                   {String(post.metadata?.label ?? '—')}

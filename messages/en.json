@@ -692,7 +692,8 @@
     "usageFromFullLogo": "from your full logo",
     "pinHang": "Hang it here",
     "pinNotYet": "not generated",
-    "pinCredits": "{credits, plural, one {# credit} other {# credits}}"
+    "pinCredits": "{credits, plural, one {# credit} other {# credits}}",
+    "holdUp": "Hold up {what}"
   },
   "Social": {
     "bio": "Instagram bio",

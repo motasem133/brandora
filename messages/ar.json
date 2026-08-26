@@ -692,7 +692,8 @@
     "usageFromFullLogo": "من شعارك الكامل",
     "pinHang": "علّقه هنا",
     "pinNotYet": "لم يُولّد بعد",
-    "pinCredits": "{credits, plural, zero {# رصيد} one {رصيد واحد} two {رصيدان} few {# أرصدة} many {# رصيداً} other {# رصيد}}"
+    "pinCredits": "{credits, plural, zero {# رصيد} one {رصيد واحد} two {رصيدان} few {# أرصدة} many {# رصيداً} other {# رصيد}}",
+    "holdUp": "اعرض {what}"
   },
   "Social": {
     "bio": "نبذة إنستغرام",
