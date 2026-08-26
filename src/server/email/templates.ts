@@ -153,7 +153,11 @@ const COPY = {
         `${name}, you have an account on Brandora, and we would rather hear what fell short than guess at it. Two lines is plenty: what worked, and what you would change.`,
       button: 'Reply with your thoughts',
       note: 'It goes to a person, not a form, and every answer is read.',
-      offer: (percent: number) => `And with thanks for the time, ${percent}% off any plan:`,
+      /* "First payment", not "any plan". The code's duration in Polar is
+         `once`, so on a subscription it discounts the first period only, and on
+         a credit pack the single order. Promising more than that is a promise
+         the checkout will not keep. */
+      offer: (percent: number) => `And with thanks for the time, ${percent}% off your first payment:`,
       /* Says why it arrived and how to stop it. This is the only email the
          product sends that nobody asked for. */
       footer: 'You are getting this because you have a Brandora account. Reply with "stop" and we will not ask again.',
@@ -224,7 +228,8 @@ const COPY = {
         `${name}، لديك حساب في براندورا، ونفضّل أن نسمع منك ما الذي لم يكن على قدر توقّعك بدل أن نخمّنه. سطران يكفيان: ما الذي نجح، وما الذي تغيّره.`,
       button: 'شاركنا رأيك',
       note: 'يصل ردّك إلى شخص، لا إلى نموذج، ونقرأ كل ردّ.',
-      offer: (percent: number) => `وشكراً لوقتك، خصم ${percent}% على أي اشتراك:`,
+      /* "First payment" — see the English note on the code's duration. */
+      offer: (percent: number) => `وشكراً لوقتك، خصم ${percent}% على أول دفعة:`,
       footer: 'وصلتك هذه الرسالة لأن لديك حساباً في براندورا. ردّ بكلمة «إيقاف» ولن نسألك مرة أخرى.',
     },
     'site-message': {
