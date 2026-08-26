@@ -646,7 +646,7 @@
     "websiteHint": "A four-page site written from your brand — home, about, services and contact — published on its own address, with a contact form that emails you.",
     "websiteLocked": "The website is on Creator and above.",
     "variationsHint": "Every size and format of your chosen logo. Pick an icon above to use a text-free mark for the favicon and avatars.",
-    "variationsHintWithIcon": "Every size and format. The favicon and avatars use your chosen icon; the social card uses the full logo.",
+    "variationsHintWithIcon": "Every size and format. The favicon and profile pictures are cut from the icon concept — a wordmark is unreadable at 32 pixels — while the social card, the monochrome mark and the vector use the logo you chose.",
     "varFullLogo": "Full logo",
     "varVector": "Vector",
     "varVectorLocked": "SVG · Creator and above",
@@ -671,7 +671,6 @@
     "usageAvatar": "Profile picture",
     "usageCard": "Link preview",
     "usageFromIcon": "from your icon",
-    "usageFromLogo": "Your favicon, avatars and link preview are cut from the logo you choose.",
     "fontHeading": "Headings",
     "fontBody": "Body",
     "fontsSpecimen": "The quick brown fox jumps over the lazy dog.",
@@ -685,8 +684,8 @@
     "varAvatarHandle": "Profile",
     "varSocialCardHint": "How a link to your site unfurls when it is shared.",
     "varSocialCardFallbackDomain": "your-site.com",
-    "varsOther": "Other files"
-  },
+    "varsOther": "Other files",
+    "usageFromFullLogo": "from your full logo"  },
   "Social": {
     "bio": "Instagram bio",
     "posts": "{count, plural, one {# Instagram post} other {# Instagram posts}}",

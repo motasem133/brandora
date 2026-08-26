@@ -301,6 +301,31 @@ export async function LogoVariations({
    */
   const unlabelled = derived.filter((file) => !file.metadata?.variant)
 
+  /*
+   * Whether the small square formats were actually cut from the icon.
+   *
+   * Read from the files rather than from `markLogoFileId`, because that column
+   * only records a customer *choosing* an icon — and the pipeline picks one for
+   * them whenever the chosen logo is a wordmark, since a wordmark at 32 pixels
+   * is a smudge. On every brand where nobody pressed that button the hint
+   * therefore read "pick an icon above to use a text-free mark", printed
+   * directly above scenes already using one, and the mark in them is visibly
+   * not the chosen logo. That reads as the favicon showing the wrong artwork,
+   * and it was reported as exactly that. `source` is written by
+   * `derivePrimaryAssets` and records what each file was really cut from.
+   */
+  const cutFromIcon = derived.some((file) => file.metadata?.source === 'icon')
+
+  /**
+   * Said at the scene rather than on a tile.
+   *
+   * This began as a suffix on a per-file caption, back when every derived file
+   * was its own plate in a grid. The scenes replaced that grid, so the sentence
+   * belongs on the scene — which is where the picture it explains now is.
+   */
+  const from = (file: GeneratedFile | undefined) =>
+    file?.metadata?.source === 'icon' ? t('usageFromIcon') : t('usageFromFullLogo')
+
   const theme = brandTheme(palette ?? null)
   const name = brandName?.trim() || t('varFullLogo')
 
@@ -350,7 +375,7 @@ export async function LogoVariations({
   return (
     <Disclosure title={t('variations')} meta={t('fileCount', { count: total })} open={open}>
       <p className="text-sm text-fg-secondary">
-        {mark ? t('variationsHintWithIcon') : t('variationsHint')}
+        {cutFromIcon ? t('variationsHintWithIcon') : t('variationsHint')}
       </p>
 
       {/* The brand's ground travels through CSS rather than through props, so
@@ -387,7 +412,11 @@ export async function LogoVariations({
             */}
             <div className="grid gap-6 lg:grid-cols-2">
               {favicon && (
-                <Scene title={t('varFavicon')} hint={t('varFaviconHint')} files={favicons}>
+                <Scene
+                  title={t('varFavicon')}
+                  hint={`${t('varFaviconHint')} · ${from(favicon)}`}
+                  files={favicons}
+                >
                   <div className="flex items-end gap-3">
                     <div className="min-w-0 flex-1">
                       <BrowserTab file={favicon} name={name} />
@@ -400,7 +429,12 @@ export async function LogoVariations({
               )}
 
               {avatar && (
-                <Scene title={t('varAvatar')} hint={t('varAvatarHint')} files={avatars} sized>
+                <Scene
+                  title={t('varAvatar')}
+                  hint={`${t('varAvatarHint')} · ${from(avatar)}`}
+                  files={avatars}
+                  sized
+                >
                   <div
                     className={cn(
                       'flex items-center gap-3 rounded-control p-4',
