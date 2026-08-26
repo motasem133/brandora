@@ -3,7 +3,12 @@ import 'server-only'
 import { and, count, desc, eq, inArray, isNull } from 'drizzle-orm'
 
 import { db } from '@/server/db'
-import { brandingAssets, generatedFiles, projects } from '@/server/db/schema'
+import {
+  brandingAssets,
+  generatedFiles,
+  projects,
+  websiteAssets,
+} from '@/server/db/schema'
 import type { BrandFonts, BrandPalette } from '@/lib/brand-theme'
 import type { Project } from '@/server/db/schema'
 
@@ -53,6 +58,16 @@ export type BrandSpecimen = {
   slogan: string | null
   /** The chosen mark, or the first one generated while the choice is pending. */
   logo: { id: string; r2Key: string } | null
+  /*
+   * What this brand is still missing, so a wall can say so without opening it.
+   *
+   * Read from what exists rather than from what was asked for: `needsWebsite`
+   * records a request, and a request that was refused by the plan or failed in
+   * the pipeline is not a website. These two are what the paid tiers sell, and
+   * a customer who cannot see the gap from the wall has to open a brand to find
+   * it.
+   */
+  missing: { website: boolean; kit: boolean }
 }
 
 export async function listBrandSpecimens(
@@ -71,7 +86,7 @@ export async function listBrandSpecimens(
    * so every project still deciding would render blank. Resolving in memory
    * lets an undecided project fall back to its first concept.
    */
-  const [branding, logos] = await Promise.all([
+  const [branding, logos, sites, kitPosts] = await Promise.all([
     db.select().from(brandingAssets).where(inArray(brandingAssets.projectId, ids)),
     db
       .select({
@@ -83,7 +98,22 @@ export async function listBrandSpecimens(
       .where(
         and(inArray(generatedFiles.projectId, ids), eq(generatedFiles.kind, 'logo_raster')),
       ),
+    /* Two more bounded reads on the same id set, for the same reason as above:
+       one row per project at most, and no join that could drop a project. */
+    db
+      .select({ projectId: websiteAssets.projectId })
+      .from(websiteAssets)
+      .where(inArray(websiteAssets.projectId, ids)),
+    db
+      .select({ projectId: generatedFiles.projectId })
+      .from(generatedFiles)
+      .where(
+        and(inArray(generatedFiles.projectId, ids), eq(generatedFiles.kind, 'social_post')),
+      ),
   ])
+
+  const hasSite = new Set(sites.map((row) => row.projectId))
+  const hasKit = new Set(kitPosts.map((row) => row.projectId))
 
   const brandingByProject = new Map(branding.map((row) => [row.projectId, row]))
 
@@ -98,6 +128,7 @@ export async function listBrandSpecimens(
       fonts: brand?.fontRecommendations ?? null,
       slogan: brand?.slogan ?? null,
       logo: chosen ?? candidates[0] ?? null,
+      missing: { website: !hasSite.has(project.id), kit: !hasKit.has(project.id) },
     }
   })
 }

@@ -309,7 +309,11 @@
     "tileSpent": "الرصيد المستهلك",
     "tileCredits": "الرصيد المتبقي",
     "tilePeriod": "مقارنةً بالأسابيع الستة السابقة",
-    "tileTrend": "{label}، أسبوعياً خلال الأسابيع الاثني عشر الماضية"
+    "tileTrend": "{label}، أسبوعياً خلال الأسابيع الاثني عشر الماضية",
+    "wallMissing": "بلا {parts} بعد",
+    "wallWebsite": "موقع",
+    "wallKit": "حزمة",
+    "wallComplete": "مكتملة"
   },
   "Projects": {
     "title": "المشاريع",

@@ -309,7 +309,11 @@
     "tileSpent": "Credits spent",
     "tileCredits": "Credits left",
     "tilePeriod": "against the six weeks before",
-    "tileTrend": "{label}, weekly over the last twelve weeks"
+    "tileTrend": "{label}, weekly over the last twelve weeks",
+    "wallMissing": "no {parts} yet",
+    "wallWebsite": "website",
+    "wallKit": "kit",
+    "wallComplete": "complete"
   },
   "Projects": {
     "title": "Projects",
