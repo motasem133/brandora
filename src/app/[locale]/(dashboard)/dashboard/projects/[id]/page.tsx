@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import { AssistantPanel } from '@/components/features/assistant/assistant-panel'
 import { BrandFonts } from '@/components/features/projects/brand-fonts'
 import { BrandingView } from '@/components/features/projects/branding-view'
+import { EmptyPin } from '@/components/features/projects/empty-pin'
 import { DeleteProjectButton } from '@/components/features/projects/delete-project-button'
 import { GenerationPanel } from '@/components/features/projects/generation-panel'
 import { IdentityPlate } from '@/components/features/projects/identity-plate'
@@ -15,7 +16,7 @@ import { SocialView } from '@/components/features/projects/social-view'
 import { SiteMessages } from '@/components/features/projects/site-messages'
 import { WebsiteView } from '@/components/features/projects/website-view'
 import { ContentLibrary } from '@/components/features/studio/content-library'
-import { ArrowLeft, Download, Lock, MessageSquare, Palette, PenLine } from 'lucide-react'
+import { ArrowLeft, Download, MessageSquare, Palette, PenLine } from 'lucide-react'
 
 import { buttonVariants } from '@/components/ui/button'
 import { Disclosure } from '@/components/ui/disclosure'
@@ -63,6 +64,9 @@ export default async function ProjectDetailPage({
 
   const t = await getTranslations('Projects')
   const tb = await getTranslations('Branding')
+  /* The pins reuse the completion panel's copy: it already names each locked
+     deliverable and what it is for, in the product's own words. */
+  const tg = await getTranslations('Generation')
   const tst = await getTranslations('Studio')
   const { org, user } = await requireOrg()
 
@@ -385,16 +389,6 @@ export default async function ProjectDetailPage({
           mustVerify={mustVerify}
           userEmail={user.email}
           unlocked={Boolean(plan?.socialMediaKit)}
-          lockedPreview={
-            plan?.socialMediaKit ? null : (
-              <KitMockup
-                palette={brandingAsset.colorPalette}
-                fonts={brandingAsset.fontRecommendations}
-                logo={primaryLogo}
-                name={project.businessName || project.title}
-              />
-            )
-          }
         />
       )}
 
@@ -414,32 +408,14 @@ export default async function ProjectDetailPage({
         telling them they are would be a lie with a price attached.
       */}
       {!websiteAsset && !plan?.websiteBuilder && (
-        <Disclosure title={tb('website')} open>
-          <p className="max-w-[68ch] text-sm text-fg-secondary">{tb('websiteHint')}</p>
-
-          {/* Drawn in their own brand, so the section argues rather than
-              describes. Only where there is a brand to draw it in. */}
-          {brandingAsset && (
-            <div className="mt-5">
-              <WebsiteMockup
-                palette={brandingAsset.colorPalette}
-                fonts={brandingAsset.fontRecommendations}
-                logo={primaryLogo}
-                name={project.businessName || project.title}
-                slogan={brandingAsset.slogan}
-                language={project.language}
-              />
-            </div>
-          )}
-
-          <p className="mt-4 flex flex-wrap items-center gap-1.5 text-xs text-fg-muted">
-            <Lock className="size-3.5" />
-            {tb('websiteLocked')}{' '}
-            <Link href="/dashboard/billing" className="accent-text underline underline-offset-2">
-              {tb('seePlans')}
-            </Link>
-          </p>
-        </Disclosure>
+        <EmptyPin
+          title={tg('locked.website.title')}
+          benefit={tg('locked.website.benefit')}
+          action={tb('pinHang')}
+          caption={tb('website')}
+          meta={tb('pinCredits', { credits: CREDIT_COSTS.website })}
+          price={tb('websiteLocked')}
+        />
       )}
       {/* Directly under the site it came from, and only when there is
           something to read. */}

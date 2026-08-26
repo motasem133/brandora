@@ -685,7 +685,11 @@
     "varSocialCardHint": "How a link to your site unfurls when it is shared.",
     "varSocialCardFallbackDomain": "your-site.com",
     "varsOther": "Other files",
-    "usageFromFullLogo": "from your full logo"  },
+    "usageFromFullLogo": "from your full logo",
+    "pinHang": "Hang it here",
+    "pinNotYet": "not generated",
+    "pinCredits": "{credits, plural, one {# credit} other {# credits}}"
+  },
   "Social": {
     "bio": "Instagram bio",
     "posts": "{count, plural, one {# Instagram post} other {# Instagram posts}}",

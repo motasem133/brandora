@@ -685,7 +685,11 @@
     "varSocialCardHint": "كيف يظهر رابط موقعك عند مشاركته.",
     "varSocialCardFallbackDomain": "your-site.com",
     "varsOther": "ملفات أخرى",
-    "usageFromFullLogo": "من شعارك الكامل"  },
+    "usageFromFullLogo": "من شعارك الكامل",
+    "pinHang": "علّقه هنا",
+    "pinNotYet": "لم يُولّد بعد",
+    "pinCredits": "{credits, plural, zero {# رصيد} one {رصيد واحد} two {رصيدان} few {# أرصدة} many {# رصيداً} other {# رصيد}}"
+  },
   "Social": {
     "bio": "نبذة إنستغرام",
     "posts": "{count, plural, zero {لا منشورات} one {منشور إنستغرام واحد} two {منشوران على إنستغرام} few {# منشورات إنستغرام} many {# منشوراً على إنستغرام} other {# منشور إنستغرام}}",

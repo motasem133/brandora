@@ -1,9 +1,10 @@
 'use client'
 
-import { Download, Images, Loader2, Lock, MailWarning, Sparkles } from 'lucide-react'
+import { Download, Images, Loader2, MailWarning, Sparkles } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useAction } from 'next-safe-action/hooks'
 
+import { EmptyPin } from '@/components/features/projects/empty-pin'
 import { EmailVerification } from '@/components/features/settings/email-verification'
 import { Button } from '@/components/ui/button'
 import { Disclosure } from '@/components/ui/disclosure'
@@ -31,7 +32,6 @@ export function SocialKit({
   mustVerify,
   userEmail,
   unlocked,
-  lockedPreview,
 }: {
   projectId: string
   posts: GeneratedFile[]
@@ -50,10 +50,10 @@ export function SocialKit({
    * Passed in rather than rendered here: it is a server component, and naming
    * what is missing without showing it is the half-measure this replaces.
    */
-  lockedPreview?: React.ReactNode
 }) {
   const t = useTranslations('Branding')
   const ts = useTranslations('Settings')
+  const tg = useTranslations('Generation')
   const router = useRouter()
 
   const { executeAsync, isPending, result } = useAction(generateSocialKit)
@@ -140,20 +140,21 @@ export function SocialKit({
       <div className="mt-3">
         {!unlocked ? (
           /*
-           * Named rather than hidden. A section that simply vanishes on the
-           * wrong plan teaches nobody that it exists — and this is the most
-           * persuasive thing the product makes.
+           * A frame with its pin in, not a locked preview.
+           *
+           * Named rather than hidden is still the rule — a section that vanishes
+           * on the wrong plan teaches nobody it exists. What changed is what
+           * "named" looks like: the mockup and the lock line argued for eleven
+           * days and converted nobody, so the gap is drawn as a gap instead.
            */
-          <div className="space-y-4">
-            {lockedPreview}
-            <p className="flex flex-wrap items-center gap-1.5 text-xs text-fg-muted">
-              <Lock className="size-3.5" />
-              {t('kitLocked')}{' '}
-              <Link href="/dashboard/billing" className="accent-text underline underline-offset-2">
-                {t('seePlans')}
-              </Link>
-            </p>
-          </div>
+          <EmptyPin
+            title={tg('locked.kit.title')}
+            benefit={tg('locked.kit.benefit')}
+            action={t('pinHang')}
+            caption={t('kit')}
+            meta={t('pinCredits', { credits: cost })}
+            price={t('kitLocked')}
+          />
         ) : mustVerify ? (
           <div className="rounded-control border border-warning/30 bg-warning/[0.07] p-4">
             <div className="flex items-start gap-3">
