@@ -414,6 +414,31 @@ async function main() {
   const negative = await sql`SELECT id FROM organizations WHERE credit_balance < 0`
   check('no organization has a negative balance', negative.length === 0)
 
+  /*
+   * Rate limiting is still counting per person.
+   *
+   * Every rule in `server/auth.ts` is keyed `<ip>|<path>`. When Better Auth
+   * cannot attribute a client IP it does not stop limiting — it drops every
+   * request on earth into one bucket keyed `no-trusted-ip`, which turns five
+   * sign-ups per person per hour into five sign-ups for the whole product.
+   *
+   * Nothing else would notice. It is not an error, it does not fail a request,
+   * and the only signal is one `logger.warn` per instance. What it looks like
+   * from outside is a product that stopped converting.
+   *
+   * This passes trivially wherever an IP resolves, which is every environment
+   * the suite normally runs in — so it is not really a test of this database,
+   * it is an alarm to be pointed at production. Its cost is one indexed scan
+   * and it is the only thing in the product that can see this failure at all.
+   */
+  const sharedBucket = await sql`
+    SELECT key, count FROM rate_limits WHERE key LIKE 'no-trusted-ip|%'`
+  check(
+    'rate limits are keyed per client IP, not one shared bucket',
+    sharedBucket.length === 0,
+    `${sharedBucket.length} shared-bucket key(s) — the client IP is not resolving`,
+  )
+
   const orphanProjects = await sql`
     SELECT p.id FROM projects p
     LEFT JOIN organizations o ON o.id = p.organization_id WHERE o.id IS NULL`
