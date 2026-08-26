@@ -46,7 +46,7 @@ export default async function AdminLayout({
    * daylight has no horizon to rise from.
    */
   return (
-    <div className="world-board relative flex min-h-dvh flex-col">
+    <div className="relative flex min-h-dvh flex-col">
       <AppNav
         user={{ name: session.user.name, email: session.user.email }}
         isAdmin

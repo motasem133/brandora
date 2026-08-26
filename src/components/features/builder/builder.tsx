@@ -661,7 +661,7 @@ export function Builder({
     /* Bench: the page being edited is the biggest object on screen and the
        tools sit at its edges. The scope rides here rather than on the editor
        layout, which is a fragment the builder fills entirely. */
-    <div className="world-board flex h-dvh flex-col">
+    <div className="flex h-dvh flex-col">
       {fonts && <link rel="stylesheet" href={fonts} precedence="default" />}
       <header className="shrink-0 border-b border-line">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3">

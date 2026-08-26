@@ -25,7 +25,7 @@ export default async function DashboardLayout({
   const { planName } = await getEntitlements(org.id)
 
   return (
-    <div className="world-board relative flex min-h-dvh flex-col">
+    <div className="relative flex min-h-dvh flex-col">
       <AnalyticsIdentity userId={session.user.id} organizationId={org.id} plan={planName} />
 
       {/*

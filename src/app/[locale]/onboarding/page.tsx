@@ -83,7 +83,7 @@ export default async function OnboardingPage({
        * was a dark room. A board in daylight has nothing to rise from, and a
        * glow behind a form is not a light source, it is a decoration.
        */
-      className="world-board relative flex min-h-dvh items-center justify-center overflow-hidden px-4 py-12"
+      className="relative flex min-h-dvh items-center justify-center overflow-hidden px-4 py-12"
     >
       <OnboardingWizard
         entitlements={entitlements}

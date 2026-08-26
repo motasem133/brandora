@@ -149,7 +149,7 @@ function Shell({ children }: { children: React.ReactNode }) {
     /* The other front door, and the one with the stronger case for daylight: a
        teammate opening an invitation link has never seen the landing page, so
        there is no marketing world here to be continuous with. */
-    <div className="world-board flex min-h-dvh items-center justify-center px-6 py-16">
+    <div className="flex min-h-dvh items-center justify-center px-6 py-16">
       <main id="content" tabIndex={-1} className="w-full max-w-md">
         <Card>{children}</Card>
       </main>

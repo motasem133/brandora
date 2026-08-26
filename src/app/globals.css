@@ -13,22 +13,26 @@
  * borrows from the same three brand stops.
  */
 @theme {
-  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
-  --font-arabic: var(--font-arabic-face), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
+  --font-arabic: var(--font-readex-face), ui-sans-serif, system-ui, sans-serif;
   /*
-   * The app's display face is its body face, and that is still right: inside
-   * the product a heading is a heading, not a performance. The marketing scopes
-   * override this to Bricolage Grotesque — see `.world-dark, .world-light`
-   * below — so the shared components (`Disclosure`'s title, `PricingPlans`'
-   * price figure) render in the app's face in the app and in the display face
-   * on the page that is selling typography.
+   * The app has a display face of its own now.
+   *
+   * It used to be the body face, on the grounds that inside the product a
+   * heading is a heading rather than a performance. That was right while the
+   * product had one family; the board gives it two, and a page heading set in
+   * Familjen against Hanken body is the step the old arrangement had to fake
+   * with weight alone. The marketing scopes still override this to Bricolage —
+   * see `.world-dark, .world-light` below.
    */
-  --font-display: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-familjen), ui-sans-serif, system-ui, sans-serif;
   /*
-   * Was Tailwind's default stack, which meant every hex on the palette card
-   * rendered in whatever the visitor's browser called monospace.
+   * The machine's voice: credit figures, file dimensions, dates, hex. Anything
+   * the pipeline emitted is set in this and anything we wrote is not, which is
+   * the whole tell. Ships 400 and 500 only — nothing may set a heavier weight,
+   * because the face has no bold to draw and the browser would synthesise one.
    */
-  --font-mono: var(--font-plex-mono), ui-monospace, SFMono-Regular, monospace;
+  --font-mono: var(--font-spline-mono), ui-monospace, SFMono-Regular, monospace;
 
   /* Generous and consistent: cards 20px, panels 24px, controls 14px. */
   --radius-control: 0.875rem;
@@ -51,7 +55,6 @@
  * as a token scope instead, they stay dark under `[data-theme='light']` while
  * every value in them is the measured one.
  */
-:root,
 .world-dark {
   /* Dark Navy, and two steps lifted out of it rather than grey panels. */
   --bg-base: #05070f;
@@ -169,50 +172,6 @@
   --danger: #ef4444;
 }
 
-/* Attribute, not class: React owns <html>'s className and wipes a class added
-   imperatively whenever the locale changes. See lib/theme.ts. */
-[data-theme='light'] {
-  --bg-base: #f7f8fc;
-  --bg-surface: #ffffff;
-  --bg-elevated: #f2f4fb;
-
-  --text-primary: #0b1020;
-  --text-secondary: #4c5570;
-  /* 4.45:1 on plain white missed AA across 57 nodes in the light theme. */
-  --text-muted: #67708c;
-
-  /* A shade of the primary here, for the same reason the dark theme takes a
-     tint: the accent has to survive being read on white. 7.53:1 on surface,
-     7.09:1 on the base ground. */
-  --text-accent: #5b33cc;
-
-  --border: color-mix(in srgb, #0b1020 8%, transparent);
-  --border-strong: color-mix(in srgb, #0b1020 14%, transparent);
-
-  /* White into a white ground is nothing. The top edge inverts; the lit bottom
-     edge keeps the accent and eases off, because it has less room to sit in. */
-  --lit-inset: inset 0 1px 0 0 color-mix(in srgb, #0b1020 4%, transparent),
-    inset 0 -1px 0 0 color-mix(in srgb, var(--brand-primary) 26%, transparent);
-
-  --shadow-soft: 0 1px 2px rgba(11, 16, 32, 0.05), 0 10px 30px -18px rgba(11, 16, 32, 0.25);
-  --shadow-lifted: 0 2px 6px rgba(11, 16, 32, 0.06), 0 24px 48px -24px rgba(114, 64, 255, 0.35);
-
-  /*
-   * Status, darkened for a light ground.
-   *
-   * These three were declared once, for the dark theme, and never overridden —
-   * so every "Verified" badge, every `+490` and every error message measured
-   * 1.84–3.76:1 in light. The dark values are unchanged and correct there.
-   *
-   * The floor they had to clear is not white: a Badge sets its tone as text on a
-   * 15% wash of that same tone, which is the tightest pairing each one appears
-   * in. Measured worst cases across base, surface, elevated and their washes:
-   * success 5.20, warning 5.13, danger 4.59.
-   */
-  --success: #166534;
-  --warning: #92400e;
-  --danger: #b91c1c;
-}
 
 /* -------------------------------------------------------------------------- */
 /*                        The board — a replacement world                       */
@@ -241,9 +200,9 @@
  * 4.51 — falls to 3.52 on the board itself, and the board is what most muted
  * text actually sits on.
  */
-.world-board {
+:root {
   /*
-   * The scope paints and sets its own faces, so opting a surface in is one
+   * The document paints and sets its own faces, so opting a surface in is one
    * class rather than a class plus a background plus a font.
    *
    * `bg-base` is not a utility and never was — registering a colour called
@@ -308,11 +267,6 @@
   --warning: #92400e;
   --danger: #b91c1c;
 
-  /* The board's own faces. Loaded in the locale layout, used only in here. */
-  --font-sans: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-familjen), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-spline-mono), ui-monospace, SFMono-Regular, monospace;
-  --font-arabic: var(--font-readex-face), ui-sans-serif, system-ui, sans-serif;
 }
 
 /*
@@ -324,7 +278,7 @@
  * at 5.46 and danger is #f87171 at 5.38, where the Darkroom's #ef4444 fell to
  * 3.96 and would have shipped failing.
  */
-[data-theme='dark'] .world-board {
+[data-theme='dark'] {
   --bg-base: #16150f;
   --bg-surface: #1f1d17;
   --bg-elevated: #2a2721;
@@ -354,14 +308,23 @@
   --danger: #f87171;
 }
 
+
 /*
- * Under RTL the board takes Readex for every role, for the reason the app's own
- * RTL rule already gives: appending an Arabic face behind a Latin one loses to
- * next/font's metric fallback, which covers Arabic and answers first.
+ * The ground behind a page that refuses the theme.
+ *
+ * `.world-dark` sits on a div, so it paints itself and its subtree — but `body`
+ * is painted from the document's own tokens, which are the board's now. The
+ * page looks right and the overscroll behind it does not: rubber-banding a dark
+ * marketing page reveals a warm board underneath it.
+ *
+ * The leak is older than the board — under `[data-theme='light']` the same page
+ * overscrolled onto #f7f8fc — but it used to happen only to readers who had
+ * chosen light, and the board makes it the default. `:has()` lets the document
+ * take its ground from the world its page actually opened in, which is the one
+ * thing the scope arrangement could not express on its own.
  */
-[dir='rtl'] .world-board {
-  --font-sans: var(--font-readex-face), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-readex-face), ui-sans-serif, system-ui, sans-serif;
+body:has(> .world-dark) {
+  background: #05070f;
 }
 
 /*

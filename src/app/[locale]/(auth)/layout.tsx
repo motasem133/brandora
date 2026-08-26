@@ -28,7 +28,7 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
   const t = await getTranslations('Auth')
 
   return (
-    <div className="world-board relative flex min-h-dvh flex-col overflow-hidden">
+    <div className="relative flex min-h-dvh flex-col overflow-hidden">
       {/* The way back to the page they came from. A sign-in screen with no exit
           is a trap for anyone who arrived at it by accident. */}
       <div className="relative z-10 px-6 pt-6">
