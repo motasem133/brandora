@@ -4,9 +4,13 @@ import { NextIntlClientProvider, hasLocale } from 'next-intl'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import {
   Bricolage_Grotesque,
+  Familjen_Grotesk,
+  Hanken_Grotesk,
   IBM_Plex_Mono,
   IBM_Plex_Sans_Arabic,
   Plus_Jakarta_Sans,
+  Readex_Pro,
+  Spline_Sans_Mono,
 } from 'next/font/google'
 import { notFound } from 'next/navigation'
 
@@ -97,6 +101,65 @@ const arabic = IBM_Plex_Sans_Arabic({
   display: 'swap',
 })
 
+/* -------------------------------------------------------------------------- */
+/*                        The board's own faces                                */
+/* -------------------------------------------------------------------------- */
+/*
+ * Loaded here, used only where a surface opts into `.world-board`.
+ *
+ * The board is a replacement visual world, and it is being migrated one surface
+ * at a time rather than by flipping `:root` — so these four have to exist on the
+ * document while most of the app is still on Jakarta and Plex. That costs four
+ * font files on every page until the migration finishes, which is the price of
+ * not rewriting twenty-three routes in one commit.
+ */
+
+/** Display. A grotesque with enough shape to sit above a customer's own mark
+    without competing with it. */
+const familjen = Familjen_Grotesk({
+  subsets: ['latin'],
+  variable: '--font-familjen',
+  display: 'swap',
+})
+
+/** The board's interface face. Warmer and narrower than Jakarta, which is what
+    lets a dense table stay quiet at 13px. */
+const hanken = Hanken_Grotesk({
+  subsets: ['latin'],
+  variable: '--font-hanken',
+  display: 'swap',
+})
+
+/*
+ * The machine's voice: credit figures, file dimensions, dates, hex.
+ *
+ * Distinct from the interface face on purpose — anything the pipeline emitted
+ * is set in this, anything we wrote is not, and that is the whole tell. Ships
+ * 400 and 500 only; nothing may set a heavier weight on it, because the face
+ * has no bold to draw and the browser would synthesise one.
+ */
+const splineMono = Spline_Sans_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500'],
+  variable: '--font-spline-mono',
+  display: 'swap',
+})
+
+/*
+ * Arabic, for the board.
+ *
+ * Drawn for Arabic and Latin together rather than being an Arabic sibling of a
+ * Latin superfamily, which matters on a surface where the two sit in the same
+ * table row. Same variable discipline as `--font-arabic-face` above: the raw
+ * face gets its own name so the theme layer can compose it without a cycle.
+ */
+const readex = Readex_Pro({
+  subsets: ['arabic', 'latin'],
+  weight: ['300', '400', '500', '600'],
+  variable: '--font-readex-face',
+  display: 'swap',
+})
+
 /**
  * The defaults every page under this layout inherits.
  *
@@ -163,7 +226,7 @@ export default async function LocaleLayout({
       lang={locale}
       dir={isRtl(locale) ? 'rtl' : 'ltr'}
       suppressHydrationWarning
-      className={`${jakarta.variable} ${bricolage.variable} ${mono.variable} ${arabic.variable}`}
+      className={`${jakarta.variable} ${bricolage.variable} ${mono.variable} ${arabic.variable} ${familjen.variable} ${hanken.variable} ${splineMono.variable} ${readex.variable}`}
     >
       <head>
         {/*

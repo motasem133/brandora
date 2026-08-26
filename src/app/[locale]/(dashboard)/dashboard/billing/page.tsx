@@ -122,8 +122,25 @@ export default async function BillingPage({
   const isSubscribed = Boolean(subscription && hasLiveSubscription(subscription.status))
   const paymentFailed = subscription?.status === 'past_due'
 
+  /*
+   * The first surface on the board.
+   *
+   * Billing is where the replacement world starts, and the order is deliberate:
+   * nothing here is generated, so no guest palette has to be re-derived against
+   * a new ground before a single token can be proven. Everything below already
+   * reads semantic tokens, so the scope re-skins it without the markup moving.
+   *
+   * What the scope cannot do is composition, and one thing in here belonged to
+   * the room it replaces — see the standing panel below.
+   *
+   * The negative margins cancel the shell's own padding so the board reaches the
+   * edges of the main column. The top bar is still the old world and will be
+   * until the shell moves with the last surface; that seam is the visible cost
+   * of migrating a route at a time, and it is the right cost to pay.
+   */
   return (
-    <div className="mx-auto max-w-5xl space-y-12">
+    <div className="world-board -mx-6 -my-10 min-h-screen px-6 py-10 lg:-mx-10 lg:px-10">
+      <div className="mx-auto max-w-5xl space-y-12">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl font-semibold">{t('title')}</h1>
@@ -133,8 +150,17 @@ export default async function BillingPage({
       </div>
 
       {/* ----------------------------------------------------------- standing */}
-      <section className="lit [--lit-radius:var(--radius-panel)]">
-        <div className="lit-inner bloom p-7 sm:p-9 [--bloom-x:82%] [--bloom-strength:16%]">
+      {/*
+        A sheet, not a lit card.
+
+        `lit` and `bloom` draw the Darkroom's horizon — a gradient edge and an
+        interior light source — and both are meaningless on a board in daylight,
+        where a sheet is lifted by its own shadow instead. Keeping them here
+        would have been the tell that the world was repainted rather than
+        replaced.
+      */}
+      <section className="rounded-panel bg-surface shadow-[var(--shadow-soft)]">
+        <div className="p-7 sm:p-9">
           <div className="flex flex-wrap items-start justify-between gap-x-10 gap-y-7">
             <div>
               <p className="text-sm text-fg-secondary">{t('currentPlan')}</p>
@@ -474,6 +500,7 @@ export default async function BillingPage({
           </div>
         </div>
       </section>
+      </div>
     </div>
   )
 }

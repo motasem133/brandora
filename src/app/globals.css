@@ -198,6 +198,132 @@
   --danger: #b91c1c;
 }
 
+/* -------------------------------------------------------------------------- */
+/*                        The board — a replacement world                       */
+/* -------------------------------------------------------------------------- */
+/*
+ * A scope, not a `:root` rewrite, and deliberately.
+ *
+ * The board replaces the Darkroom across the whole app, but twenty-three routes
+ * cannot move in one commit — so it arrives the way the marketing worlds already
+ * do: as a token scope a surface opts into. Everything inside reads the same
+ * semantic tokens it always did, so a component re-skins without being touched.
+ * When the last surface has opted in, this block becomes `:root` and the scope
+ * disappears.
+ *
+ * Why daylight. The Darkroom's thesis was that a near-black room lets the print
+ * be the only lit thing. It is a good idea about photographs and the wrong one
+ * about brands: you cannot judge a colour in the dark, and most generated brands
+ * are drawn on light paper — Weekday Roasters' own background is #FFFFFF — so a
+ * near-black chrome forces every specimen into a bright rectangle in a void.
+ *
+ * The ramp is unchanged and still pinned. What changed is how little of it there
+ * is: on the board the accent is the pin, and nothing else.
+ *
+ * Every value below was measured against its own worst ground rather than
+ * assumed. Muted is #635e54 because #7c766b — which reads fine on a sheet at
+ * 4.51 — falls to 3.52 on the board itself, and the board is what most muted
+ * text actually sits on.
+ */
+.world-board {
+  /*
+   * The scope paints and sets its own faces, so opting a surface in is one
+   * class rather than a class plus a background plus a font.
+   *
+   * `bg-base` is not a utility and never was — registering a colour called
+   * "base" makes Tailwind compile `.text-base` to a colour instead of a font
+   * size, which is why the note above `@theme inline` exists. Painting here is
+   * also what makes the ground follow the theme without a second class.
+   */
+  background: var(--bg-base);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+
+  /* The board, a sheet laid on it, and a fill raised out of the sheet. */
+  --bg-base: #e7e3da;
+  --bg-surface: #ffffff;
+  --bg-elevated: #faf8f4;
+
+  --text-primary: #191816;
+  --text-secondary: #57534a;
+  /* 5.03 on the board, 6.44 on a sheet, 6.07 on a raised fill. */
+  --text-muted: #635e54;
+  /* The Readable Accent Rule survives the move: the pin is #7240ff at 4.21 on
+     the board, which is enough under a control and not under words. */
+  --text-accent: #5b33cc;
+
+  /* Mixed from the ink rather than drawn as a grey line, exactly as before —
+     only the ink it is mixed from has changed. */
+  --border: color-mix(in srgb, #191816 11%, transparent);
+  --border-strong: color-mix(in srgb, #191816 18%, transparent);
+
+  /*
+   * No lit edge on the board.
+   *
+   * The Light From The Horizon Rule belongs to a room with a light source in it.
+   * A sheet on a board in daylight is lifted by its own shadow instead, so the
+   * inset carries a single hairline and gets out of the way.
+   */
+  --lit-inset: inset 0 1px 0 0 color-mix(in srgb, #191816 5%, transparent);
+
+  /* Warm, because the shadow of paper on board is not blue. Offset and blur,
+     never a zero-offset halo. */
+  --shadow-soft: 0 1px 1px rgba(60, 52, 38, 0.1), 0 10px 22px -10px rgba(60, 52, 38, 0.3);
+  --shadow-lifted: 0 2px 3px rgba(60, 52, 38, 0.12), 0 26px 44px -18px rgba(60, 52, 38, 0.42);
+
+  --success: #166534;
+  --warning: #92400e;
+  --danger: #b91c1c;
+
+  /* The board's own faces. Loaded in the locale layout, used only in here. */
+  --font-sans: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-familjen), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-spline-mono), ui-monospace, SFMono-Regular, monospace;
+  --font-arabic: var(--font-readex-face), ui-sans-serif, system-ui, sans-serif;
+}
+
+/*
+ * The same studio after dark.
+ *
+ * Not an inversion: the board keeps its warmth and the sheets stay the lightest
+ * thing in the room, which is what a night studio actually looks like. Measured
+ * against the raised fill, which is the tightest ground here — muted is #a39c8d
+ * at 5.46 and danger is #f87171 at 5.38, where the Darkroom's #ef4444 fell to
+ * 3.96 and would have shipped failing.
+ */
+[data-theme='dark'] .world-board {
+  --bg-base: #16150f;
+  --bg-surface: #1f1d17;
+  --bg-elevated: #2a2721;
+
+  --text-primary: #f3f0e8;
+  --text-secondary: #bab4a6;
+  --text-muted: #a39c8d;
+  --text-accent: #aa8cff;
+
+  --border: color-mix(in srgb, #f3f0e8 11%, transparent);
+  --border-strong: color-mix(in srgb, #f3f0e8 18%, transparent);
+
+  --lit-inset: inset 0 1px 0 0 color-mix(in srgb, #f3f0e8 6%, transparent);
+
+  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.5), 0 12px 26px -12px rgba(0, 0, 0, 0.75);
+  --shadow-lifted: 0 2px 4px rgba(0, 0, 0, 0.5), 0 28px 48px -20px rgba(0, 0, 0, 0.8);
+
+  --success: #22c55e;
+  --warning: #f5a524;
+  --danger: #f87171;
+}
+
+/*
+ * Under RTL the board takes Readex for every role, for the reason the app's own
+ * RTL rule already gives: appending an Arabic face behind a Latin one loses to
+ * next/font's metric fallback, which covers Arabic and answers first.
+ */
+[dir='rtl'] .world-board {
+  --font-sans: var(--font-readex-face), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-readex-face), ui-sans-serif, system-ui, sans-serif;
+}
+
 /*
  * The marketing display face.
  *
