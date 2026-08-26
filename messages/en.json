@@ -693,7 +693,9 @@
     "pinHang": "Hang it here",
     "pinNotYet": "not generated",
     "pinCredits": "{credits, plural, one {# credit} other {# credits}}",
-    "holdUp": "Hold up {what}"
+    "holdUp": "Hold up {what}",
+    "compare": "Compare two",
+    "compareHint": "Pick two posts to see them side by side."
   },
   "Social": {
     "bio": "Instagram bio",

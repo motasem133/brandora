@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useAction } from 'next-safe-action/hooks'
 
 import { EmptyPin } from '@/components/features/projects/empty-pin'
-import { HoldUp } from '@/components/ui/hold-up'
+import { CompareShelf } from '@/components/ui/compare-shelf'
 import { EmailVerification } from '@/components/features/settings/email-verification'
 import { Button } from '@/components/ui/button'
 import { Disclosure } from '@/components/ui/disclosure'
@@ -88,42 +88,29 @@ export function SocialKit({
       <p className="max-w-[68ch] text-sm text-fg-secondary">{t('kitHint')}</p>
 
       {posts.length > 0 && (
-        <div className="mt-5 grid gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {posts.map((post) => (
-            <figure key={post.id} className="space-y-2">
-              {/*
-                Eight posts at 180 pixels is a customer checking that files
-                exist, not looking at them. Holding one up is the only way this
-                page shows the thing it is selling at a size worth judging.
-              */}
-              <HoldUp
-                label={t('holdUp', { what: String(post.metadata?.label ?? t('kit')) })}
-                frameClassName="rounded-card bg-white shadow-[var(--shadow-lifted)] overflow-hidden"
-              >
-                {/* Generated assets are arbitrary user content, so next/image
-                    optimisation is skipped in favour of a plain img. */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`/api/files/${post.id}`}
-                  alt={String(post.metadata?.label ?? t('kit'))}
-                  className="w-full max-h-[80dvh] rounded-control border border-line bg-white object-contain"
-                  loading="lazy"
-                />
-              </HoldUp>
-              <figcaption className="flex items-center justify-between gap-2">
-                <span className="truncate text-xs font-medium">
-                  {String(post.metadata?.label ?? '—')}
-                </span>
-                <a
-                  href={`/api/files/${post.id}?download`}
-                  className="inline-flex min-h-6 shrink-0 items-center text-xs accent-text hover:underline"
-                >
-                  {t('download')}
-                </a>
-              </figcaption>
-            </figure>
-          ))}
-        </div>
+        /*
+          The kit is where the product's first principle gets tested: it must
+          agree with itself. A grid of thumbnails proves eight files exist and
+          answers nothing about whether the third and the seventh look like the
+          same brand — the shelf lets a customer put any two next to each other
+          at a size worth judging, which is the only way that question gets
+          answered.
+
+          Downloads left the tile with it. They were a link under every image
+          competing with the image for the press, and the whole set is one ZIP
+          on the button below — the place someone actually goes for the files.
+        */
+        <CompareShelf
+          className="mt-5"
+          items={posts.map((post) => ({
+            id: post.id,
+            src: `/api/files/${post.id}`,
+            label: String(post.metadata?.label ?? t('kit')),
+          }))}
+          compareLabel={t('compare')}
+          compareHint={t('compareHint')}
+          holdLabel={(what) => t('holdUp', { what })}
+        />
       )}
 
       <div className="mt-6 flex flex-wrap items-center gap-3">

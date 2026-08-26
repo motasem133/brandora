@@ -693,7 +693,9 @@
     "pinHang": "علّقه هنا",
     "pinNotYet": "لم يُولّد بعد",
     "pinCredits": "{credits, plural, zero {# رصيد} one {رصيد واحد} two {رصيدان} few {# أرصدة} many {# رصيداً} other {# رصيد}}",
-    "holdUp": "اعرض {what}"
+    "holdUp": "اعرض {what}",
+    "compare": "قارن اثنين",
+    "compareHint": "اختر منشورين لعرضهما جنباً إلى جنب."
   },
   "Social": {
     "bio": "نبذة إنستغرام",
