@@ -96,10 +96,6 @@
    * agreement. The indigo midpoint is interpolated between the new anchor and
    * the blue end so the gradient keeps its shape.
    */
-  --brand-primary: #7240ff;
-  --brand-indigo: #5b5cfb;
-  --brand-secondary: #3b82f6;
-  --brand-fg: #ffffff;
 
   /*
    * The colour that decorative light is drawn in — a lit edge, a bloom, a rail.
@@ -134,7 +130,6 @@
    * top stop because the top is now the far end from the light and has to look
    * like it.
    */
-  --brand-gradient: linear-gradient(0deg, var(--brand-primary), #4b46c9 55%, #1e4585);
 
   /*
    * The two inner edges every control carries: a faint neutral line along the
@@ -201,6 +196,26 @@
  * text actually sits on.
  */
 :root {
+  /*
+   * The brand ramp is chrome, and chrome is not world-specific.
+   *
+   * These five lived in the `.world-dark` block for as long as that block was
+   * also `:root`. Splitting the two to give marketing its own dark left the
+   * whole ramp behind with it, so `--brand-gradient` resolved to nothing
+   * everywhere else and every primary control in the product lost its fill —
+   * a white pill with a shadow where the one gradient in the system should be.
+   *
+   * The ramp is the client's pinned commitment and it is sampled from
+   * `logo.png`, so it belongs to the product rather than to any one room. What
+   * *is* world-specific is how much of it a room spends: `--accent-surface`
+   * below points at the ramp on marketing and at ink on the board.
+   */
+  --brand-primary: #7240ff;
+  --brand-indigo: #5b5cfb;
+  --brand-secondary: #3b82f6;
+  --brand-fg: #ffffff;
+  --brand-gradient: linear-gradient(0deg, var(--brand-primary), #4b46c9 55%, #1e4585);
+
   /*
    * The document paints and sets its own faces, so opting a surface in is one
    * class rather than a class plus a background plus a font.

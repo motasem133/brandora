@@ -1,299 +1,60 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-04T00:00:00.000Z",
+  "generatedAt": "2026-08-27T00:00:00Z",
   "title": "Design System: Brandora",
   "extensions": {
     "colorMeta": {
-      "signal-violet": {
-        "role": "primary",
-        "displayName": "Signal Violet",
-        "canonical": "#7240ff",
-        "tonalRamp": [
-          "oklch(22% 0.12 286)",
-          "oklch(32% 0.17 286)",
-          "oklch(42% 0.22 286)",
-          "oklch(53% 0.26 286)",
-          "oklch(63% 0.22 286)",
-          "oklch(74% 0.16 286)",
-          "oklch(85% 0.09 286)",
-          "oklch(95% 0.03 286)"
-        ]
-      },
-      "indigo-core": {
-        "role": "primary",
-        "displayName": "Indigo Core",
-        "canonical": "#5b5cfb",
-        "tonalRamp": [
-          "oklch(21% 0.11 275)",
-          "oklch(30% 0.16 275)",
-          "oklch(40% 0.20 275)",
-          "oklch(51% 0.24 275)",
-          "oklch(62% 0.20 275)",
-          "oklch(73% 0.15 275)",
-          "oklch(85% 0.08 275)",
-          "oklch(95% 0.03 275)"
-        ]
-      },
-      "horizon-blue": {
-        "role": "secondary",
-        "displayName": "Horizon Blue",
-        "canonical": "#3b82f6",
-        "tonalRamp": [
-          "oklch(24% 0.09 260)",
-          "oklch(34% 0.13 260)",
-          "oklch(44% 0.16 260)",
-          "oklch(55% 0.19 260)",
-          "oklch(65% 0.16 260)",
-          "oklch(76% 0.12 260)",
-          "oklch(86% 0.07 260)",
-          "oklch(95% 0.02 260)"
-        ]
-      },
-      "lit-violet": {
-        "role": "primary",
-        "displayName": "Lit Violet",
-        "canonical": "#aa8cff",
-        "lightThemeValue": "#5b33cc",
-        "purpose": "The readable member of the ramp. All accent text, in both themes.",
-        "tonalRamp": [
-          "oklch(28% 0.10 294)",
-          "oklch(38% 0.14 294)",
-          "oklch(48% 0.17 294)",
-          "oklch(58% 0.18 294)",
-          "oklch(68% 0.15 294)",
-          "oklch(78% 0.11 294)",
-          "oklch(88% 0.06 294)",
-          "oklch(96% 0.02 294)"
-        ]
-      },
-      "room-black": {
-        "role": "neutral",
-        "displayName": "Room Black",
-        "canonical": "#05070f",
-        "purpose": "The page. The dark room itself.",
-        "tonalRamp": [
-          "oklch(12% 0.015 265)",
-          "oklch(18% 0.018 265)",
-          "oklch(26% 0.020 265)",
-          "oklch(36% 0.022 265)",
-          "oklch(48% 0.022 265)",
-          "oklch(62% 0.018 265)",
-          "oklch(78% 0.012 265)",
-          "oklch(94% 0.006 265)"
-        ]
-      },
-      "bench-navy": {
-        "role": "neutral",
-        "displayName": "Bench Navy",
-        "canonical": "#0a0f1c",
-        "purpose": "Panels and cards — the surface work is laid on.",
-        "tonalRamp": [
-          "oklch(15% 0.020 265)",
-          "oklch(21% 0.024 265)",
-          "oklch(29% 0.026 265)",
-          "oklch(39% 0.026 265)",
-          "oklch(51% 0.024 265)",
-          "oklch(65% 0.020 265)",
-          "oklch(80% 0.013 265)",
-          "oklch(95% 0.006 265)"
-        ]
-      },
-      "riser-navy": {
-        "role": "neutral",
-        "displayName": "Riser Navy",
-        "canonical": "#121a2e",
-        "purpose": "Raised fills, chips, hover states, input grounds.",
-        "tonalRamp": [
-          "oklch(18% 0.028 265)",
-          "oklch(25% 0.034 265)",
-          "oklch(33% 0.038 265)",
-          "oklch(43% 0.038 265)",
-          "oklch(55% 0.034 265)",
-          "oklch(68% 0.026 265)",
-          "oklch(82% 0.016 265)",
-          "oklch(95% 0.007 265)"
-        ]
-      },
-      "reading-grey": {
-        "role": "neutral",
-        "displayName": "Reading Grey",
-        "canonical": "#a3aec9",
-        "purpose": "Secondary prose meant to be read — subtitles, descriptions."
-      },
-      "quiet-grey": {
-        "role": "neutral",
-        "displayName": "Quiet Grey",
-        "canonical": "#7a86a1",
-        "purpose": "Labels, timestamps, hints. Present, not competing.",
-        "lightThemeValue": "#67708c"
-      },
-      "success-green": {
-        "role": "tertiary",
-        "displayName": "Success Green",
-        "canonical": "#22c55e"
-      },
-      "warning-amber": {
-        "role": "tertiary",
-        "displayName": "Warning Amber",
-        "canonical": "#f5a524"
-      },
-      "danger-red": {
-        "role": "tertiary",
-        "displayName": "Danger Red",
-        "canonical": "#ef4444"
-      },
-      "bloom-violet": {
-        "role": "primary",
-        "displayName": "Bloom Violet",
-        "canonical": "#8f66ff",
-        "purpose": "The stop between Signal Violet and Lit Violet; carries the horizon bloom and sits inside both arc gradients.",
-        "tonalRamp": [
-          "oklch(25% 0.11 291)",
-          "oklch(35% 0.15 291)",
-          "oklch(45% 0.19 291)",
-          "oklch(56% 0.22 291)",
-          "oklch(66% 0.18 291)",
-          "oklch(77% 0.13 291)",
-          "oklch(87% 0.07 291)",
-          "oklch(96% 0.02 291)"
-        ]
-      }
+      "board": { "role": "neutral", "displayName": "Board", "canonical": "#e7e3da", "tonalRamp": ["#1c1a15", "#332f26", "#4d483b", "#6b6453", "#8f8877", "#b5ad9c", "#d2cbbc", "#f2eee6"] },
+      "sheet": { "role": "neutral", "displayName": "Sheet", "canonical": "#ffffff", "tonalRamp": ["#262626", "#404040", "#595959", "#737373", "#8c8c8c", "#bfbfbf", "#e6e6e6", "#ffffff"] },
+      "raised-fill": { "role": "neutral", "displayName": "Raised Fill", "canonical": "#faf8f4", "tonalRamp": ["#1f1e1a", "#38352e", "#514d43", "#6f6a5d", "#948e7e", "#bdb7a7", "#dcd7cb", "#faf8f4"] },
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "#191816", "tonalRamp": ["#0d0c0b", "#191816", "#33302c", "#4d4942", "#6b665c", "#948e82", "#c2bcae", "#eae6dd"] },
+      "ink-secondary": { "role": "neutral", "displayName": "Secondary Ink", "canonical": "#57534a", "tonalRamp": ["#16150f", "#2b2823", "#403c34", "#57534a", "#726d61", "#99937f", "#c4bfaf", "#e9e5da"] },
+      "ink-muted": { "role": "neutral", "displayName": "Muted Ink", "canonical": "#635e54", "tonalRamp": ["#191713", "#2f2c26", "#46423a", "#635e54", "#7f7a6d", "#a29c8c", "#c8c3b5", "#eae7de"] },
+      "ink-accent": { "role": "primary", "displayName": "Deep Accent Ink", "canonical": "#5b33cc", "tonalRamp": ["#170d33", "#2d1a66", "#442699", "#5b33cc", "#7d5ddb", "#a189e6", "#c6b6f0", "#e8e0fa"] },
+      "signal-violet": { "role": "primary", "displayName": "Signal Violet", "canonical": "#7240ff", "tonalRamp": ["#1b0f3d", "#2f1a6b", "#452699", "#5c33cc", "#7240ff", "#9670ff", "#bba3ff", "#e0d5ff"] },
+      "bridge-indigo": { "role": "secondary", "displayName": "Bridge Indigo", "canonical": "#5b5cfb", "tonalRamp": ["#14144a", "#22226e", "#33339e", "#4646c8", "#5b5cfb", "#8384fc", "#adadfd", "#dcdcfe"] },
+      "signal-blue": { "role": "secondary", "displayName": "Signal Blue", "canonical": "#3b82f6", "tonalRamp": ["#0d1f3d", "#153466", "#1e4585", "#2a63b8", "#3b82f6", "#6ba3f8", "#9dc3fb", "#d4e5fd"] },
+      "ramp-top": { "role": "secondary", "displayName": "Deep Ramp Blue", "canonical": "#1e4585", "tonalRamp": ["#0a1730", "#122a52", "#1e4585", "#2a5eb0", "#3b82f6", "#6ba3f8", "#9dc3fb", "#d4e5fd"] },
+      "board-night": { "role": "neutral", "displayName": "Night Board", "canonical": "#16150f", "tonalRamp": ["#0b0a07", "#16150f", "#26241b", "#3a3729", "#54503d", "#7c7660", "#aaa38b", "#d8d2bf"] },
+      "ink-night": { "role": "neutral", "displayName": "Night Ink", "canonical": "#f3f0e8", "tonalRamp": ["#1a1913", "#333025", "#4d4938", "#6d674f", "#948d70", "#bcb69b", "#dad4c1", "#f3f0e8"] },
+      "ink-accent-night": { "role": "primary", "displayName": "Night Accent Ink", "canonical": "#aa8cff", "tonalRamp": ["#1e1140", "#33206b", "#4a2f99", "#6444c4", "#8266e6", "#aa8cff", "#c9b5ff", "#e7dcff"] },
+      "room-black": { "role": "neutral", "displayName": "Room Black", "canonical": "#05070f", "tonalRamp": ["#05070f", "#0a0f1c", "#121a2e", "#1e2a47", "#3a4a6e", "#5f719b", "#98a6c4", "#d5dcea"] },
+      "success": { "role": "tertiary", "displayName": "Ledger Green", "canonical": "#166534", "tonalRamp": ["#052012", "#0b3a1f", "#166534", "#1f8a48", "#2fae5e", "#5fca85", "#9ae0b3", "#d8f5e2"] },
+      "warning": { "role": "tertiary", "displayName": "Amber Note", "canonical": "#92400e", "tonalRamp": ["#2b1204", "#4d2007", "#6d300a", "#92400e", "#c25f18", "#e5893c", "#f2b57e", "#fbe4c8"] },
+      "danger": { "role": "tertiary", "displayName": "Stop Red", "canonical": "#b91c1c", "tonalRamp": ["#330606", "#5c0d0d", "#8a1414", "#b91c1c", "#dc4040", "#ea6f6f", "#f4a3a3", "#fbdada"] }
     },
     "typographyMeta": {
-      "display": {
-        "displayName": "Display",
-        "purpose": "Marketing headlines only. Never inside the app."
-      },
-      "headline": {
-        "displayName": "Headline",
-        "purpose": "The one page-owning h1 — a greeting, a brand's name on its plate."
-      },
-      "title": {
-        "displayName": "Title",
-        "purpose": "Card and section headings."
-      },
-      "body": {
-        "displayName": "Body",
-        "purpose": "All prose. Measure stays inside 65–75ch."
-      },
-      "label": {
-        "displayName": "Label",
-        "purpose": "Uppercase section eyebrows and meta keys."
-      },
-      "arabic": {
-        "displayName": "Arabic",
-        "purpose": "A separate stack at 1.85 leading, not a fallback."
-      }
+      "display": { "displayName": "Display", "purpose": "The one largest thing on a page. Familjen Grotesk in the app." },
+      "headline": { "displayName": "Section", "purpose": "Section titles; floored at 1.75rem so a phone keeps a display step." },
+      "title": { "displayName": "Title", "purpose": "A heading on a card. 20px, the step eight routes used to hand-roll." },
+      "body": { "displayName": "Body", "purpose": "Hanken Grotesk; everything the interface says at reading size." },
+      "label": { "displayName": "Eyebrow / Machine voice", "purpose": "Spline Sans Mono, uppercase, 0.16em. Anything the pipeline emitted." },
+      "arabic": { "displayName": "Arabic", "purpose": "Readex Pro; takes both the display and body roles under RTL, at 1.85 leading and no negative tracking." },
+      "marketing-display": { "displayName": "Marketing Display", "purpose": "Bricolage Grotesque, scoped to .world-dark and .world-light only, variable across opsz." }
     },
-    "themes": {
-      "light": {
-        "room-black": "#f7f8fc",
-        "bench-navy": "#ffffff",
-        "riser-navy": "#f2f4fb",
-        "paper-white": "#0b1020",
-        "reading-grey": "#4c5570",
-        "quiet-grey": "#67708c",
-        "lit-violet": "#5b33cc"
-      }
-    },
-    "gradients": [
-      {
-        "name": "brand-gradient",
-        "value": "linear-gradient(0deg, #7240ff, #4b46c9 55%, #1e4585)",
-        "purpose": "The primary control fill and the lit edge source. One per view. Vertical and value-graded rather than a 135deg hue sweep: the light in this system is below the content, so the fill is brightest along its bottom edge. Every stop carries a 14px white label — 5.44:1 at the violet bottom, 7.00:1 in the middle, 9.47:1 at the deep blue top."
-      },
-      {
-        "name": "lit-edge",
-        "value": "linear-gradient(0deg, color-mix(in srgb, #7240ff 34%, transparent), color-mix(in srgb, #ffffff 4%, transparent) 38%)",
-        "purpose": "The hairline on what matters, lit along its bottom edge by the arc rising behind the fold."
-      },
-      {
-        "name": "horizon-arc",
-        "value": "linear-gradient(90deg, #7240ff 0%, #8f66ff 18%, #ded1ff 42%, #ffffff 52%, #93c5fd 64%, #3b82f6 86%, #1e4585 100%)",
-        "purpose": "The rim across the hero's arc. Its named stops read the tokens at the source so a re-anchored ramp moves the arc with it; the pale stops between them are samples along that ramp rather than palette members."
-      },
-      {
-        "name": "section-arc",
-        "value": "linear-gradient(90deg, #5b5cfb 0%, #8f66ff 30%, #c4b5fd 50%, #60a5fa 70%, #3b82f6 100%)",
-        "purpose": "The same light further away: thinner, dimmer, rising from a section base."
-      },
-      {
-        "name": "horizon-bloom",
-        "value": "radial-gradient(circle, rgba(143,102,255,0.42), rgba(91,92,251,0.18) 45%, transparent 70%)",
-        "purpose": "The haze the crest throws up into the copy above it."
-      },
-      {
-        "name": "horizon-body",
-        "value": "linear-gradient(180deg, rgba(222,209,255,0.5) 0%, rgba(114,64,255,0.3) 14%, rgba(59,130,246,0.1) 52%, rgba(59,130,246,0) 100%)",
-        "purpose": "The lit band under the rim. The reference carries eighty-odd pixels of colour below its rim before the disc goes dark, and that band is most of what makes the arc read as an object with light behind it rather than as a drawn line."
-      }
-    ],
     "shadows": [
-      {
-        "name": "soft",
-        "value": "0 1px 2px rgba(5,8,20,0.4), 0 12px 32px -16px rgba(5,8,20,0.8)",
-        "purpose": "The resting state of any raised surface."
-      },
-      {
-        "name": "lifted",
-        "value": "0 2px 4px rgba(5,8,20,0.35), 0 26px 56px -24px rgba(91,92,251,0.55)",
-        "purpose": "Hover and active elevation. The indigo tint is what makes it read as light rather than darkness."
-      },
-      {
-        "name": "glow-brand",
-        "value": "0 0 0 1px color-mix(in srgb, #7240ff 25%, transparent), 0 0 24px -4px color-mix(in srgb, #7240ff 55%, transparent), 0 0 64px -8px color-mix(in srgb, #7240ff 38%, transparent)",
-        "purpose": "The brand-carrying moment. Both blur layers centred rather than offset downward: measured off the reference, this is a light with a halo, not a raised box."
-      },
-      {
-        "name": "focus-ring",
-        "value": "0 0 0 3px color-mix(in srgb, #7240ff 22%, transparent)",
-        "purpose": "Field focus. A bloom outside the border, not an outline."
-      }
+      { "name": "soft", "value": "0 1px 1px rgba(60, 52, 38, 0.1), 0 10px 22px -10px rgba(60, 52, 38, 0.3)", "purpose": "A sheet resting on the board. Default for cards and standing panels." },
+      { "name": "lifted", "value": "0 2px 3px rgba(60, 52, 38, 0.12), 0 26px 44px -18px rgba(60, 52, 38, 0.42)", "purpose": "A sheet picked up: interactive hover, the auth sheet." },
+      { "name": "primary", "value": "0 1px 1px rgba(60, 52, 38, 0.18), 0 8px 16px -8px rgba(60, 52, 38, 0.55)", "purpose": "The primary control's weight. Offset and blur, never a halo." },
+      { "name": "primary-hover", "value": "0 2px 3px rgba(60, 52, 38, 0.2), 0 14px 24px -10px rgba(60, 52, 38, 0.6)", "purpose": "Primary control hover: it lifts further, it does not glow." },
+      { "name": "lit-inset", "value": "inset 0 1px 0 0 color-mix(in srgb, #191816 5%, transparent)", "purpose": "The single hairline a control carries on the board." },
+      { "name": "soft-night", "value": "0 1px 2px rgba(0, 0, 0, 0.5), 0 12px 26px -12px rgba(0, 0, 0, 0.75)", "purpose": "The same lift in the studio after dark." },
+      { "name": "marketing-primary", "value": "0 0 0 1px color-mix(in srgb, #7240ff 20%, transparent), 0 2px 18px -6px color-mix(in srgb, #7240ff 60%, transparent), 0 0 44px -10px color-mix(in srgb, #7240ff 32%, transparent)", "purpose": ".world-dark only: the control's own light, centred halos rather than a drop shadow." }
     ],
     "motion": [
-      {
-        "name": "ease-out-soft",
-        "value": "cubic-bezier(0.22, 1, 0.36, 1)",
-        "purpose": "Entrances and all default state transitions."
-      },
-      {
-        "name": "ease-in-soft",
-        "value": "cubic-bezier(0.64, 0, 0.78, 0)",
-        "purpose": "Exits."
-      },
-      {
-        "name": "ease-spring",
-        "value": "cubic-bezier(0.34, 1.56, 0.64, 1)",
-        "purpose": "Scale-in, where a small overshoot reads as arrival."
-      },
-      {
-        "name": "duration-band",
-        "value": "150–300ms",
-        "purpose": "Interface motion. Outside this band it reads as decorative rather than responsive."
-      },
-      {
-        "name": "stagger-step",
-        "value": "60ms, capped at 480ms",
-        "purpose": "List entrances via a --i index; the cap stops a long list leaving its last row waiting."
-      }
+      { "name": "ease-out-soft", "value": "cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "Entrances and hover lifts: arrive fast, settle." },
+      { "name": "ease-in-soft", "value": "cubic-bezier(0.64, 0, 0.78, 0)", "purpose": "Exits." },
+      { "name": "ease-spring", "value": "cubic-bezier(0.34, 1.56, 0.64, 1)", "purpose": "Scale-in arrivals: dialogs, sheets." },
+      { "name": "duration-control", "value": "200ms", "purpose": "Control state changes; 75ms on press." },
+      { "name": "stagger-step", "value": "60ms per --i, capped at 480ms", "purpose": "List arrivals without a JS timeline." },
+      { "name": "reduced-motion-feedback", "value": "120ms on color, background-color, border-color, box-shadow, opacity", "purpose": "Motion is removed; the interface still answers." }
     ],
     "breakpoints": [
-      {
-        "name": "sm",
-        "value": "640px"
-      },
-      {
-        "name": "md",
-        "value": "768px"
-      },
-      {
-        "name": "lg",
-        "value": "1024px"
-      },
-      {
-        "name": "xl",
-        "value": "1280px"
-      }
+      { "name": "sm", "value": "640px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "shell-max", "value": "90rem" },
+      { "name": "desk-max", "value": "64rem" },
+      { "name": "threshold-max", "value": "26rem" }
     ]
   },
   "components": [
@@ -301,151 +62,123 @@
       "name": "Primary Button",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "The one gradient fill in the system. Normally one per view.",
-      "html": "<button class=\"ds-btn-primary\">Create my brand</button>",
-      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; height: 2.75rem; padding: 0 1.25rem; border: none; border-radius: 9999px; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; font-weight: 600; color: #ffffff; cursor: pointer; background-image: linear-gradient(135deg, #7240ff, #5b5cfb 52%, #3b82f6); background-size: 180% auto; background-position: left center; box-shadow: 0 10px 24px -14px #7240ff; transition: background-position 500ms cubic-bezier(0.22,1,0.36,1), box-shadow 500ms cubic-bezier(0.22,1,0.36,1), transform 200ms cubic-bezier(0.22,1,0.36,1); } .ds-btn-primary:hover { background-position: right center; box-shadow: 0 14px 30px -12px #7240ff; } .ds-btn-primary:focus-visible { outline: 2px solid #7240ff; outline-offset: 2px; } .ds-btn-primary:active { transform: scale(0.98); transition-duration: 75ms; }"
+      "description": "The one committed action on a surface. Lifted by a warm shadow, never haloed.",
+      "html": "<button class=\"ds-btn-primary\">Generate brand</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; height: 2.75rem; padding: 0 1.25rem; border: none; border-radius: 9999px; font-family: var(--font-sans, 'Hanken Grotesk', sans-serif); font-size: 0.875rem; font-weight: 600; color: #ffffff; cursor: pointer; background-image: linear-gradient(0deg, #7240ff, #4b46c9 55%, #1e4585); box-shadow: 0 1px 1px rgba(60,52,38,0.18), 0 8px 16px -8px rgba(60,52,38,0.55); transition: box-shadow 200ms cubic-bezier(0.22,1,0.36,1), transform 200ms cubic-bezier(0.22,1,0.36,1); } .ds-btn-primary:hover { box-shadow: 0 2px 3px rgba(60,52,38,0.2), 0 14px 24px -10px rgba(60,52,38,0.6); } .ds-btn-primary:focus-visible { outline: 2px solid #7240ff; outline-offset: 2px; } .ds-btn-primary:active { transform: scale(0.98); transition-duration: 75ms; }"
     },
     {
       "name": "Secondary Button",
       "kind": "button",
       "refersTo": "button-secondary",
-      "description": "The default non-committal action: raised ground, hairline edge.",
-      "html": "<button class=\"ds-btn-secondary\">Resend verification email</button>",
-      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; height: 2.75rem; padding: 0 1.25rem; border: 1px solid rgba(255,255,255,0.09); border-radius: 9999px; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; font-weight: 600; color: #ffffff; background-color: #121a2e; cursor: pointer; transition: background-color 200ms cubic-bezier(0.22,1,0.36,1), transform 200ms cubic-bezier(0.22,1,0.36,1); } .ds-btn-secondary:hover { background-color: rgba(18,26,46,0.7); } .ds-btn-secondary:focus-visible { outline: 2px solid #7240ff; outline-offset: 2px; } .ds-btn-secondary:active { transform: scale(0.98); transition-duration: 75ms; }"
+      "description": "The quiet companion action: a raised fill with a hairline and one inner edge.",
+      "html": "<button class=\"ds-btn-secondary\">Cancel</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; height: 2.75rem; padding: 0 1.25rem; border: 1px solid color-mix(in srgb, #191816 11%, transparent); border-radius: 9999px; background-color: #faf8f4; color: #191816; font-family: var(--font-sans, 'Hanken Grotesk', sans-serif); font-size: 0.875rem; font-weight: 600; cursor: pointer; box-shadow: inset 0 1px 0 0 color-mix(in srgb, #191816 5%, transparent); transition: background-color 200ms ease, border-color 200ms ease; } .ds-btn-secondary:hover { background-color: color-mix(in srgb, #faf8f4 70%, transparent); border-color: color-mix(in srgb, #191816 18%, transparent); } .ds-btn-secondary:focus-visible { outline: 2px solid #7240ff; outline-offset: 2px; } .ds-btn-secondary:active { transform: scale(0.98); }"
     },
     {
-      "name": "Ghost Button",
-      "kind": "button",
-      "refersTo": "button-ghost",
-      "description": "Text until hovered. For the quieter half of a pair.",
-      "html": "<button class=\"ds-btn-ghost\">Back</button>",
-      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; height: 2.75rem; padding: 0 1.25rem; border: none; border-radius: 9999px; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; font-weight: 600; color: #a3aec9; background: transparent; cursor: pointer; transition: background-color 200ms cubic-bezier(0.22,1,0.36,1), color 200ms cubic-bezier(0.22,1,0.36,1); } .ds-btn-ghost:hover { background-color: #121a2e; color: #ffffff; } .ds-btn-ghost:focus-visible { outline: 2px solid #7240ff; outline-offset: 2px; }"
+      "name": "Badge",
+      "kind": "chip",
+      "refersTo": "badge-brand",
+      "description": "A state, never a control: a flat wash with no shadow, no border and no hover.",
+      "html": "<span class=\"ds-badge ds-badge-brand\">Generating</span><span class=\"ds-badge ds-badge-neutral\">Draft</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.625rem; border-radius: 9999px; font-family: var(--font-sans, 'Hanken Grotesk', sans-serif); font-size: 0.75rem; font-weight: 500; } .ds-badge-brand { background-color: color-mix(in srgb, #7240ff 15%, transparent); color: #5b33cc; } .ds-badge-neutral { background-color: #faf8f4; color: #57534a; margin-inline-start: 0.5rem; }"
+    },
+    {
+      "name": "Sheet Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "A sheet laid on the board, lifted by its own warm shadow. No lit edge, no bloom.",
+      "html": "<div class=\"ds-card\"><h2 class=\"ds-card-title\">Weekday Roasters</h2><p class=\"ds-card-desc\">Five colours, two faces, one mark.</p><p class=\"ds-card-meta\">#1B3A3A · 2048×2048</p></div>",
+      "css": ".ds-card { background-color: #ffffff; border-radius: 1.25rem; padding: 1.75rem; box-shadow: 0 1px 1px rgba(60,52,38,0.1), 0 10px 22px -10px rgba(60,52,38,0.3); transition: transform 180ms cubic-bezier(0.22,1,0.36,1), box-shadow 180ms cubic-bezier(0.22,1,0.36,1); } .ds-card:hover { transform: translateY(-3px); box-shadow: 0 2px 3px rgba(60,52,38,0.12), 0 26px 44px -18px rgba(60,52,38,0.42); } .ds-card:active { transform: translateY(0) scale(0.995); } .ds-card-title { margin: 0; font-family: 'Familjen Grotesk', sans-serif; font-size: 1.25rem; font-weight: 600; line-height: 1.3; letter-spacing: -0.02em; color: #191816; } .ds-card-desc { margin: 0.375rem 0 0; font-family: 'Hanken Grotesk', sans-serif; font-size: 0.875rem; color: #57534a; } .ds-card-meta { margin: 0.75rem 0 0; font-family: 'Spline Sans Mono', monospace; font-size: 0.75rem; font-weight: 400; color: #635e54; direction: ltr; unicode-bidi: isolate; }"
     },
     {
       "name": "Text Field",
       "kind": "input",
       "refersTo": "input",
-      "description": "44px tall, hairline edge, and a violet bloom on focus rather than an outline.",
-      "html": "<input class=\"ds-input\" placeholder=\"e.g. TechFlow\" />",
-      "css": ".ds-input { width: 100%; height: 2.75rem; padding: 0 0.875rem; border: 1px solid rgba(255,255,255,0.09); border-radius: 0.875rem; background-color: rgba(18,26,46,0.6); color: #ffffff; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; transition: border-color 200ms ease, box-shadow 200ms cubic-bezier(0.22,1,0.36,1); } .ds-input::placeholder { color: #6f7b96; } .ds-input:focus { outline: none; border-color: #7240ff; box-shadow: 0 0 0 3px color-mix(in srgb, #7240ff 22%, transparent); } .ds-input[aria-invalid='true'] { border-color: #ef4444; }"
+      "description": "44px control on a raised fill; focus joins the inner edge and the bloom in one shadow.",
+      "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"Brand name\" />",
+      "css": ".ds-input { width: 100%; height: 2.75rem; padding: 0 0.875rem; border: 1px solid color-mix(in srgb, #191816 11%, transparent); border-radius: 0.875rem; background-color: color-mix(in srgb, #faf8f4 60%, transparent); color: #191816; font-family: 'Hanken Grotesk', sans-serif; font-size: 0.875rem; box-shadow: inset 0 1px 0 0 color-mix(in srgb, #191816 5%, transparent); transition: box-shadow 200ms ease, border-color 200ms ease; } .ds-input::placeholder { color: #635e54; } .ds-input:focus { outline: none; border-color: #7240ff; box-shadow: inset 0 1px 0 0 color-mix(in srgb, #191816 5%, transparent), 0 0 0 3px color-mix(in srgb, #7240ff 22%, transparent); } .ds-input[aria-invalid='true'] { border-color: #b91c1c; }"
     },
     {
-      "name": "Lit Card",
-      "kind": "card",
-      "refersTo": "card",
-      "description": "The signature surface: a 1px gradient ring lit from above around an inner ground. Two elements, because a border cannot hold a gradient and a background at once.",
-      "html": "<div class=\"ds-card\"><div class=\"ds-card-inner\"><h3 class=\"ds-card-title\">Colour palette</h3><p class=\"ds-card-body\">Click a colour to copy its hex code.</p></div></div>",
-      "css": ".ds-card { padding: 1px; border-radius: 1.25rem; background-image: linear-gradient(180deg, color-mix(in srgb, #7240ff 34%, transparent), color-mix(in srgb, #ffffff 4%, transparent) 38%); box-shadow: 0 1px 2px rgba(5,8,20,0.4), 0 12px 32px -16px rgba(5,8,20,0.8); transition: box-shadow 200ms cubic-bezier(0.22,1,0.36,1); } .ds-card:hover { box-shadow: 0 2px 4px rgba(5,8,20,0.35), 0 26px 56px -24px rgba(91,92,251,0.55); } .ds-card-inner { background-color: #0a0f1c; border-radius: calc(1.25rem - 1px); padding: 1.75rem; } .ds-card-title { margin: 0; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 1.25rem; font-weight: 600; letter-spacing: -0.02em; color: #ffffff; } .ds-card-body { margin: 0.375rem 0 0; font-size: 0.875rem; line-height: 1.6; color: #a3aec9; }"
-    },
-    {
-      "name": "Status Badge",
-      "kind": "chip",
-      "refersTo": "badge-brand",
-      "description": "A state, not a control — which is why it is a full pill. The word always rides with the colour.",
-      "html": "<span class=\"ds-badge ds-badge-success\">Completed</span> <span class=\"ds-badge ds-badge-warning\">Generating</span> <span class=\"ds-badge ds-badge-brand\">Chosen</span>",
-      "css": ".ds-badge { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.625rem; border-radius: 9999px; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 0.75rem; font-weight: 500; } .ds-badge-success { background-color: color-mix(in srgb, #22c55e 15%, transparent); color: #22c55e; } .ds-badge-warning { background-color: color-mix(in srgb, #f5a524 15%, transparent); color: #f5a524; } .ds-badge-brand { background-color: color-mix(in srgb, #7240ff 15%, transparent); color: #aa8cff; }"
-    },
-    {
-      "name": "Rail Navigation Item",
-      "kind": "nav",
-      "refersTo": "nav-item-active",
-      "description": "The active marker is a violet bar that grows from nothing on the item you moved to, so the eye follows the change rather than hunting for which row changed shade.",
-      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-item ds-nav-item-active\" href=\"#\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"3\" width=\"7\" height=\"7\" rx=\"1\"/><rect x=\"14\" y=\"3\" width=\"7\" height=\"7\" rx=\"1\"/><rect x=\"3\" y=\"14\" width=\"7\" height=\"7\" rx=\"1\"/><rect x=\"14\" y=\"14\" width=\"7\" height=\"7\" rx=\"1\"/></svg>Overview</a><a class=\"ds-nav-item\" href=\"#\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z\"/></svg>Projects</a></nav>",
-      "css": ".ds-nav { display: flex; flex-direction: column; gap: 0.25rem; width: 15rem; } .ds-nav-item { position: relative; display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 0.875rem; border-radius: 9999px; font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 0.875rem; color: #a3aec9; text-decoration: none; transition: background-color 200ms cubic-bezier(0.22,1,0.36,1), color 200ms cubic-bezier(0.22,1,0.36,1); } .ds-nav-item::before { content: ''; position: absolute; inset-block: 0.5rem; inset-inline-start: -0.25rem; width: 2px; border-radius: 9999px; background-color: #7240ff; transform: scaleY(0); transition: transform 200ms cubic-bezier(0.22,1,0.36,1); } .ds-nav-item:hover { background-color: #121a2e; color: #ffffff; } .ds-nav-item-active { background-image: linear-gradient(100deg, color-mix(in srgb, #7240ff 22%, transparent), transparent 70%); box-shadow: inset 0 0 0 1px color-mix(in srgb, #7240ff 20%, transparent); color: #ffffff; font-weight: 500; } .ds-nav-item-active::before { transform: scaleY(1); }"
-    },
-    {
-      "name": "Brand Specimen",
+      "name": "Desk Row",
       "kind": "custom",
-      "description": "A brand shown as itself: its mark on its own paper, its name in its own heading face, its palette along the base as the sheet's own edge. The unit of the contact sheet. Every colour here comes from the guest brand, not from Brandora.",
-      "html": "<article class=\"ds-specimen\"><div class=\"ds-specimen-stage\"><span class=\"ds-specimen-mark\">Marra</span></div><div class=\"ds-specimen-meta\"><h3 class=\"ds-specimen-name\">Marra</h3><p class=\"ds-specimen-slogan\">Built to be understood.</p><p class=\"ds-specimen-facts\">Food &amp; beverage · United Arab Emirates</p></div><div class=\"ds-specimen-band\"><span style=\"background:#7240ff\"></span><span style=\"background:#06b6d4\"></span><span style=\"background:#111827\"></span><span style=\"background:#1f2937\"></span></div></article>",
-      "css": ".ds-specimen { --brand-paper: #f9fafb; --brand-ink: #1f2937; --brand-line: color-mix(in srgb, #1f2937 14%, transparent); display: flex; flex-direction: column; overflow: hidden; border-radius: 1.5rem; background-color: var(--brand-paper); box-shadow: 0 1px 2px rgba(5,8,20,0.4), 0 12px 32px -16px rgba(5,8,20,0.8); box-shadow: 0 1px 2px rgba(5,8,20,0.4), 0 12px 32px -16px rgba(5,8,20,0.8), 0 0 0 1px var(--brand-line); } .ds-specimen-stage { display: grid; place-items: center; min-height: 10rem; padding: 2.5rem 2rem; } .ds-specimen-mark { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-size: 2rem; font-weight: 600; letter-spacing: -0.03em; color: var(--brand-ink); } .ds-specimen-meta { padding: 0 1.5rem 1.25rem; } .ds-specimen-name { margin: 0; font-size: 1.125rem; font-weight: 600; letter-spacing: -0.02em; color: var(--brand-ink); } .ds-specimen-slogan { margin: 0.25rem 0 0; font-size: 0.875rem; color: color-mix(in srgb, var(--brand-ink) 66%, var(--brand-paper)); } .ds-specimen-facts { margin: 0.625rem 0 0; font-size: 0.75rem; color: color-mix(in srgb, var(--brand-ink) 42%, var(--brand-paper)); } .ds-specimen-band { display: flex; height: 0.625rem; } .ds-specimen-band span { flex: 1; }"
+      "refersTo": "panel-sheet",
+      "description": "The desk register: squared rows of figures on a sheet, every number tabular.",
+      "html": "<div class=\"ds-desk\"><div class=\"ds-desk-row\"><span class=\"ds-desk-label\">Brand generation</span><span class=\"ds-desk-figure\">-40</span></div><div class=\"ds-desk-row\"><span class=\"ds-desk-label\">Monthly top-up</span><span class=\"ds-desk-figure ds-desk-figure-credit\">+250</span></div></div>",
+      "css": ".ds-desk { border: 1px solid color-mix(in srgb, #191816 11%, transparent); border-radius: 1.25rem; background-color: color-mix(in srgb, #ffffff 60%, transparent); padding: 0 1.5rem; } .ds-desk-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.875rem 0; font-family: 'Hanken Grotesk', sans-serif; font-size: 0.875rem; } .ds-desk-row + .ds-desk-row { border-top: 1px solid color-mix(in srgb, #191816 11%, transparent); } .ds-desk-label { color: #57534a; } .ds-desk-figure { font-family: 'Spline Sans Mono', monospace; font-variant-numeric: tabular-nums; font-weight: 500; color: #191816; } .ds-desk-figure-credit { color: #166534; }"
+    },
+    {
+      "name": "Eyebrow",
+      "kind": "custom",
+      "refersTo": "label",
+      "description": "The machine's voice at label size: a stage name, a key the run emitted.",
+      "html": "<span class=\"ds-eyebrow\">Palette · step 3 of 8</span>",
+      "css": ".ds-eyebrow { font-family: 'Spline Sans Mono', monospace; font-size: 0.6875rem; font-weight: 500; line-height: 1.4; letter-spacing: 0.16em; text-transform: uppercase; color: #635e54; }"
+    },
+    {
+      "name": "Glass Nav Bar",
+      "kind": "nav",
+      "refersTo": "panel-sheet",
+      "description": "Frosted bar over scrolling content, closed by a rule that fades before the edges.",
+      "html": "<nav class=\"ds-nav\"><span class=\"ds-nav-item ds-nav-item-active\">Projects</span><span class=\"ds-nav-item\">Content</span><span class=\"ds-nav-item\">Billing</span><hr class=\"ds-nav-rule\" /></nav>",
+      "css": ".ds-nav { position: relative; display: flex; align-items: center; gap: 1.5rem; padding: 0.875rem 1.5rem; background-color: color-mix(in srgb, #e7e3da 72%, transparent); backdrop-filter: blur(14px) saturate(1.4); -webkit-backdrop-filter: blur(14px) saturate(1.4); } .ds-nav-item { font-family: 'Hanken Grotesk', sans-serif; font-size: 0.875rem; color: #57534a; cursor: pointer; transition: color 200ms ease; } .ds-nav-item:hover { color: #191816; } .ds-nav-item-active { color: #191816; font-weight: 600; } .ds-nav-rule { position: absolute; inset-inline: 0; bottom: 0; block-size: 1px; border: 0; margin: 0; background-image: linear-gradient(90deg, transparent, color-mix(in srgb, #191816 11%, transparent) 8%, color-mix(in srgb, #191816 11%, transparent) 92%, transparent); }"
     }
   ],
   "narrative": {
-    "northStar": "The Darkroom",
-    "overview": "The interface is the dark room. Every brand this product generates is a print that comes out of it, and the print is the only thing carrying colour. That is why the chrome sits at near-black and holds a single accent ramp: it is not minimalism as a style preference, it is a room built so that whatever is pinned up in it can be judged. A product that sells brand coherence cannot show a customer's brand inside its own purple and expect to be believed.\n\nSo the register is a quiet instrument around loud work. Chrome is severe: hairline edges mixed from white rather than drawn in grey, three tonal grounds instead of borders, one accent that appears where something means something. Expression is delegated outward — a project page adopts the palette and the faces of the brand it is showing, and Brandora's own ramp withdraws to the shell. The one place the chrome is allowed to be expressive is motion, and even there it is bounded: nothing loops forever except a running job and a loading skeleton.\n\nThe visual anti-reference is the admin template — same-size cards of icon plus heading plus text, figures that restate a count nobody asked for, and a grey 1px border around everything. Those were all present and all removed deliberately; a change that reintroduces them is a regression regardless of how it looks in isolation.",
+    "northStar": "The Board",
+    "overview": "A dry studio board in daylight, with sheets of work laid on it. The Darkroom that preceded it argued that a near-black room lets the print be the only lit thing; that is a good idea about photographs and the wrong one about brands. You cannot judge a colour in the dark, and most generated brands are drawn on light paper, so a near-black chrome forced every specimen into a bright rectangle in a void. The board is the answer: a warm matte ground (#e7e3da), white sheets on it, and shadow rather than light doing the lifting. [data-theme='dark'] is the same studio after dark, not an inversion.\n\nThe Darkroom did not die, it was scoped. .world-dark is the retained marketing world on /, /pricing, /brand-kit and the legal pages, because the brand is dark on purpose. .world-light is the guest scope: a region handed to a generated brand, painted in the customer's own checked ink. The app itself is the board, arriving as a :root scope while twenty-three routes migrate onto it one at a time.\n\nThe board has three registers, and the boundary is one question: does this surface show something the product generated? Wall (generated work pinned up: sheets, cast shadows, gaps visible), Bench (one thing at working size with tools at its edges), Desk (squared to a grid, never pinned, tabular figures). Nothing generated is ever tabulated; nothing financial is ever pinned.",
     "keyCharacteristics": [
-      "Near-black navy ground with three tonal steps, never a grey border",
-      "One accent ramp, violet through blue, used sparingly and never as text at full strength",
-      "Light from above: a gradient top edge on what matters, brand-tinted shadow below",
-      "The generated brand owns any region that displays it, with contrast guarded at runtime",
-      "Generous radii (14 / 20 / 24px) and a 150–300ms motion band that collapses entirely under reduced-motion",
-      "Fully bilingual: every surface works in Arabic with RTL, on its own font stack"
+      "Warm matte ground, white sheets, warm shadows — never a blue or black shadow",
+      "One accent ramp, pinned to the logo, and used as little as possible",
+      "Depth by cast shadow and tonal step, not by glow",
+      "Five faces with five jobs; the mono face is the machine's voice",
+      "Every colour under text carries a measured contrast number in the source",
+      "Three registers with a one-question boundary"
     ],
     "rules": [
-      {
-        "name": "The One Ramp Rule",
-        "body": "There is no second accent. Status colours aside, anything that needs emphasis borrows from Signal Violet, Indigo Core or Horizon Blue. A new colour entering the system is a design decision, not an implementation detail.",
-        "section": "colors"
-      },
-      {
-        "name": "The Readable Accent Rule",
-        "body": "Signal Violet is 3.4:1 on Room Black — enough under a button, not enough under words. Accent text is always Lit Violet, which clears 7:1 in both themes. This is why the two values differ per theme while the ramp does not.",
-        "section": "colors"
-      },
-      {
-        "name": "The Checked Tone Rule",
-        "body": "Every colour this system puts under text is verified against its own ground, not assumed from a percentage. A color-mix at 42% of its own background cannot reach 4.5:1 for any pair of colours in existence — that is arithmetic, not a data problem — so guest-brand text tones are resolved by stepping the mix until it clears the floor.",
-        "section": "colors"
-      },
-      {
-        "name": "The Guest Palette Rule",
-        "body": "On any surface displaying a generated brand, that brand's palette owns the region and Brandora's ramp withdraws to the shell. The guest palette is untrusted input: every colour that ends up under text is contrast-checked at runtime and replaced when it fails, so a bad generation degrades to plain rather than to unreadable. Secondary text on a guest ground is mixed from that brand's own ink, never set to grey.",
-        "section": "colors"
-      },
-      {
-        "name": "The Rendered Light Rule",
-        "body": "The horizon arcs and their bloom are light, not surfaces, so they interpolate across the ramp and through white rather than stepping between named swatches. Their intermediate stops — pale violets, pale blues, a white core — are samples along that ramp and belong to the gradient definitions in the sidecar, not to the palette. Anything that is not rendered light uses a named colour.",
-        "section": "colors"
-      },
-      {
-        "name": "The Word-Not-Letter Rule",
-        "body": "Headline motion splits on words, never on characters. Character-level animation reads as a typewriter gimmick at display size and it breaks Arabic outright, where letterforms join.",
-        "section": "typography"
-      },
-      {
-        "name": "The Tracking Floor Rule",
-        "body": "Negative tracking scales with size: -0.02em at title, -0.03em at headline, -0.035em at display, and never past -0.04em.",
-        "section": "typography"
-      },
-      {
-        "name": "The No Dead Column Rule",
-        "body": "A persistent side region must earn its width down the whole page. A rail holding four links above a screen-height of nothing is the failure this system was rebuilt to remove; give it more to hold, or let it collapse.",
-        "section": "layout"
-      },
-      {
-        "name": "The Light From Above Rule",
-        "body": "Illumination enters at the top edge. A uniform 1px outline on all four sides is what made this app read as a template beside its own marketing; the lit edge replaced it and should not be reintroduced.",
-        "section": "elevation"
-      },
-      {
-        "name": "The Tinted Shadow Rule",
-        "body": "No shadow in this system is pure black. Tint with the ground's navy for weight, with Indigo Core for lift.",
-        "section": "elevation"
-      },
-      {
-        "name": "The Measured Figure Rule",
-        "body": "A figure earns its tile by being measurable. Every series is bucketed from a real timestamp; where the data cannot support a trend the tile shows none rather than a decorative line; a level takes no percentage, because the denominator is whatever the account happened to hold at an arbitrary earlier moment; and a metric with no good direction says so rather than colouring itself green or red. This replaced the outright ban on a row of stat tiles, which was lifted after three dashboards were built and measured — the tiles started 50px lower than the contact sheet and still put six brands in the fold against its two."
-      }
+      { "name": "The One Ramp Rule", "body": "There is no second accent. Status colours aside, anything that needs emphasis borrows from Signal Violet, Bridge Indigo and Signal Blue.", "section": "colors" },
+      { "name": "The Readable Accent Rule", "body": "Signal Violet is 4.21:1 on the board — enough under a control, not under words. So accent text is #5b33cc in daylight and #aa8cff at night. In .world-dark it is #aa8cff at 7.57:1. The value differs either side; the ramp does not.", "section": "colors" },
+      { "name": "The Ink Light Rule", "body": "On the board, decorative light is drawn in ink, not in the accent. --accent-surface is re-pointed at ink at 13%, which moves lit, bloom, rail, rail-node and pulse-ring in one declaration. Left pointing at the ramp, every card wore a violet gradient along its bottom and the accent stopped meaning 'this matters' the moment it appeared on all of them.", "section": "colors" },
+      { "name": "The Checked Tone Rule", "body": "Every colour this system puts under text is verified against the ground it will actually sit on, not against the friendliest one, and the measured number is recorded next to the token. A muted token with no headroom is a token that fails wherever a surface is tinted at all.", "section": "colors" },
+      { "name": "The Guest Palette Rule", "body": "On any surface showing a generated brand, that brand supplies the colour. .world-light re-points the semantic chrome names at the --guest-* variables lib/brand-theme.ts emits. Nothing in that scope is a literal, greys are absent, and the ramp is deliberately absent — :focus-visible draws from --brand-primary, and a guest palette allowed to shadow it renders an invisible focus ring on its own section. Chrome tokens are not shadowable by untrusted input, and a generated palette is untrusted input even when it is our own example brand.", "section": "colors" },
+      { "name": "The Committed Dark Rule", "body": "The app follows the reader's theme; the marketing pages do not. .world-dark stays dark under [data-theme='light'] because the brand is dark by commitment, not by category default. The default theme is now daylight: the board's thesis is that a brand cannot be judged in the dark, so opening the product in a night room would ship the argument backwards.", "section": "colors" },
+      { "name": "The Colour Arc Rule", "body": "A marketing section is either chrome or it is a guest, never both. A section that hands itself to a generated brand takes that brand's whole palette, including its decorative light; a chrome section keeps ours.", "section": "colors" },
+      { "name": "The World Ground Rule", "body": "body:has(> .world-dark) paints the document #05070f. A world scope sits on a div, so it paints itself and its subtree — but the body is painted from the document's own tokens, which are the board's, and rubber-banding a dark marketing page revealed a warm board underneath it. The document takes its ground from the world its page actually opened in.", "section": "colors" },
+      { "name": "The Machine Voice Rule", "body": "Anything the pipeline emitted is set in Spline Sans Mono — credit figures, file dimensions, dates, hex codes, log lines, elapsed time. Anything we wrote is not. Nothing may set a weight heavier than 500 on it: the face has no bold to draw and the browser would synthesise one.", "section": "typography" },
+      { "name": "The Isolated Value Rule", "body": "A machine value inside a paragraph carries machine-value (direction: ltr; unicode-bidi: isolate). Inside an Arabic paragraph the bidi algorithm renders #1B3A3A as 1B3A3A# and /home as home/. A hex is something a customer copies and a route is something they type.", "section": "typography" },
+      { "name": "The RTL Display Rule", "body": "Under [dir='rtl'], both --font-display and --font-sans re-point to Readex Pro, at the variable rather than at the utilities. Appending the Arabic face to the Latin stack does not work: next/font's metric-adjusted fallback is declared local(\"Arial\"), Arial has Arabic coverage, and it answers first. 451 Arabic glyphs were rendering in Arial before this.", "section": "typography" },
+      { "name": "The Tracking Floor Rule", "body": "One negative value, -0.02em, from title size upward and never below it. Arabic drops negative tracking entirely and takes its own leading.", "section": "typography" },
+      { "name": "The Marketing Pairing Rule", "body": "Bricolage Grotesque is declared on .world-dark, .world-light only. The app keeps one display family and the page that sells typography gets a pairing.", "section": "typography" },
+      { "name": "The Register Boundary Rule", "body": "Ask one question of a surface: does it show something the product generated? Yes → wall or bench. No → desk. Nothing generated is ever tabulated; nothing financial is ever pinned.", "section": "layout" },
+      { "name": "The Tabular Figure Rule", "body": "Every desk figure is tabular-nums. A column of credit balances or order totals that shifts horizontally between rows is a column nobody can scan.", "section": "layout" },
+      { "name": "The Lifted Not Lit Rule", "body": "A control on a board is lifted, not lit. --shadow-primary and --shadow-primary-hover exist as tokens precisely because the halo was three literals reading --brand-primary inline — the one lit thing a scope could not move, since the fill has to stay violet. On a dark ground that halo reads as light; on a board in daylight it reads as haze.", "section": "elevation" },
+      { "name": "The Light From The Horizon Rule (retired in the app, retained in marketing)", "body": "It said: there is one light in this product, it is the arc rising behind the fold, and everything lit is lit from below. That is still exactly true inside .world-dark. It is dead on the board: a board in daylight has no horizon to rise from. The lit, bloom and radial-wash compositions were removed from the dashboard shell, the billing panel, the onboarding bench and the auth sheet rather than recoloured.", "section": "elevation" },
+      { "name": "The Tinted Shadow Rule", "body": "No shadow in this system is pure black. Warm brown on the board, black-at-opacity at night, ink-mixed in a guest scope.", "section": "elevation" },
+      { "name": "The Rendered Light Rule", "body": "Light is drawn, never faked with a decorative image. Anything that glows reads --accent-surface, so a scope can move all of it at once.", "section": "elevation" },
+      { "name": "The Lit Control Rule", "body": "A Button always carries a source — a fill with a shadow, or the lit inner edges. A Badge never carries one: no fill gradient, no shadow, no lit edges, no border, no hover. Now that both are pills, the light is the only thing telling a control from a state.", "section": "components" },
+      { "name": "The Reduced Motion Rule", "body": "prefers-reduced-motion removes motion and keeps feedback. Animations collapse to one frame and transforms are dropped, but colour, background, border, shadow and opacity keep transitioning at 120ms. The two states that exist only as movement get a still form instead of nothing: the shimmer becomes a steady tint, the pulse a static ring.", "section": "components" }
     ],
     "dos": [
-      "Do delegate colour outward on any surface showing a generated brand, and contrast-check every guest colour that ends up under text.",
-      "Do use Lit Violet (#aa8cff / #5b33cc) for accent text and Signal Violet (#7240ff) for fills. They are not interchangeable.",
-      "Do mix borders from white at 9% or 16% into the ground rather than drawing a grey line.",
-      "Do put a lit gradient edge on what matters and a plain hairline on what does not.",
-      "Do pick the radius by role: 14px to operate, 20px for a card, 24px for a panel of cards.",
-      "Do keep interface motion in the 150–300ms band, ease entrances out and exits in, and collapse all of it under prefers-reduced-motion.",
-      "Do design both directions. Arabic uses its own stack at 1.85 leading, and every layout uses logical properties."
+      "Do ask the register question first: generated work goes on the wall or the bench; money and settings go on the desk.",
+      "Do lift a sheet with a warm cast shadow (rgba(60,52,38,…)) and a tonal step, never with a halo.",
+      "Do set accent text at #5b33cc in daylight and #aa8cff at night, and reserve #7240ff for fills, focus and edges.",
+      "Do set anything the pipeline emitted in Spline Sans Mono at 400 or 500, and wrap it in machine-value when it sits inside a sentence.",
+      "Do put every desk figure in tabular-nums.",
+      "Do measure a new text colour against the worst ground it will sit on and record the number in the source next to it.",
+      "Do reach for a semantic token (bg-surface, text-fg-muted, border-line) so a component re-skins by scope without being touched.",
+      "Do let a guest scope own its colour completely, including its decorative light."
     ],
     "donts": [
-      "Don't clip the brand gradient to text. It was removed for legibility: part of every glyph sits on the lowest-contrast stop, and the words vanish entirely where the clip is unsupported.",
-      "Don't introduce a second accent colour, or a solid grey 1px border, or a shadow made of pure black.",
-      "Don't nest a card inside a card. Drop the inner one to a plain region with a hairline rule.",
-      "Don't build a page as a stack of same-size cards of icon plus heading plus text. That one stands.",
-      "Don't show a figure this system cannot measure — no invented trend, no percentage on a level, no delta against a period nobody named. See the Measured Figure Rule.",
-      "Don't leave a persistent side rail holding less than a screen of content — give it more or let it collapse.",
-      "Don't animate headlines letter by letter; split on words, because Arabic letterforms join.",
-      "Don't signal a state with colour alone; the word rides with the dot."
+      "Don't draw the Darkroom's horizon on the board. No lit gradient edge, no bloom, no radial wash behind a header, no glow behind a form. There is nothing for light to rise from.",
+      "Don't point --accent-surface back at the ramp inside the app. A violet edge on every card is how the accent stops meaning anything.",
+      "Don't let a generated palette bind --brand-primary or any chrome token; --guest-* is the only namespace an untrusted palette may write.",
+      "Don't put Signal Violet under words on the board — 4.21:1 is a control's number, not a paragraph's.",
+      "Don't introduce a second accent hue. Status colours aside, emphasis borrows from the one ramp.",
+      "Don't set the mono face above weight 500; the browser will synthesise a bold that does not exist.",
+      "Don't use negative letter-spacing on Arabic, or leave --font-display pointing at a Latin-only face under RTL.",
+      "Don't give a Badge a shadow, a gradient or a hover — that makes it look like a control.",
+      "Don't draw a hard grey border in .world-dark; borders there are translucent white at 9% and 16%.",
+      "Don't run a decorative animation forever. Only a live generation and a loading skeleton loop.",
+      "Don't register a Tailwind colour named base; it compiles .text-base into a colour instead of a font size."
     ]
   }
 }

@@ -1,592 +1,564 @@
 ---
 name: Brandora
-description: A dark room where every generated brand is the only thing lit.
+description: A dry studio board in daylight, where a generated brand is judged on light paper.
 colors:
+  board: "#e7e3da"
+  sheet: "#ffffff"
+  raised-fill: "#faf8f4"
+  ink: "#191816"
+  ink-secondary: "#57534a"
+  ink-muted: "#635e54"
+  ink-accent: "#5b33cc"
+  board-night: "#16150f"
+  sheet-night: "#1f1d17"
+  raised-fill-night: "#2a2721"
+  ink-night: "#f3f0e8"
+  ink-secondary-night: "#bab4a6"
+  ink-muted-night: "#a39c8d"
+  ink-accent-night: "#aa8cff"
   signal-violet: "#7240ff"
-  indigo-core: "#5b5cfb"
-  horizon-blue: "#3b82f6"
-  bloom-violet: "#8f66ff"
-  lit-violet: "#aa8cff"
+  bridge-indigo: "#5b5cfb"
+  signal-blue: "#3b82f6"
+  ramp-top: "#1e4585"
+  success: "#166534"
+  warning: "#92400e"
+  danger: "#b91c1c"
+  success-night: "#22c55e"
+  warning-night: "#f5a524"
+  danger-night: "#f87171"
   room-black: "#05070f"
-  bench-navy: "#0a0f1c"
-  riser-navy: "#121a2e"
-  paper-white: "#ffffff"
-  reading-grey: "#a3aec9"
-  quiet-grey: "#7a86a1"
-  success-green: "#22c55e"
-  warning-amber: "#f5a524"
-  danger-red: "#ef4444"
+  room-surface: "#0a0f1c"
+  room-elevated: "#121a2e"
+  room-ink: "#ffffff"
+  room-ink-secondary: "#a3aec9"
+  room-ink-muted: "#7a86a1"
 typography:
   display:
-    fontFamily: "Bricolage Grotesque, ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "Familjen Grotesk, ui-sans-serif, system-ui, sans-serif"
     fontSize: "clamp(2.2rem, 1rem + 5vw, 4.6rem)"
     fontWeight: 600
     lineHeight: 1.12
     letterSpacing: "-0.02em"
-  section:
-    fontFamily: "Bricolage Grotesque, ui-sans-serif, system-ui, sans-serif"
+  headline:
+    fontFamily: "Familjen Grotesk, ui-sans-serif, system-ui, sans-serif"
     fontSize: "clamp(1.75rem, 0.9rem + 3.2vw, 3.2rem)"
     fontWeight: 600
     lineHeight: 1.1
     letterSpacing: "-0.02em"
-  headline:
-    fontFamily: "Plus Jakarta Sans, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "2.25rem"
-    fontWeight: 600
-    lineHeight: 1.1
-    letterSpacing: "-0.02em"
   title:
-    fontFamily: "Bricolage Grotesque, ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "Familjen Grotesk, ui-sans-serif, system-ui, sans-serif"
     fontSize: "1.25rem"
     fontWeight: 600
     lineHeight: 1.3
     letterSpacing: "-0.02em"
   body:
-    fontFamily: "Plus Jakarta Sans, ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "Hanken Grotesk, ui-sans-serif, system-ui, sans-serif"
     fontSize: "0.875rem"
     fontWeight: 400
     lineHeight: 1.6
     letterSpacing: "normal"
   label:
-    fontFamily: "Plus Jakarta Sans, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "0.75rem"
-    fontWeight: 600
-    lineHeight: 1.4
-    letterSpacing: "0.12em"
-  eyebrow:
-    fontFamily: "IBM Plex Mono, ui-monospace, SFMono-Regular, monospace"
+    fontFamily: "Spline Sans Mono, ui-monospace, SFMono-Regular, monospace"
     fontSize: "0.6875rem"
     fontWeight: 500
     lineHeight: 1.4
     letterSpacing: "0.16em"
   arabic:
-    fontFamily: "IBM Plex Sans Arabic, ui-sans-serif, system-ui, sans-serif"
+    fontFamily: "Readex Pro, ui-sans-serif, system-ui, sans-serif"
     fontSize: "0.875rem"
     fontWeight: 400
     lineHeight: 1.85
     letterSpacing: "normal"
+  marketing-display:
+    fontFamily: "Bricolage Grotesque, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "clamp(2.2rem, 1rem + 5vw, 4.6rem)"
+    fontWeight: 600
+    lineHeight: 1.12
+    letterSpacing: "-0.02em"
 rounded:
   control: "0.875rem"
   card: "1.25rem"
   panel: "1.5rem"
   pill: "9999px"
 spacing:
-  grid: "1.25rem"
-  card: "1.75rem"
-  section: "2rem"
+  xs: "0.5rem"
+  sm: "0.875rem"
+  md: "1.5rem"
+  lg: "1.75rem"
+  xl: "2.5rem"
+  section: "3rem"
 components:
   button-primary:
     backgroundColor: "{colors.signal-violet}"
-    textColor: "{colors.paper-white}"
+    textColor: "#ffffff"
     rounded: "{rounded.pill}"
     padding: "0 1.25rem"
     height: "2.75rem"
+    typography: "{typography.body}"
+  button-primary-hover:
+    backgroundColor: "{colors.signal-violet}"
+    textColor: "#ffffff"
   button-secondary:
-    backgroundColor: "{colors.riser-navy}"
-    textColor: "{colors.paper-white}"
+    backgroundColor: "{colors.raised-fill}"
+    textColor: "{colors.ink}"
     rounded: "{rounded.pill}"
     padding: "0 1.25rem"
     height: "2.75rem"
   button-ghost:
-    textColor: "{colors.reading-grey}"
+    textColor: "{colors.ink-secondary}"
     rounded: "{rounded.pill}"
     padding: "0 1.25rem"
     height: "2.75rem"
+  button-danger:
+    backgroundColor: "{colors.danger}"
+    textColor: "#ffffff"
+    rounded: "{rounded.pill}"
+    height: "2.75rem"
+  button-link:
+    textColor: "{colors.ink-accent}"
+  badge-neutral:
+    backgroundColor: "{colors.raised-fill}"
+    textColor: "{colors.ink-secondary}"
+    rounded: "{rounded.pill}"
+    padding: "0.25rem 0.625rem"
+  badge-brand:
+    textColor: "{colors.ink-accent}"
+    rounded: "{rounded.pill}"
+    padding: "0.25rem 0.625rem"
+  card:
+    backgroundColor: "{colors.sheet}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.card}"
+    padding: "1.75rem"
+  panel-sheet:
+    backgroundColor: "{colors.sheet}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.panel}"
+    padding: "1.75rem"
   input:
-    backgroundColor: "{colors.riser-navy}"
-    textColor: "{colors.paper-white}"
+    backgroundColor: "{colors.raised-fill}"
+    textColor: "{colors.ink}"
     rounded: "{rounded.control}"
     padding: "0 0.875rem"
     height: "2.75rem"
-  card:
-    backgroundColor: "{colors.bench-navy}"
-    textColor: "{colors.paper-white}"
-    rounded: "{rounded.card}"
-    padding: "1.75rem"
-  badge-brand:
-    backgroundColor: "{colors.signal-violet}"
-    textColor: "{colors.signal-violet}"
-    rounded: "{rounded.pill}"
-    padding: "0.25rem 0.625rem"
-  nav-item-active:
-    backgroundColor: "{colors.riser-navy}"
-    textColor: "{colors.paper-white}"
-    rounded: "{rounded.pill}"
-    padding: "0.625rem 1rem"
 ---
 
 # Design System: Brandora
 
 ## Overview
 
-**Creative North Star: "The Darkroom"**
+**Creative North Star: "The Board"**
 
-The interface is the dark room. Every brand this product generates is a print
-that comes out of it, and the print is the only thing carrying colour. That is
-why the chrome sits at near-black and holds a single accent ramp: it is not
-minimalism as a style preference, it is a room built so that whatever is pinned
-up in it can be judged. A product that sells brand coherence cannot show a
-customer's brand inside its own purple and expect to be believed.
+A dry studio board in daylight, with sheets of work laid on it. The Darkroom
+that preceded it argued that a near-black room lets the print be the only lit
+thing; that is a good idea about photographs and the wrong one about brands. You
+cannot judge a colour in the dark, and most generated brands are drawn on light
+paper — an example brand's own background is `#ffffff` — so a near-black chrome
+forced every specimen into a bright rectangle in a void. The board is the
+answer: a warm, matte ground (`#e7e3da`), white sheets on it, and shadow rather
+than light doing the lifting. `[data-theme='dark']` is the same studio after
+dark, not an inversion: the board keeps its warmth and the sheets stay the
+lightest thing in the room.
 
-So the register is a quiet instrument around loud work. Chrome is severe:
-hairline edges mixed from white rather than drawn in grey, three tonal grounds
-instead of borders, one accent that appears where something means something.
-Expression is delegated outward — a project page adopts the palette and the
-faces of the brand it is showing, and Brandora's own ramp withdraws to the
-shell. The one place the chrome is allowed to be expressive is motion, and even
-there it is bounded: nothing loops forever except a running job and a loading
-skeleton.
+The Darkroom did not die — it was **scoped**. `.world-dark` is the retained
+marketing world on `/`, `/pricing`, `/brand-kit` and the legal pages, because
+the brand is dark on purpose and that is a pinned commitment rather than a
+default. `.world-light` is the guest scope: a region handed to a generated
+brand, painted in the customer's own checked ink. The app itself is the board,
+and the board is arriving as a `:root` scope while twenty-three routes migrate
+onto it one at a time.
 
-The visual anti-reference is the admin template — same-size cards of icon plus
-heading plus text, figures that restate a count nobody asked for, and a grey 1px
-border around everything. Those were all present and all removed deliberately; a
-change that reintroduces them is a regression regardless of how it looks in
-isolation.
-
-The row of stat tiles is the one item that came off that list, and it came off
-by measurement rather than by taste. See the Measured Figure Rule.
+The board has **three registers**, and the boundary between them is a single
+question: *does this surface show something the product generated?* **Wall** —
+generated work pinned up (dashboard, projects, brand page, content library):
+sheets, cast shadows, gaps visible. **Bench** — one thing at working size with
+tools at its edges (onboarding, the run, Content Studio composer, website
+builder). **Desk** — squared to a grid, never pinned, tabular figures (billing,
+settings, admin, auth). Nothing generated is ever tabulated; nothing financial
+is ever pinned.
 
 **Key Characteristics:**
-
-- Near-black navy ground with three tonal steps, never a grey border
-- One accent ramp, violet through blue, used sparingly and never as text at full strength
-- Light from the horizon: a gradient bottom edge on what matters, brand-tinted shadow around it
-- The generated brand owns any region that displays it, with contrast guarded at runtime
-- One light source, below the content, and everything lit takes it on its bottom edge
-- Generous radii (14 / 20 / 24px) and a 150–300ms motion band that collapses entirely under reduced-motion
-- Fully bilingual: every surface works in Arabic with RTL, on its own font stack
-- The marketing pages are dark in both themes, by decision rather than by omission
+- Warm matte ground, white sheets, warm shadows — never a blue or black shadow
+- One accent ramp, pinned to the logo, and used as little as possible
+- Depth by cast shadow and tonal step, not by glow
+- Five faces with five jobs; the mono face is the machine's voice
+- Every colour under text carries a measured contrast number in the source
+- Three registers with a one-question boundary
 
 ## Colors
 
-A single violet-to-blue ramp on a near-black navy ground, with everything else
-reserved for the customer's own palette.
+A warm neutral system with one violet ramp held in reserve; the palette's whole
+job is to stay quiet enough that a generated brand next to it is the loud thing.
 
 ### Primary
+- **Signal Violet** (`#7240ff`): Sampled from `logo.png` and pinned. It fills the
+  primary control's gradient, draws every `:focus-visible` outline, tints the
+  field focus bloom and the interactive hover border. It is the pin and nothing
+  else on the board.
+- **Bridge Indigo** (`#5b5cfb`): The interpolated midpoint of the ramp; exists so
+  the gradient keeps its shape between the violet anchor and the blue end.
+- **Signal Blue** (`#3b82f6`): The cool end of the ramp. Chrome only.
+- **Deep Ramp Blue** (`#1e4585`): The top stop of `--brand-gradient`, farthest
+  from the light. Measured white-on-fill down the ramp: 5.44:1 at the violet
+  bottom, 7.00:1 at the indigo middle, 9.47:1 at the blue top — every stop has to
+  carry a 14px label, which is what decided how dark the top could go.
+- **Deep Accent Ink** (`#5b33cc`): Accent *text* on the board. See the Readable
+  Accent Rule.
 
-- **Signal Violet** (`#7240ff`): The ramp's anchor and the product's identity. It is the mark's own violet, sampled from the artwork the client supplied, so the logo and the interface are the same colour by construction rather than by agreement. Fills the primary button, lights the active nav marker, tints focus rings and glows. It signals "this means something" — never used to decorate a surface that is merely present.
-- **Indigo Core** (`#5b5cfb`): The middle of the brand gradient and the tint in the lifted shadow. Interpolated between the anchor and the blue end so the ramp keeps its shape after re-anchoring. Rarely used alone.
-- **Horizon Blue** (`#3b82f6`): The ramp's cool end. Closes the marketing page's horizon arc and supplies the secondary stop in the lit card edge and icon chips.
-- **Bloom Violet** (`#8f66ff`): The stop between Signal Violet and Lit Violet. It exists because light is drawn as a continuous ramp rather than as three swatches — it carries the marketing horizon's bloom and sits at 18% and 30% along the two arc gradients.
-- **Lit Violet** (`#aa8cff` dark / `#5b33cc` light): The readable member of the family. Every piece of accent *text* uses this, never Signal Violet. Derived rather than picked: it is the tint of the anchor that lands at 7.57:1 dark and 7.53:1 light.
+### Neutral (the board, daylight)
+- **Board** (`#e7e3da`): The ground. Warm, matte, mid-light.
+- **Sheet** (`#ffffff`): Anything laid on the board — cards, panels, the auth
+  sheet, a specimen's paper.
+- **Raised Fill** (`#faf8f4`): A fill lifted out of a sheet: inputs, badges,
+  hover states, quiet rows.
+- **Ink** (`#191816`), **Secondary Ink** (`#57534a`), **Muted Ink** (`#635e54`):
+  Muted is not the obvious lighter value — `#7c766b` reads fine on a sheet at
+  4.51 and falls to **3.52** on the board itself, and the board is what most
+  muted text actually sits on. `#635e54` measures **5.03** on the board, **6.44**
+  on a sheet, **6.07** on a raised fill.
+- **Hairlines**: mixed from the ink at 11% (`--border`) and 18%
+  (`--border-strong`), never drawn as a grey line.
 
-### Neutral
+### Neutral (the board, night)
+- **Night Board / Sheet / Raised Fill** (`#16150f` / `#1f1d17` / `#2a2721`) with
+  **Night Ink** (`#f3f0e8`), secondary `#bab4a6`, muted `#a39c8d` (**5.46** on
+  the raised fill, the tightest ground here) and accent `#aa8cff`.
 
-- **Room Black** (`#05070f`): The page. The dark room itself.
-- **Bench Navy** (`#0a0f1c`): Panels and cards — the surface work is laid on.
-- **Riser Navy** (`#121a2e`): Raised fills, chips, hover states, input grounds. What sits above the bench.
-- **Paper White** (`#ffffff`): Primary text, and the ground a logo is drawn on when its brand has none.
-- **Reading Grey** (`#a3aec9`): Secondary prose — subtitles, descriptions, meta that is meant to be read.
-- **Quiet Grey** (`#7a86a1` dark / `#67708c` light): Labels, timestamps, hints. Present, not competing. Lifted from its original values after measurement: the old pair cleared 4.5:1 on the base ground and failed on every tinted surface above it, which is most of them.
+### Neutral (`.world-dark`, marketing only)
+- **Room Black / Room Surface / Room Elevated** (`#05070f` / `#0a0f1c` /
+  `#121a2e`), **Room Ink** (`#ffffff`), secondary `#a3aec9`, muted `#7a86a1`
+  (lifted from `#6f7b96`, which measured 4.36:1 on tinted surface variants and
+  4.08:1 on elevated). Borders are translucent white at 9% and 16%; a hard grey
+  border is the single thing that makes a dark interface look like a template.
 
-**The Committed Dark Rule.** The app follows the reader's theme; the marketing
-pages do not. Dark navy is a pinned brand commitment, so `/` and `/pricing`
-carry `.world-dark`, a scope that re-declares the dark palette and stays dark
-under `[data-theme='light']`. This is the one place in the product where a
-surface refuses the toggle, and it refuses it deliberately — the alternative
-was what shipped before: forty-four hex literals, no response to anything, and
-body text hand-tuned to `white/35` at 3.11:1. A dark scope is not a licence for
-literals; everything inside it still reads the tokens.
-
-**The Colour Arc Rule.** A marketing section is either chrome or it is a guest,
-and the ground says which. Chrome sections are `.world-dark`: the hero, the
-process, the price. A section whose subject *is* a generated brand takes
-`.world-light`, a scope that re-points every chrome token at the `--guest-*`
-variables `lib/brand-theme.ts` emits — so the region becomes that brand's paper,
-ink and accent, all of it contrast-checked against itself before it is written.
-
-This is the Guest Palette Rule applied to a whole region rather than to a card,
-and it is what the landing page's argument is made of: the room is neutral so
-the work can be judged, and the page demonstrates that by handing itself over
-half way down instead of asserting it. Three constraints come with it:
-
-- **The ramp does not cross.** `.world-light` never redefines `--brand-primary`
-  or its neighbours. `:focus-visible` draws from that token, and a guest palette
-  allowed to shadow it can render an invisible focus ring on its own section.
-  Chrome tokens are not shadowable by untrusted input, and a generated palette is
-  untrusted input even when it is our own example brand.
-- **Decorative light goes through `--accent-surface`.** `lit`, `bloom`, `rail`,
-  `rail-node` and `pulse-ring` read that variable rather than the ramp directly,
-  which is the whole mechanism: one declaration moves every lit edge in a subtree
-  to the guest's colour. It is also how the hero's replay performs the handover.
-- **Pick the palette member that survives the ground.** Sultana's primary is
-  `#1b3a3a`; on Room Black it is very nearly nothing, so the hero's flip takes the
-  gold and the rose instead. This is the same judgement `brandTheme` already makes
-  for text — a colour that cannot be seen on its ground is not the brand's colour
-  *there* — applied to light.
-
-**No greys on a guest ground.** Inside `.world-light`, secondary ink, raised
-fills and hairlines are all mixed from that brand's own ink. Grey on a coloured
-ground reads as dirt; the same hue at lower strength reads as quiet.
-
-Borders are never a grey line. They are white mixed into the ground at 9%
-(`--border`) or 16% (`--border-strong`), so an edge belongs to the surface it
-sits on instead of being drawn on top of it.
+### Tertiary (status)
+- **Success / Warning / Danger**, daylight (`#166534` / `#92400e` / `#b91c1c`),
+  night (`#22c55e` / `#f5a524` / `#f87171`). Night danger is `#f87171` at **5.38**
+  on the raised fill, where the Darkroom's `#ef4444` fell to **3.96** and would
+  have shipped failing.
 
 ### Named Rules
 
 **The One Ramp Rule.** There is no second accent. Status colours aside, anything
-that needs emphasis borrows from Signal Violet, Indigo Core or Horizon Blue. A
-new colour entering the system is a design decision, not an implementation
-detail.
+that needs emphasis borrows from Signal Violet, Bridge Indigo and Signal Blue.
 
-**The Readable Accent Rule.** Signal Violet is 3.73:1 on Room Black — enough
-under a button, not enough under words. Accent *text* is always Lit Violet,
-which clears 7.5:1 in both themes. This is why the two values differ per theme
-while the ramp does not. It applies to the gradient too, and it is what decides
-how far that gradient is allowed to travel: every stop in `--brand-gradient`
-has to carry a 14px white label, so the ramp runs 5.44:1 at its violet end,
-7.00:1 in the middle and 9.47:1 at its deep blue top. Horizon Blue stays the
-palette's blue; the gradient's own top stop is the deeper `#1e4585`.
+**The Readable Accent Rule.** Signal Violet is **4.21:1** on the board — enough
+under a control, not under words. So accent *text* is `#5b33cc` in daylight and
+`#aa8cff` at night. In `.world-dark` it is `#aa8cff` at **7.57:1**. The value
+differs either side; the ramp does not.
+
+**The Ink Light Rule.** On the board, decorative light is drawn in **ink**, not
+in the accent. `--accent-surface` is re-pointed at `color-mix(in srgb, #191816
+13%, transparent)`, which moves `lit`, `bloom`, `rail`, `rail-node` and
+`pulse-ring` in one declaration. Left pointing at the ramp, every card wore a
+violet gradient along its bottom and the accent stopped meaning "this matters"
+the moment it appeared on all of them.
 
 **The Checked Tone Rule.** Every colour this system puts under text is verified
-against its own ground, not assumed from a percentage. A `color-mix` at 42% of
-its own background cannot reach 4.5:1 for any pair of colours in existence —
-that is arithmetic, not a data problem — so guest-brand text tones are resolved
-by stepping the mix until it clears the floor.
+against the ground it will actually sit on, not against the friendliest one, and
+the measured number is recorded next to the token. A muted token with no headroom
+is a token that fails wherever a surface is tinted at all.
 
-**The Rendered Light Rule.** The horizon arcs and their bloom are light, not
-surfaces, so they interpolate across the ramp and through white rather than
-stepping between named swatches. Their intermediate stops — pale violets,
-pale blues, a white core — are samples along that ramp and belong to the
-gradient definitions in the sidecar, not to the palette. Anything that is *not*
-rendered light uses a named colour.
+**The Guest Palette Rule.** On any surface showing a generated brand, that brand
+supplies the colour. `.world-light` re-points the semantic chrome names at the
+`--guest-*` variables `lib/brand-theme.ts` emits, so `text-fg-secondary`,
+`border-line` and `bg-surface` keep working and resolve to the customer's ink.
+Nothing in that scope is a literal, greys are absent (grey on a coloured ground
+reads as dirt: secondary ink and hairlines are mixed from the brand's own ink),
+and **the ramp is deliberately absent** — `:focus-visible` draws from
+`--brand-primary`, and a guest palette allowed to shadow it renders an invisible
+focus ring on its own section. Chrome tokens are not shadowable by untrusted
+input, and a generated palette is untrusted input even when it is our own example
+brand.
 
-**The Guest Palette Rule.** On any surface displaying a generated brand, that
-brand's palette owns the region and Brandora's ramp withdraws to the shell. The
-guest palette is untrusted input: every colour that ends up under text is
-contrast-checked at runtime and replaced when it fails, so a bad generation
-degrades to plain rather than to unreadable. Secondary text on a guest ground is
-mixed from that brand's own ink, never set to grey.
+**The Committed Dark Rule.** The app follows the reader's theme; the marketing
+pages do not. `.world-dark` stays dark under `[data-theme='light']` because the
+brand is dark by commitment, not by category default. The default theme is now
+daylight: the board's thesis is that a brand cannot be judged in the dark, so
+opening the product in a night room would ship the argument backwards. Only the
+*absence* of a choice changed meaning; a stored `dark` still gets dark.
+
+**The Colour Arc Rule.** A marketing section is either chrome or it is a guest,
+never both. A section that hands itself to a generated brand takes that brand's
+whole palette, including its decorative light (`--accent-surface` in
+`.world-light` is `var(--guest-accent)`); a chrome section keeps ours.
+
+**The World Ground Rule.** `body:has(> .world-dark)` paints the document
+`#05070f`. A world scope sits on a div, so it paints itself and its subtree — but
+the body is painted from the document's own tokens, which are the board's, and
+rubber-banding a dark marketing page revealed a warm board underneath it. The
+document takes its ground from the world its page actually opened in.
 
 ## Typography
 
-**Body / UI Font:** Plus Jakarta Sans (with `ui-sans-serif`, `system-ui`)
-**Display Font, marketing only:** Bricolage Grotesque (variable, `opsz` + `wght`)
-**Utility / Mono Font:** IBM Plex Mono (with `ui-monospace`, `SFMono-Regular`)
-**Arabic Font, every role:** IBM Plex Sans Arabic (with `ui-sans-serif`, `system-ui`)
+**Display Font:** Familjen Grotesk (app), Bricolage Grotesque (marketing only,
+variable across `opsz` as well as `wght`)
+**Body Font:** Hanken Grotesk — warmer and narrower than the face it replaced,
+which is what lets a dense table stay quiet at 13px
+**Mono Font:** Spline Sans Mono, shipped at 400 and 500 only
+**Arabic Font:** Readex Pro
 
-**Character:** Plus Jakarta Sans carries the whole app — a geometric humanist
-sans neutral enough at 14px to disappear into a form. Arabic is not a fallback:
-it is a separate stack with its own leading (1.85 against the Latin 1.6),
-because Arabic letterforms need the room.
-
-**The Marketing Pairing Rule.** The app is one family; the marketing pages are
-three roles. `--font-display` is redeclared inside `.world-dark` and
-`.world-light` only, so a component shared between the two worlds — `Disclosure`'s
-title, `PricingPlans`' price figure — renders in the app's face inside the app
-and in the display face on the page that is selling typography.
-
-This reverses "one family across the whole product", and the reason is specific
-rather than a change of taste: typography is one of the ten things a run
-produces, and the page making that claim was setting the entire argument in a
-single weight-varied UI sans. A page that cannot show a pairing is a poor
-advertisement for a product that generates them. The exception does not travel
-inland — nothing behind the login gains a second Latin face.
-
-Bricolage is variable across optical size as well as weight, which is what earns
-it a second file: one outline is drawn correctly at a 74px hero *and* at a 20px
-card title rather than being scaled to both.
-
-Arabic is deliberately **not** paired. Bricolage has no Arabic, and setting a
-characterful Latin display against a generic Arabic one — on the single surface
-whose job is to prove Arabic is generated natively — would undercut the claim it
-is decorating. Arabic display takes IBM Plex Sans Arabic at 700 for presence and
-keeps its own leading and zero negative tracking.
-
-**The RTL Display Rule.** Under `[dir='rtl']`, `--font-display` and `--font-sans`
-are re-pointed at the Arabic face rather than the Arabic face being appended
-behind the Latin one. Everything reads those variables, so one declaration moves
-every consumer — the `type-*` utilities, `stat-figure`, and the sixty-odd bare
-`font-display` call sites that have no RTL block of their own.
-
-Appending to the stack is the textbook answer and it does not work here, which
-is worth writing down because it looks correct: `var(--font-jakarta)` expands to
-`"Plus Jakarta Sans", "Plus Jakarta Sans Fallback"`, and that second family is
-next/font's metric-adjusted fallback, declared `local("Arial")`. Arial covers
-Arabic, so it answers before any face further down the list. Measured before the
-fix, 451 Arabic glyphs on `/ar` — every FAQ question, every step name, the price
-figure — were rendering in Arial. The fallback that exists to protect CLS was
-swallowing the script.
-
-`--font-mono` is exempt: its content is hex codes, page paths and a clock, all
-Latin, and they stay monospaced. `type-eyebrow` swaps its own family under RTL,
-which is where Arabic actually meets the mono role.
-
-**Weights shipped are weights used.** Plus Jakarta Sans 400/500/600/700 and IBM
-Plex Sans Arabic 400/500/600/700. Jakarta's 800 and Plex Arabic's 300 were
-dropped after `font-extrabold` and `font-light` were found to appear nowhere in
-the codebase. IBM Plex Mono ships 400/500 only, so nothing may set
-`font-semibold` on it — that renders a browser-synthesised bold rather than a
-drawn one.
-
-Bricolage is requested with `axes: ['opsz']`. Without it next/font serves the
-weight axis alone, and the optical-size claim that justifies a second Latin file
-is not delivered — measured, the advance width was identical at 14px and 74px
-with optical sizing on and off.
+**Character:** A grotesque with enough shape to sit above a customer's own mark
+without competing with it, over a warm workmanlike interface face, with a
+monospace that exists to mark the difference between what the product said and
+what the pipeline emitted.
 
 ### Hierarchy
-
-- **Display** (600, `clamp(2.05rem, 6.2vw, 4.6rem)`, 1.12, `-0.02em`): Marketing headlines only. Never inside the app. Available as `type-display`. The floor is the phone's size and was 2.6rem, which put a ten-word headline on four lines and 186px of a 390px screen — most of the fold before a single claim had been read. At 2.05rem it is still the only size on that screen, and the deck and both buttons sit above the crease.
-- **Section** (600, `clamp(2rem, 4vw, 3.2rem)`, 1.1, `-0.02em`): The heading that opens a marketing section. Available as `type-section`. It existed as a literal on five headings before it was a step, which is how one of them drifted a size away from the others.
-- **Headline** (600, 2.25rem, 1.1, `-0.02em`): The one page-owning `h1` — a dashboard greeting, a brand's name on its identity plate.
-- **Title** (600, 1.25rem, 1.3, `-0.02em`): Card and section headings. Available as `type-title`. It was declared here and had no token for a long time, so "a heading on a card" was hand-rolled as `font-display text-Nxl font-semibold tracking-[-0.02em]` in eight places and drifted to four sizes — the same failure `type-section` was written to stop, one level down. Two larger sizes survive on purpose and are not this step: a step name outranks a card heading, and the contact sheet's 30px lines are specimens, where a typeface and a brand name are shown at a size worth looking at.
-- **Body** (400, 0.875rem, 1.6): All prose. Measure stays inside 65–75 *characters*, which is not what `ch` counts — `ch` is the advance of `0`, and in Plus Jakarta Sans a digit is about 1.4× the average lowercase advance, so `max-w-[70ch]` renders about 95. Caps on this page are set from measured character counts rather than from the unit: 44–46ch for body prose, which lands at 71–75.
-- **Label** (600, 0.75rem, 1.4, `0.12em`, uppercase): Section eyebrows above a group of content, and meta keys in a definition list. Available as `Eyebrow`.
-- **Eyebrow** (mono, 500, 0.6875rem, 1.4, `0.16em`, uppercase): The machine's voice — a run's log lines, a stage name, an elapsed time, a key the pipeline emitted. Available as `type-eyebrow`. Distinct from **Label**, which is a heading's quiet companion written by us; these two appear within a few hundred pixels of each other on the landing page and setting them in the same face would make a reported run look authored. Arabic drops both the mono face and the tracking: IBM Plex Mono has no Arabic, and letter-spacing pulls joined letterforms apart.
-
-One deliberate exception: the logo-direction composer sets its textarea at
-16px against the app's 14px. It is the one field where someone writes a sentence
-rather than fills a slot, it is read back before it spends credits, and 16px is
-also what stops iOS zooming the page on focus.
+- **Display** (600, `clamp(2.2rem, 1rem + 5vw, 4.6rem)`, 1.12, `-0.02em`): The
+  one largest thing on a page. The middle clamp term carries a rem as well as a
+  vw — a pure `vw` is frozen against the reader's own font size, and at 200% root
+  this heading grew 21% while body grew 125%, collapsing the display-to-body
+  ratio from 4.1 to 2.5 for exactly the person who most needed it.
+- **Headline / Section** (600, `clamp(1.75rem, 0.9rem + 3.2vw, 3.2rem)`, 1.1):
+  Section titles. The `1.75rem` floor exists because both clamps used to bottom
+  out 3.2px apart at 390px, which left the page with no display step at all on a
+  phone.
+- **Title** (600, `1.25rem`, 1.3, `-0.02em`): A heading on a card. Hand-rolled in
+  eight places before it was a token, where it drifted to four different sizes.
+- **Body** (400, `0.875rem`, ~1.6): Everything else. Prose is capped near 46ch
+  where it sits beside other content.
+- **Label / Eyebrow** (mono, 500, `0.6875rem`, `0.16em`, uppercase): The
+  product's own quiet companion to a heading.
 
 ### Named Rules
 
-**The Word-Not-Letter Rule.** Headline motion splits on words, never on
-characters. Character-level animation reads as a typewriter gimmick at display
-size and it breaks Arabic outright, where letterforms join.
+**The Machine Voice Rule.** Anything the pipeline emitted is set in Spline Sans
+Mono — credit figures, file dimensions, dates, hex codes, log lines, elapsed
+time. Anything we wrote is not. That is the whole tell. Nothing may set a weight
+heavier than 500 on it: the face has no bold to draw and the browser would
+synthesise one.
+
+**The Isolated Value Rule.** A machine value inside a paragraph carries
+`machine-value` (`direction: ltr; unicode-bidi: isolate`). Hex codes, routes and
+hostnames have neutral characters at their edges, and the bidi algorithm resolves
+a neutral by its surroundings — inside an Arabic paragraph `#1B3A3A` renders as
+`1B3A3A#` and `/home` as `home/`. A hex is something a customer copies and a
+route is something they type.
+
+**The RTL Display Rule.** Under `[dir='rtl']`, both `--font-display` and
+`--font-sans` re-point to Readex Pro, at the variable rather than at the
+utilities. Appending the Arabic face to the end of the Latin stack looks like the
+textbook answer and does not work: next/font's metric-adjusted fallback is
+declared `local("Arial")`, Arial has Arabic coverage, and it answers first. 451
+Arabic glyphs were rendering in Arial before this. `--font-mono` is left alone —
+its content is Latin and should stay monospaced.
 
 **The Tracking Floor Rule.** One negative value, `-0.02em`, from title size
-upward, and never past `-0.03em` anywhere.
+upward and never below it. Arabic drops negative tracking entirely and takes its
+own leading (1.4–1.85): joined letterforms are pulled into each other by negative
+letter-spacing rather than tightened, and Arabic carries vowels above the line.
 
-It used to scale with size — `-0.03em` at headline, `-0.035em` at display — and
-that was correct while the display weight was 700. Negative tracking exists to
-stop heavy letterforms colliding; the display step is 600 now, and holding the
-tighter values on a lighter face reads as cramped rather than as tight. A
-generated brand's own face is exempt: the specimen and the identity plate set
-someone else's wordmark, and its spacing is not ours to assume.
-
-**The Trailing Clause Rule.** Where a heading has a second clause, it drops to
-the secondary ink (`type-trail`) rather than taking a second size or a second
-colour. It is the cheapest way to give a headline a shape, and it is the one
-type device the reference repeats on every section it has.
+**The Marketing Pairing Rule.** Bricolage Grotesque is declared on
+`.world-dark, .world-light` only. The app keeps one display family and the page
+that sells typography gets a pairing; every component reading `--font-display`
+follows the scope it is rendered inside.
 
 ## Layout
 
-A centred column, not a full-bleed grid. Content sits in `max-w-6xl` (72rem) for
-app surfaces and `max-w-7xl` for marketing, with `px-6` rising to `px-10` from
-large up. The app shell is a fixed left rail beside a scrolling main; the rail is
-15rem open and 4.75rem collapsed, and it collapses itself on a project page,
-where the document is the point.
+The app shell is a single centred column: `max-w-[90rem]`, `px-6` rising to
+`lg:px-10`, `py-10`, with content arriving on `animate-fade-up` rather than
+snapping in. Desk surfaces narrow further — billing runs at `max-w-5xl` with
+`space-y-12` between its blocks. Bench surfaces have no navigation and no sidebar
+at all: `min-h-dvh`, centred, one thing at working size. The auth sheet is
+`max-w-[26rem]`.
 
-Rhythm is three values doing most of the work: `1.25rem` between grid cells,
-`1.75rem` inside a card, `2rem` between page sections. Asymmetry is used where
-two things are not equally important — the brand book splits 7/5, not 6/6,
-because the mark being decided outranks the system beside it.
+Rhythm is a small set of steps used consistently: `gap-4`/`gap-6` between
+siblings, `p-7` inside a card (`sm:p-9` on a standing panel), `mt-5` under a
+heading, `py-3.5` per row in a list of figures, `space-y-12` between page
+sections. Controls stand on a 36–52px height ladder (`h-9` / `h-11` / `h-13`),
+and a pressable target clears 44px on the threshold screens.
 
-Responsive behaviour is structural rather than proportional. Below `lg` the
-side rail becomes a horizontal scrolling row, the 7/5 spread stacks, and
-multi-column grids fall to one. Nothing merely shrinks.
+**The Register Boundary Rule.** Ask one question of a surface: does it show
+something the product generated? Yes → **wall** (sheets, cast shadows, gaps
+visible) or **bench** (one thing at working size, tools at its edges). No →
+**desk** (squared to a grid, tabular figures, never pinned). Nothing generated is
+ever tabulated; nothing financial is ever pinned.
 
-**The No Dead Column Rule.** A persistent side region must earn its width down
-the whole page. A rail holding four links above a screen-height of nothing is
-the failure this system was rebuilt to remove; give it more to hold, or let it
-collapse.
+**The Tabular Figure Rule.** Every desk figure is `tabular-nums`. A column of
+credit balances or order totals that shifts horizontally between rows is a column
+nobody can scan.
 
 ## Elevation & Depth
 
-Depth comes from a single light source below the interface — the arc rising
-behind the fold. Three tonal grounds establish the stack (Room Black → Bench
-Navy → Riser Navy), and what matters gets a lit bottom edge: a gradient from
-Signal Violet at 34% fading into near-transparent white by 38%, applied as a 1px
-padding ring around an inner surface. A border cannot hold a gradient and a
-background at once, which is why this is two elements rather than one.
-
-Controls repeat the same gesture at their own scale. The primary fill runs
-brightest along its bottom edge and sinks to a deep blue at the top; every other
-control carries a faint neutral inner line along the top and an accent-tinted
-one along the bottom. That is what makes a button and the horizon behind it read
-as one idea instead of as a hero with some widgets on it.
-
-Shadows are ambient, not structural — they say "this is above that", never
-"this is a box". They are tinted with the page's own navy or with Indigo Core,
-never black.
+Depth on the board is a **cast shadow plus a tonal step**, and nothing else.
+Board → sheet → raised fill is three warm steps, and a sheet is lifted by its own
+shadow. Shadows are warm because the shadow of paper on board is not blue:
+`rgba(60, 52, 38, …)`, always with an offset and a blur, never a zero-offset
+halo. At night the same shadows are drawn in black at higher opacity.
 
 ### Shadow Vocabulary
-
-- **Soft** (`0 1px 2px rgba(5,8,20,.4), 0 12px 32px -16px rgba(5,8,20,.8)`): The resting state of any raised surface.
-- **Lifted** (`0 2px 4px rgba(5,8,20,.35), 0 26px 56px -24px rgba(91,92,251,.55)`): Hover and active elevation. The indigo tint is what makes it read as light rather than as darkness.
-- **Bloom** (`bloom`): the source *inside* a card, not around it — a wide radial rising from the card's own base, dying before it reaches the opposite edge. The reference gives every dark card one, and it is what separates its bento from a grid of dark rectangles. Positioned with `--bloom-x` / `--bloom-y` as percentages of the card, so the default sits on the bottom edge where the horizon is and a panel wanting the reference's corner source sets `--bloom-x: 85%`. `bloom-hover` holds it at 55% until the pointer arrives, for a card that is a link. One per card, and not on every card in a grid — a bento where everything glows is a bento where nothing is lit.
-- **Glow** (`0 0 0 1px violet/25%, 0 0 24px -4px violet/55%, 0 0 64px -8px violet/38%`): Reserved for the brand-carrying moment — a primary action, a running job. Both blur layers are centred rather than offset downward, and the wide one is deliberately enormous: measured off the reference, the ground 11px above its primary control still reads the accent at 15% and has not finished falling off by the edge of the frame. An offset shadow says "raised"; this says "lit", which is the difference between the reference's world and a dark template.
+- **Soft** (`0 1px 1px rgba(60,52,38,0.1), 0 10px 22px -10px rgba(60,52,38,0.3)`):
+  A sheet resting on the board. The default for cards and standing panels.
+- **Lifted** (`0 2px 3px rgba(60,52,38,0.12), 0 26px 44px -18px rgba(60,52,38,0.42)`):
+  A sheet picked up — hover on an `interactive` surface, and the auth sheet.
+- **Primary control** (`0 1px 1px rgba(60,52,38,0.18), 0 8px 16px -8px rgba(60,52,38,0.55)`),
+  **hover** (`0 2px 3px …, 0 14px 24px -10px rgba(60,52,38,0.6)`): the primary
+  control's own weight, as a token.
+- **Hairline inset** (`inset 0 1px 0 0` ink at 5%): the single line a control
+  carries on the board, where the Darkroom carried two.
 
 ### Named Rules
 
-**The Light From The Horizon Rule.** There is one light in this product and it
-is below the content: the arc that rises behind the fold. Illumination therefore
-enters at the *bottom* edge — of a card, of a control, of anything lit at all.
+**The Lifted Not Lit Rule.** A control on a board is lifted, not lit.
+`--shadow-primary` and `--shadow-primary-hover` exist as tokens precisely because
+the halo was three literals reading `--brand-primary` inline — the one lit thing
+in the product a scope could not move, since the fill has to stay violet. On a
+dark ground that halo reads as light; on a board in daylight it reads as haze.
 
-This replaces the Light From Above Rule, which said the same thing in the
-opposite direction. What that rule was actually protecting survives untouched: a
-uniform 1px outline on all four sides is what made this app read as a template
-beside its own marketing, and a lit edge is still what replaced it. Only the
-direction changed, and it changed because a ceiling light was being asserted
-while the only light the product ever drew was the arc.
+**The Light From The Horizon Rule — retired in the app, retained in marketing.**
+It said: there is one light in this product, it is the arc rising behind the
+fold, and everything lit is lit from below. That is still exactly true inside
+`.world-dark`, where `--lit-inset` carries a neutral top edge and an
+accent-tinted bottom one, `glow-brand` is two centred halos rather than a drop
+shadow, and `bloom` puts a source inside a card. It is **dead on the board**: a
+board in daylight has no horizon to rise from. The `lit`, `bloom` and radial-wash
+compositions were removed from the dashboard shell, the billing panel, the
+onboarding bench and the auth sheet rather than recoloured — keeping them would
+have been the tell that the world was repainted rather than replaced. The
+utilities survive because the marketing world still uses them, and because
+`--accent-surface` keeps them honest wherever they do appear.
 
-**The Tinted Shadow Rule.** No shadow in this system is pure black. Tint with
-the ground's navy for weight, with Indigo Core for lift.
+**The Tinted Shadow Rule.** No shadow in this system is pure black. Warm brown on
+the board, black-at-opacity at night, ink-mixed in a guest scope.
+
+**The Rendered Light Rule.** Light is drawn, never faked with a decorative image.
+Anything that glows reads `--accent-surface`, so a scope can move all of it at
+once.
 
 ## Shapes
 
-Three radii, and they mean different things: **14px** (`--radius-control`) for
-anything you operate — buttons, inputs, nav items, chips. **20px**
-(`--radius-card`) for a card. **24px** (`--radius-panel`) for a panel that
-contains cards. Full pills are reserved for badges and status chips, where the
-shape itself signals "this is a state, not a control".
+Three radii and a pill, and they are semantic rather than sizes. Controls take
+`0.875rem` (14px), cards `1.25rem` (20px), panels `1.5rem` (24px). A chip is
+something you operate, so it takes the control radius. The default button shape
+is a **full pill**, in both worlds — the reference world puts every control on a
+pill, so the shape stopped distinguishing a control from a state and the
+distinction moved onto the light. `shape="control"` survives for the pressable
+surfaces a pill would misdescribe: a full-width panel, a swatch, a tile with
+content in it.
 
-Corners are generous by intent; combined with hairline edges it produces
-surfaces that read as soft objects rather than as boxes. Nesting is avoided
-rather than styled: a card inside a card is treated as a composition failure, so
-an inner region drops to a plain region with a hairline rule instead of gaining
-its own radius and shadow.
+Borders are hairlines mixed from the ink, applied globally (`* { border-color:
+var(--border) }`) so a bordered element never has to name its colour.
+`rule-fade` draws a rule that fades out before it reaches either edge — a
+full-bleed line is the clearest signal that a page is a template; the same line
+stopping short reads as a horizon.
 
 ## Components
 
 ### Buttons
-
-- **Shape:** A full pill, 44px tall at default (`h-11`), 36px small, 52px large, 40px round for icon-only. `shape="control"` drops back to the 14px radius for the pressable surfaces a pill would misdescribe — see the Lit Control Rule.
-- **Primary:** The brand gradient, brightest along the bottom edge and sinking to a deep blue at the top, inside a wide accent halo that deepens on hover. This is the only gradient fill in the system and there is normally one per view. It no longer pans sideways on hover: that gesture belonged to a diagonal gradient, and moving a vertical one horizontally shows a reader nothing.
-- **Secondary:** Riser Navy with a hairline border. **Outline:** transparent with a stronger hairline. Both carry the lit bottom edge. **Ghost:** text only until hover, then Riser Navy. **Danger:** solid red. **Link:** Lit Violet with an offset underline on hover.
-- **Press:** every variant scales to 0.98 in 75ms. Transitions ease with `cubic-bezier(0.22, 1, 0.36, 1)`.
-
-**The Lit Control Rule.** Every control in the product is a pill, in both
-worlds, and what tells a Badge from a Button is light rather than shape: a
-Button always carries a source — the gradient fill inside its halo, or the lit
-inner edges — and a Badge never carries one. A flat wash at 12px with no border,
-no shadow and no hover is a state; anything with light on it can be pressed.
-
-This replaces the **Reserved Pill Rule**, which reserved the pill for the
-marketing pages on the grounds that the app has badges and the reference does
-not, so only the reference could afford to make every control a pill. The client
-asked for the reference's world across the whole product, which made that a
-constraint to solve rather than a reason to stop. The distinction it protected
-is intact and is now carried by the one property this system already spends
-everywhere; the two supporting tells — 12px against a control's 14px, and a
-control's 36px pressable floor — do the rest.
-
-The exception is `shape="control"`, kept for the pressable surfaces a pill would
-misdescribe: a full-width panel, a colour swatch, a tile with content inside it.
-A pill is the shape of a control you press, not of every box you can click.
-
-### Inputs / Fields
-
-- **Style:** 44px tall, 14px radius, Riser Navy at 60% opacity, hairline border, 14px text, and the lit bottom edge every control carries.
-- **Focus:** the border becomes Signal Violet and a 3px ring of violet at 22% blooms outside it — a glow, not an outline. The lit edges are restated alongside it rather than replaced, because `box-shadow` does not stack across rules and a field that loses its light on focus loses it exactly when someone is looking at it.
-- **Error:** border switches to Danger Red via `aria-invalid`, so the state is driven by the attribute assistive technology already reads.
-- **Textarea:** grows to fit its content up to a ceiling, then scrolls. A fixed-height composer that hides what was typed is a defect, not a constraint.
-
-### Cards / Containers
-
-- **Corner:** 20px, or 24px when the container holds other cards — set `--lit-radius` to the panel step and both the ring and its inner corner follow.
-- **Background:** Bench Navy inside a lit 1px ring, lit along its bottom edge.
-- **Chosen:** where one card in a set is the recommended one, its hairline goes solid accent and nothing else changes. No fill, no size, no second badge. It is the reference's whole "which one" device and it survives being seen at a glance.
-- **Shadow:** Soft at rest, Lifted on hover, and only where the card is a link.
-- **Padding:** 1.75rem.
+- **Shape:** Full pill by default (`9999px`); control radius (14px) on the
+  content-bearing exceptions.
+- **Sizes:** `sm` 36px / `md` 44px / `lg` 52px / `icon` 40px square, at 14px label
+  weight 600 (16px at `lg`).
+- **Primary:** The vertical brand gradient (`--brand-gradient`, violet at the
+  bottom climbing to deep blue at the top) with white label, carrying
+  `--shadow-primary`. Hover deepens the shadow; it no longer pans its fill, which
+  was a gesture that belonged to a 135° gradient and moves nothing visible on a
+  vertical one.
+- **Secondary / Outline:** Raised fill or transparent, hairline or strong
+  hairline border, `control-lit` inner edge.
+- **Ghost:** No fill at rest, so nothing to light; the moment hover gives it a
+  surface, the surface takes the same edges every other control has.
+- **Danger:** Solid danger fill with white inner edges at 10% and 28% — a violet
+  edge on a red button is a second accent arriving through the back door.
+- **Link:** Accent ink, underline on hover, offset 4.
+- **Press:** `active:scale-[0.98]` at 75ms; transitions run 200ms on
+  `cubic-bezier(0.22, 1, 0.36, 1)`.
 
 ### Badges
+- **Style:** A flat wash at 15% of its tone, pill, 12px text, height from padding
+  rather than from a control's 36px pressable floor.
+- **Tones:** neutral (raised fill), brand (violet wash + accent ink), success,
+  warning, danger.
 
-Full pill, 12px semibold text, tone as a 15%-opacity wash of its own colour with
-that colour as the text. Status is never conveyed by colour alone — the word is
-always present, and where a dot is used it sits beside a label.
+**The Lit Control Rule.** A Button always carries a source — a fill with a shadow,
+or the lit inner edges. A Badge never carries one: no fill gradient, no shadow,
+no lit edges, no border, no hover. Now that both are pills, the light is the only
+thing telling a control from a state.
+
+### Cards / Containers
+- **Corner Style:** Card 20px, panel 24px.
+- **Structure:** `Card` is two elements — an outer that carries the gradient edge
+  and an inner that carries the surface — because a single bordered box cannot do
+  both, and a uniform 1px outline is what made every screen read as a template.
+  On the board that outer edge resolves to ink at 13%, so it reads as a soft
+  bevel rather than a violet rim.
+- **Background:** Sheet white; a raised fill for quiet interior blocks.
+- **Shadow:** Soft at rest, lifted on hover for anything `interactive`.
+- **Padding:** `1.75rem` (28px), rising to `2.25rem` on a standing panel.
+- **Headings:** `CardTitle` renders an `h2` by default — it was an `h3` under a
+  page `h1` on eight routes, which is a hole in a screen reader's heading list.
+
+### Inputs / Fields
+- **Style:** 44px tall, control radius, raised fill at 60%, hairline border,
+  14px ink.
+- **Focus:** `field-lit` carries the inset edge *and* the focus bloom in one
+  declaration, plus a violet border. Written as two rules the ring replaces the
+  edges instead of joining them, and the field loses its light at the exact
+  moment someone is looking at it.
+- **Error / Disabled:** `aria-[invalid=true]` swaps the border to danger;
+  disabled drops to 50% and `not-allowed`.
+- **Focus, globally:** `:focus-visible` is a 2px Signal Violet outline at 2px
+  offset, and it is never shadowable by a guest palette.
 
 ### Navigation
+Nav is a frosted bar (`glass`: the ground at 72% behind a 14px blur and 1.4
+saturate) over scrolling content, with a `rule-fade` rather than a full-bleed
+border underneath.
 
-The bar along the top: the mark at the start, the destinations centred on the
-page rather than on the space left over, and identity plus one lit call to
-action at the end. Items are pills with an icon and a label; the active one
-takes a Riser Navy fill, an inset violet hairline and the lit bottom edge every
-control carries, so it is marked by light and not only by shade. Below `lg` the
-same items become a horizontally scrolling row under the bar. Labels are labels
-at every width — never bare glyphs.
+### Motion
+Durations sit in the 150–300ms band; entrances ease out (`--ease-out-soft`),
+exits ease in, arrivals of a modal scale in on `--ease-spring`. Stagger comes
+from a `--i` index and caps at 480ms, so a long list never leaves its last row
+waiting. Only two things loop: a running generation's pulse and a loading
+skeleton's shimmer.
 
-This replaced a collapsing left rail. Four destinations and a toggle is less
-than a screen of content, which this system's own rules already refused; the
-reference shows its product with a horizontal bar; and the rail's answer to
-being in the way on a project page was to hide itself. The one thing the bar
-must not do is grow a second copy of the primary action further down a page —
-it is now on every screen, so a page-level "New project" says it twice.
-
-### Brand Scope (signature)
-
-The system's defining component is not visual furniture — it is the runtime
-theme that lets a generated brand take a region over. A scope element carries
-`--brand-paper`, `--brand-ink`, `--brand-accent`, `--brand-ink-soft`,
-`--brand-ink-faint` and `--brand-line`, derived from the customer's palette with
-WCAG relative luminance and swapped for readable fallbacks when the generated
-values fail. Everything inside reads those variables, so a server component can
-hand its whole subtree to another brand's colours through CSS instead of props.
-
-### Stat Tile
-
-A measured figure: a label in the `label` step, a delta, the value, and a
-twelve-week sparkline. Four of them open the dashboard.
-
-- **Value:** display face, semibold, ~1.875rem, and the font's *proportional*
-  figures. `tabular-nums` gives every digit the width of a zero, which is right
-  in a column of numbers and looks gappy on one large one.
-- **Delta:** signed, against a period named in the accessible text, and **absent
-  rather than zero** where there is no prior period to compare with. Flat is its
-  own state — neither arrow, no status colour.
-- **Sparkline:** one series, so no legend; the label names it. Muted ink, 2px,
-  with only the final segment and its endpoint in the accent. A flat series is
-  drawn on the mid-line rather than stretched to fill the box, because a
-  straight line at full height reads as a value at its maximum.
-- **Direction is separate from goodness.** Only a metric with a real direction
-  gets green or red, and the arrow carries the direction so colour is never
-  alone in saying it.
-
-**The Measured Figure Rule.** This composition was banned outright — "a row of
-stat tiles whose largest type is the digit 1" — and the ban was lifted after
-three versions of the dashboard were built and measured against a twelve-week,
-nine-brand account. The tiles started 50px lower down the page than the contact
-sheet they replaced and still put six brands in the fold against its two.
-
-What the ban was protecting is now the rule, and it is stricter than a ban: a
-figure earns its tile by being measurable. Every series is bucketed from a real
-timestamp. Where the data cannot support a trend the tile shows none rather than
-a decorative line. A level takes no percentage — credits going from 36 to 494 is
-"+1,272%", arithmetically true and meaningless, because the denominator is
-whatever the account happened to hold at an arbitrary earlier moment. And a
-metric with no good direction says so: spending credits is what credits are for.
-
-The corollary is that removing a figure is a design decision, not a data one.
-"Brands finished" has no tile because a project's completion is current state
-with no date beside it; its weekly series would be creation dates filtered by
-today's status, a number that rewrites its own history.
-
-### Specimen (signature)
-
-A brand shown as itself: its mark centred on its own paper, its name set in its
-own heading face, its palette laid along the base as the sheet's own edge. Not a
-container around a database row — the card *is* the brand's ground. Used as the
-unit of the even grid on the dashboard and the projects list.
-
-One size, and no lead frame. Marking the newest brand by printing it across two
-columns was defended on the grounds that a grid of identical cells is a
-spreadsheet — which is true of cells that are chrome and false of these. A
-specimen wears its own brand's paper, ink and palette, so six of them are six
-different objects without any help from the layout, and measured at nine brands
-the lead frame cost four of its neighbours their place in the fold.
+**The Reduced Motion Rule.** `prefers-reduced-motion` removes motion and keeps
+feedback. Animations collapse to one frame and transforms are dropped, but
+colour, background, border, shadow and opacity keep transitioning at 120ms — a
+colour easing over 100ms is not motion, it is the interface answering. The two
+states that exist only as movement get a still form instead of nothing: the
+shimmer becomes a steady tint, the pulse a static ring.
 
 ## Do's and Don'ts
 
 ### Do:
-
-- **Do** delegate colour outward on any surface showing a generated brand, and contrast-check every guest colour that ends up under text.
-- **Do** use Lit Violet (`#aa8cff` / `#5b33cc`) for accent text and Signal Violet (`#7240ff`) for fills. They are not interchangeable.
-- **Do** mix borders from white at 9% or 16% into the ground rather than drawing a grey line.
-- **Do** put a lit gradient edge along the *bottom* of what matters and a plain hairline on what does not.
-- **Do** let a rule that spans a page fade out before it reaches the edges. A line running corner to corner is the clearest signal a page is a template.
-- **Do** pick the radius by role: 14px to operate, 20px for a card, 24px for a panel of cards.
-- **Do** keep interface motion in the 150–300ms band, ease entrances out and exits in, and collapse all of it under `prefers-reduced-motion`.
-- **Do** design both directions. Arabic uses its own stack at 1.85 leading, and every layout uses logical properties.
+- **Do** ask the register question first: generated work goes on the wall or the
+  bench; money and settings go on the desk.
+- **Do** lift a sheet with a warm cast shadow (`rgba(60,52,38,…)`) and a tonal
+  step, never with a halo.
+- **Do** set accent text at `#5b33cc` in daylight and `#aa8cff` at night, and
+  reserve `#7240ff` for fills, focus and edges.
+- **Do** set anything the pipeline emitted in Spline Sans Mono at 400 or 500, and
+  wrap it in `machine-value` when it sits inside a sentence.
+- **Do** put every desk figure in `tabular-nums`.
+- **Do** measure a new text colour against the *worst* ground it will sit on and
+  record the number in the source next to it.
+- **Do** reach for a semantic token (`bg-surface`, `text-fg-muted`, `border-line`)
+  so a component re-skins by scope without being touched.
+- **Do** let a guest scope own its colour completely, including its decorative
+  light.
 
 ### Don't:
-
-- **Don't** clip the brand gradient to text. It was removed for legibility: part of every glyph sits on the lowest-contrast stop, and the words vanish entirely where the clip is unsupported.
-- **Don't** introduce a second accent colour, or a solid grey 1px border, or a shadow made of pure black.
-- **Don't** nest a card inside a card. Drop the inner one to a plain region with a hairline rule.
-- **Don't** build a page as a stack of same-size cards of icon plus heading plus text. That one stands.
-- **Don't** show a figure this system cannot measure — no invented trend, no percentage on a level, no delta against a period nobody named. See the Measured Figure Rule.
-- **Don't** leave a persistent side rail holding less than a screen of content — give it more or let it collapse.
-- **Don't** animate headlines letter by letter; split on words, because Arabic letterforms join.
-- **Don't** signal a state with colour alone; the word rides with the dot.
+- **Don't** draw the Darkroom's horizon on the board. No `lit` gradient edge, no
+  `bloom`, no radial wash behind a header, no glow behind a form. There is
+  nothing for light to rise from.
+- **Don't** point `--accent-surface` back at the ramp inside the app. A violet
+  edge on every card is how the accent stops meaning anything.
+- **Don't** let a generated palette bind `--brand-primary` or any chrome token;
+  `--guest-*` is the only namespace an untrusted palette may write.
+- **Don't** put Signal Violet under words on the board — 4.21:1 is a control's
+  number, not a paragraph's.
+- **Don't** introduce a second accent hue. Status colours aside, emphasis borrows
+  from the one ramp.
+- **Don't** set the mono face above weight 500; the browser will synthesise a
+  bold that does not exist.
+- **Don't** use negative letter-spacing on Arabic, or leave `--font-display`
+  pointing at a Latin-only face under RTL.
+- **Don't** give a Badge a shadow, a gradient or a hover — that makes it look
+  like a control.
+- **Don't** draw a hard grey border in `.world-dark`; borders there are
+  translucent white at 9% and 16%.
+- **Don't** run a decorative animation forever. Only a live generation and a
+  loading skeleton loop.
+- **Don't** register a Tailwind colour named `base`; it compiles `.text-base`
+  into a colour instead of a font size.
