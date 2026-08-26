@@ -52,6 +52,51 @@ What they were, and what they turned out to be, is at the end of this file.
 
 ## Improvements
 
+*Reordered 26 August.* The funnel was read for the first time at a useful sample
+— 21 signups, **zero payments, and zero checkouts ever started**. Nobody is
+bouncing off the price, so the two pricing items below were aimed at a decision
+customers never reach. They keep their numbering and their reasoning; they are
+simply no longer next. What comes first is the reason people leave.
+
+**The shape of it.** 17 of 21 verify, 17 make a project, ~18 finish a run — and
+then it stops. Fourteen consecutive accounts since 13 August are the same
+account: one project, one run, one session, last seen the day they joined.
+Across every project ever: 2 Content Studio items, 1 assistant message, 1
+published site, and **14 of 17 projects with no website and no kit** — the two
+things Creator and Studio sell. Fourteen brand-nudge emails were delivered and
+produced no second session.
+
+Three hypotheses died on the data and should not be re-opened: checkout is not
+broken (both plans and all three packs have live Polar products), nobody is
+hidden from the Upgrade button (all 21 users are `owner` of their own
+organisation), and nobody has hit the one-project wall (every user has exactly
+one project).
+
+### 0. Make the free brand worth coming back to
+
+**0a. The free run drops its own captions — shipped 26 August.** See *Closed*.
+The free brand ended at a logo, which is the tool Brandora positions itself
+against.
+
+**0b. Wire the Content Studio credit wall to billing — 20 min.** It is the only
+spending wall in the product with no route to payment: a grey sentence in
+`studio/content-composer.tsx:205-209` and a disabled button. Content Studio is
+the return-visit surface, and 13 accounts are sitting on a remainder that buys
+exactly what it sells. `Studio.lowCredits` and `Studio.getMore` ("Get more
+credits") are already written and translated **in both locales and rendered
+nowhere** — zero usages in the repo.
+
+**0c. Make the nudge carry the thing, not a link to it — half a day.** Fourteen
+delivered, nothing returned. It points at a brand they already have. It should
+carry a caption written for that brand, in the body.
+
+**0d. Stop telling people to upgrade to plans that do not exist — 15 min.**
+`Builder.publishLocked` and `website.ts:132` say **Basic**; `generation.ts:177`
+and `api/assistant/route.ts:66` say **Pro**. The ladder is Free / Creator /
+Studio.
+
+**Needs from you:** nothing. All four are work, not decisions.
+
 ### 1. Turn on yearly billing — half a day
 
 Columns, interval enum and Polar product fields all exist; both yearly prices
@@ -398,6 +443,36 @@ and a three-scene kit at $0.15 an image loses money on every plan.
 ---
 
 ## Closed
+
+### The free brand had no captions in it, 26 August
+
+`createProject` was changed to stop gating the written social copy, with a
+comment saying why: it "meant the free plan produced no Instagram bio — a thing
+the pricing page promises and that costs a single credit and a fifth of a cent of
+model time."
+
+The wizard was never changed to match. It seeded the flag from the *paid*
+entitlement (`wizard.tsx:146`, `needsSocialMedia: entitlements.socialMediaKit`)
+and rendered step 8 as a locked panel, so a free project was stored with the flag
+false whatever the server was willing to allow. The fix was half-shipped, and the
+client is the half that decides.
+
+Everything downstream had already been updated for the intended behaviour and was
+quietly wrong: `BRAND_COST_STARTER = 8` assumes social runs on free, the pricing
+card's "one brand" arithmetic divides by 8, the free plan's own feature list
+promises "Instagram bio and captions", and the comparison table marks captions ✓
+for Free. The run actually cost **7**, and every free ledger row in production
+says so.
+
+So every free customer received names, logos, a palette and a story — and nothing
+they could post. Step 8's copy described the free half ("nine Instagram posts,
+bios, stories, hashtags and ad copy") under the paid half's name ("a social media
+kit"), which is how one flag came to mean two things.
+
+Verified by running it: a fresh free signup now stores `needs_social_media =
+true`, the job runs `['branding','logos','social']`, the ledger row is **-8**, the
+balance lands on **2**, and the brand arrives with a bio, nine captions with
+hashtags and three story templates.
 
 ### Fixes, 10 August
 

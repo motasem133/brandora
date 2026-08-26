@@ -454,8 +454,8 @@
     "step6Subtitle": "Choose up to three. Skip and we'll pick for you.",
     "step7Title": "Do you need a website?",
     "step7Subtitle": "We'll generate a full multi-page site you can edit and publish.",
-    "step8Title": "Do you need a social media kit?",
-    "step8Subtitle": "Nine Instagram posts, bios, stories, hashtags and ad copy.",
+    "step8Title": "Do you want your social copy written?",
+    "step8Subtitle": "An Instagram bio, nine captions with hashtags, three story templates and your ad copy — in your brand’s voice.",
     "yes": "Yes, please",
     "no": "Not right now",
     "languageTitle": "Which language should we generate in?",
@@ -497,7 +497,6 @@
       "brandTooShort": "A little more, please — a sentence or two is plenty."
     },
     "lockedWebsite": "Website generation isn't included in your {plan} plan. We'll still create your full brand identity — you can add a website by upgrading.",
-    "lockedSocial": "The social media kit isn't included in your {plan} plan. We'll still create your full brand identity — you can add it by upgrading.",
     "seePlans": "See plans",
     "chapterBusiness": "Your business",
     "chapterBrand": "Your brand",

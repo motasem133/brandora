@@ -141,9 +141,20 @@ export function OnboardingWizard({
     industry: carriedOver?.industry ?? '',
     country: carriedOver?.country ?? '',
     brandStyle: carriedOver?.brandStyle ?? '',
-    // Start locked features off, so what the user sees is what gets created.
+    /*
+     * The website is a paid feature, so it starts off — what the user sees is
+     * what gets created.
+     *
+     * The written social copy is not, and seeding it from `socialMediaKit` was
+     * the bug: `createProject` stopped gating it deliberately, because a bio
+     * and nine captions cost one credit and the free plan's own feature list
+     * promises them. This was the only thing still saying no, and it is the one
+     * that decides — so every free brand arrived with nothing postable in it.
+     * `socialMediaKit` governs the *designed* kit, which is checked where that
+     * kit is built.
+     */
     needsWebsite: entitlements.websiteBuilder,
-    needsSocialMedia: entitlements.socialMediaKit,
+    needsSocialMedia: true,
   })
   const [error, setError] = useState<string>()
   const [leaving, setLeaving] = useState(false)
@@ -587,20 +598,19 @@ export function OnboardingWizard({
                     />
                   ))}
 
-                {step === 8 &&
-                  (entitlements.socialMediaKit ? (
-                    <YesNo
-                      value={form.needsSocialMedia}
-                      onChange={(v) => set('needsSocialMedia', v)}
-                      yes={t('yes')}
-                      no={t('no')}
-                    />
-                  ) : (
-                    <LockedFeature
-                      message={t('lockedSocial', { plan: entitlements.planName })}
-                      cta={t('seePlans')}
-                    />
-                  ))}
+                {/*
+                  Asked of every plan, unlike the website above. This step buys
+                  one credit of writing, not the designed kit — the kit is sold
+                  on the project page, next to a mockup of itself.
+                */}
+                {step === 8 && (
+                  <YesNo
+                    value={form.needsSocialMedia}
+                    onChange={(v) => set('needsSocialMedia', v)}
+                    yes={t('yes')}
+                    no={t('no')}
+                  />
+                )}
               </div>
             </motion.div>
           </AnimatePresence>
