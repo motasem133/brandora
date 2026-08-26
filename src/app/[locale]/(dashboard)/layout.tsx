@@ -25,25 +25,22 @@ export default async function DashboardLayout({
   const { planName } = await getEntitlements(org.id)
 
   return (
-    <div className="relative flex min-h-dvh flex-col">
+    <div className="world-board relative flex min-h-dvh flex-col">
       <AnalyticsIdentity userId={session.user.id} organizationId={org.id} plan={planName} />
 
       {/*
-        The light, put back — behind the navigation rather than across the work.
+        The whole dashboard is on the board.
 
-        The marketing page's horizon was drawn over the top of every app screen
-        once and removed, correctly: it crossed the greeting on the overview and
-        the brand's own name on a project page, which put a glowing line through
-        the two pieces of text that matter most. The reference does not light
-        its product that way either — its app frame sits in front of the arc,
-        and the light inside the frame is in the cards. So this is a single wide
-        source behind the header, dying well above the first heading, and the
-        panels below carry their own.
+        Scoping the layout rather than each page is what removes the seam: the
+        shell, the wall surfaces and the desk surfaces are one world again, and
+        billing and settings no longer need a wrapper of their own to reach the
+        edges of the column.
+
+        The radial wash that used to sit behind the header is gone. It drew the
+        Darkroom's horizon — a single wide source below the fold, rising — and
+        the board has no horizon. What lifted a panel there is what lifts a sheet
+        here: its own shadow.
       */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-80 bg-[radial-gradient(60rem_20rem_at_50%_-6rem,color-mix(in_srgb,var(--brand-primary)_16%,transparent),transparent_70%)]"
-      />
 
       <AppNav
         user={{ name: session.user.name, email: session.user.email }}

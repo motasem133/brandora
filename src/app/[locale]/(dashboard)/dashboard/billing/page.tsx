@@ -123,23 +123,20 @@ export default async function BillingPage({
   const paymentFailed = subscription?.status === 'past_due'
 
   /*
-   * The first surface on the board.
+   * The first surface that was put on the board, and the reason it went first:
+   * nothing here is generated, so no guest palette had to be re-derived against
+   * a new ground before a single token had been proven.
    *
-   * Billing is where the replacement world starts, and the order is deliberate:
-   * nothing here is generated, so no guest palette has to be re-derived against
-   * a new ground before a single token can be proven. Everything below already
-   * reads semantic tokens, so the scope re-skins it without the markup moving.
+   * It carried its own scope wrapper while it was the only one. The dashboard
+   * layout holds the scope now, so this is a fragment again.
    *
-   * What the scope cannot do is composition, and one thing in here belonged to
-   * the room it replaces — see the standing panel below.
-   *
-   * The negative margins cancel the shell's own padding so the board reaches the
-   * edges of the main column. The top bar is still the old world and will be
-   * until the shell moves with the last surface; that seam is the visible cost
-   * of migrating a route at a time, and it is the right cost to pay.
+   * One composition change survives from that pass: `lit` and `bloom` came off
+   * the standing panel below. They draw a horizon and an interior light source,
+   * and both are meaningless on a board in daylight where a sheet is lifted by
+   * its own shadow.
    */
   return (
-    <div className="world-board -mx-6 -my-10 min-h-screen px-6 py-10 lg:-mx-10 lg:px-10">
+    <>
       <div className="mx-auto max-w-5xl space-y-12">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
@@ -501,6 +498,6 @@ export default async function BillingPage({
         </div>
       </section>
       </div>
-    </div>
+    </>
   )
 }
