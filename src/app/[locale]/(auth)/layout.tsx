@@ -2,37 +2,33 @@ import { ArrowLeft } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 
 import { Logo } from '@/components/ui/logo'
-import { SectionArc } from '@/components/ui/horizon'
 import { Link } from '@/i18n/navigation'
 
 /**
  * The threshold.
  *
- * These four screens sit between the marketing page and the app and used to
- * belong to neither: a mark, a form and nothing else, on flat ground, with the
- * light that carries the whole rest of the product switched off. Someone who
- * pressed "Start free" on the landing page fell out of its world into a
- * template and then back into the world again after signing in.
+ * These four screens sit between the marketing page and the app, and they used
+ * to belong to neither: a mark, a form and nothing else on flat ground, with the
+ * light that carried the rest of the product switched off. Someone who pressed
+ * "Start free" fell out of the landing page's world into a template and back
+ * into a world again after signing in.
  *
- * So the arc rises here too, and the form sits in front of it in a lit panel —
- * the same composition as the reference's hero, at the scale of a single
- * decision. Dark in both themes, like the marketing pages and for the same
- * pinned reason: the brand is dark, and this is still the brand's own room
- * rather than the customer's workspace.
+ * The fix then was to give them the marketing world — the arc, the lit panel,
+ * dark in both themes. The fix now is the other side of the same argument: they
+ * get the *product's* world instead. Signing in is arriving at the workshop, not
+ * a last page of the brochure, and a teammate opening an invitation link has no
+ * marketing context to be continuous with — they have never seen the landing
+ * page. The problem that comment was written about is still solved; the door now
+ * opens onto the room it actually leads to.
+ *
+ * The arc goes with the change, for the reason it went everywhere else: a board
+ * in daylight has no horizon to rise from.
  */
 export default async function AuthLayout({ children }: { children: React.ReactNode }) {
   const t = await getTranslations('Auth')
 
   return (
-    <div className="world-dark relative flex min-h-dvh flex-col overflow-hidden">
-      {/*
-        Rising from the base of the screen, behind the panel. The section arc
-        rather than the hero's: the hero's is scroll-driven and there is nothing
-        to scroll here, and its crest is drawn at a scale that would put the
-        brightest part of the light directly behind a 24px heading.
-      */}
-      <SectionArc className="bottom-0 top-auto translate-y-1/3" />
-
+    <div className="world-board relative flex min-h-dvh flex-col overflow-hidden">
       {/* The way back to the page they came from. A sign-in screen with no exit
           is a trap for anyone who arrived at it by accident. */}
       <div className="relative z-10 px-6 pt-6">
@@ -51,13 +47,11 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
         </Link>
 
         <main id="content" tabIndex={-1} className="animate-scale-in w-full max-w-[26rem]">
-          {/*
-            One lit panel, with its own source inside it. The bloom is centred
-            on the base, where the arc behind the page is — so the panel reads
-            as sitting in that light rather than as a box placed over it.
-          */}
-          <div className="lit shadow-[var(--shadow-lifted)] [--lit-radius:var(--radius-panel)]">
-            <div className="lit-inner bloom p-7 sm:p-8 [--bloom-strength:14%]">{children}</div>
+          {/* A sheet on the board. It was a lit panel with its own source
+              inside it, which only made sense while there was an arc behind the
+              page for it to be sitting in. */}
+          <div className="rounded-panel bg-surface p-7 shadow-[var(--shadow-lifted)] sm:p-8">
+            {children}
           </div>
         </main>
       </div>

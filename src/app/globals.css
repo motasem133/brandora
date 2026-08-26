@@ -145,6 +145,22 @@
     inset 0 -1px 0 0 color-mix(in srgb, var(--brand-primary) 32%, transparent);
 
   /* Soft, wide, and tinted with the brand rather than pure black. */
+  /*
+   * The primary control's own light, as a token rather than three literals in
+   * the Button.
+   *
+   * It was written inline, reading `--brand-primary` directly, which made it the
+   * one lit thing in the product a scope could not move: the fill has to stay
+   * violet, so re-pointing the ramp was never an option. On a dark ground this
+   * halo reads as light. On a board in daylight it reads as haze.
+   */
+  --shadow-primary: 0 0 0 1px color-mix(in srgb, var(--brand-primary) 20%, transparent),
+    0 2px 18px -6px color-mix(in srgb, var(--brand-primary) 60%, transparent),
+    0 0 44px -10px color-mix(in srgb, var(--brand-primary) 32%, transparent);
+  --shadow-primary-hover: 0 0 0 1px color-mix(in srgb, var(--brand-primary) 32%, transparent),
+    0 2px 22px -4px color-mix(in srgb, var(--brand-primary) 75%, transparent),
+    0 0 64px -8px color-mix(in srgb, var(--brand-primary) 45%, transparent);
+
   --shadow-soft: 0 1px 2px rgba(5, 8, 20, 0.4), 0 12px 32px -16px rgba(5, 8, 20, 0.8);
   --shadow-lifted: 0 2px 4px rgba(5, 8, 20, 0.35), 0 26px 56px -24px rgba(91, 92, 251, 0.55);
 
@@ -284,6 +300,10 @@
   --shadow-soft: 0 1px 1px rgba(60, 52, 38, 0.1), 0 10px 22px -10px rgba(60, 52, 38, 0.3);
   --shadow-lifted: 0 2px 3px rgba(60, 52, 38, 0.12), 0 26px 44px -18px rgba(60, 52, 38, 0.42);
 
+  /* A control on a board is lifted, not lit. Offset and blur, no halo. */
+  --shadow-primary: 0 1px 1px rgba(60, 52, 38, 0.18), 0 8px 16px -8px rgba(60, 52, 38, 0.55);
+  --shadow-primary-hover: 0 2px 3px rgba(60, 52, 38, 0.2), 0 14px 24px -10px rgba(60, 52, 38, 0.6);
+
   --success: #166534;
   --warning: #92400e;
   --danger: #b91c1c;
@@ -325,6 +345,9 @@
 
   --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.5), 0 12px 26px -12px rgba(0, 0, 0, 0.75);
   --shadow-lifted: 0 2px 4px rgba(0, 0, 0, 0.5), 0 28px 48px -20px rgba(0, 0, 0, 0.8);
+
+  --shadow-primary: 0 1px 2px rgba(0, 0, 0, 0.55), 0 8px 18px -8px rgba(0, 0, 0, 0.7);
+  --shadow-primary-hover: 0 2px 4px rgba(0, 0, 0, 0.55), 0 14px 26px -10px rgba(0, 0, 0, 0.75);
 
   --success: #22c55e;
   --warning: #f5a524;
