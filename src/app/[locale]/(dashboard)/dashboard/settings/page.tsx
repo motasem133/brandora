@@ -36,8 +36,17 @@ export default async function SettingsPage({ params }: { params: Promise<{ local
    * appearance card would grow to whatever height the workspace card next to it
    * happened to be.
    */
+  /*
+   * The rest of the desk. Settings is administration — a name, a password, a
+   * theme, an organisation, seats — and none of it is generated, so it takes
+   * the board on the same terms billing did.
+   *
+   * The negative margins cancel the shell's padding so the board reaches the
+   * edges of the column rather than floating as a panel inside the old ground.
+   */
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="world-board -mx-6 -my-10 min-h-screen px-6 py-10 lg:-mx-10 lg:px-10">
+      <div className="mx-auto max-w-5xl">
       <div>
         <h1 className="font-display text-2xl font-semibold">{t('title')}</h1>
         <p className="mt-1 text-sm text-fg-secondary">{t('subtitle')}</p>
@@ -80,6 +89,7 @@ export default async function SettingsPage({ params }: { params: Promise<{ local
           currentUserId={user.id}
         />
       </div>
+    </div>
     </div>
   )
 }

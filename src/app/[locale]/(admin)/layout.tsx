@@ -35,13 +35,18 @@ export default async function AdminLayout({
    * different application bolted to the side of this one. It is a destination
    * in the same navigation as the rest, so it wears the same bar.
    */
+  /*
+   * Administration is entirely desk, so the board goes on the layout rather
+   * than on five pages — and the shell comes with it. That is why /admin has no
+   * seam where billing still does: nothing under here shows generated work, so
+   * there is nothing left on the old world to butt against.
+   *
+   * The radial wash that used to sit behind the bar is gone with it. It drew the
+   * Darkroom's horizon — a light source below the fold, rising — and a board in
+   * daylight has no horizon to rise from.
+   */
   return (
-    <div className="relative flex min-h-dvh flex-col">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-80 bg-[radial-gradient(60rem_20rem_at_50%_-6rem,color-mix(in_srgb,var(--brand-primary)_16%,transparent),transparent_70%)]"
-      />
-
+    <div className="world-board relative flex min-h-dvh flex-col">
       <AppNav
         user={{ name: session.user.name, email: session.user.email }}
         isAdmin

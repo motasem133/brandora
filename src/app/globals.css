@@ -266,6 +266,19 @@
    */
   --lit-inset: inset 0 1px 0 0 color-mix(in srgb, #191816 5%, transparent);
 
+  /*
+   * Decorative light is drawn in ink here, not in the accent.
+   *
+   * `--accent-surface` is the one variable every lit device reads — `lit`,
+   * `bloom`, `rail`, `rail-node`, `pulse-ring` — which is what makes this a
+   * single declaration rather than an edit to every component that has an edge.
+   * Left pointing at the ramp, every Card on the board wore a violet gradient
+   * along its bottom, and the accent stopped meaning "this matters" the moment
+   * it appeared on all of them.
+   */
+  --accent-surface: color-mix(in srgb, #191816 13%, transparent);
+  --accent-surface-2: color-mix(in srgb, #191816 6%, transparent);
+
   /* Warm, because the shadow of paper on board is not blue. Offset and blur,
      never a zero-offset halo. */
   --shadow-soft: 0 1px 1px rgba(60, 52, 38, 0.1), 0 10px 22px -10px rgba(60, 52, 38, 0.3);
@@ -305,6 +318,10 @@
   --border-strong: color-mix(in srgb, #f3f0e8 18%, transparent);
 
   --lit-inset: inset 0 1px 0 0 color-mix(in srgb, #f3f0e8 6%, transparent);
+
+  /* Ink again, mixed the other way. See the note on the daylight scope. */
+  --accent-surface: color-mix(in srgb, #f3f0e8 15%, transparent);
+  --accent-surface-2: color-mix(in srgb, #f3f0e8 7%, transparent);
 
   --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.5), 0 12px 26px -12px rgba(0, 0, 0, 0.75);
   --shadow-lifted: 0 2px 4px rgba(0, 0, 0, 0.5), 0 28px 48px -20px rgba(0, 0, 0, 0.8);
