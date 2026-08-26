@@ -138,18 +138,18 @@ export default async function OverviewPage({ params }: { params: Promise<{ local
           {[0, 1, 2].map((column) => (
             <div key={column} className="flex min-w-0 flex-1 flex-col gap-7">
               {/*
-                Round-robin left holes: with four brands and the blank frame
-                pinned to the last column, the middle one ended a whole sheet
-                short and the wall read as unfinished rather than as unequal.
-                Filling column by column keeps the shortest one last, which is
-                where the blank frame wants to be anyway.
+                Dealt across the columns rather than filled down them.
+
+                Filling down was tried and is wrong twice: with four brands it
+                left the third column empty, and it breaks the order — a wall
+                sorted newest-first should read newest-first across the top, and
+                column-fill puts the two newest one above the other instead.
+                The blank frame then takes the next slot in the same sequence,
+                which is where the deal would have put a fifth brand.
               */}
               {specimens
                 .map((specimen, index) => ({ specimen, index }))
-                .filter(({ index }) => {
-                  const perColumn = Math.ceil((specimens.length + 1) / 3)
-                  return Math.floor(index / perColumn) === column
-                })
+                .filter(({ index }) => index % 3 === column)
                 .map(({ specimen, index }) => (
                   <Cell key={specimen.project.id} index={index} lift={false}>
                     <MomentumItem>
@@ -192,7 +192,7 @@ export default async function OverviewPage({ params }: { params: Promise<{ local
                 another one here", and it gives the primary action a home inside
                 the work rather than only in the corner of the bar.
               */}
-              {column === 2 && (
+              {specimens.length % 3 === column && (
                 <Cell index={specimens.length} lift={false}>
                   <Tacked caption={tp('newProject')}>
                     <Link

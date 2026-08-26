@@ -6,6 +6,8 @@ import { BrandSpecimen } from '@/components/features/projects/brand-specimen'
 import { buttonVariants } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Cell } from '@/components/ui/horizon'
+import { Tacked } from '@/components/ui/tacked'
+import { formatDate } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { MomentumField, MomentumItem } from '@/components/ui/momentum'
 import { SegmentedControl, SegmentedLink } from '@/components/ui/segmented-control'
@@ -137,6 +139,8 @@ async function ProjectList({
   sort: Sort
 }) {
   const t = await getTranslations('Projects')
+  /* The wall's caption copy lives with the wall, not with the list. */
+  const td = await getTranslations('Dashboard')
   const { org } = await requireOrg()
   const specimens = await listBrandSpecimens(org.id)
 
@@ -232,14 +236,48 @@ async function ProjectList({
           wrapper that also lifts would carry the card out from under the cursor
           and make it enter itself again.
         */
-        <MomentumField className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {shown.map((specimen, index) => (
-            <Cell key={specimen.project.id} index={index} lift={false}>
-              <MomentumItem className="h-full">
-                <BrandSpecimen specimen={specimen} locale={locale} />
-              </MomentumItem>
-            </Cell>
-          ))}
+        <MomentumField className="flex flex-col gap-6 sm:flex-row sm:items-start sm:gap-6">
+          {/*
+            The same wall the overview hangs, at the length this page runs to:
+            columns filled in order so a sheet keeps the height of what is on it
+            and the shortest column is the last one. A grid would make forty
+            brands one object repeated forty times, which is the failure a
+            specimen exists to avoid.
+          */}
+          {[0, 1, 2].map((column) => {
+            return (
+              <div key={column} className="flex min-w-0 flex-1 flex-col gap-7">
+                {shown
+                  .map((specimen, index) => ({ specimen, index }))
+                  /* Dealt, not filled: the sort is the point of this page, and
+                     filling down columns reads the newest two vertically. */
+                  .filter(({ index }) => index % 3 === column)
+                  .map(({ specimen, index }) => (
+                    <Cell key={specimen.project.id} index={index} lift={false}>
+                      <MomentumItem>
+                        <Tacked
+                          caption={
+                            specimen.missing.website || specimen.missing.kit
+                              ? td('wallMissing', {
+                                  parts: [
+                                    specimen.missing.website ? td('wallWebsite') : null,
+                                    specimen.missing.kit ? td('wallKit') : null,
+                                  ]
+                                    .filter(Boolean)
+                                    .join(' · '),
+                                })
+                              : td('wallComplete')
+                          }
+                          meta={formatDate(specimen.project.createdAt, locale)}
+                        >
+                          <BrandSpecimen specimen={specimen} locale={locale} />
+                        </Tacked>
+                      </MomentumItem>
+                    </Cell>
+                  ))}
+              </div>
+            )
+          })}
         </MomentumField>
       )}
     </div>
