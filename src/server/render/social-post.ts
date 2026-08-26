@@ -8,19 +8,9 @@ import { AppError } from '@/lib/errors'
 import { signedDownloadUrl } from '@/server/storage/r2'
 import { inkLuminance, liftBackground, splitLockup, trim } from '@/server/services/logo-parts'
 import { renderToPng } from './browser'
-import { fontFace, type PostBrand } from './post-template'
+import { fontFace, loadFont, type PostBrand } from './post-template'
 import { LAYOUTS, renderLayout, type LayoutKind } from './layouts'
 import { buildCopy } from './copy'
-
-/**
- * A brand's real typeface, as bytes.
- *
- * Google's CSS API serves woff2 to a modern browser and TrueType to an old
- * one, and only TrueType goes into a `@font-face` data URI that Chromium will
- * accept without a fetch. Hence the antique user agent — it is load-bearing,
- * not cargo.
- */
-const fontCache = new Map<string, Buffer | null>()
 
 /**
  * Whether a face paints its own colour and ignores `color` entirely.
@@ -37,29 +27,6 @@ const fontCache = new Map<string, Buffer | null>()
 function paintsItsOwnColour(font: Buffer) {
   const tables = font.subarray(12, 12 + 16 * font.readUInt16BE(4))
   return tables.includes('COLR')
-}
-
-async function loadFont(family: string): Promise<Buffer | null> {
-  if (fontCache.has(family)) return fontCache.get(family) ?? null
-
-  try {
-    const css = await fetch(
-      `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family)}`,
-      { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 6.1)' } },
-    )
-    const url = (await css.text()).match(/https:\/\/[^)]+/)?.[0]
-    if (!url) throw new Error(`no source for ${family}`)
-
-    const file = Buffer.from(await (await fetch(url)).arrayBuffer())
-    fontCache.set(family, file)
-    return file
-  } catch (error) {
-    // A missing face is a worse-looking post, not a failed one: Chromium falls
-    // back and the render still carries the brand's colours, mark and words.
-    console.warn(`[render] could not load "${family}"`, error)
-    fontCache.set(family, null)
-    return null
-  }
 }
 
 async function readFile(key: string): Promise<Buffer> {
