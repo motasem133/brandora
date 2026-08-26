@@ -38,6 +38,16 @@ export type EmailTemplate =
    */
   | { kind: 'brand-nudge'; url: string; brand: string }
   /**
+   * The one email that asks instead of telling.
+   *
+   * A single broadcast to everyone with an account, not a lifecycle message:
+   * there is no analytics in production, so what customers think is only
+   * knowable by asking them. It carries a code for the same reason
+   * `brand-ready` does — the ask costs the reader a few minutes, and the
+   * discount is what those minutes are worth — but nothing here is an apology.
+   */
+  | { kind: 'feedback-request'; url: string; name: string; code: string; percent: number }
+  /**
    * A message somebody sent through a customer's own published site.
    *
    * The only email this product sends that is not about Brandora. It is a
@@ -131,6 +141,27 @@ const COPY = {
       footer:
         'You are getting this because you generated a brand on Brandora. It is the only reminder we send for it.',
     },
+    'feedback-request': {
+      subject: 'What would you change about Brandora?',
+      heading: 'Tell us what to fix',
+      /*
+       * It asks for the bad half first, on purpose. "How are we doing?"
+       * collects praise from the people who already liked it; the answer worth
+       * having is the one from someone who found it lacking and left.
+       */
+      body: (name: string) =>
+        `${name}, you have an account on Brandora, and we would rather hear what fell short than guess at it. Two lines is plenty: what worked, and what you would change.`,
+      button: 'Reply with your thoughts',
+      note: 'It goes to a person, not a form, and every answer is read.',
+      /* "First payment", not "any plan". The code's duration in Polar is
+         `once`, so on a subscription it discounts the first period only, and on
+         a credit pack the single order. Promising more than that is a promise
+         the checkout will not keep. */
+      offer: (percent: number) => `And with thanks for the time, ${percent}% off your first payment:`,
+      /* Says why it arrived and how to stop it. This is the only email the
+         product sends that nobody asked for. */
+      footer: 'You are getting this because you have a Brandora account. Reply with "stop" and we will not ask again.',
+    },
     'site-message': {
       subject: (site: string) => `New message from your ${site} website`,
       heading: 'Someone contacted you',
@@ -188,6 +219,18 @@ const COPY = {
         'علامتك ما زالت كما تركتها — الشعار ولوحة الألوان والنصوص كلها هناك. اطّلع على شكلها مجتمعة.',
       button: 'اعرض علامتك',
       footer: 'وصلتك هذه الرسالة لأنك ولّدت علامة على براندورا، وهي التذكير الوحيد الذي نرسله عنها.',
+    },
+    'feedback-request': {
+      subject: 'ما الذي تغيّره في براندورا؟',
+      heading: 'قل لنا ما الذي نصلحه',
+      /* The bad half first — see the English note. */
+      body: (name: string) =>
+        `${name}، لديك حساب في براندورا، ونفضّل أن نسمع منك ما الذي لم يكن على قدر توقّعك بدل أن نخمّنه. سطران يكفيان: ما الذي نجح، وما الذي تغيّره.`,
+      button: 'شاركنا رأيك',
+      note: 'يصل ردّك إلى شخص، لا إلى نموذج، ونقرأ كل ردّ.',
+      /* "First payment" — see the English note on the code's duration. */
+      offer: (percent: number) => `وشكراً لوقتك، خصم ${percent}% على أول دفعة:`,
+      footer: 'وصلتك هذه الرسالة لأن لديك حساباً في براندورا. ردّ بكلمة «إيقاف» ولن نسألك مرة أخرى.',
     },
     'site-message': {
       subject: (site: string) => `رسالة جديدة من موقع ${site}`,
@@ -386,10 +429,10 @@ function quoteLayout(params: {
  * The card, carrying a link and a code.
  *
  * The two other action layouts each hold one or the other, and deliberately: an
- * email with two things to do is an email where neither gets done. This one is
- * the exception the situation earns — the link is the delivery and the code is
- * the apology, and splitting them into two emails to a customer we have already
- * let down would be worse than the crowding.
+ * email with two things to do is an email where neither gets done. Both users
+ * of this one earn the exception — `brand-ready` pairs a delivery with an
+ * apology, `feedback-request` pairs an ask with what the asking is worth — and
+ * in each case splitting them into two emails would be worse than the crowding.
  *
  * The order says which is which. The button is the point; the code sits under a
  * rule, quieter, so it reads as something extra rather than as the reason we
@@ -401,7 +444,7 @@ function offerLayout(params: {
   body: string
   button: string
   url: string
-  credits: string
+  note: string
   offer: string
   code: string
   footer: string
@@ -411,7 +454,7 @@ function offerLayout(params: {
   return shell({
     ...params,
     main: `<a href="${params.url}" style="display:inline-block;background-color:${VIOLET};background-image:linear-gradient(135deg,${VIOLET},${INDIGO} 55%,${DEEP});color:#ffffff;text-decoration:none;padding:13px 24px;border-radius:10px;font-size:15px;font-weight:600;">${escape(params.button)}</a>
-              <p style="margin:20px 0 0;font-size:14px;line-height:1.6;color:#4c5570;">${escape(params.credits)}</p>
+              <p style="margin:20px 0 0;font-size:14px;line-height:1.6;color:#4c5570;">${escape(params.note)}</p>
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:24px;border-top:1px solid ${TINT_LINE};">
                 <tr>
                   <td style="padding-top:20px;">
@@ -522,6 +565,24 @@ export function renderEmail(template: EmailTemplate, locale: Locale = 'en') {
       }
     }
 
+    case 'feedback-request': {
+      const c = copy['feedback-request']
+      return {
+        subject: c.subject,
+        html: offerLayout({
+          locale,
+          heading: c.heading,
+          body: c.body(template.name),
+          button: c.button,
+          url: template.url,
+          note: c.note,
+          offer: c.offer(template.percent),
+          code: template.code,
+          footer: c.footer,
+        }),
+      }
+    }
+
     case 'brand-ready': {
       const c = copy['brand-ready']
       return {
@@ -532,7 +593,7 @@ export function renderEmail(template: EmailTemplate, locale: Locale = 'en') {
           body: c.body(template.name),
           button: c.button,
           url: template.url,
-          credits: c.credits,
+          note: c.credits,
           offer: c.offer(template.percent),
           code: template.code,
           footer: c.footer,

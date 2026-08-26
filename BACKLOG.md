@@ -10,35 +10,27 @@ have been built on top of a product that was quietly losing customers' money.
 
 Times are working estimates, not commitments. Where one is uncertain it says so.
 
-*Last true on 23 August 2026.*
+*Last true on 26 August 2026.*
 
 ---
 
 ## Fixes
 
-### 1. Inngest rejects requests it should accept — 30 minutes to diagnose, unknown to fix
+Empty. The one entry here — *Inngest rejects requests it should accept* — was
+diagnosed on 26 August and is not a fix; what it turned out to be is under
+*Closed*. The endpoint is refusing exactly what it should refuse.
 
-`/api/inngest` logs `Signature validation failed` and `Error: Invalid signature`
-in production. Low volume — single figures — but continuous since 5 August, and
-still appearing on 20 August after four deploys.
-
-It is on the endpoint that runs brand generation, which is the reason it is a
-fix rather than a curiosity: a signing-key mismatch is exactly how a run ends up
-queued forever with a customer's credits held, and that has already happened
-once on 9 August for a different reason. Nothing currently says whether these
-are real invocations being rejected or unsigned probes being correctly refused,
-and the difference is the whole question.
-
-Check `INNGEST_SIGNING_KEY` in production against the key the synced app
-expects, and look at whether the rejected requests correlate with any run that
-stalled. See the Inngest note under *Yours, not code*.
+One thing that investigation did turn up is real and unresolved, but it is a
+question for you rather than a defect: see *Anyone can make production re-sync*
+under **Yours, not code**.
 
 ---
 
 Fixes had been **empty since 13 August**. Two entries were found on 20 August by
-reading production telemetry rather than from a customer report; the other was
-English branding returning unparseable JSON, which is closed — the cause was not
-the one written down here, and the correction is under *Closed* below.
+reading production telemetry rather than from a customer report, and both are now
+closed: English branding returning unparseable JSON — where the cause was not the
+one written down here — and the Inngest signature failures, which were never a
+defect. Both corrections are under *Closed* below.
 
 The CI suite that had been red for days is green again — three causes, one of
 them a real defect: choosing a logo failed *after* it had worked, because the
@@ -142,6 +134,42 @@ source reads Vercel rather than manual.
 All previews still register as the same `brandora-preview` app, so they
 overwrite each other. That is harmless for production and worth knowing before
 someone debugs two previews disagreeing.
+
+### Anyone can make production re-sync — your call, one line either way
+
+Found on 26 August while diagnosing the entry above. An **unauthenticated
+`PUT`** to `https://brandora.enigmitic.com/api/inngest` returns
+`{"message":"Successfully registered","modified":true}`. Anyone who knows the
+URL can make production re-register its functions with Inngest, as often as they
+like.
+
+This is the SDK's default, not a mistake in our code: `enableUnauthedSync`
+defaults to **true** (`InngestCommHandler.js:805`). GET and POST are both signed
+and refused; only sync is open.
+
+**What it is worth.** Low. A sync re-registers the same functions from the same
+URL — the URL comes from the request's own host, so it cannot be pointed
+somewhere else — and it costs nothing but noise in the sync history. It is not a
+way in. It is simply a mutating endpoint on a public URL with no authentication
+in front of it, which is not where you want to be.
+
+**The fix is one line**, either `enableUnauthedSync: false` on `serve()` in
+`src/app/api/inngest/route.ts`, or `INNGEST_ENABLE_UNAUTHED_SYNC=false` in
+production. In code is better: this is a decision, and an env var is invisible to
+whoever reads the route next.
+
+**Why it is here and not in Fixes.** Turning it off means every sync must be
+signed, and the deploy-time sync from the Vercel–Inngest integration is the one
+that would break if that assumption is wrong. Inngest signs its own requests, so
+it should be fine — but "should be" is not how the last Inngest change went, and
+the recovery from getting it wrong is a production app that silently stops
+picking up new functions. Worth doing, worth doing deliberately, and worth
+checking Inngest's Apps page for a fresh sync straight after the deploy.
+
+*Also noted while looking:* `INNGEST_SIGNING_KEY` and `INNGEST_EVENT_KEY` are set
+on **Production only**. Previews therefore run without a signing key, which is
+harmless — they register as `brandora-preview` and nobody sends them events —
+but it does mean a preview cannot be used to test anything about signing.
 
 ### Neon preview branches — 5 minutes, recurring
 
@@ -734,6 +762,38 @@ a change rather than a decision. The eighth is the Arabic exemplar, above under
     publicly after, fetching the Enigmitic homepage each time to prove the apex
     still served Hostinger's site rather than Vercel's edge. What is left to
     check is above, under *Yours, not code*.
+
+### Inngest was refusing probes, not invocations, 26 August
+
+Recorded as a fix because `/api/inngest` logged `Signature validation failed`
+continuously from 5 August, on the endpoint that runs brand generation — and a
+signing-key mismatch there is precisely how a run ends up queued forever with a
+customer's credits held. That had already happened once, on 9 August.
+
+It was not happening. Nothing has been lost.
+
+**What the database says.** Over the last thirty days production ran 26 jobs and
+every one of them reached `completed`, in about two minutes each, the most
+recent on 25 August. There are **zero** jobs sitting in `queued` or `running`
+beyond half an hour — not now, and none old enough to have been swept. The 11
+failures in the window all predate 9 August and belong to the model-chain
+incident that is closed above; there have been none since.
+
+(`inngest_run_id` is null on every row including the completed ones, so that
+column proves nothing either way. It is never written. Worth knowing before
+anyone reads it as evidence of a run that was never collected.)
+
+**What the endpoint does.** Against production, unsigned: `GET` → 401, `POST` →
+401. In `InngestCommHandler.js` both paths log `Signature validation failed`
+immediately before returning the 401 — GET at line 1035, POST at 826. The log
+line *is* the refusal. Single-figure volume, continuous since the keys were set,
+surviving every deploy is the signature of background noise hitting a public URL:
+scanners, link previews, anything that follows a path it found.
+
+**How to tell it apart if it comes back.** The log line alone says nothing. The
+question is only ever whether a run was lost, and that is a database question:
+jobs stuck in `queued`/`running`, or a project whose credits are held with
+nothing finishing. Both are cheap to ask and neither needs telemetry.
 
 ### The branding chain's last cause, 23 August
 

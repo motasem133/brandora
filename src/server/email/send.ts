@@ -38,6 +38,15 @@ export async function sendEmail(params: {
    * instead of the person who wrote to them.
    */
   replyTo?: string
+  /*
+   * Extra headers, for the one message that is not transactional.
+   *
+   * `feedback-request` is a broadcast, and a broadcast without a
+   * `List-Unsubscribe` is what a mailbox provider files under spam regardless
+   * of what the footer says. Nothing else here needs it — an unsubscribe link
+   * on a password reset is worse than no header at all.
+   */
+  headers?: Record<string, string>
 }) {
   const { subject, html } = renderEmail(params.template, params.locale ?? 'en')
   const resend = getClient()
@@ -66,6 +75,7 @@ export async function sendEmail(params: {
       from: env.EMAIL_FROM,
       to: params.to,
       ...(params.replyTo ? { replyTo: params.replyTo } : {}),
+      ...(params.headers ? { headers: params.headers } : {}),
       subject,
       html,
     })

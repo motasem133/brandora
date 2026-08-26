@@ -788,7 +788,10 @@ export const projectEmails = pgTable(
  * uniqueness that makes "at most once, ever" true has to be keyed on whatever
  * the message is about.
  */
-export const userEmailKindEnum = pgEnum('user_email_kind', ['verify_reminder'])
+export const userEmailKindEnum = pgEnum('user_email_kind', [
+  'verify_reminder',
+  'feedback_request',
+])
 
 export const userEmails = pgTable(
   'user_emails',

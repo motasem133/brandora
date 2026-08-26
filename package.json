@@ -36,13 +36,15 @@
     "test:ai-timeout": "tsx scripts/ai-timeout-test.ts",
     "test:model-routing": "tsx scripts/model-routing-test.ts",
     "test:brand-nudge": "tsx scripts/brand-nudge-test.ts",
+    "test:feedback": "tsx scripts/feedback-request-test.ts",
     "test:rendered": "tsx scripts/rendered-content-test.ts",
     "test:verification": "tsx --conditions react-server scripts/verification-gate-test.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "db:seed:test": "node scripts/seed-test-data.mjs",
     "preview:kit": "tsx --conditions react-server scripts/preview-kit.ts",
-    "preview:site": "tsx --conditions react-server scripts/preview-site.ts"
+    "preview:site": "tsx --conditions react-server scripts/preview-site.ts",
+    "feedback:blast": "tsx scripts/feedback-blast.ts"
   },
   "dependencies": {
     "@ai-sdk/react": "^4.0.50",
