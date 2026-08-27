@@ -68,7 +68,7 @@ export function EmptyPin({
 
       <div
         className={cn(
-          'flex min-h-[11rem] flex-col justify-end rounded-card p-6',
+          'flex min-h-[13rem] flex-col justify-end rounded-card p-6',
           'transition-shadow duration-200 ease-[var(--ease-out-soft)]',
         )}
         style={{

@@ -135,7 +135,7 @@ export async function LogoStudio({
                 return (
                   <li key={option.id}>
                     <Link
-                      href={`/dashboard/projects/${projectId}?round=${round.round}&concept=${option.id}`}
+                      href={`/dashboard/projects/${projectId}?open=identity&round=${round.round}&concept=${option.id}#open`}
                       scroll={false}
                       aria-current={current ? 'true' : undefined}
                       title={String(option.metadata?.style ?? '')}

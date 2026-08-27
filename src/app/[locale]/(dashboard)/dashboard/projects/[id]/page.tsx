@@ -6,7 +6,16 @@ import { AssistantPanel } from '@/components/features/assistant/assistant-panel'
 import { BrandFonts } from '@/components/features/projects/brand-fonts'
 import { BrandingView } from '@/components/features/projects/branding-view'
 import { EmptyPin } from '@/components/features/projects/empty-pin'
-import { Tacked } from '@/components/ui/tacked'
+import {
+  FactsSheet,
+  MarkSheet,
+  PaletteSheet,
+  TextSheet,
+  ThumbsSheet,
+  TypeSheet,
+  Wall,
+  WallFrame,
+} from '@/components/features/projects/brand-wall'
 import { DeleteProjectButton } from '@/components/features/projects/delete-project-button'
 import { GenerationPanel } from '@/components/features/projects/generation-panel'
 import { IdentityPlate } from '@/components/features/projects/identity-plate'
@@ -18,6 +27,7 @@ import { SiteMessages } from '@/components/features/projects/site-messages'
 import { WebsiteView } from '@/components/features/projects/website-view'
 import { ContentLibrary } from '@/components/features/studio/content-library'
 import { ArrowLeft, Download, MessageSquare, Palette, PenLine } from 'lucide-react'
+import { brandTheme, fontStack } from '@/lib/brand-theme'
 
 import { buttonVariants } from '@/components/ui/button'
 import { Disclosure } from '@/components/ui/disclosure'
@@ -47,20 +57,26 @@ import { requireOrg } from '@/server/session'
  * had generated — the customer's colours were five chips near the bottom of a
  * scroll, under Brandora's own purple.
  *
- * It is one document now. The identity plate opens it on the brand's own
- * ground, in the brand's own faces; the mark is decided beside the system it
- * has to agree with; and the things the run produced follow in the order
- * someone reads them, rather than hiding behind tabs that had to be discovered.
+ * Replacing it with one long document fixed the navigation and created a worse
+ * problem: eight thousand pixels of tools, with the brand distributed through
+ * them. Everything was reachable and nothing was visible.
+ *
+ * So the page is a wall. It opens on every artefact this brand has, at a size
+ * worth judging, with the gaps hanging in the same frames as the work — one
+ * screen that answers "what do I have?". Each sheet opens its working view
+ * below through `?open=`, which keeps the tools one press away, survives a
+ * reload, and can be linked to. The order of the wall is the order someone
+ * reads a brand; the order of the tools is whichever one they pressed.
  */
 export default async function ProjectDetailPage({
   params,
   searchParams,
 }: {
   params: Promise<{ locale: string; id: string }>
-  searchParams: Promise<{ tab?: string; round?: string; concept?: string }>
+  searchParams: Promise<{ tab?: string; round?: string; concept?: string; open?: string }>
 }) {
   const { locale, id } = await params
-  const { tab, round, concept } = await searchParams
+  const { tab, round, concept, open } = await searchParams
   setRequestLocale(locale)
 
   const t = await getTranslations('Projects')
@@ -69,6 +85,7 @@ export default async function ProjectDetailPage({
      deliverable and what it is for, in the product's own words. */
   const tg = await getTranslations('Generation')
   const tst = await getTranslations('Studio')
+  const tw = await getTranslations('Website')
   const { org, user } = await requireOrg()
 
   // getProject is org-scoped, so a project from another tenant reads as 404.
@@ -262,6 +279,57 @@ export default async function ProjectDetailPage({
       ]
     : []
 
+  /* The brand's own ground and faces, for the sheets that *are* the brand.
+     Every variable is `--guest-*`; chrome tokens are not shadowable by
+     generated input, for the reason `brand-theme` sets out at length. */
+  const theme = brandTheme(brandingAsset?.colorPalette ?? null)
+  const brandName = project.businessName || project.title
+
+  /* The same order and the same emptiness rule the website section itself uses,
+     so the sheet and the view below it cannot disagree about what exists. */
+  const sitePages = (['home', 'about', 'services', 'contact'] as const)
+    .map((name) => ({
+      name,
+      blocks: ((websiteAsset?.pages ?? {}) as Record<string, unknown[]>)[name]?.length ?? 0,
+    }))
+    .filter((page) => page.blocks > 0)
+    .slice(0, 4)
+
+  /*
+   * Which working view is open, if any.
+   *
+   * Read from the URL rather than held in state so a link to one artefact is a
+   * link somebody can send, and an unknown value closes everything instead of
+   * rendering a section that does not exist.
+   */
+  const OPEN_KEYS = ['identity', 'kit', 'website', 'copy', 'content', 'brief'] as const
+  const opened = OPEN_KEYS.find((key) => key === open) ?? null
+
+  const sheet = (key: string | null) =>
+    key ? `/dashboard/projects/${project.id}?open=${key}#open` : `/dashboard/projects/${project.id}`
+
+  /* The brief reads the same whether it is the whole page or one sheet's view,
+     so it is written once. */
+  const brief = (
+    <dl className="grid gap-4 sm:grid-cols-2">
+      {[
+        [t('briefIndustry'), project.industry],
+        [t('briefCountry'), project.country],
+        [t('briefStyle'), project.brandStyle],
+        [t('briefLanguage'), project.language === 'ar' ? 'العربية' : 'English'],
+      ].map(([label, value]) => (
+        <div key={label}>
+          <dt className="text-xs uppercase tracking-wide text-fg-muted">{label}</dt>
+          <dd className="mt-0.5 text-sm capitalize">{value}</dd>
+        </div>
+      ))}
+      <div className="sm:col-span-2">
+        <dt className="text-xs uppercase tracking-wide text-fg-muted">{t('briefAudience')}</dt>
+        <dd className="mt-0.5 text-sm">{project.brandBrief}</dd>
+      </div>
+    </dl>
+  )
+
   return (
     <div className="mx-auto max-w-6xl space-y-8">
       {/*
@@ -344,202 +412,297 @@ export default async function ProjectDetailPage({
       />
 
       {/*
-        Every deliverable on one scroll, in the order it is read.
+        The wall, and the tools one press behind it.
 
-        Behind tabs, the website and the social kit were things a customer had
-        to already know existed. The product's claim is that one run produces
-        all of it and that it agrees with itself, which is a claim a page can
-        only make by putting the pieces next to each other.
+        `open` is read rather than trusted: an unknown value falls back to the
+        wall with nothing open, so a stale or hand-typed link lands somewhere
+        rather than on an empty page.
       */}
       {onAssistant ? (
         <AssistantPanel projectId={project.id} initialMessages={history as never} />
       ) : (
         <>
-      {/* Pin only, no caption: every section below carries its own heading, and
-          a mono label above one would be the page saying the same word twice. */}
-      {brandingAsset && (
-        <Tacked>
-        <BrandingView
-          branding={brandingAsset}
-          files={files}
-          projectId={project.id}
-          chosenName={project.businessName}
-          creditBalance={org.creditBalance}
-          logoCost={CREDIT_COSTS.logos}
-          logoBrief={project.logoBrief}
-          isGenerating={isJobActive}
-          rounds={rounds}
-          activeRound={activeRound}
-          activeConcept={activeConcept}
-          primaryId={primaryId}
-          chosenId={chosenId}
-          language={project.language}
-          mustVerify={mustVerify}
-          vectorExport={Boolean(plan?.vectorExport)}
-          userEmail={user.email}
-          renameImpact={renameImpact}
-        />
-        </Tacked>
-      )}
+          {brandingAsset && (
+            <Wall>
+              {primaryLogo && (
+                <WallFrame
+                  href={sheet('identity')}
+                  caption={tb('logos')}
+                  meta={tb('fileCount', { count: logoFiles.length })}
+                  active={opened === 'identity'}
+                  guest
+                  vars={theme.vars}
+                >
+                  <MarkSheet logo={primaryLogo} alt={brandName} />
+                </WallFrame>
+              )}
 
-      {brandingAsset && (
-        <Tacked>
-        <SocialKit
-          projectId={project.id}
-          posts={kitPosts}
-          pdf={kitPdf}
-          hasLogo={Boolean(chosenId)}
-          cost={CREDIT_COSTS.kit}
-          creditBalance={org.creditBalance}
-          isGenerating={isJobActive}
-          mustVerify={mustVerify}
-          userEmail={user.email}
-          unlocked={Boolean(plan?.socialMediaKit)}
-        />
-        </Tacked>
-      )}
+              <WallFrame
+                href={sheet('identity')}
+                caption={tb('palette')}
+                active={opened === 'identity'}
+                guest
+                vars={theme.vars}
+              >
+                <PaletteSheet swatches={brandSwatches} />
+              </WallFrame>
 
-      {websiteAsset && (
-        <Tacked>
-          <WebsiteView website={websiteAsset} />
-        </Tacked>
-      )}
+              <WallFrame
+                href={sheet('identity')}
+                caption={tb('fonts')}
+                meta={brandingAsset.fontRecommendations?.heading}
+                active={opened === 'identity'}
+                guest
+                vars={theme.vars}
+              >
+                <TypeSheet
+                  name={brandName}
+                  slogan={brandingAsset.slogan}
+                  heading={fontStack(brandingAsset.fontRecommendations?.heading)}
+                  body={fontStack(brandingAsset.fontRecommendations?.body)}
+                />
+              </WallFrame>
 
-      {/*
-        The website a free customer did not get, named rather than absent.
+              {brandingAsset.brandStory && (
+                <WallFrame
+                  href={sheet('identity')}
+                  caption={tb('story')}
+                  active={opened === 'identity'}
+                  guest
+                  vars={theme.vars}
+                >
+                  <TextSheet
+                    body={brandingAsset.brandStory}
+                    font={fontStack(brandingAsset.fontRecommendations?.body)}
+                  />
+                </WallFrame>
+              )}
 
-        The same decision the social kit already made, and the reason is the
-        same: a section that simply is not there teaches nobody that it exists.
-        A free brand is the thin one — no site, no kit — so the customer meets
-        the two things the paid plans are sold on exactly never, and the upgrade
-        is asked for on a pricing page they have no reason to open.
+              {socialAsset?.instagramBio && (
+                <WallFrame
+                  href={sheet('copy')}
+                  caption={tb('copy')}
+                  active={opened === 'copy'}
+                  guest
+                  vars={theme.vars}
+                >
+                  <TextSheet
+                    body={socialAsset.instagramBio}
+                    font={fontStack(brandingAsset.fontRecommendations?.body)}
+                  />
+                </WallFrame>
+              )}
 
-        Only when the plan is what is missing. A customer who could have had a
-        website and said no at the wizard is not locked out of anything, and
-        telling them they are would be a lie with a price attached.
-      */}
-      {!websiteAsset && !plan?.websiteBuilder && (
-        <EmptyPin
-          title={tg('locked.website.title')}
-          benefit={tg('locked.website.benefit')}
-          action={tb('pinHang')}
-          caption={tb('website')}
-          meta={tb('pinCredits', { credits: CREDIT_COSTS.website })}
-          price={tb('websiteLocked')}
-        />
-      )}
-      {/*
-        The modest half, hung rather than stacked.
+              {/*
+                The kit is three sheets in one slot, because it is three states:
+                made, buyable, and available but not run yet. Only the middle one
+                is a gap — the last is a button that has not been pressed, and
+                drawing it as a locked frame would be selling somebody something
+                they already own.
+              */}
+              {kitPosts.length > 0 ? (
+                <WallFrame
+                  href={sheet('kit')}
+                  caption={tb('kit')}
+                  meta={tb('fileCount', { count: kitPosts.length + (kitPdf ? 1 : 0) })}
+                  active={opened === 'kit'}
+                >
+                  <ThumbsSheet files={kitPosts} alt={tb('kit')} />
+                </WallFrame>
+              ) : !plan?.socialMediaKit ? (
+                <EmptyPin
+                  className="h-full max-w-none"
+                  title={tg('locked.kit.title')}
+                  benefit={tg('locked.kit.benefit')}
+                  action={tb('pinHang')}
+                  caption={tb('kit')}
+                  meta={tb('pinCredits', { credits: CREDIT_COSTS.kit })}
+                  price={tb('kitLocked')}
+                />
+              ) : (
+                <WallFrame
+                  href={sheet('kit')}
+                  caption={tb('kit')}
+                  meta={tb('pinCredits', { credits: CREDIT_COSTS.kit })}
+                  active={opened === 'kit'}
+                >
+                  <TextSheet body={tb('kitHint')} />
+                </WallFrame>
+              )}
 
-        These four are sheets a person reads, not artefacts they operate, and as
-        full-width bands they were four screens of scrolling for four short
-        things. Two columns at this width is what the wall does with a sheet
-        that does not need the room.
+              {/*
+                A website that was never asked for is not a gap. The pin appears
+                only when the plan is what is missing — the same distinction the
+                section below has always made, and the reason is that telling
+                somebody they are locked out of a thing they declined is a lie
+                with a price attached.
+              */}
+              {websiteAsset ? (
+                <WallFrame
+                  href={sheet('website')}
+                  caption={tb('website')}
+                  /* Where it is, or that it is nowhere — the one thing anyone
+                     wants from a website at a glance. */
+                  meta={
+                    websiteAsset.isPublished && websiteAsset.subdomain
+                      ? websiteAsset.subdomain
+                      : tw('notPublished')
+                  }
+                  active={opened === 'website'}
+                >
+                  <FactsSheet
+                    rows={sitePages.map((page) => [
+                      tw(`pages.${page.name}`),
+                      tw('blockCount', { count: page.blocks }),
+                    ])}
+                  />
+                </WallFrame>
+              ) : !plan?.websiteBuilder ? (
+                <EmptyPin
+                  className="h-full max-w-none"
+                  title={tg('locked.website.title')}
+                  benefit={tg('locked.website.benefit')}
+                  action={tb('pinHang')}
+                  caption={tb('website')}
+                  meta={tb('pinCredits', { credits: CREDIT_COSTS.website })}
+                  price={tb('websiteLocked')}
+                />
+              ) : null}
 
-        Messages sit directly under the site they came from, which is why this
-        block starts where it does.
-      */}
-      <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
-        <div className="flex min-w-0 flex-1 flex-col gap-8">
-          {socialAsset && (
-            <Tacked>
-              <SocialView social={socialAsset} />
-            </Tacked>
+              <WallFrame
+                href={sheet('content')}
+                caption={t('contentTitle')}
+                active={opened === 'content'}
+              >
+                <TextSheet body={tst('emptyBodyBrand')} />
+              </WallFrame>
+
+              <WallFrame href={sheet('brief')} caption={t('brief')} active={opened === 'brief'}>
+                <TextSheet body={project.brandBrief} />
+              </WallFrame>
+            </Wall>
           )}
-        </div>
-        <div className="flex min-w-0 flex-1 flex-col gap-8">
-          {websiteAsset && (
-            <Tacked>
-              <SiteMessages projectId={project.id} locale={locale} />
-            </Tacked>
-          )}
 
-      {/*
-        What this brand has written since, and the door to writing more.
-        `content_items.project_id` is required, so every piece of content
-        already belongs to exactly one brand — but the only way in was the app
-        bar's Content Studio, which opens on a brand picker and asks which
-        brand you meant about four seconds after you were looking at it.
-
-        Last of the deliverables on purpose: the run produced everything above,
-        and this is the part that accumulates afterwards.
-      */}
-      {brandingAsset && (
-        <Tacked><section className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="font-display text-xl font-semibold">{t('contentTitle')}</h2>
-            {/*
-              `?brand=` is the Studio's own parameter, resolved on the server —
-              so this arrives with the brand already chosen and the picker
-              already showing it, rather than landing on someone else's.
-            */}
-            <Link
-              href={`/dashboard/studio?brand=${project.id}`}
-              className={buttonVariants({ variant: 'secondary', size: 'sm' })}
-            >
-              <PenLine />
-              {tst('generate')}
-            </Link>
-          </div>
-
-          {/* A slice, not the archive. The full list, and the composer, are one
-              press away above. */}
           {/*
-            No Suspense boundary, deliberately, and it is not a style choice.
+            The working view for whichever sheet was pressed.
 
-            A boundary that re-suspends inside a React transition blocks the
-            whole transition from committing, and `router.refresh()` is a
-            transition. So every save on this page — a slogan, a brand story, a
-            chosen name — wrote to the database, refreshed, received a correct
-            payload, and painted none of it: the customer edited one word and
-            watched the page tell them nothing had happened. It reproduced two
-            times in three.
-
-            What the boundary bought was the wait on one indexed query, measured
-            at 1–22ms. What it cost was every mutation on the page, and three
-            `window.location.reload()` workarounds elsewhere in this codebase
-            written against the same fault — see `generation-panel`, which
-            records it as "the RSC request goes out and the DOM keeps the old
-            output".
+            One at a time, deliberately. The point of the wall is that the page
+            has a size; rendering two of these under it puts the scroll straight
+            back.
           */}
-          <ContentLibrary
-            organizationId={org.id}
-            projectId={project.id}
-            limit={5}
-            emptyBody={tst('emptyBodyBrand')}
-          />
-        </section></Tacked>
-      )}
-        </div>
-      </div>
+          {opened && (
+            <section id="open" className="scroll-mt-6 space-y-6">
+              <Link
+                href={sheet(null)}
+                unstable_dynamicOnHover
+                className="inline-flex items-center gap-1.5 text-sm text-fg-muted transition-colors hover:text-fg"
+              >
+                <ArrowLeft className="size-4 rtl:-scale-x-100" />
+                {tb('wallBack')}
+              </Link>
+
+              {opened === 'identity' && brandingAsset && (
+                <BrandingView
+                  branding={brandingAsset}
+                  files={files}
+                  projectId={project.id}
+                  chosenName={project.businessName}
+                  creditBalance={org.creditBalance}
+                  logoCost={CREDIT_COSTS.logos}
+                  logoBrief={project.logoBrief}
+                  isGenerating={isJobActive}
+                  rounds={rounds}
+                  activeRound={activeRound}
+                  activeConcept={activeConcept}
+                  primaryId={primaryId}
+                  chosenId={chosenId}
+                  language={project.language}
+                  mustVerify={mustVerify}
+                  vectorExport={Boolean(plan?.vectorExport)}
+                  userEmail={user.email}
+                  renameImpact={renameImpact}
+                />
+              )}
+
+              {opened === 'kit' && brandingAsset && (
+                <SocialKit
+                  projectId={project.id}
+                  posts={kitPosts}
+                  pdf={kitPdf}
+                  hasLogo={Boolean(chosenId)}
+                  cost={CREDIT_COSTS.kit}
+                  creditBalance={org.creditBalance}
+                  isGenerating={isJobActive}
+                  mustVerify={mustVerify}
+                  userEmail={user.email}
+                  unlocked={Boolean(plan?.socialMediaKit)}
+                />
+              )}
+
+              {/* The site and the messages it was written from, together — they
+                  were two sections asking to be read as one. */}
+              {opened === 'website' && websiteAsset && (
+                <>
+                  <WebsiteView website={websiteAsset} />
+                  <SiteMessages projectId={project.id} locale={locale} />
+                </>
+              )}
+
+              {opened === 'copy' && socialAsset && <SocialView social={socialAsset} />}
+
+              {opened === 'content' && (
+                <section className="space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <h2 className="font-display text-xl font-semibold">{t('contentTitle')}</h2>
+                    {/*
+                      `?brand=` is the Studio's own parameter, resolved on the
+                      server — so this arrives with the brand already chosen and
+                      the picker already showing it, rather than landing on
+                      someone else's.
+                    */}
+                    <Link
+                      href={`/dashboard/studio?brand=${project.id}`}
+                      className={buttonVariants({ variant: 'secondary', size: 'sm' })}
+                    >
+                      <PenLine />
+                      {tst('generate')}
+                    </Link>
+                  </div>
+
+                  {/*
+                    No Suspense boundary, deliberately, and it is not a style
+                    choice. A boundary that re-suspends inside a React transition
+                    blocks the whole transition from committing, and
+                    `router.refresh()` is a transition — so every save on this
+                    page wrote to the database, refreshed, received a correct
+                    payload and painted none of it. It reproduced two times in
+                    three. What the boundary bought was the wait on one indexed
+                    query, measured at 1–22ms.
+                  */}
+                  <ContentLibrary
+                    organizationId={org.id}
+                    projectId={project.id}
+                    limit={10}
+                    emptyBody={tst('emptyBodyBrand')}
+                  />
+                </section>
+              )}
+
+              {opened === 'brief' && brief}
+            </section>
+          )}
+
+          {/*
+            Before the first run there is no wall — so the brief is the page,
+            open, rather than a sheet hanging on nothing.
+          */}
+          {!brandingAsset && (
+            <Disclosure title={t('brief')} open>
+              {brief}
+            </Disclosure>
+          )}
         </>
       )}
-
-      {/*
-        The brief used to vanish the moment anything was generated, so the one
-        question people ask of a result they dislike — "what did I actually ask
-        for?" — became unanswerable. It stays, folded shut once there is work to
-        read above it, and open when it is all there is.
-      */}
-      <Disclosure title={t('brief')} open={!brandingAsset}>
-        <dl className="grid gap-4 sm:grid-cols-2">
-          {[
-            [t('briefIndustry'), project.industry],
-            [t('briefCountry'), project.country],
-            [t('briefStyle'), project.brandStyle],
-            [t('briefLanguage'), project.language === 'ar' ? 'العربية' : 'English'],
-          ].map(([label, value]) => (
-            <div key={label}>
-              <dt className="text-xs uppercase tracking-wide text-fg-muted">{label}</dt>
-              <dd className="mt-0.5 text-sm capitalize">{value}</dd>
-            </div>
-          ))}
-          <div className="sm:col-span-2">
-            <dt className="text-xs uppercase tracking-wide text-fg-muted">{t('briefAudience')}</dt>
-            <dd className="mt-0.5 text-sm">{project.brandBrief}</dd>
-          </div>
-        </dl>
-      </Disclosure>
     </div>
   )
 }
