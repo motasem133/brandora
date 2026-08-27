@@ -6,6 +6,7 @@ import { AssistantPanel } from '@/components/features/assistant/assistant-panel'
 import { BrandFonts } from '@/components/features/projects/brand-fonts'
 import { BrandingView } from '@/components/features/projects/branding-view'
 import { EmptyPin } from '@/components/features/projects/empty-pin'
+import { Tacked } from '@/components/ui/tacked'
 import { DeleteProjectButton } from '@/components/features/projects/delete-project-button'
 import { GenerationPanel } from '@/components/features/projects/generation-panel'
 import { IdentityPlate } from '@/components/features/projects/identity-plate'
@@ -354,7 +355,10 @@ export default async function ProjectDetailPage({
         <AssistantPanel projectId={project.id} initialMessages={history as never} />
       ) : (
         <>
+      {/* Pin only, no caption: every section below carries its own heading, and
+          a mono label above one would be the page saying the same word twice. */}
       {brandingAsset && (
+        <Tacked>
         <BrandingView
           branding={brandingAsset}
           files={files}
@@ -375,9 +379,11 @@ export default async function ProjectDetailPage({
           userEmail={user.email}
           renameImpact={renameImpact}
         />
+        </Tacked>
       )}
 
       {brandingAsset && (
+        <Tacked>
         <SocialKit
           projectId={project.id}
           posts={kitPosts}
@@ -390,9 +396,14 @@ export default async function ProjectDetailPage({
           userEmail={user.email}
           unlocked={Boolean(plan?.socialMediaKit)}
         />
+        </Tacked>
       )}
 
-      {websiteAsset && <WebsiteView website={websiteAsset} />}
+      {websiteAsset && (
+        <Tacked>
+          <WebsiteView website={websiteAsset} />
+        </Tacked>
+      )}
 
       {/*
         The website a free customer did not get, named rather than absent.
@@ -417,10 +428,31 @@ export default async function ProjectDetailPage({
           price={tb('websiteLocked')}
         />
       )}
-      {/* Directly under the site it came from, and only when there is
-          something to read. */}
-      {websiteAsset && <SiteMessages projectId={project.id} locale={locale} />}
-      {socialAsset && <SocialView social={socialAsset} />}
+      {/*
+        The modest half, hung rather than stacked.
+
+        These four are sheets a person reads, not artefacts they operate, and as
+        full-width bands they were four screens of scrolling for four short
+        things. Two columns at this width is what the wall does with a sheet
+        that does not need the room.
+
+        Messages sit directly under the site they came from, which is why this
+        block starts where it does.
+      */}
+      <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
+        <div className="flex min-w-0 flex-1 flex-col gap-8">
+          {socialAsset && (
+            <Tacked>
+              <SocialView social={socialAsset} />
+            </Tacked>
+          )}
+        </div>
+        <div className="flex min-w-0 flex-1 flex-col gap-8">
+          {websiteAsset && (
+            <Tacked>
+              <SiteMessages projectId={project.id} locale={locale} />
+            </Tacked>
+          )}
 
       {/*
         What this brand has written since, and the door to writing more.
@@ -433,7 +465,7 @@ export default async function ProjectDetailPage({
         and this is the part that accumulates afterwards.
       */}
       {brandingAsset && (
-        <section className="space-y-4">
+        <Tacked><section className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="font-display text-xl font-semibold">{t('contentTitle')}</h2>
             {/*
@@ -476,8 +508,10 @@ export default async function ProjectDetailPage({
             limit={5}
             emptyBody={tst('emptyBodyBrand')}
           />
-        </section>
+        </section></Tacked>
       )}
+        </div>
+      </div>
         </>
       )}
 
