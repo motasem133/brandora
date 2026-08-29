@@ -658,6 +658,9 @@ export function Builder({
   const fonts = fontHref(theme)
 
   return (
+    /* Bench: the page being edited is the biggest object on screen and the
+       tools sit at its edges. The scope rides here rather than on the editor
+       layout, which is a fragment the builder fills entirely. */
     <div className="flex h-dvh flex-col">
       {fonts && <link rel="stylesheet" href={fonts} precedence="default" />}
       <header className="shrink-0 border-b border-line">

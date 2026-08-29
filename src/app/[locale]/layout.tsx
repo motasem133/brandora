@@ -4,40 +4,18 @@ import { NextIntlClientProvider, hasLocale } from 'next-intl'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import {
   Bricolage_Grotesque,
-  IBM_Plex_Mono,
-  IBM_Plex_Sans_Arabic,
-  Plus_Jakarta_Sans,
+  Familjen_Grotesk,
+  Hanken_Grotesk,
+  Readex_Pro,
+  Spline_Sans_Mono,
 } from 'next/font/google'
 import { notFound } from 'next/navigation'
 
 import { PostHogProvider } from '@/components/analytics/posthog-provider'
 import { isRtl, routing } from '@/i18n/routing'
 import { ogImage, ogLocale, siteUrl } from '@/lib/seo'
-import { themeInitScript } from '@/lib/theme'
 import '../globals.css'
 
-/*
- * Three Latin roles, not one.
- *
- * One family carried everything here, on the reasoning that two was one more
- * than the brand needs. That holds inside the app and it does not hold on the
- * marketing page, which sells typography as one of the ten things a run
- * produces and was setting the whole argument in a single weight-varied UI
- * sans. A page that cannot show a pairing is a poor advertisement for a product
- * that generates them.
- *
- * The split is by role and the roles do not overlap: display is the only thing
- * that changed, body is untouched, and the mono is a face the page already
- * wanted and did not have.
- */
-const jakarta = Plus_Jakarta_Sans({
-  subsets: ['latin'],
-  /* 800 is gone: `font-extrabold` appears nowhere in the codebase, and it was
-     a whole file per locale for a weight nothing sets. */
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-jakarta',
-  display: 'swap',
-})
 
 /*
  * Display, marketing only.
@@ -65,35 +43,70 @@ const bricolage = Bricolage_Grotesque({
   display: 'swap',
 })
 
+
+
+/* -------------------------------------------------------------------------- */
+/*                        The board's own faces                                */
+/* -------------------------------------------------------------------------- */
 /*
- * Utility. Hex codes, the run panel's log lines, timings, credit figures.
+ * The product's faces. Bricolage below is the marketing display face and the
+ * only survivor of the family the app used before the board.
  *
- * `font-mono` resolved to whatever the visitor's browser called monospace,
- * which on this page meant the palette card's four hex values rendered in a
- * different face per platform. It is also the superfamily sibling of the
- * Arabic face below, so the two non-Jakarta stacks are related by design.
+ * The board is a replacement visual world, and it is being migrated one surface
+ * at a time rather than by flipping `:root` — so these four have to exist on the
+ * document while most of the app is still on Jakarta and Plex. That costs four
+ * font files on every page until the migration finishes, which is the price of
+ * not rewriting twenty-three routes in one commit.
  */
-const mono = IBM_Plex_Mono({
+
+/** Display. A grotesque with enough shape to sit above a customer's own mark
+    without competing with it. */
+const familjen = Familjen_Grotesk({
   subsets: ['latin'],
-  weight: ['400', '500'],
-  variable: '--font-plex-mono',
+  variable: '--font-familjen',
   display: 'swap',
 })
 
-const arabic = IBM_Plex_Sans_Arabic({
-  subsets: ['arabic'],
-  /* 300 is gone for the same reason as Jakarta's 800: `font-light` is unused. */
-  weight: ['400', '500', '600', '700'],
-  /*
-   * `--font-arabic-face`, not `--font-arabic`.
-   *
-   * The theme layer also declares `--font-arabic`, as `var(--font-arabic), …`
-   * — which with this name was a cycle. One of the two won by source order and
-   * the generic tail was silently dropped. Naming the raw face separately lets
-   * the theme token compose it properly, which is what makes it safe to append
-   * to the display and mono stacks.
-   */
-  variable: '--font-arabic-face',
+/** The board's interface face. Warmer and narrower than Jakarta, which is what
+    lets a dense table stay quiet at 13px. */
+const hanken = Hanken_Grotesk({
+  subsets: ['latin'],
+  variable: '--font-hanken',
+  display: 'swap',
+})
+
+/*
+ * The machine's voice: credit figures, file dimensions, dates, hex.
+ *
+ * Distinct from the interface face on purpose — anything the pipeline emitted
+ * is set in this, anything we wrote is not, and that is the whole tell. Ships
+ * 400 and 500 only; nothing may set a heavier weight on it, because the face
+ * has no bold to draw and the browser would synthesise one.
+ */
+const splineMono = Spline_Sans_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500'],
+  variable: '--font-spline-mono',
+  display: 'swap',
+})
+
+/*
+ * Arabic, for the board.
+ *
+ * Drawn for Arabic and Latin together rather than being an Arabic sibling of a
+ * Latin superfamily, which matters on a surface where the two sit in the same
+ * `--font-readex-face`, not `--font-arabic`: the theme layer declares
+ * `--font-arabic` as `var(--font-readex-face), …`, and naming both the same
+ * would be a cycle — one would win by source order and the generic tail would
+ * be dropped silently.
+ */
+const readex = Readex_Pro({
+  subsets: ['arabic', 'latin'],
+  /* Weights shipped are weights used, the rule that dropped Jakarta's 800 and
+     Plex Arabic's 300 before it: `font-light` appears nowhere in the codebase,
+     and on a face served across two subsets an unused weight is two files. */
+  weight: ['400', '500', '600'],
+  variable: '--font-readex-face',
   display: 'swap',
 })
 
@@ -163,16 +176,8 @@ export default async function LocaleLayout({
       lang={locale}
       dir={isRtl(locale) ? 'rtl' : 'ltr'}
       suppressHydrationWarning
-      className={`${jakarta.variable} ${bricolage.variable} ${mono.variable} ${arabic.variable}`}
+      className={`${familjen.variable} ${hanken.variable} ${splineMono.variable} ${readex.variable} ${bricolage.variable}`}
     >
-      <head>
-        {/*
-          Rendered by a Server Component so it ships in the initial HTML and runs
-          before first paint. A <script> created inside a client component would
-          never execute, which is what React 19 warns about.
-        */}
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
-      </head>
       <body>
         <NextIntlClientProvider>
           <PostHogProvider />

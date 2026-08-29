@@ -25,7 +25,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          'bg-[image:var(--brand-gradient)] text-brand-fg shadow-[0_0_0_1px_color-mix(in_srgb,var(--brand-primary)_20%,transparent),0_2px_18px_-6px_color-mix(in_srgb,var(--brand-primary)_60%,transparent),0_0_44px_-10px_color-mix(in_srgb,var(--brand-primary)_32%,transparent)] hover:shadow-[0_0_0_1px_color-mix(in_srgb,var(--brand-primary)_32%,transparent),0_2px_22px_-4px_color-mix(in_srgb,var(--brand-primary)_75%,transparent),0_0_64px_-8px_color-mix(in_srgb,var(--brand-primary)_45%,transparent)]',
+          'bg-[image:var(--brand-gradient)] text-brand-fg shadow-[var(--shadow-primary)] hover:shadow-[var(--shadow-primary-hover)]',
         secondary: 'control-lit border border-line bg-elevated text-fg hover:bg-elevated/70',
         outline: 'control-lit border border-line-strong text-fg hover:bg-elevated',
         /* No fill at rest, so nothing to light; the moment hover gives it a

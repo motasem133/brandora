@@ -122,8 +122,22 @@ export default async function BillingPage({
   const isSubscribed = Boolean(subscription && hasLiveSubscription(subscription.status))
   const paymentFailed = subscription?.status === 'past_due'
 
+  /*
+   * The first surface that was put on the board, and the reason it went first:
+   * nothing here is generated, so no guest palette had to be re-derived against
+   * a new ground before a single token had been proven.
+   *
+   * It carried its own scope wrapper while it was the only one. The dashboard
+   * layout holds the scope now, so this is a fragment again.
+   *
+   * One composition change survives from that pass: `lit` and `bloom` came off
+   * the standing panel below. They draw a horizon and an interior light source,
+   * and both are meaningless on a board in daylight where a sheet is lifted by
+   * its own shadow.
+   */
   return (
-    <div className="mx-auto max-w-5xl space-y-12">
+    <>
+      <div className="mx-auto max-w-5xl space-y-12">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl font-semibold">{t('title')}</h1>
@@ -133,8 +147,17 @@ export default async function BillingPage({
       </div>
 
       {/* ----------------------------------------------------------- standing */}
-      <section className="lit [--lit-radius:var(--radius-panel)]">
-        <div className="lit-inner bloom p-7 sm:p-9 [--bloom-x:82%] [--bloom-strength:16%]">
+      {/*
+        A sheet, not a lit card.
+
+        `lit` and `bloom` draw the Darkroom's horizon — a gradient edge and an
+        interior light source — and both are meaningless on a board in daylight,
+        where a sheet is lifted by its own shadow instead. Keeping them here
+        would have been the tell that the world was repainted rather than
+        replaced.
+      */}
+      <section className="rounded-panel bg-surface shadow-[var(--shadow-soft)]">
+        <div className="p-7 sm:p-9">
           <div className="flex flex-wrap items-start justify-between gap-x-10 gap-y-7">
             <div>
               <p className="text-sm text-fg-secondary">{t('currentPlan')}</p>
@@ -474,6 +497,7 @@ export default async function BillingPage({
           </div>
         </div>
       </section>
-    </div>
+      </div>
+    </>
   )
 }

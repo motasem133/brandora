@@ -1,9 +1,11 @@
 'use client'
 
-import { Download, Images, Loader2, Lock, MailWarning, Sparkles } from 'lucide-react'
+import { Download, Images, Loader2, MailWarning, Sparkles } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useAction } from 'next-safe-action/hooks'
 
+import { LockedTile } from '@/components/features/projects/brand-tiles'
+import { CompareShelf } from '@/components/ui/compare-shelf'
 import { EmailVerification } from '@/components/features/settings/email-verification'
 import { Button } from '@/components/ui/button'
 import { Disclosure } from '@/components/ui/disclosure'
@@ -31,7 +33,6 @@ export function SocialKit({
   mustVerify,
   userEmail,
   unlocked,
-  lockedPreview,
 }: {
   projectId: string
   posts: GeneratedFile[]
@@ -50,10 +51,10 @@ export function SocialKit({
    * Passed in rather than rendered here: it is a server component, and naming
    * what is missing without showing it is the half-measure this replaces.
    */
-  lockedPreview?: React.ReactNode
 }) {
   const t = useTranslations('Branding')
   const ts = useTranslations('Settings')
+  const tg = useTranslations('Generation')
   const router = useRouter()
 
   const { executeAsync, isPending, result } = useAction(generateSocialKit)
@@ -87,32 +88,29 @@ export function SocialKit({
       <p className="max-w-[68ch] text-sm text-fg-secondary">{t('kitHint')}</p>
 
       {posts.length > 0 && (
-        <div className="mt-5 grid gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {posts.map((post) => (
-            <figure key={post.id} className="space-y-2">
-              {/* Generated assets are arbitrary user content, so next/image
-                  optimisation is skipped in favour of a plain img. */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={`/api/files/${post.id}`}
-                alt={String(post.metadata?.label ?? t('kit'))}
-                className="w-full rounded-control border border-line bg-white object-contain"
-                loading="lazy"
-              />
-              <figcaption className="flex items-center justify-between gap-2">
-                <span className="truncate text-xs font-medium">
-                  {String(post.metadata?.label ?? '—')}
-                </span>
-                <a
-                  href={`/api/files/${post.id}?download`}
-                  className="inline-flex min-h-6 shrink-0 items-center text-xs accent-text hover:underline"
-                >
-                  {t('download')}
-                </a>
-              </figcaption>
-            </figure>
-          ))}
-        </div>
+        /*
+          The kit is where the product's first principle gets tested: it must
+          agree with itself. A grid of thumbnails proves eight files exist and
+          answers nothing about whether the third and the seventh look like the
+          same brand — the shelf lets a customer put any two next to each other
+          at a size worth judging, which is the only way that question gets
+          answered.
+
+          Downloads left the tile with it. They were a link under every image
+          competing with the image for the press, and the whole set is one ZIP
+          on the button below — the place someone actually goes for the files.
+        */
+        <CompareShelf
+          className="mt-5"
+          items={posts.map((post) => ({
+            id: post.id,
+            src: `/api/files/${post.id}`,
+            label: String(post.metadata?.label ?? t('kit')),
+          }))}
+          compareLabel={t('compare')}
+          compareHint={t('compareHint')}
+          holdLabel={(what) => t('holdUp', { what })}
+        />
       )}
 
       <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -140,20 +138,20 @@ export function SocialKit({
       <div className="mt-3">
         {!unlocked ? (
           /*
-           * Named rather than hidden. A section that simply vanishes on the
-           * wrong plan teaches nobody that it exists — and this is the most
-           * persuasive thing the product makes.
+           * A frame with its pin in, not a locked preview.
+           *
+           * Named rather than hidden is still the rule — a section that vanishes
+           * on the wrong plan teaches nobody it exists. What changed is what
+           * "named" looks like: the mockup and the lock line argued for eleven
+           * days and converted nobody, so the gap is drawn as a gap instead.
            */
-          <div className="space-y-4">
-            {lockedPreview}
-            <p className="flex flex-wrap items-center gap-1.5 text-xs text-fg-muted">
-              <Lock className="size-3.5" />
-              {t('kitLocked')}{' '}
-              <Link href="/dashboard/billing" className="accent-text underline underline-offset-2">
-                {t('seePlans')}
-              </Link>
-            </p>
-          </div>
+          <LockedTile
+            title={t('kit')}
+            meta={t('pinCredits', { credits: cost })}
+            benefit={tg('locked.kit.benefit')}
+            action={t('generateIt')}
+            price={t('kitLocked')}
+          />
         ) : mustVerify ? (
           <div className="rounded-control border border-warning/30 bg-warning/[0.07] p-4">
             <div className="flex items-start gap-3">

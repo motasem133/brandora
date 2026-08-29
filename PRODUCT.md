@@ -308,6 +308,52 @@ Two notes on that pinned line, neither of them a change to it:
   approved decision, and the app is untouched. Recorded here so the pinned
   single-family line is not read as having been broken. The reasoning lives in
   DESIGN.md under the Marketing Pairing Rule.
+- **The app carries no metaphor, and that is now a commitment rather than a
+  default.** Answered by the owner on 27 August 2026, after four visual worlds
+  were designed and three were built or comped and rejected: the board (shipped
+  to twelve routes, then rejected), the pin-up wall, the parts catalogue, the
+  standards manual, the split-flap board, the archive wall, the safelight bay,
+  the living specimen and the high-density mosaic. The stated reason was that a
+  concept the user has to decode is a tax the product cannot charge — the person
+  on the screen came to see their brand, not to admire ours.
+
+  Three things were settled with it, and none is to be reopened from memory:
+
+  1. **When distinctive and instantly obvious conflict, obvious wins.** A new
+     user should understand a screen in about three seconds. Distinctiveness
+     lives in polish, colour and depth, never in the structure.
+  2. **The craft bar is Apple, Arc and Family** — real depth, motion, colour and
+     obvious beauty on first sight. Named by the owner as the company this
+     should keep. It is a bar to reach, not a look to copy.
+  3. **The customer's palette supplies the colour.** The chrome is a cool
+     near-white with one violet accent; every surface showing generated work is
+     painted from that work's own palette. This is what makes the product look
+     unlike its competitors without asking the user to learn anything.
+
+  4. **There is no dark theme, and that is settled.** Removed on 27 August 2026.
+     The product exists to show a generated palette and a generated palette
+     cannot be judged on a dark ground, so a dark theme was a whole parallel
+     palette maintained for a mode nobody should use on the screens the product
+     is for. `.world-dark` on the marketing pages is unaffected — that is a
+     scope with a pinned brand behind it, not a preference anyone sets, and the
+     two are not in tension. Anything proposing to reintroduce a theme switch is
+     reopening this.
+
+  5. **The landing page is light.** Changed on 27 August 2026 at the owner's
+     direction, and it reverses a pinned commitment rather than drifting from
+     one. `.world-dark` was pinned because the brand is dark on purpose; the
+     landing page no longer opts into it, for a reason specific to that surface:
+     the page's whole argument is "look at the actual work", and near-black is
+     both the category's costume for AI tools and the wrong ground to judge a
+     generated palette on. `/pricing`, `/brand-kit` and the legal pages still use
+     the dark scope, and the scope itself is untouched — this is one surface
+     opting out, not the world being deleted. Reversing it back is a decision,
+     not a restoration.
+
+  Anything proposing a new governing metaphor for the app — a room, a surface, a
+  document, a machine — is reopening a decision that cost four rounds, not
+  offering a fresh idea. The visual detail lives in DESIGN.md under "The Work Is
+  The Colour".
 
 The mark is a four-point star with a smaller four-point star cut out of its
 centre, hard-edged, sweeping blue to violet. It supersedes the traced "B" that

@@ -1,4 +1,4 @@
-import { ArrowRight, Sparkles } from 'lucide-react'
+import { ArrowRight, Plus, Sparkles } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Suspense } from 'react'
 
@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { MomentumField, MomentumItem } from '@/components/ui/momentum'
 import { SegmentedControl, SegmentedLink } from '@/components/ui/segmented-control'
 import { Link } from '@/i18n/navigation'
+import { BRAND_COST } from '@/server/billing/credits'
 import { listBrandSpecimens, type BrandSpecimen as Specimen } from '@/server/db/queries/projects'
 import { requireOrg } from '@/server/session'
 
@@ -44,13 +45,36 @@ export default async function ProjectsPage({
   const t = await getTranslations('Projects')
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8">
+    <div className="space-y-7">
       {/* The same action is lit at the end of the app bar on every screen; a
           second copy here said it twice. The empty state below still carries
           its own, because a page with nothing on it needs one. */}
-      <div>
-        <h1 className="font-display text-2xl font-semibold">{t('title')}</h1>
-        <p className="mt-1 text-sm text-fg-secondary">{t('subtitle')}</p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="font-display text-2xl font-semibold">{t('title')}</h1>
+          <p className="mt-1 text-sm text-fg-secondary">{t('subtitle')}</p>
+        </div>
+
+        {/* A GET form keeps the search in the URL and needs no client
+            JavaScript — the same shape the admin screens use. It sits with the
+            page's own heading rather than above the grid, because it filters
+            the page rather than the one list on it. */}
+        <form className="flex gap-2" role="search">
+          <label htmlFor="project-search" className="sr-only">
+            {t('searchLabel')}
+          </label>
+          <Input
+            id="project-search"
+            name="q"
+            type="search"
+            defaultValue={q ?? ''}
+            placeholder={t('searchLabel')}
+            className="w-56 sm:w-64"
+          />
+          {/* Carried across the search, so searching does not silently throw
+              away a sort the customer chose a moment ago. */}
+          {isSort(sort) && sort !== 'recent' && <input type="hidden" name="sort" value={sort} />}
+        </form>
       </div>
 
       {/*
@@ -177,26 +201,7 @@ async function ProjectList({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        {/* A GET form keeps the search in the URL and needs no client
-            JavaScript — the same shape the admin screens use. */}
-        <form className="flex gap-2" role="search">
-          <label htmlFor="project-search" className="sr-only">
-            {t('searchLabel')}
-          </label>
-          <Input
-            id="project-search"
-            name="q"
-            type="search"
-            defaultValue={search ?? ''}
-            placeholder={t('searchLabel')}
-            className="w-56 sm:w-64"
-          />
-          {/* Carried across the search, so searching does not silently throw
-              away a sort the customer chose a moment ago. */}
-          {sort !== 'recent' && <input type="hidden" name="sort" value={sort} />}
-        </form>
-
+      <div className="flex flex-wrap items-center justify-end gap-3">
         <SegmentedControl label={t('sortLabel')}>
           {SORTS.map((option) => (
             <SegmentedLink key={option} href={sortHref(option)} active={sort === option}>
@@ -232,7 +237,23 @@ async function ProjectList({
           wrapper that also lifts would carry the card out from under the cursor
           and make it enter itself again.
         */
-        <MomentumField className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        /*
+          A grid, not a wall.
+
+          The three-column deal and the pinned sheets were the board's
+          composition — a sheet kept the height of what was on it and the
+          shortest column was the last one, which is how a critique wall reads.
+          The world that replaced the board has no pins and no sheets, and the
+          comp this page was approved from is an even grid: every brand the same
+          frame, so the only thing that differs between two cards is the brand
+          itself. That is the whole argument of the new world, and a masonry
+          would put our composition back in front of it.
+
+          `MomentumField` stays. It is not board vocabulary — it measures how the
+          pointer was travelling so a card entered on the way past knows, and a
+          card can only measure velocity it was there for.
+        */
+        <MomentumField className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {shown.map((specimen, index) => (
             <Cell key={specimen.project.id} index={index} lift={false}>
               <MomentumItem className="h-full">
@@ -240,6 +261,35 @@ async function ProjectList({
               </MomentumItem>
             </Cell>
           ))}
+
+          {/*
+            The way to the next brand, in the grid rather than only in the rail.
+
+            It is last rather than first: a returning customer comes here to
+            find a brand they already made, and putting the empty frame in the
+            first cell puts the thing they are not looking for where their eye
+            lands. It carries the price and the duration because this control
+            spends real money, and PRODUCT.md is explicit that anything which
+            can spend credits says so at the control that spends them.
+
+            Only shown on an unfiltered list: in a set of search results it is
+            not one of the results, and the card that looks like a result and is
+            not is the oldest trick in a bad grid.
+          */}
+          {!needle && (
+            <Link
+              href="/onboarding"
+              className="group flex min-h-[15rem] flex-col items-center justify-center gap-2.5 rounded-card border border-dashed border-line-strong bg-elevated/60 p-6 text-center transition-colors hover:border-brand/40 hover:bg-elevated"
+            >
+              <span className="grid size-10 place-items-center rounded-full bg-surface text-accent shadow-[var(--shadow-soft),var(--lit-inset)] transition-transform duration-200 group-hover:scale-105">
+                <Plus className="size-[1.15rem]" />
+              </span>
+              <span className="text-sm font-semibold text-fg">{t('emptyCta')}</span>
+              <span className="font-mono text-xs text-fg-muted tabular-nums">
+                {t('newBrandCost', { credits: BRAND_COST })}
+              </span>
+            </Link>
+          )}
         </MomentumField>
       )}
     </div>

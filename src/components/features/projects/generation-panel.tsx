@@ -533,40 +533,96 @@ export function GenerationPanel({
         /* Named, so it is reachable as "the run's steps" rather than as an
            anonymous list — the live region above narrates it, and the two want
            telling apart both by a screen reader and by a test. */
-        <ol aria-label={t('stepsLabel')} className="space-y-2 stagger-children">
+        /*
+          The wall assembling itself.
+
+          These were four rows with a tick and a band of light — a progress
+          list, which is what every queue in every product looks like. It is
+          also the single most persuasive ninety seconds this product has: the
+          customer is watching a whole identity arrive, and a checklist is the
+          one shape that makes that look like a file copying.
+
+          So each section is a frame in the place its sheet will occupy. A
+          finished one is paper with its pin in; the one running is the same
+          frame with the light crossing it; the ones after are the same frame,
+          quieter. Nothing moves position as it completes, because a wall whose
+          contents reflow while you watch is a wall you cannot read.
+
+          The `<ol>` and its label stay: the live region narrates this list, and
+          the two have to be tellable apart by a screen reader and by a test.
+        */
+        <ol
+          aria-label={t('stepsLabel')}
+          className="stagger-children grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+        >
           {sections.map((section, index) => {
             const state = stepStatus(progress[section]?.status)
+            const filled = state === 'done'
             return (
               <li
                 key={section}
                 style={{ '--i': index } as React.CSSProperties}
-                className={cn(
-                  'relative flex items-center gap-3 overflow-hidden rounded-control border border-line px-4 py-3 text-sm transition-colors duration-300',
-                  state === 'running' && 'border-brand/40 bg-brand/5',
-                  state === 'done' && 'border-success/30',
-                )}
+                className="relative m-0"
               >
-                {/*
-                  A band of light crossing only the step that is running. One
-                  moving element at a time is what makes the list read as work
-                  in progress rather than as decoration.
-                */}
-                {state === 'running' && (
-                  <span aria-hidden className="absolute inset-0 shimmer-surface" />
-                )}
-                <StepIcon status={state} />
+                {/* The pin goes in as the frame is hung, and brightens when the
+                    sheet arrives — the one thing on a wall that is ours. */}
                 <span
+                  aria-hidden
                   className={cn(
-                    'relative transition-colors duration-300',
-                    state === 'pending' && 'text-fg-muted',
-                    state === 'running' && 'font-medium text-fg',
+                    'absolute -top-[6px] left-1/2 z-10 size-2.5 -translate-x-1/2 rounded-full',
+                    'transition-opacity duration-300',
+                    state === 'pending' ? 'opacity-40' : 'opacity-100',
                   )}
+                  style={{
+                    background:
+                      'radial-gradient(circle at 34% 30%, color-mix(in srgb, var(--brand-primary) 55%, #fff), var(--brand-primary) 58%, color-mix(in srgb, var(--brand-primary) 70%, #000))',
+                    boxShadow: '0 1px 1px rgba(60,52,38,.3), 0 3px 6px -2px rgba(60,52,38,.35)',
+                  }}
+                />
+
+                <div
+                  className={cn(
+                    'relative flex min-h-24 flex-col justify-end overflow-hidden rounded-card p-4',
+                    'transition-all duration-300',
+                    filled && 'bg-surface shadow-[var(--shadow-soft)]',
+                  )}
+                  style={
+                    filled
+                      ? undefined
+                      : {
+                          background:
+                            'repeating-linear-gradient(-45deg, color-mix(in srgb, var(--brand-primary) 5%, transparent) 0 9px, transparent 9px 18px)',
+                          boxShadow: `inset 0 0 0 1.5px color-mix(in srgb, var(--brand-primary) ${
+                            state === 'running' ? 34 : 18
+                          }%, transparent)`,
+                        }
+                  }
                 >
-                  {t(`steps.${section}`)}
-                </span>
-                {progress[section]?.error && (
-                  <span className="ms-auto text-xs text-danger">{progress[section].error}</span>
-                )}
+                  {/* One moving element at a time, on the frame being filled. */}
+                  {state === 'running' && (
+                    <span aria-hidden className="absolute inset-0 shimmer-surface" />
+                  )}
+
+                  <span className="relative flex items-center gap-2">
+                    <StepIcon status={state} />
+                    <span
+                      className={cn(
+                        'text-sm transition-colors duration-300',
+                        state === 'pending' && 'text-fg-muted',
+                        state === 'running' && 'font-medium text-fg',
+                        filled && 'text-fg',
+                      )}
+                    >
+                      {t(`steps.${section}`)}
+                    </span>
+                  </span>
+
+                  {progress[section]?.error && (
+                    <span className="relative mt-1.5 text-xs text-danger">
+                      {progress[section].error}
+                    </span>
+                  )}
+                </div>
               </li>
             )
           })}

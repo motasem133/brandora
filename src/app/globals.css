@@ -13,22 +13,26 @@
  * borrows from the same three brand stops.
  */
 @theme {
-  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
-  --font-arabic: var(--font-arabic-face), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
+  --font-arabic: var(--font-readex-face), ui-sans-serif, system-ui, sans-serif;
   /*
-   * The app's display face is its body face, and that is still right: inside
-   * the product a heading is a heading, not a performance. The marketing scopes
-   * override this to Bricolage Grotesque — see `.world-dark, .world-light`
-   * below — so the shared components (`Disclosure`'s title, `PricingPlans`'
-   * price figure) render in the app's face in the app and in the display face
-   * on the page that is selling typography.
+   * The app has a display face of its own now.
+   *
+   * It used to be the body face, on the grounds that inside the product a
+   * heading is a heading rather than a performance. That was right while the
+   * product had one family; the board gives it two, and a page heading set in
+   * Familjen against Hanken body is the step the old arrangement had to fake
+   * with weight alone. The marketing scopes still override this to Bricolage —
+   * see `.world-dark, .world-light` below.
    */
-  --font-display: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-familjen), ui-sans-serif, system-ui, sans-serif;
   /*
-   * Was Tailwind's default stack, which meant every hex on the palette card
-   * rendered in whatever the visitor's browser called monospace.
+   * The machine's voice: credit figures, file dimensions, dates, hex. Anything
+   * the pipeline emitted is set in this and anything we wrote is not, which is
+   * the whole tell. Ships 400 and 500 only — nothing may set a heavier weight,
+   * because the face has no bold to draw and the browser would synthesise one.
    */
-  --font-mono: var(--font-plex-mono), ui-monospace, SFMono-Regular, monospace;
+  --font-mono: var(--font-spline-mono), ui-monospace, SFMono-Regular, monospace;
 
   /* Generous and consistent: cards 20px, panels 24px, controls 14px. */
   --radius-control: 0.875rem;
@@ -48,10 +52,9 @@
  * is dark — it is a pinned commitment, not a default picked by category — and
  * they used to say so in hardcoded hex, which meant 44 colour literals, no
  * response to anything, and text tuned by eye at `white/35` (3.11:1). Written
- * as a token scope instead, they stay dark under `[data-theme='light']` while
+ * as a token scope instead, they stay dark while
  * every value in them is the measured one.
  */
-:root,
 .world-dark {
   /* Dark Navy, and two steps lifted out of it rather than grey panels. */
   --bg-base: #05070f;
@@ -93,10 +96,6 @@
    * agreement. The indigo midpoint is interpolated between the new anchor and
    * the blue end so the gradient keeps its shape.
    */
-  --brand-primary: #7240ff;
-  --brand-indigo: #5b5cfb;
-  --brand-secondary: #3b82f6;
-  --brand-fg: #ffffff;
 
   /*
    * The colour that decorative light is drawn in — a lit edge, a bloom, a rail.
@@ -131,7 +130,6 @@
    * top stop because the top is now the far end from the light and has to look
    * like it.
    */
-  --brand-gradient: linear-gradient(0deg, var(--brand-primary), #4b46c9 55%, #1e4585);
 
   /*
    * The two inner edges every control carries: a faint neutral line along the
@@ -145,6 +143,22 @@
     inset 0 -1px 0 0 color-mix(in srgb, var(--brand-primary) 32%, transparent);
 
   /* Soft, wide, and tinted with the brand rather than pure black. */
+  /*
+   * The primary control's own light, as a token rather than three literals in
+   * the Button.
+   *
+   * It was written inline, reading `--brand-primary` directly, which made it the
+   * one lit thing in the product a scope could not move: the fill has to stay
+   * violet, so re-pointing the ramp was never an option. On a dark ground this
+   * halo reads as light. On a board in daylight it reads as haze.
+   */
+  --shadow-primary: 0 0 0 1px color-mix(in srgb, var(--brand-primary) 20%, transparent),
+    0 2px 18px -6px color-mix(in srgb, var(--brand-primary) 60%, transparent),
+    0 0 44px -10px color-mix(in srgb, var(--brand-primary) 32%, transparent);
+  --shadow-primary-hover: 0 0 0 1px color-mix(in srgb, var(--brand-primary) 32%, transparent),
+    0 2px 22px -4px color-mix(in srgb, var(--brand-primary) 75%, transparent),
+    0 0 64px -8px color-mix(in srgb, var(--brand-primary) 45%, transparent);
+
   --shadow-soft: 0 1px 2px rgba(5, 8, 20, 0.4), 0 12px 32px -16px rgba(5, 8, 20, 0.8);
   --shadow-lifted: 0 2px 4px rgba(5, 8, 20, 0.35), 0 26px 56px -24px rgba(91, 92, 251, 0.55);
 
@@ -153,49 +167,173 @@
   --danger: #ef4444;
 }
 
-/* Attribute, not class: React owns <html>'s className and wipes a class added
-   imperatively whenever the locale changes. See lib/theme.ts. */
-[data-theme='light'] {
-  --bg-base: #f7f8fc;
-  --bg-surface: #ffffff;
-  --bg-elevated: #f2f4fb;
 
-  --text-primary: #0b1020;
-  --text-secondary: #4c5570;
-  /* 4.45:1 on plain white missed AA across 57 nodes in the light theme. */
-  --text-muted: #67708c;
-
-  /* A shade of the primary here, for the same reason the dark theme takes a
-     tint: the accent has to survive being read on white. 7.53:1 on surface,
-     7.09:1 on the base ground. */
-  --text-accent: #5b33cc;
-
-  --border: color-mix(in srgb, #0b1020 8%, transparent);
-  --border-strong: color-mix(in srgb, #0b1020 14%, transparent);
-
-  /* White into a white ground is nothing. The top edge inverts; the lit bottom
-     edge keeps the accent and eases off, because it has less room to sit in. */
-  --lit-inset: inset 0 1px 0 0 color-mix(in srgb, #0b1020 4%, transparent),
-    inset 0 -1px 0 0 color-mix(in srgb, var(--brand-primary) 26%, transparent);
-
-  --shadow-soft: 0 1px 2px rgba(11, 16, 32, 0.05), 0 10px 30px -18px rgba(11, 16, 32, 0.25);
-  --shadow-lifted: 0 2px 6px rgba(11, 16, 32, 0.06), 0 24px 48px -24px rgba(114, 64, 255, 0.35);
+/* -------------------------------------------------------------------------- */
+/*                        The board — a replacement world                       */
+/* -------------------------------------------------------------------------- */
+/*
+ * A scope, not a `:root` rewrite, and deliberately.
+ *
+ * The board replaces the Darkroom across the whole app, but twenty-three routes
+ * cannot move in one commit — so it arrives the way the marketing worlds already
+ * do: as a token scope a surface opts into. Everything inside reads the same
+ * semantic tokens it always did, so a component re-skins without being touched.
+ * When the last surface has opted in, this block becomes `:root` and the scope
+ * disappears.
+ *
+ * Why daylight. The Darkroom's thesis was that a near-black room lets the print
+ * be the only lit thing. It is a good idea about photographs and the wrong one
+ * about brands: you cannot judge a colour in the dark, and most generated brands
+ * are drawn on light paper — Weekday Roasters' own background is #FFFFFF — so a
+ * near-black chrome forces every specimen into a bright rectangle in a void.
+ *
+ * The ramp is unchanged and still pinned. What changed is how little of it there
+ * is: on the board the accent is the pin, and nothing else.
+ *
+ * Every value below was measured against its own worst ground rather than
+ * assumed. Muted is #635e54 because #7c766b — which reads fine on a sheet at
+ * 4.51 — falls to 3.52 on the board itself, and the board is what most muted
+ * text actually sits on.
+ */
+:root {
+  /*
+   * The brand ramp is chrome, and chrome is not world-specific.
+   *
+   * These five lived in the `.world-dark` block for as long as that block was
+   * also `:root`. Splitting the two to give marketing its own dark left the
+   * whole ramp behind with it, so `--brand-gradient` resolved to nothing
+   * everywhere else and every primary control in the product lost its fill —
+   * a white pill with a shadow where the one gradient in the system should be.
+   *
+   * The ramp is the client's pinned commitment and it is sampled from
+   * `logo.png`, so it belongs to the product rather than to any one room. What
+   * *is* world-specific is how much of it a room spends: `--accent-surface`
+   * below points at the ramp on marketing and at ink on the board.
+   */
+  --brand-primary: #7240ff;
+  --brand-indigo: #5b5cfb;
+  --brand-secondary: #3b82f6;
+  --brand-fg: #ffffff;
+  --brand-gradient: linear-gradient(0deg, var(--brand-primary), #4b46c9 55%, #1e4585);
 
   /*
-   * Status, darkened for a light ground.
+   * The document paints and sets its own faces, so opting a surface in is one
+   * class rather than a class plus a background plus a font.
    *
-   * These three were declared once, for the dark theme, and never overridden —
-   * so every "Verified" badge, every `+490` and every error message measured
-   * 1.84–3.76:1 in light. The dark values are unchanged and correct there.
-   *
-   * The floor they had to clear is not white: a Badge sets its tone as text on a
-   * 15% wash of that same tone, which is the tightest pairing each one appears
-   * in. Measured worst cases across base, surface, elevated and their washes:
-   * success 5.20, warning 5.13, danger 4.59.
+   * `bg-base` is not a utility and never was — registering a colour called
+   * "base" makes Tailwind compile `.text-base` to a colour instead of a font
+   * size, which is why the note above `@theme inline` exists. Painting here is
+   * also what makes the ground follow the theme without a second class.
    */
-  --success: #166534;
-  --warning: #92400e;
-  --danger: #b91c1c;
+  background: var(--bg-base);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+
+  /*
+   * Ground, a panel floating on it, and a fill raised out of the panel.
+   *
+   * Light is not a default here, it is read off the use scene: the person at
+   * this screen is judging a generated palette, and most generated brands are
+   * drawn on light paper — an example brand's own background is `#ffffff`. A
+   * dark chrome puts every specimen in a bright rectangle in a void, which is
+   * the failure that ended the Darkroom and then ended the board's night as the
+   * default. The ground is a cool near-white so a customer's warm palette and a
+   * customer's cool palette are both guests rather than one of them fighting
+   * the room.
+   */
+  --bg-base: #eff1f4;
+  --bg-surface: #ffffff;
+  --bg-elevated: #f7f8fa;
+
+  --text-primary: #14151a;
+  --text-secondary: #5a5f6b;
+  /*
+   * Measured against the ground, which is the tightest of the three.
+   *
+   * The comp this world was approved from used #878c97 here, which is 2.98 on
+   * the ground and would have shipped every card's second line failing. The
+   * lightest grey that clears AA against #eff1f4 is what the token gets:
+   * #676c79 is 4.64 on the ground, 5.25 on a panel, 4.94 on a raised fill.
+   */
+  --text-muted: #676c79;
+  /* The Readable Accent Rule survives every world change: #7240ff is 4.77 on
+     the ground, which is fine for a control and thin for a paragraph, so accent
+     *text* stays the deeper #5b33cc at 6.65. */
+  --text-accent: #5b33cc;
+
+  /* Mixed from the ink rather than drawn as a grey line. */
+  --border: color-mix(in srgb, #14151a 10%, transparent);
+  --border-strong: color-mix(in srgb, #14151a 17%, transparent);
+
+  /*
+   * The specular top edge, which is what separates a surface that is lifted
+   * from a rectangle that is merely paler.
+   *
+   * Invisible on a white panel by design; it does its work on the raised fill,
+   * the nav pill and the credit meter, where the surface sits on a tinted
+   * ground and needs a lit edge to read as raised rather than as cut out.
+   */
+  --lit-inset: inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
+
+  /*
+   * Decorative light stays drawn in ink, for the reason it always was: pointed
+   * at the ramp, every card wears a violet edge and the accent stops meaning
+   * "this matters" the moment it appears on all of them. The one authored light
+   * source in this world is the single quiet radial behind the shell, not a
+   * gradient repeated per component.
+   */
+  --accent-surface: color-mix(in srgb, #14151a 11%, transparent);
+  --accent-surface-2: color-mix(in srgb, #14151a 5%, transparent);
+
+  /*
+   * Depth is a real cast shadow: offset, blur, and two layers — a tight contact
+   * shadow and a wide ambient one. Cool rather than warm now, because the
+   * ground is cool; a brown shadow on a blue-grey ground reads as dirt.
+   */
+  --shadow-soft: 0 1px 2px rgba(20, 21, 26, 0.05), 0 4px 10px -3px rgba(20, 21, 26, 0.07);
+  --shadow-lifted: 0 4px 8px rgba(20, 21, 26, 0.07), 0 34px 56px -16px rgba(20, 21, 26, 0.26);
+  /* The shell's own panel, which floats above everything else in the window. */
+  --shadow-panel: 0 1px 2px rgba(20, 21, 26, 0.05), 0 26px 60px -22px rgba(20, 21, 26, 0.28);
+
+  /*
+   * The primary control carries a tinted shadow, and that is a deliberate break
+   * with the board's Lifted Not Lit Rule rather than an oversight. On a board in
+   * daylight a coloured halo read as haze; on this ground, at this craft level,
+   * the one gradient control in the product is the thing the eye should find
+   * first, and a violet-tinted cast shadow is how it earns that without a second
+   * accent appearing anywhere else.
+   */
+  --shadow-primary: 0 1px 2px rgba(48, 18, 120, 0.4), 0 10px 20px -8px rgba(114, 64, 255, 0.6);
+  --shadow-primary-hover: 0 2px 4px rgba(48, 18, 120, 0.42), 0 16px 30px -10px rgba(114, 64, 255, 0.66);
+
+  /* Measured on the ground: 5.17, 4.58, 5.30. The comp's #12855a / #b5791c /
+     #c4443c were 4.10, 3.25 and 4.38 there and all three failed. */
+  --success: #0f7350;
+  --warning: #96620f;
+  --danger: #b03a33;
+
+}
+
+
+
+
+
+/*
+ * The ground behind a page that refuses the theme.
+ *
+ * `.world-dark` sits on a div, so it paints itself and its subtree — but `body`
+ * is painted from the document's own tokens, which are the board's now. The
+ * page looks right and the overscroll behind it does not: rubber-banding a dark
+ * marketing page reveals a warm board underneath it.
+ *
+ * The leak is older than the board — the same page
+ * overscrolled onto #f7f8fc — but it used to happen only to readers who had
+ * chosen light, and the board makes it the default. `:has()` lets the document
+ * take its ground from the world its page actually opened in, which is the one
+ * thing the scope arrangement could not express on its own.
+ */
+body:has(> .world-dark) {
+  background: #05070f;
 }
 
 /*
@@ -374,18 +512,6 @@
  * flag would cost a cascading render on every page load just to pick an icon.
  */
 @layer components {
-  .icon-when-dark {
-    display: block;
-  }
-  .icon-when-light {
-    display: none;
-  }
-  [data-theme='light'] .icon-when-dark {
-    display: none;
-  }
-  [data-theme='light'] .icon-when-light {
-    display: block;
-  }
 }
 
 /*
@@ -1035,6 +1161,43 @@
  * signal that a page is a template; the same line stopping short reads as a
  * horizon rather than as a frame.
  */
+/*
+ * The world’s one authored light: a single quiet source, top start, behind
+ * everything.
+ *
+ * It was the same 300-character arbitrary class pasted into four layouts, which
+ * is how the Arabic bug survived in three of them. `-start-40` mirrors and the
+ * gradient does not, so in RTL the box hangs off the right edge while the
+ * ellipse stays at 30% from the box's *left* — putting its falloff outside the
+ * box and cutting the wash off down a hard vertical seam at x=512. Mirroring
+ * the ellipse with the box is the fix, and it has to live somewhere there is
+ * exactly one of it.
+ */
+@utility world-glow {
+  position: fixed;
+  inset-inline-start: -10rem;
+  top: -16rem;
+  z-index: 0;
+  block-size: 48rem;
+  inline-size: 68rem;
+  pointer-events: none;
+  background-image: radial-gradient(
+    ellipse at 30% 30%,
+    color-mix(in srgb, var(--brand-primary) 10%, transparent),
+    color-mix(in srgb, var(--brand-secondary) 5%, transparent) 44%,
+    transparent 70%
+  );
+
+  [dir='rtl'] & {
+    background-image: radial-gradient(
+      ellipse at 70% 30%,
+      color-mix(in srgb, var(--brand-primary) 10%, transparent),
+      color-mix(in srgb, var(--brand-secondary) 5%, transparent) 44%,
+      transparent 70%
+    );
+  }
+}
+
 @utility rule-fade {
   block-size: 1px;
   border: 0;

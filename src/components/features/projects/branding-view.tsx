@@ -87,7 +87,7 @@ export async function BrandingView({
             return (
               <Link
                 key={entry.round}
-                href={`/dashboard/projects/${projectId}?round=${entry.round}`}
+                href={`/dashboard/projects/${projectId}?open=identity&round=${entry.round}#open`}
                 scroll={false}
                 aria-current={current ? 'true' : undefined}
                 className={cn(

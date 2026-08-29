@@ -33,12 +33,10 @@ export function RegisterForm({ google }: { google: boolean }) {
     const name = String(data.get('name')).trim()
     const email = String(data.get('email')).trim()
     const password = String(data.get('password'))
-    const confirm = String(data.get('confirmPassword'))
 
     const next: Record<string, string> = {}
     if (!name) next.name = t('nameRequired')
     if (password.length < 8) next.password = t('passwordTooShort')
-    if (password !== confirm) next.confirmPassword = t('passwordMismatch')
 
     if (Object.keys(next).length > 0) {
       setErrors(next)
@@ -122,18 +120,19 @@ export function RegisterForm({ google }: { google: boolean }) {
           <Input name="email" type="email" autoComplete="email" required className="mt-1.5" />
         </Field>
 
-        {/* The rule is stated before the field is used, not after it is
-            refused — it was only discoverable by submitting and failing. */}
+        {/*
+          The rule is stated before the field is used, not after it is refused —
+          it was only discoverable by submitting and failing.
+
+          There is no confirm field beside it. A second box is only worth its
+          place where a typo is unrecoverable, and here it is not: the field
+          reveals what was typed, and a wrong password is one reset email away
+          from being fixed. It cost a fifth of the form's height on the screen
+          the whole funnel starts at. `reset-password` keeps its confirm, where
+          the same reasoning does not apply — that form is itself the recovery.
+        */}
         <Field label={t('password')} error={errors.password} hint={t('passwordHint')} required>
           <PasswordInput name="password" autoComplete="new-password" className="mt-1.5" />
-        </Field>
-
-        <Field label={t('confirmPassword')} error={errors.confirmPassword} required>
-          <PasswordInput
-            name="confirmPassword"
-            autoComplete="new-password"
-            className="mt-1.5"
-          />
         </Field>
 
         {/* The form-level failure — a rejected sign-up, a taken email —

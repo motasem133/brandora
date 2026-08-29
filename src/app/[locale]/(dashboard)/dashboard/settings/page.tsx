@@ -1,6 +1,5 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
-import { AppearanceCard } from '@/components/features/settings/appearance-card'
 import { OrganizationCard } from '@/components/features/settings/organization-card'
 import { PasswordCard } from '@/components/features/settings/password-card'
 import { ProfileCard } from '@/components/features/settings/profile-card'
@@ -36,8 +35,14 @@ export default async function SettingsPage({ params }: { params: Promise<{ local
    * appearance card would grow to whatever height the workspace card next to it
    * happened to be.
    */
+  /*
+   * Desk, not wall: a name, a password, a theme, an organisation, seats. Nothing
+   * on this page was generated, which is what put it in the first migration slice
+   * alongside billing. The scope lives on the dashboard layout now.
+   */
   return (
-    <div className="mx-auto max-w-5xl">
+    <>
+      <div className="mx-auto max-w-5xl">
       <div>
         <h1 className="font-display text-2xl font-semibold">{t('title')}</h1>
         <p className="mt-1 text-sm text-fg-secondary">{t('subtitle')}</p>
@@ -61,8 +66,6 @@ export default async function SettingsPage({ params }: { params: Promise<{ local
             isOwner={orgRole === 'owner'}
             credits={org.creditBalance}
           />
-
-          <AppearanceCard />
         </div>
       </div>
 
@@ -81,5 +84,6 @@ export default async function SettingsPage({ params }: { params: Promise<{ local
         />
       </div>
     </div>
+    </>
   )
 }
