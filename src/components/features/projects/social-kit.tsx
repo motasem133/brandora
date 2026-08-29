@@ -4,7 +4,7 @@ import { Download, Images, Loader2, MailWarning, Sparkles } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useAction } from 'next-safe-action/hooks'
 
-import { EmptyPin } from '@/components/features/projects/empty-pin'
+import { LockedTile } from '@/components/features/projects/brand-tiles'
 import { CompareShelf } from '@/components/ui/compare-shelf'
 import { EmailVerification } from '@/components/features/settings/email-verification'
 import { Button } from '@/components/ui/button'
@@ -145,12 +145,11 @@ export function SocialKit({
            * "named" looks like: the mockup and the lock line argued for eleven
            * days and converted nobody, so the gap is drawn as a gap instead.
            */
-          <EmptyPin
-            title={tg('locked.kit.title')}
-            benefit={tg('locked.kit.benefit')}
-            action={t('pinHang')}
-            caption={t('kit')}
+          <LockedTile
+            title={t('kit')}
             meta={t('pinCredits', { credits: cost })}
+            benefit={tg('locked.kit.benefit')}
+            action={t('generateIt')}
             price={t('kitLocked')}
           />
         ) : mustVerify ? (

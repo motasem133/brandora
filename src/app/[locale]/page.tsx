@@ -1,66 +1,55 @@
-import { Check } from 'lucide-react'
 import type { Metadata } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import Image from 'next/image'
 
 import { ArabicProof } from '@/components/features/landing/arabic-proof'
 import { ContactSheet } from '@/components/features/landing/contact-sheet'
-import { StepMark } from '@/components/features/landing/flourish'
-import { HowPanel } from '@/components/features/landing/how-panel'
+import { GuestHandover } from '@/components/features/landing/guest-handover'
+import { HeroArtefacts } from '@/components/features/landing/hero-stage'
 import { PricingFaq } from '@/components/features/landing/pricing-faq'
 import { PricingPlans } from '@/components/features/landing/pricing-plans'
-import { RunPanel } from '@/components/features/landing/run-panel'
-import { RunSpine } from '@/components/features/landing/run-spine'
 import { StartCta } from '@/components/features/landing/start-cta'
 import { SULTANA } from '@/components/features/landing/sultana'
-import { AfterHeadline, HeadlineWords } from '@/components/features/landing/motion-hero'
-import { buttonVariants } from '@/components/ui/button'
-import { Eyebrow } from '@/components/ui/eyebrow'
-import { Cell, Horizon, SectionArc, SectionReveal } from '@/components/ui/horizon'
 import { SiteJsonLd } from '@/components/seo/json-ld'
+import { Cell, SectionReveal } from '@/components/ui/horizon'
 import { LogoMark } from '@/components/ui/logo'
 import { Link } from '@/i18n/navigation'
 import { alternatesFor, socialMeta } from '@/lib/seo'
 import { getSession } from '@/server/session'
 
 /**
- * Direction E — The Run.
+ * The landing page: proof, arithmetic, and the gap a subscription closes.
  *
- * The page is the run. It opens in an empty dark room, a real generation plays
- * in the fold, the room then hands itself over to the brand that generation
- * produced, and it closes back in the dark with the price.
+ * This replaces "The Run", and the reason is a number rather than a taste.
+ * Twenty-one accounts, seventeen verified, seventeen generated a brand, and
+ * **zero checkouts ever started** — not abandoned at a price, never reached one.
+ * Fourteen of those seventeen projects have no website and no kit, which are
+ * precisely the two things Creator and Studio sell. Six of the seven growth
+ * fixes shipped against the old page and none of them moved anything. A page
+ * that argues harder for signing up is aimed at the half of the funnel that
+ * already works.
  *
- * That arc is the argument, not a mood. A product selling brand coherence has
- * to demonstrate two things — that a whole identity arrives at once, and that
- * the pieces agree — and both are visual. The hero shows the arrival; the light
- * section shows the agreement, by being Sultana's paper rather than ours. The
- * Guest Palette Rule was already in the design system and this page had never
- * spent it.
+ * So the page is built on the two levers a landing page actually has here.
  *
- * What the previous direction got wrong, and this is answering:
+ * **Trust, without any of the usual instruments.** PRODUCT.md is explicit: no
+ * customers, no testimonials, no usage numbers, no press, no funding, no
+ * awards, no "trusted by" row — none exist, and inventing them is forbidden.
+ * That rules out the entire conventional playbook and leaves three honest
+ * devices, which are the page's three main beats: the complete artefact shown
+ * unabridged and labelled as generated output; the arithmetic published as an
+ * itemised bill; and the limits published beside the price.
  *
- * - Its above-the-fold proof was a screenshot of the dashboard. The first image
- *   a visitor got from a brand generator was an admin UI, and the actual output
- *   started two thousand pixels down.
- * - Its five sections had one rhythm — rule, arc, heading, reveal, grid, at
- *   `py-28` each — so nothing accumulated and nothing pulled the scroll.
- * - A published website, which is one of the ten things a run makes, was a pill
- *   in a list called "And the rest of it".
- * - Arabic, the sharpest differentiator the product has, was not on the page.
- *   Nor were the three copy pairs written for it, which sat unreferenced in both
- *   catalogues: `coherence*`, `edit*`, `arabic*`.
+ * **The paid deliverables, named before an account is asked for.** The website
+ * and the kit are shown as artefacts rather than listed as features, so a
+ * visitor meets the gap here rather than discovering it as a wall after their
+ * one free run.
  *
- * The reference's customer logo wall is still deliberately absent: there are no
- * customers yet, and inventing a "trusted by" row is the one thing on that page
- * we cannot honestly copy.
- */
-/**
- * The landing page's own title, rather than the site default.
- *
- * `title.absolute` skips the `%s · Brandora` template: the template is right
- * for a subpage and wrong here, where the brand name should not be paid for
- * twice. What it buys is the words people actually search — "Brandora" is not
- * one of them, and this page had no others.
+ * It is also light. The app dropped its dark theme, and `.world-dark` on this
+ * page was a pinned commitment that the owner reopened by asking for a page
+ * built to earn trust: near-black chrome is the category's costume for AI tools,
+ * and a page whose entire argument is "look at the actual work" cannot also
+ * stage that work in a dark room. The commitment is not deleted — the marketing
+ * dark still exists as a scope and the legal pages still use it — but this
+ * surface no longer opts into it.
  */
 export async function generateMetadata({
   params,
@@ -89,7 +78,7 @@ export async function generateMetadata({
   }
 }
 
-export default async function RunDirection({
+export default async function LandingPage({
   params,
 }: {
   params: Promise<{ locale: string }>
@@ -97,31 +86,18 @@ export default async function RunDirection({
   const { locale } = await params
   setRequestLocale(locale)
 
-  /*
-   * Every string on this page comes from the catalogue.
-   *
-   * The page previously called `setRequestLocale` and then hardcoded English,
-   * so `/ar` rendered English inside an RTL frame — the bidi algorithm
-   * reordering it into "brand entire Your ,identity" on the one surface that
-   * has to prove the product generates Arabic natively.
-   */
   const t = await getTranslations('Landing')
+  const tc = await getTranslations('Common')
+  const tm = await getTranslations('Meta')
   const tn = await getTranslations('Nav')
   const tp = await getTranslations('Pricing')
-  const tm = await getTranslations('Meta')
-  const tc = await getTranslations('Common')
-  // Shared with StartCta's own lookup — getSession is cache()d per render.
   const session = await getSession()
-  const steps = t.raw('steps') as { name: string; body: string }[]
-  const runSteps = t.raw('runSteps') as { key: string; label: string; detail: string }[]
-  /* One caption per step for the panel beside the list, and the two real data
-     sets its diagrams name. Both are already on the page elsewhere; reading them
-     from the catalogue here rather than restating them is what keeps the process
-     section from drifting away from the contact sheet. */
-  const howCaptions = t.raw('howCaptions') as string[]
-  const logoNames = t.raw('kitLogoNames') as string[]
-  const sitePages = t.raw('kitWebsitePages') as string[]
-  const runSections = runSteps.map(({ key, label }) => ({ key, label }))
+
+  const receiptLines = t.raw('receiptLines') as { t: string; s: string; c: string }[]
+  const limits = t.raw('limitsItems') as { t: string; s: string }[]
+  const gapHas = t.raw('gapHas') as string[]
+  const gapMissing = t.raw('gapMissing') as string[]
+  const gapAdds = t.raw('gapAdds') as string[]
 
   /*
    * Both languages, because the Arabic panel shows them side by side.
@@ -145,458 +121,347 @@ export default async function RunDirection({
     style: m('runBriefStyle'),
   })
 
-  const spine = [
-    { id: 'kit', label: t('navKit') },
-    { id: 'how', label: t('navHow') },
-    { id: 'pricing', label: t('navPricing') },
-    { id: 'faq', label: tp('faqTitle') },
+  const nav = [
+    { href: '#kit', label: t('navKit') },
+    { href: '#bill', label: tp('faqTitle') },
+    { href: '#pricing', label: t('navPricing') },
   ]
 
   return (
-    <div className="world-dark min-h-dvh overflow-x-hidden">
+    <div className="min-h-dvh overflow-x-hidden">
       <SiteJsonLd
         locale={locale}
         name={tc('appName')}
         description={tm('homeDescription')}
         category={tm('applicationCategory')}
       />
-      {/*
-        Sticky, which it was not.
 
-        A page this long put its only header call to action above the first
-        screen and then never offered it again until the visitor had scrolled
-        past everything. The bar costs 72px and carries the one press this page
-        is asking for.
+      {/*
+        One quiet authored light behind the whole page, the same single source
+        the app shell uses. Not a gradient repeated per section — that is how an
+        accent stops meaning anything.
       */}
+      <div
+        aria-hidden
+        className="world-glow"
+      />
+
       <header className="glass sticky top-0 z-40 border-b border-line">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3.5 lg:px-8">
           <span className="flex items-center gap-2.5">
-            <LogoMark className="size-10" />
+            <LogoMark className="size-9" />
             <span className="font-display text-lg font-semibold tracking-[-0.01em]">Brandora</span>
           </span>
 
           {/* `min-h-11` on each item: as bare inline links these measured 20px
               tall, which is under WCAG 2.2's 24px floor on the pointer devices
-              that are the only ones ever to see this row. The bar's own height
-              already allowed for it, so nothing moves. */}
+              that are the only ones ever to see this row. */}
           <nav className="hidden items-center gap-8 text-sm text-fg-secondary md:flex">
-            {[
-              { href: '#kit', label: t('navKit') },
-              { href: '#how', label: t('navHow') },
-              { href: '#pricing', label: t('navPricing') },
-            ].map((item) => (
+            {nav.map((item) => (
               <a
                 key={item.href}
                 href={item.href}
-                className="inline-flex min-h-11 items-center transition-colors hover:text-white"
+                className="inline-flex min-h-11 items-center transition-colors hover:text-fg"
               >
                 {item.label}
               </a>
             ))}
           </nav>
 
-          {/* 44px on touch, back to the compact 36px from `sm` up. This is the
-              one control that follows the visitor down the whole page, so it is
-              the last one that should be under the target-size floor. */}
-          <StartCta size="sm" className="h-11 sm:h-9" />
+          <StartCta size="sm" />
         </div>
       </header>
 
-      <RunSpine items={spine} label={t('spineAria')} />
-
-      {/*
-        Without JavaScript, 49 elements below the fold stayed at `opacity: 0`
-        for good — about four thousand pixels of blank ground on a phone,
-        because the reveal never fired. The reveal is an enhancement; the
-        content is not conditional on it.
-      */}
-      <noscript>
-        <style
-          dangerouslySetInnerHTML={{
-            __html:
-              '[data-reveal]{opacity:1!important;transform:none!important;filter:none!important}',
-          }}
-        />
-      </noscript>
-
-      <main id="content" tabIndex={-1}>
-        {/* ----------------------------------------------------------- hero */}
-        <section className="relative overflow-hidden pb-24 pt-14 sm:pt-20">
-          <Horizon />
-
-          <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-8">
-            <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-10">
-              {/* The claim. Start-aligned rather than centred: a centred column
-                  above a centred blob is the one hero shape this page was asked
-                  not to be, and an asymmetric split is what lets the run sit
-                  beside the sentence it is proving. */}
-              <div className="lg:col-span-5">
-                <span className="animate-fade-in inline-flex items-center gap-2.5 rounded-full border border-line bg-elevated/40 py-1 pe-4 ps-1 text-sm sm:backdrop-blur">
-                  <span className="rounded-full bg-[image:var(--brand-gradient)] px-3 py-1 text-xs font-semibold">
-                    {t('badgePill')}
-                  </span>
-                  <span className="text-fg-secondary">{t('badgeText')}</span>
-                </span>
-
-                {/*
-                  One sentence, one heading. The second clause was a `<p>` at
-                  identical display size, which left the page's accessible title
-                  as the fragment "Your entire brand identity,".
-
-                  Word-level split, which is what keeps this legible in Arabic:
-                  characters join, so a per-letter animation would break the
-                  script outright.
-                */}
-                {/* Tighter above the crease on a phone and unchanged from `sm`
-                    up. The panel below still cannot fit in a 390×844 fold — it
-                    is 616px tall — but every pixel taken out here is another
-                    pixel of it visible, which is what invites the scroll that
-                    starts the replay. */}
-                <h1 className="type-display mt-6 sm:mt-7">
-                  <HeadlineWords text={t('heroHeadline')} />{' '}
-                  <AfterHeadline delay={0.18}>
-                    <span className="type-trail block">{t('heroHeadlineAfter')}</span>
-                  </AfterHeadline>
-                </h1>
-
-                <AfterHeadline delay={0.3}>
-                  <p className="mt-5 max-w-[44ch] leading-relaxed text-fg-secondary sm:mt-6 sm:text-lg">
-                    {t('heroDeck')}
-                  </p>
-                </AfterHeadline>
-
-                <AfterHeadline delay={0.4}>
-                  <div className="mt-7 flex flex-wrap items-center gap-3 sm:mt-9">
-                    <StartCta size="lg" />
-                    <Link
-                      href="/pricing"
-                      className={buttonVariants({
-                        variant: 'outline',
-                        size: 'lg',
-                        shape: 'pill',
-                      })}
-                    >
-                      {t('ctaSecondary')}
-                    </Link>
-                  </div>
-                </AfterHeadline>
-              </div>
-
-              {/* The proof. */}
-              <AfterHeadline delay={0.5} className="lg:col-span-7">
-                <RunPanel
-                  steps={runSteps}
-                  strings={{
-                    replay: t('runReplay'),
-                    replayAction: t('runReplayAction'),
-                    files: t('runFiles'),
-                    briefBusiness: t('runBriefBusiness'),
-                    briefMarket: t('runBriefMarket'),
-                    briefStyle: t('runBriefStyle'),
-                    labelBusiness: t('runBriefLabelBusiness'),
-                    labelMarket: t('runBriefLabelMarket'),
-                    labelStyle: t('runBriefLabelStyle'),
-                    done: t('runDone'),
-                    /*
-                     * `raw`, because the placeholders are filled on the client.
-                     *
-                     * next-intl formats ICU at call time and throws when a
-                     * `{step}` it can see has no value — and the values here
-                     * depend on how far a replay running in the browser has
-                     * got, which the server cannot know. The template crosses
-                     * the boundary unformatted and the panel fills it in.
-                     */
-                    status: t.raw('runStatus') as string,
-                    statusDone: t('runStatusDone'),
-                    header: t('runHeader'),
-                    logoNames,
-                    socialAlt: t('kitSocialAlt'),
-                  }}
-                />
-              </AfterHeadline>
-            </div>
-          </div>
-        </section>
-
-        {/* ------------------------------------------------- what you get --- */}
+      <main id="content" className="relative z-10">
+        {/* ------------------------------------------------------------ hero */}
         {/*
-          The handover.
+          Bold, and light — the system is light and a single dark section is
+          still a second visual system on the page most visitors only ever see.
+          The contrast here is ink on ground at 16.1:1, which is higher than the
+          white-on-black heroes this was measured against; what makes a fold
+          bold is the size of the type and the presence of the subject, not the
+          darkness behind them.
 
-          `world-light` re-points every chrome token at the `--guest-*` variables
-          `brandTheme` emits, so this whole region is Sultana's paper, ink and
-          accent — contrast-checked against each other before they were written,
-          not eyeballed. Brandora's ramp withdraws to the shell, which is what
-          the Guest Palette Rule has always said and what the page never did.
+          No negative margin either. Pulling the section up under a sticky
+          header to fake a full-bleed left a 5px strip of ground showing above
+          it: the header is 73px and the pull was 68px. A light hero needs
+          neither the pull nor the arithmetic.
         */}
-        <section id="kit" className="world-light py-24 sm:py-32" style={SULTANA.vars}>
-          <div className="mx-auto max-w-7xl px-6 lg:px-8">
-            <SectionReveal>
-              <Eyebrow>{t('navKit')}</Eyebrow>
-              <h2 className="type-section mt-4 max-w-3xl">
-                {t('kitTitle')}
-                <span className="type-trail"> {t('kitTitleAccent')}</span>
-              </h2>
-            </SectionReveal>
+        <section className="relative overflow-hidden border-b border-line">
+          <div className="mx-auto flex w-full max-w-7xl items-center gap-16 px-6 py-24 lg:px-8 lg:py-32">
+            <div className="min-w-0 flex-1">
+              {/*
+                `clamp` with a rem term as well as a vw one: a pure `vw` display
+                size is frozen against the reader's own font size, so at 200%
+                root it would grow a fraction of what the body does and the
+                hierarchy would invert for exactly the person who needed it
+                most. DESIGN.md's Hero step.
+              */}
+              <h1
+                className="font-display text-balance font-semibold leading-[0.98] tracking-[-0.045em]"
+                style={{ fontSize: 'clamp(2.75rem, 1.2rem + 5.6vw, 6.5rem)' }}
+              >
+                {t('trustHeroLead')}
+              </h1>
+              <p className="mt-7 max-w-xl text-base leading-relaxed text-fg-secondary sm:text-lg">
+                {t('trustHeroDeck')}
+              </p>
 
-            <ContactSheet />
-
-            {/*
-              The conclusion the sheet has just demonstrated, said once.
-
-              This copy existed in both catalogues and was rendered nowhere. It
-              belongs here rather than in a section of its own: the argument
-              "they match because they were decided together" is only worth
-              making immediately after someone has looked at the things that
-              match.
-            */}
-            <SectionReveal>
-              <div className="mt-20 grid gap-8 border-t border-line pt-14 lg:grid-cols-12">
-                <h3 className="type-section lg:col-span-5">{t('coherenceTitle')}</h3>
-                <p className="max-w-[46ch] text-lg leading-relaxed text-fg-secondary lg:col-span-7">
-                  {t('coherenceBody')}
-                </p>
-              </div>
-            </SectionReveal>
-          </div>
-        </section>
-
-        {/* ------------------------------------------------- how it works --- */}
-        <section id="how" className="relative overflow-hidden py-24 sm:py-32">
-          <SectionArc className="top-0" />
-
-          <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-8">
-            <SectionReveal>
-              <Eyebrow>{t('navHow')}</Eyebrow>
-              <h2 className="type-section mt-4">{t('howTitle')}</h2>
-            </SectionReveal>
-
-            {/*
-              The descent is unchanged and still right — the run happens in
-              sequence, and a row of equal boxes said nothing about order. These
-              numbers are the only ones on the page and they are a real
-              sequence, which is the whole difference between this and a
-              decorative 01/02/03.
-
-              The rail sits outside the list. An `<ol>` may contain only `<li>`,
-              and this one held a decorative div plus a motion wrapper around
-              every item — enough for several screen readers to drop the list
-              semantics, so "How a run works" stopped announcing five steps.
-            */}
-            <div className="mt-14 grid gap-x-16 gap-y-14 lg:grid-cols-[minmax(0,26rem)_1fr] lg:items-start">
-              <div className="relative">
-                <div aria-hidden className="rail absolute bottom-8 start-[1.55rem] top-4 w-px" />
-
-                <ol>
-                  {steps.map((step, index) => (
-                    /* The id is what the panel beside this list observes to know
-                       which step is being read. */
-                    <li key={step.name} id={`how-step-${index}`} className="pb-12 last:pb-0">
-                      {/* The reveal wraps a real box: under `display: contents`
-                          it would generate none, and animate nothing. */}
-                      <Cell
-                        index={index}
-                        className="relative grid grid-cols-[3.5rem_1fr] items-start gap-x-6"
-                      >
-                        <StepMark
-                          index={index}
-                          className="rail-node relative z-10 flex size-14 items-center justify-center rounded-card font-display text-lg font-semibold"
-                        >
-                          {index + 1}
-                        </StepMark>
-
-                        <div className="pt-2.5">
-                          <p className="font-display text-2xl font-semibold tracking-[-0.02em]">
-                            {step.name}
-                          </p>
-                          <p className="mt-2 max-w-[46ch] leading-relaxed text-fg-secondary">
-                            {step.body}
-                          </p>
-                        </div>
-                      </Cell>
-                    </li>
-                  ))}
-                </ol>
+              <div className="mt-10 flex flex-wrap items-center gap-4">
+                <StartCta size="lg" />
+                <span className="text-sm text-fg-muted">{t('planNoCard')}</span>
               </div>
 
               {/*
-                The run itself, cropped out of the product. Sticky, so it stays
-                beside whichever step is being read rather than scrolling past
-                the first one — and only from `lg`, where there are two columns
-                for it to stay beside.
-
-                It now changes with the step. One screenshot captioned "The first
-                of eight questions" sat here beside all five, which meant the
-                picture contradicted the words for four of them and left three
-                hundred pixels of empty column beside the last two.
+                Required by PRODUCT.md, and load-bearing rather than a
+                disclaimer: what sits beside this is the product's own output.
+                Two of the three reference pages fill the same slot with
+                invented company names.
               */}
-              <SectionReveal delay={0.15}>
-                <HowPanel
-                  stepIds={steps.map((_, index) => `how-step-${index}`)}
-                  captions={howCaptions}
-                  shotAlt={t('howShotAlt')}
-                  logoNames={logoNames}
-                  sections={runSections}
-                  pages={sitePages}
-                  refineNote={t('howRefineNote')}
-                />
-              </SectionReveal>
+              <p className="mt-12 font-mono text-xs text-fg-muted">
+                {t('sampleNotice')} · Sultana · {t('receiptTotalValue')}
+              </p>
             </div>
+
+            <HeroArtefacts />
           </div>
         </section>
 
-        {/* ----------------------------------------------------- refine --- */}
-        {/* Recovered copy. "Then you change your mind" is the objection every
-            visitor has at this point in the page, and the answer to it was
-            written and then never rendered. */}
-        <div aria-hidden className="rule-fade" />
-        <section className="py-24 sm:py-32">
+        {/* ------------------------------------------------- the whole kit */}
+        {/*
+          `world-light` re-points every chrome token at the `--guest-*` variables
+          `brandTheme` emits, so this section is drawn in Sultana's own ink
+          rather than ours. It is the page's central claim made structurally: a
+          product that sells brand coherence hands a whole section over to a
+          brand it generated, and nothing here is a mock-up.
+        */}
+        <GuestHandover>
+        <section
+          id="kit"
+          className="world-light border-y border-line py-16 sm:py-20"
+          style={SULTANA.vars}
+        >
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
-            <div className="grid items-center gap-12 lg:grid-cols-12">
-              <SectionReveal className="lg:col-span-5">
-                <h2 className="type-section">{t('editTitle')}</h2>
-                <p className="mt-5 max-w-[46ch] text-lg leading-relaxed text-fg-secondary">
-                  {t('editBody')}
-                </p>
-              </SectionReveal>
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <h2 className="font-display max-w-2xl text-balance text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">
+                {t('kitTitle')} <span className="text-accent">{t('kitTitleAccent')}</span>
+              </h2>
+              {/* Required by PRODUCT.md: any example shown is labelled as
+                  generated output, never implied to be a customer. */}
+              <span className="rounded-full border border-line px-3 py-1.5 font-mono text-xs text-fg-muted">
+                {t('sampleNotice')}
+              </span>
+            </div>
 
-              <SectionReveal delay={0.12} className="lg:col-span-7">
-                <div className="lit [--lit-radius:var(--radius-panel)]">
-                  <div className="lit-inner p-2">
-                    <Image
-                      src="/marketing/app-overview.webp"
-                      alt={t('productAlt')}
-                      width={1600}
-                      height={900}
-                      className="w-full rounded-card"
-                      sizes="(max-width: 1024px) 100vw, 720px"
-                    />
+            <ContactSheet />
+          </div>
+        </section>
+        </GuestHandover>
+
+        {/* --------------------------------------------------------- the bill */}
+        <section id="bill" className="mx-auto max-w-7xl px-6 py-16 sm:py-20 lg:px-8">
+          <div className="grid gap-10 lg:grid-cols-[1.1fr_.9fr]">
+            <div>
+              <h2 className="font-display text-balance text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">
+                {t('receiptTitle')}
+              </h2>
+              <p className="mt-4 max-w-xl text-fg-secondary">{t('receiptDeck')}</p>
+
+              <div className="mt-8 overflow-hidden rounded-card border border-line bg-surface shadow-[var(--shadow-soft)]">
+                <div className="flex items-baseline justify-between border-b border-line px-5 py-4">
+                  <span className="text-sm font-semibold">{t('receiptTotal')}</span>
+                  <span className="font-mono text-xs text-fg-muted">{t('receiptRun')}</span>
+                </div>
+
+                {/* The bill prints. `Cell` is the product's own staggered
+                    arrival and already caps its delay, so the last line never
+                    waits on a phone; `lift={false}` because a row of figures is
+                    not a pressable card. */}
+                <ol>
+                  {receiptLines.map((line, index) => (
+                    <Cell key={line.t} index={index} lift={false}>
+                    <li
+                      className="flex items-center gap-4 border-b border-line px-5 py-3.5"
+                    >
+                      <span className="w-6 shrink-0 font-mono text-xs text-fg-muted tabular-nums">
+                        {String(index + 1).padStart(2, '0')}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-medium">{line.t}</span>
+                        <span className="block text-xs text-fg-muted">{line.s}</span>
+                      </span>
+                      <span className="shrink-0 font-mono text-xs tabular-nums">{line.c}</span>
+                    </li>
+                    </Cell>
+                  ))}
+                </ol>
+
+                <div className="flex items-center justify-between bg-elevated px-5 py-4">
+                  <span className="text-sm font-semibold">{t('receiptTotal')}</span>
+                  <span className="font-mono text-base tabular-nums">{t('receiptTotalValue')}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* ------------------------------------------- free vs paid, shown */}
+            {/*
+              The conversion beat, and the reason this page exists in this shape.
+              Fourteen of seventeen projects in the database have no website and
+              no kit — the two things a subscription buys — so the difference is
+              drawn rather than tabulated, and it is drawn before an account is
+              asked for rather than met as a wall afterwards.
+            */}
+            <div>
+              <h2 className="font-display text-balance text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">
+                {t('gapTitle')}
+              </h2>
+              <p className="mt-4 text-fg-secondary">{t('gapDeck')}</p>
+
+              <div className="mt-8 space-y-4">
+                <SectionReveal>
+                <div className="rounded-card border border-line bg-surface p-5 shadow-[var(--shadow-soft)]">
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-sm font-semibold">{t('gapFreeTitle')}</span>
+                    <span className="font-mono text-xs text-fg-muted">{t('gapFreeMeta')}</span>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {gapHas.map((item) => (
+                      <span
+                        key={item}
+                        className="rounded-full bg-elevated px-2.5 py-1 text-xs text-fg-secondary"
+                      >
+                        {item}
+                      </span>
+                    ))}
+                    {/* Dashed rather than dimmed: a thing you do not have is a
+                        gap, not a broken control. */}
+                    {gapMissing.map((item) => (
+                      <span
+                        key={item}
+                        className="rounded-full border border-dashed border-line-strong px-2.5 py-1 text-xs text-fg-muted"
+                      >
+                        {item}
+                      </span>
+                    ))}
                   </div>
                 </div>
-              </SectionReveal>
-            </div>
-          </div>
-        </section>
+                </SectionReveal>
 
-        {/* ----------------------------------------------------- arabic --- */}
-        <div aria-hidden className="rule-fade" />
-        <section className="relative overflow-hidden py-24 sm:py-32">
-          <SectionArc className="top-0" />
-
-          <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-8">
-            <div className="grid items-center gap-12 lg:grid-cols-12">
-              <SectionReveal className="lg:col-span-5">
-                <h2 className="type-section">{t('arabicTitle')}</h2>
-                <p className="mt-5 max-w-[46ch] text-lg leading-relaxed text-fg-secondary">
-                  {t('arabicBody')}
-                </p>
-              </SectionReveal>
-
-              <SectionReveal delay={0.12} className="lg:col-span-7">
-                <ArabicProof
-                  en={briefOf(ten)}
-                  ar={briefOf(tar)}
-                  toggleAria={t('arabicToggleAria')}
-                />
-              </SectionReveal>
-            </div>
-          </div>
-        </section>
-
-        {/* ---------------------------------------------------- pricing --- */}
-        <div aria-hidden className="rule-fade" />
-        <section id="pricing" className="relative overflow-hidden bg-surface/50 py-24 sm:py-32">
-          <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-8">
-            <SectionReveal>
-              <Eyebrow>{t('navPricing')}</Eyebrow>
-              <div className="mt-4 flex flex-wrap items-end justify-between gap-6">
-                <h2 className="type-section max-w-2xl">{t('pricingHeading')}</h2>
-                <p className="max-w-[42ch] leading-relaxed text-fg-secondary">{t('pricingDeck')}</p>
+                {/* A beat behind the free card on purpose: the two arriving
+                    together reads as a comparison, and one arriving after the
+                    other reads as the thing that is missing. */}
+                <SectionReveal delay={0.18}>
+                <div className="rounded-card border border-brand/30 bg-[color-mix(in_srgb,var(--brand-primary)_5%,var(--bg-surface))] p-5 shadow-[var(--shadow-soft)]">
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-sm font-semibold">{t('gapPaidTitle')}</span>
+                    <span className="font-mono text-xs text-fg-muted">{t('gapPaidMeta')}</span>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {gapAdds.map((item) => (
+                      <span
+                        key={item}
+                        className="rounded-full bg-[color-mix(in_srgb,var(--brand-primary)_12%,transparent)] px-2.5 py-1 text-xs font-medium text-accent"
+                      >
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                </SectionReveal>
               </div>
-            </SectionReveal>
+            </div>
+          </div>
+        </section>
 
-            {/*
-              The same component the pricing page renders, from the same table
-              that bills for it. These were two hand-written ladders that could
-              — and did — disagree about what a plan includes.
-            */}
-            <div className="mt-14">
+        {/* ------------------------------------------------------ arabic */}
+        <section className="border-y border-line bg-elevated/60 py-16 sm:py-20">
+          <div className="mx-auto max-w-7xl px-6 lg:px-8">
+            <h2 className="font-display max-w-2xl text-balance text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">
+              {t('arabicTitle')}
+            </h2>
+            <p className="mt-4 max-w-2xl text-fg-secondary">{t('arabicBody')}</p>
+
+            <div className="mt-10">
+              <ArabicProof
+                en={briefOf(ten)}
+                ar={briefOf(tar)}
+                toggleAria={t('arabicToggleAria')}
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* ------------------------------------------------------- the limits */}
+        {/*
+          The one device a product with no customers has that a dishonest
+          competitor cannot copy. PRODUCT.md already records the client's rule —
+          omit what is not built rather than print it as coming soon — and this
+          section is that rule turned outward: the same discipline, said out
+          loud, on the page that asks for money.
+        */}
+        <section className="mx-auto max-w-7xl px-6 py-16 sm:py-20 lg:px-8">
+          <h2 className="font-display text-balance text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">
+            {t('limitsTitle')}
+          </h2>
+          <p className="mt-4 max-w-2xl text-fg-secondary">{t('limitsDeck')}</p>
+
+          <ul className="mt-10 grid gap-4 sm:grid-cols-2">
+            {limits.map((item, index) => (
+              <Cell key={item.t} index={index} lift={false}>
+              <li
+                className="rounded-card border border-line bg-surface p-5 shadow-[var(--shadow-soft)]"
+              >
+                <p className="text-sm font-semibold">{item.t}</p>
+                <p className="mt-1.5 text-sm leading-relaxed text-fg-secondary">{item.s}</p>
+              </li>
+              </Cell>
+            ))}
+          </ul>
+        </section>
+
+        {/* ------------------------------------------------------- pricing */}
+        <section id="pricing" className="border-y border-line bg-elevated/60 py-16 sm:py-20">
+          <div className="mx-auto max-w-7xl px-6 lg:px-8">
+            <h2 className="font-display max-w-3xl text-balance text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">
+              {t('pricingHeading')}
+            </h2>
+            <p className="mt-4 max-w-2xl text-fg-secondary">{t('pricingDeck')}</p>
+
+            <div className="mt-12">
               <PricingPlans locale={locale} />
             </div>
-
-            <p className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-fg-muted">
-              <span className="flex items-center gap-2">
-                <Check className="size-4 accent-text" />
-                {t('assuranceCard')}
-              </span>
-              <span className="flex items-center gap-2">
-                <Check className="size-4 accent-text" />
-                {t('assuranceCredits')}
-              </span>
-              <span className="flex items-center gap-2">
-                <Check className="size-4 accent-text" />
-                {t('assuranceCancel')}
-              </span>
-            </p>
           </div>
         </section>
 
-        {/* -------------------------------------------------------- faq --- */}
-        {/*
-          Its own section with its own id, so the rail can reach it. The
-          questions stay on this page rather than behind a link: someone
-          deciding here is the person with the questions, and sending them
-          elsewhere to read the answers is where the decision gets postponed.
-        */}
-        <div aria-hidden className="rule-fade" />
-        <section id="faq" className="py-24 sm:py-32">
-          <div className="mx-auto max-w-7xl px-6 lg:px-8">
-            <SectionReveal>
-              <PricingFaq columns />
-            </SectionReveal>
-          </div>
+        {/* ----------------------------------------------------------- faq */}
+        <section id="faq" className="mx-auto max-w-7xl px-6 py-16 sm:py-20 lg:px-8">
+          <h2 className="font-display text-balance text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">
+            {tp('faqTitle')}
+          </h2>
+          <PricingFaq columns className="mt-10" />
         </section>
 
-        {/* ------------------------------------------------------ close --- */}
-        <div aria-hidden className="rule-fade" />
-        <section className="relative overflow-hidden">
-          <SectionArc className="top-[38%]" />
-          <div className="relative z-10 mx-auto max-w-7xl px-6 py-28 text-center lg:px-8">
-            <SectionReveal>
-              <h2 className="type-display mx-auto max-w-3xl">
-                {t('closeTitle')}
-                <span className="type-trail"> {t('closeTitleAccent')}</span>
-              </h2>
-            </SectionReveal>
-            <SectionReveal delay={0.1}>
-              <StartCta size="lg" className="mt-10" />
-            </SectionReveal>
+        {/* --------------------------------------------------------- close */}
+        <section className="border-t border-line bg-elevated/60 py-20 sm:py-24">
+          <div className="mx-auto max-w-3xl px-6 text-center lg:px-8">
+            <h2 className="font-display text-balance text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">
+              {t('closeTitle')} <span className="text-accent">{t('closeTitleAccent')}</span>
+            </h2>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+              <StartCta size="lg" />
+              <span className="text-sm text-fg-muted">{t('planNoCard')}</span>
+            </div>
           </div>
         </section>
       </main>
 
-      {/*
-        The foot of the page carries the page's own sections and the two
-        destinations that exist off it. It used to be the mark and a single
-        link, which is the one part of a long page a visitor reaches having
-        decided not to press anything yet — and it offered them the same press
-        they had already declined four times.
-      */}
-      <div aria-hidden className="rule-fade" />
-      <footer>
-        {/* Extra bottom room below `lg` so the fixed section bar, which is
-            showing by the time anyone reaches the footer, does not sit on top
-            of the last row of links. */}
-        <div className="mx-auto flex max-w-7xl flex-wrap items-start justify-between gap-x-16 gap-y-8 px-6 pb-28 pt-12 lg:px-8 lg:pb-12">
-          <div>
+      <footer className="border-t border-line py-12">
+        <div className="mx-auto flex max-w-7xl flex-col gap-8 px-6 lg:flex-row lg:items-start lg:justify-between lg:px-8">
+          <div className="max-w-xs">
             <span className="flex items-center gap-2.5">
-              <LogoMark className="size-11" />
-              <span className="text-sm font-semibold">Brandora</span>
+              <LogoMark className="size-8" />
+              <span className="font-display text-base font-semibold">Brandora</span>
             </span>
-            {/* Was the hero's deck, repeated verbatim. The foot of a page is
-                where a visitor who has read everything arrives; restating the
-                first sentence they read tells them the page has run out. */}
-            <p className="mt-3 max-w-[34ch] text-sm leading-relaxed text-fg-muted">{t('badgeText')}</p>
-            {/* The studio behind it, said once, quietly, at the bottom. */}
             <p className="mt-4 text-xs leading-relaxed text-fg-muted">
               {t('poweredBy')}{' '}
               <a
@@ -606,7 +471,7 @@ export default async function RunDirection({
                 /* Padding rather than a min-height: this one sits inside a
                    sentence, so it has to grow its hit area without breaking the
                    line box around it. */
-                className="inline-block py-2.5 text-fg-secondary transition-colors hover:text-white"
+                className="inline-block py-2.5 text-fg-secondary transition-colors hover:text-fg"
               >
                 Enigmitic
               </a>
@@ -615,28 +480,21 @@ export default async function RunDirection({
 
           {/*
             Every one of these was a bare inline link 15 to 20 pixels tall,
-            which is under WCAG 2.2's 24px minimum target size — not merely
-            under the 44px anyone would want on a phone. `min-h-11` makes each
-            row its own 44px target; the vertical gap comes off to compensate,
-            so the block occupies roughly the space it did before.
+            which is under WCAG 2.2's 24px minimum target size. `min-h-11` makes
+            each row its own 44px target; the vertical gap comes off to
+            compensate, so the block occupies roughly the space it did before.
           */}
-          <nav
-            aria-label={t('navKit')}
-            className="-my-2 flex flex-wrap gap-x-8 gap-y-0 text-sm"
-          >
+          <nav aria-label={t('navKit')} className="-my-2 flex flex-wrap gap-x-8 gap-y-0 text-sm">
             {[
               { key: 'kit', href: '#kit', label: t('navKit'), external: true },
-              { key: 'how', href: '#how', label: t('navHow'), external: true },
               { key: 'pricing', href: '/pricing', label: t('navPricing') },
               /* The deliverables page. It is announced in the sitemap, but a
                  page nothing links to is a page a crawler reaches last and
-                 trusts least — and this is the only marketing page on the site
-                 written for a search rather than for someone already here. */
+                 trusts least. */
               { key: 'brandKit', href: '/brand-kit', label: tn('brandKit') },
               ...(session ? [] : [{ key: 'login', href: '/login', label: tn('signIn') }]),
               /* Reachable from the page a visitor is on when they decide whether
-                 to trust the product with a card — and from the only page Google
-                 checks when it verifies the consent screen. */
+                 to trust the product with a card. */
               { key: 'privacy', href: '/privacy', label: tn('privacy') },
               { key: 'terms', href: '/terms', label: tn('terms') },
             ].map((item) =>
@@ -644,7 +502,7 @@ export default async function RunDirection({
                 <a
                   key={item.key}
                   href={item.href}
-                  className="inline-flex min-h-11 items-center text-fg-secondary transition-colors hover:text-white"
+                  className="inline-flex min-h-11 items-center text-fg-secondary transition-colors hover:text-fg"
                 >
                   {item.label}
                 </a>
@@ -652,7 +510,7 @@ export default async function RunDirection({
                 <Link
                   key={item.key}
                   href={item.href}
-                  className="inline-flex min-h-11 items-center text-fg-secondary transition-colors hover:text-white"
+                  className="inline-flex min-h-11 items-center text-fg-secondary transition-colors hover:text-fg"
                 >
                   {item.label}
                 </Link>

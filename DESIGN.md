@@ -1,31 +1,21 @@
 ---
 name: Brandora
-description: A dry studio board in daylight, where a generated brand is judged on light paper.
+description: A clear, bright product surface where the customer's own brand supplies the colour.
 colors:
-  board: "#e7e3da"
-  sheet: "#ffffff"
-  raised-fill: "#faf8f4"
-  ink: "#191816"
-  ink-secondary: "#57534a"
-  ink-muted: "#635e54"
+  ground: "#eff1f4"
+  surface: "#ffffff"
+  raised: "#f7f8fa"
+  ink: "#14151a"
+  ink-secondary: "#5a5f6b"
+  ink-muted: "#676c79"
   ink-accent: "#5b33cc"
-  board-night: "#16150f"
-  sheet-night: "#1f1d17"
-  raised-fill-night: "#2a2721"
-  ink-night: "#f3f0e8"
-  ink-secondary-night: "#bab4a6"
-  ink-muted-night: "#a39c8d"
-  ink-accent-night: "#aa8cff"
   signal-violet: "#7240ff"
   bridge-indigo: "#5b5cfb"
   signal-blue: "#3b82f6"
   ramp-top: "#1e4585"
-  success: "#166534"
-  warning: "#92400e"
-  danger: "#b91c1c"
-  success-night: "#22c55e"
-  warning-night: "#f5a524"
-  danger-night: "#f87171"
+  success: "#0f7350"
+  warning: "#96620f"
+  danger: "#b03a33"
   room-black: "#05070f"
   room-surface: "#0a0f1c"
   room-elevated: "#121a2e"
@@ -33,6 +23,12 @@ colors:
   room-ink-secondary: "#a3aec9"
   room-ink-muted: "#7a86a1"
 typography:
+  hero:
+    fontFamily: "Bricolage Grotesque, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "clamp(2.75rem, 1.2rem + 5.6vw, 6.5rem)"
+    fontWeight: 600
+    lineHeight: 0.98
+    letterSpacing: "-0.045em"
   display:
     fontFamily: "Familjen Grotesk, ui-sans-serif, system-ui, sans-serif"
     fontSize: "clamp(2.2rem, 1rem + 5vw, 4.6rem)"
@@ -147,43 +143,76 @@ components:
 
 ## Overview
 
-**Creative North Star: "The Board"**
+**Creative North Star: "The Work Is The Colour"**
 
-A dry studio board in daylight, with sheets of work laid on it. The Darkroom
-that preceded it argued that a near-black room lets the print be the only lit
-thing; that is a good idea about photographs and the wrong one about brands. You
-cannot judge a colour in the dark, and most generated brands are drawn on light
-paper — an example brand's own background is `#ffffff` — so a near-black chrome
-forced every specimen into a bright rectangle in a void. The board is the
-answer: a warm, matte ground (`#e7e3da`), white sheets on it, and shadow rather
-than light doing the lifting. `[data-theme='dark']` is the same studio after
-dark, not an inversion: the board keeps its warmth and the sheets stay the
-lightest thing in the room.
+There is no metaphor. The app is not a board, a darkroom, a wall or a catalogue,
+and a visitor is never asked to decode a world before they can use a screen. It
+is a sidebar, a header, cards and tabs — the arrangement anyone who has used a
+web app already knows — executed at a craft level that makes the familiar
+arrangement worth looking at.
 
-The Darkroom did not die — it was **scoped**. `.world-dark` is the retained
-marketing world on `/`, `/pricing`, `/brand-kit` and the legal pages, because
-the brand is dark on purpose and that is a pinned commitment rather than a
-default. `.world-light` is the guest scope: a region handed to a generated
-brand, painted in the customer's own checked ink. The app itself is the board,
-and the board is arriving as a `:root` scope while twenty-three routes migrate
-onto it one at a time.
+This was decided rather than defaulted to. Three metaphor worlds were built and
+rejected, and the owner named the reason: a concept the user has to understand
+is a tax the product cannot afford to charge, because the person on this screen
+came to see their brand, not to admire ours. When *distinctive* and *instantly
+obvious* pull against each other here, obvious wins, and the distinctiveness has
+to come from somewhere that costs the user nothing.
 
-The board has **three registers**, and the boundary between them is a single
-question: *does this surface show something the product generated?* **Wall** —
-generated work pinned up (dashboard, projects, brand page, content library):
-sheets, cast shadows, gaps visible. **Bench** — one thing at working size with
-tools at its edges (onboarding, the run, Content Studio composer, website
-builder). **Desk** — squared to a grid, never pinned, tabular figures (billing,
-settings, admin, auth). Nothing generated is ever tabulated; nothing financial
-is ever pinned.
+It comes from three places:
+
+**The colour belongs to the customer.** The chrome is a cool near-white with one
+violet accent and nothing else. Every brand card, every banner and every
+specimen is painted in that brand's own palette, so an account with ten brands
+in it looks like nothing any other account looks like, and the marks sit on
+grounds they were actually designed for. This is the one decision that is both
+the prettiest thing on the screen and the most functional: a generated brand is
+the loud thing because the room refuses to be.
+
+**Depth is real.** Two-layer cast shadows — a tight contact shadow and a wide
+ambient one — plus a specular top edge on anything lifted, and one quiet
+authored light source behind the shell. Not blur, not glass, not a border
+pretending to be elevation. The content panel floats above the ground; the
+sidebar sits on it.
+
+**Money is visible where it is spent.** The credit meter says what a balance is
+worth in brands, not just what it is. The price rides on the button that spends
+it. A refund reads `+13 cr` on the run that failed.
+
+The bar is the craft level of Apple, Arc and Family — depth, motion, colour and
+obvious beauty on first sight — and the owner named those three as the company
+this should keep.
+
+Light is not a default, it is read off the use scene: the person at this screen
+is judging a generated palette, and most generated brands are drawn on light
+paper. A dark chrome puts every specimen in a bright rectangle in a void, which
+is the failure that ended the Darkroom and then ended the board's night as the
+default. **There is no dark theme.** The app is light, full stop. A second theme was
+carried for a while and then removed: the product exists to show a generated
+palette, a generated palette cannot be judged on a dark ground, and a theme
+nobody should use on the one screen the product is *for* is a whole parallel
+palette to maintain for no one. Removing it also removed the only control in
+the account menu that was a preference rather than an action.
+
+`.world-dark` survives untouched as the retained marketing world on `/`,
+`/pricing`, `/brand-kit` and the legal pages, because the brand is dark on
+purpose there and that is a pinned commitment. `.world-light` survives as the
+guest scope. What was replaced is the app.
+
+**The registers are retired.** Wall, bench and desk described a world that no
+longer exists, and the question they turned on — *does this surface show
+something the product generated?* — is now answered by colour rather than by
+composition. A surface showing generated work lets that work supply the colour;
+a surface showing money or settings stays in chrome. Same boundary, no
+vocabulary to learn.
 
 **Key Characteristics:**
-- Warm matte ground, white sheets, warm shadows — never a blue or black shadow
-- One accent ramp, pinned to the logo, and used as little as possible
-- Depth by cast shadow and tonal step, not by glow
-- Five faces with five jobs; the mono face is the machine's voice
+- Cool near-white ground, white panels, cool two-layer cast shadows — one theme,
+  no dark
+- The customer's palette owns every surface that shows their work
+- One violet accent, used on exactly one control and the focus ring
+- Depth by real shadow plus a specular edge, never by glass or blur
 - Every colour under text carries a measured contrast number in the source
-- Three registers with a one-question boundary
+- No metaphor, no vocabulary, nothing to decode
 
 ## Colors
 
@@ -194,7 +223,7 @@ job is to stay quiet enough that a generated brand next to it is the loud thing.
 - **Signal Violet** (`#7240ff`): Sampled from `logo.png` and pinned. It fills the
   primary control's gradient, draws every `:focus-visible` outline, tints the
   field focus bloom and the interactive hover border. It is the pin and nothing
-  else on the board.
+  else in the app.
 - **Bridge Indigo** (`#5b5cfb`): The interpolated midpoint of the ramp; exists so
   the gradient keeps its shape between the violet anchor and the blue end.
 - **Signal Blue** (`#3b82f6`): The cool end of the ramp. Chrome only.
@@ -202,27 +231,21 @@ job is to stay quiet enough that a generated brand next to it is the loud thing.
   from the light. Measured white-on-fill down the ramp: 5.44:1 at the violet
   bottom, 7.00:1 at the indigo middle, 9.47:1 at the blue top — every stop has to
   carry a 14px label, which is what decided how dark the top could go.
-- **Deep Accent Ink** (`#5b33cc`): Accent *text* on the board. See the Readable
+- **Deep Accent Ink** (`#5b33cc`): Accent *text* in daylight. See the Readable
   Accent Rule.
 
-### Neutral (the board, daylight)
-- **Board** (`#e7e3da`): The ground. Warm, matte, mid-light.
-- **Sheet** (`#ffffff`): Anything laid on the board — cards, panels, the auth
-  sheet, a specimen's paper.
-- **Raised Fill** (`#faf8f4`): A fill lifted out of a sheet: inputs, badges,
-  hover states, quiet rows.
-- **Ink** (`#191816`), **Secondary Ink** (`#57534a`), **Muted Ink** (`#635e54`):
-  Muted is not the obvious lighter value — `#7c766b` reads fine on a sheet at
-  4.51 and falls to **3.52** on the board itself, and the board is what most
-  muted text actually sits on. `#635e54` measures **5.03** on the board, **6.44**
-  on a sheet, **6.07** on a raised fill.
-- **Hairlines**: mixed from the ink at 11% (`--border`) and 18%
-  (`--border-strong`), never drawn as a grey line.
-
-### Neutral (the board, night)
-- **Night Board / Sheet / Raised Fill** (`#16150f` / `#1f1d17` / `#2a2721`) with
-  **Night Ink** (`#f3f0e8`), secondary `#bab4a6`, muted `#a39c8d` (**5.46** on
-  the raised fill, the tightest ground here) and accent `#aa8cff`.
+### Neutral (daylight)
+- **Ground** (`#eff1f4`): Cool near-white. Chosen so a warm customer palette and
+  a cool customer palette are both guests, rather than one of them fighting the
+  room.
+- **Surface** (`#ffffff`): The floating content panel, cards, the auth sheet.
+- **Raised Fill** (`#f7f8fa`): Inputs, quiet rows, chips, hover states.
+- **Ink** (`#14151a`), **Secondary** (`#5a5f6b`), **Muted** (`#676c79`): Muted is
+  measured against the *ground*, which is the tightest of the three. The comp
+  this world was approved from used `#878c97`, which is **2.98** there and would
+  have shipped every card's second line failing; `#676c79` is **4.64** on the
+  ground, **5.25** on a panel, **4.94** on a raised fill.
+- **Hairlines**: mixed from the ink at 10% and 17%, never drawn as a grey line.
 
 ### Neutral (`.world-dark`, marketing only)
 - **Room Black / Room Surface / Room Elevated** (`#05070f` / `#0a0f1c` /
@@ -232,27 +255,28 @@ job is to stay quiet enough that a generated brand next to it is the loud thing.
   border is the single thing that makes a dark interface look like a template.
 
 ### Tertiary (status)
-- **Success / Warning / Danger**, daylight (`#166534` / `#92400e` / `#b91c1c`),
-  night (`#22c55e` / `#f5a524` / `#f87171`). Night danger is `#f87171` at **5.38**
-  on the raised fill, where the Darkroom's `#ef4444` fell to **3.96** and would
-  have shipped failing.
+- **Success / Warning / Danger** (`#0f7350` / `#96620f` / `#b03a33`), measured on
+  the ground at **5.17**, **4.58** and **5.30**. The approved comp's `#12855a`,
+  `#b5791c` and `#c4443c` measured **4.10**, **3.25** and **4.38** there and all
+  three failed; a comp is a direction, not a token sheet.
 
 ### Named Rules
 
 **The One Ramp Rule.** There is no second accent. Status colours aside, anything
 that needs emphasis borrows from Signal Violet, Bridge Indigo and Signal Blue.
 
-**The Readable Accent Rule.** Signal Violet is **4.21:1** on the board — enough
-under a control, not under words. So accent *text* is `#5b33cc` in daylight and
-`#aa8cff` at night. In `.world-dark` it is `#aa8cff` at **7.57:1**. The value
-differs either side; the ramp does not.
+**The Readable Accent Rule.** Signal Violet is **4.77:1** on the ground — fine
+under a control, thin for a paragraph. So accent *text* is `#5b33cc` (**6.65**)
+in the app. In `.world-dark` it is `#aa8cff` at **7.57:1**. The value differs per
+world; the ramp does not.
 
-**The Ink Light Rule.** On the board, decorative light is drawn in **ink**, not
-in the accent. `--accent-surface` is re-pointed at `color-mix(in srgb, #191816
-13%, transparent)`, which moves `lit`, `bloom`, `rail`, `rail-node` and
-`pulse-ring` in one declaration. Left pointing at the ramp, every card wore a
-violet gradient along its bottom and the accent stopped meaning "this matters"
-the moment it appeared on all of them.
+**The Ink Light Rule.** Decorative light is drawn in **ink**, not in the accent.
+`--accent-surface` points at `color-mix(in srgb, #14151a 11%, transparent)`,
+which moves `lit`, `bloom`, `rail`, `rail-node` and `pulse-ring` in one
+declaration. Left pointing at the ramp, every card wore a violet edge and the
+accent stopped meaning "this matters" the moment it appeared on all of them. The
+one authored light source in this world is a single quiet radial behind the
+shell, not a gradient repeated per component.
 
 **The Checked Tone Rule.** Every colour this system puts under text is verified
 against the ground it will actually sit on, not against the friendliest one, and
@@ -271,12 +295,16 @@ focus ring on its own section. Chrome tokens are not shadowable by untrusted
 input, and a generated palette is untrusted input even when it is our own example
 brand.
 
-**The Committed Dark Rule.** The app follows the reader's theme; the marketing
-pages do not. `.world-dark` stays dark under `[data-theme='light']` because the
-brand is dark by commitment, not by category default. The default theme is now
-daylight: the board's thesis is that a brand cannot be judged in the dark, so
-opening the product in a night room would ship the argument backwards. Only the
-*absence* of a choice changed meaning; a stored `dark` still gets dark.
+**The Committed Dark Rule.** `.world-dark` is dark by commitment, not by
+category default, and it is a *scope* rather than a theme — a region of the
+marketing pages, not a preference anyone sets. **The landing page left it on 27
+August 2026**: that page argues by showing real generated work, and a near-black
+ground is both the category's costume for an AI tool and the wrong light to
+judge a palette in. The scope is unchanged and the other marketing pages still
+use it; one surface opted out. The app has no dark at all: a
+generated palette cannot be judged in the dark, and the product exists to show
+generated palettes. A dark scope on marketing and no dark theme in the app is
+one decision, not two in tension.
 
 **The Colour Arc Rule.** A marketing section is either chrome or it is a guest,
 never both. A section that hands itself to a generated brand takes that brand's
@@ -285,8 +313,8 @@ whole palette, including its decorative light (`--accent-surface` in
 
 **The World Ground Rule.** `body:has(> .world-dark)` paints the document
 `#05070f`. A world scope sits on a div, so it paints itself and its subtree — but
-the body is painted from the document's own tokens, which are the board's, and
-rubber-banding a dark marketing page revealed a warm board underneath it. The
+the body is painted from the document's own tokens, which are the app's, and
+rubber-banding a dark marketing page revealed the light ground underneath it. The
 document takes its ground from the world its page actually opened in.
 
 ## Typography
@@ -304,6 +332,17 @@ monospace that exists to mark the difference between what the product said and
 what the pipeline emitted.
 
 ### Hierarchy
+- **Hero** (600, `clamp(2.75rem, 1.2rem + 5.6vw, 6.5rem)`, 0.98, `-0.045em`):
+  The landing page's first line, and nowhere else. It exists because the fold
+  has a different job from a page heading: it has to hold someone who has not
+  decided to read yet, and at Display's 4.6rem ceiling it did not — measured
+  against three reference landing pages whose heroes run 100–150px, ours read as
+  a document. 6.5rem lands at **100px** on a 1440px viewport and **44px** on a
+  phone. Tracking goes to `-0.045em` because the Tracking Floor Rule's `-0.02em`
+  is tuned for text sizes; at 100px it leaves the words looking unset.
+  **Not a general step.** Anything reaching for this outside a marketing fold is
+  using a hero size for a heading, which is how a page ends up with two things
+  claiming to be the largest.
 - **Display** (600, `clamp(2.2rem, 1rem + 5vw, 4.6rem)`, 1.12, `-0.02em`): The
   one largest thing on a page. The middle clamp term carries a rem as well as a
   vw — a pure `vw` is frozen against the reader's own font size, and at 200% root
@@ -344,7 +383,8 @@ Arabic glyphs were rendering in Arial before this. `--font-mono` is left alone �
 its content is Latin and should stay monospaced.
 
 **The Tracking Floor Rule.** One negative value, `-0.02em`, from title size
-upward and never below it. Arabic drops negative tracking entirely and takes its
+upward and never below it — with one exception, the Hero step at `-0.045em`,
+because a floor tuned for text leaves 100px type looking unset. Arabic drops negative tracking entirely and takes its
 own leading (1.4–1.85): joined letterforms are pulled into each other by negative
 letter-spacing rather than tightened, and Arabic carries vowels above the line.
 
@@ -368,58 +408,63 @@ heading, `py-3.5` per row in a list of figures, `space-y-12` between page
 sections. Controls stand on a 36–52px height ladder (`h-9` / `h-11` / `h-13`),
 and a pressable target clears 44px on the threshold screens.
 
-**The Register Boundary Rule.** Ask one question of a surface: does it show
-something the product generated? Yes → **wall** (sheets, cast shadows, gaps
-visible) or **bench** (one thing at working size, tools at its edges). No →
-**desk** (squared to a grid, tabular figures, never pinned). Nothing generated is
-ever tabulated; nothing financial is ever pinned.
+**The Guest Colour Boundary Rule.** Ask one question of a surface: does it show
+something the product generated? Yes → that work supplies the colour, and the
+surface is painted from its palette. No → the surface stays in chrome, cool near
+-white with one violet accent. This replaces the wall / bench / desk registers,
+which described a world that no longer exists; the boundary they drew is the
+same one, and it is now answered in colour rather than in composition, so there
+is no vocabulary to learn before a screen can be built.
 
-**The Tabular Figure Rule.** Every desk figure is `tabular-nums`. A column of
+**The Tabular Figure Rule.** Every figure is `tabular-nums`. A column of
 credit balances or order totals that shifts horizontally between rows is a column
 nobody can scan.
 
 ## Elevation & Depth
 
-Depth on the board is a **cast shadow plus a tonal step**, and nothing else.
-Board → sheet → raised fill is three warm steps, and a sheet is lifted by its own
-shadow. Shadows are warm because the shadow of paper on board is not blue:
-`rgba(60, 52, 38, …)`, always with an offset and a blur, never a zero-offset
-halo. At night the same shadows are drawn in black at higher opacity.
+Depth is a **two-layer cast shadow plus a specular edge**, and nothing else. A
+tight contact shadow says the surface is touching; a wide, soft ambient one says
+how far it is lifted. The specular top edge is what separates a surface that is
+raised from a rectangle that is merely paler. Shadows are cool, because the
+ground is cool and a warm brown shadow on a blue-grey ground reads as dirt. 
 
 ### Shadow Vocabulary
-- **Soft** (`0 1px 1px rgba(60,52,38,0.1), 0 10px 22px -10px rgba(60,52,38,0.3)`):
-  A sheet resting on the board. The default for cards and standing panels.
-- **Lifted** (`0 2px 3px rgba(60,52,38,0.12), 0 26px 44px -18px rgba(60,52,38,0.42)`):
-  A sheet picked up — hover on an `interactive` surface, and the auth sheet.
-- **Primary control** (`0 1px 1px rgba(60,52,38,0.18), 0 8px 16px -8px rgba(60,52,38,0.55)`),
-  **hover** (`0 2px 3px …, 0 14px 24px -10px rgba(60,52,38,0.6)`): the primary
-  control's own weight, as a token.
-- **Hairline inset** (`inset 0 1px 0 0` ink at 5%): the single line a control
-  carries on the board, where the Darkroom carried two.
+- **Soft** (`0 1px 2px rgba(20,21,26,.05), 0 4px 10px -3px rgba(20,21,26,.07)`):
+  a card resting on a panel. The default.
+- **Lifted** (`0 4px 8px rgba(20,21,26,.07), 0 34px 56px -16px rgba(20,21,26,.26)`):
+  hover on an `interactive` surface, and the auth sheet.
+- **Panel** (`0 1px 2px rgba(20,21,26,.05), 0 26px 60px -22px rgba(20,21,26,.28)`):
+  the shell's own content panel, which floats above the ground while the sidebar
+  sits on it. New in this world.
+- **Primary control** (`0 1px 2px rgba(48,18,120,.4), 0 10px 20px -8px rgba(114,64,255,.6)`)
+  and its hover: the one gradient control's own weight.
+- **Specular edge** (`inset 0 1px 0 0 rgba(255,255,255,.9)`): invisible on a white
+  panel by design; it does its work on the raised fill, the nav pill and the
+  credit meter.
 
 ### Named Rules
 
-**The Lifted Not Lit Rule.** A control on a board is lifted, not lit.
-`--shadow-primary` and `--shadow-primary-hover` exist as tokens precisely because
-the halo was three literals reading `--brand-primary` inline — the one lit thing
-in the product a scope could not move, since the fill has to stay violet. On a
-dark ground that halo reads as light; on a board in daylight it reads as haze.
+**The Tinted Primary Rule — and what it replaced.** The primary control carries a
+violet-tinted cast shadow. This is a deliberate reversal of the board's *Lifted
+Not Lit Rule*, which held that a control on a board is lifted rather than lit
+because a coloured halo in daylight read as haze. On this ground, at this craft
+level, the one gradient control in the product is the thing the eye should find
+first, and a tinted cast shadow is how it earns that without a second accent
+appearing anywhere else. It is still a shadow — offset and blur — never a
+zero-offset halo, and it is the **only** tinted shadow in the system.
 
 **The Light From The Horizon Rule — retired in the app, retained in marketing.**
 It said: there is one light in this product, it is the arc rising behind the
 fold, and everything lit is lit from below. That is still exactly true inside
 `.world-dark`, where `--lit-inset` carries a neutral top edge and an
 accent-tinted bottom one, `glow-brand` is two centred halos rather than a drop
-shadow, and `bloom` puts a source inside a card. It is **dead on the board**: a
-board in daylight has no horizon to rise from. The `lit`, `bloom` and radial-wash
-compositions were removed from the dashboard shell, the billing panel, the
-onboarding bench and the auth sheet rather than recoloured — keeping them would
-have been the tell that the world was repainted rather than replaced. The
-utilities survive because the marketing world still uses them, and because
-`--accent-surface` keeps them honest wherever they do appear.
+shadow, and `bloom` puts a source inside a card. It stays dead in the app. The
+one authored light here is a single quiet radial behind the shell — one source,
+top left, not a gradient repeated per component.
 
-**The Tinted Shadow Rule.** No shadow in this system is pure black. Warm brown on
-the board, black-at-opacity at night, ink-mixed in a guest scope.
+**The Tinted Shadow Rule.** No shadow in this system is pure black. Cool ink at
+opacity in the app, violet only on the primary control, ink-mixed in a guest
+scope, black at opacity inside `.world-dark`.
 
 **The Rendered Light Rule.** Light is drawn, never faked with a decorative image.
 Anything that glows reads `--accent-surface`, so a scope can move all of it at
@@ -480,7 +525,7 @@ thing telling a control from a state.
 - **Structure:** `Card` is two elements — an outer that carries the gradient edge
   and an inner that carries the surface — because a single bordered box cannot do
   both, and a uniform 1px outline is what made every screen read as a template.
-  On the board that outer edge resolves to ink at 13%, so it reads as a soft
+  That outer edge resolves to ink at 11%, so it reads as a soft
   bevel rather than a violet rim.
 - **Background:** Sheet white; a raised fill for quiet interior blocks.
 - **Shadow:** Soft at rest, lifted on hover for anything `interactive`.
@@ -522,12 +567,12 @@ shimmer becomes a steady tint, the pulse a static ring.
 ## Do's and Don'ts
 
 ### Do:
-- **Do** ask the register question first: generated work goes on the wall or the
-  bench; money and settings go on the desk.
-- **Do** lift a sheet with a warm cast shadow (`rgba(60,52,38,…)`) and a tonal
-  step, never with a halo.
-- **Do** set accent text at `#5b33cc` in daylight and `#aa8cff` at night, and
-  reserve `#7240ff` for fills, focus and edges.
+- **Do** ask the guest-colour question first: a surface showing generated work is
+  painted from that work's palette; money and settings stay in chrome.
+- **Do** lift a surface with two cool shadow layers and a specular top edge,
+  never with a halo, a glass blur or a heavier border.
+- **Do** set accent text at `#5b33cc`, and reserve `#7240ff` for fills, focus
+  and the one tinted control shadow.
 - **Do** set anything the pipeline emitted in Spline Sans Mono at 400 or 500, and
   wrap it in `machine-value` when it sits inside a sentence.
 - **Do** put every desk figure in `tabular-nums`.
@@ -539,15 +584,18 @@ shimmer becomes a steady tint, the pulse a static ring.
   light.
 
 ### Don't:
-- **Don't** draw the Darkroom's horizon on the board. No `lit` gradient edge, no
-  `bloom`, no radial wash behind a header, no glow behind a form. There is
-  nothing for light to rise from.
+- **Don't** draw the Darkroom's horizon in the app. No `lit` gradient edge, no
+  `bloom`, no radial wash behind a header, no glow behind a form. There is one
+  light source and it lives behind the shell.
+- **Don't** build a metaphor. No board, wall, darkroom, catalogue or manual. If a
+  screen needs a paragraph to explain its own arrangement, it is the wrong
+  arrangement.
 - **Don't** point `--accent-surface` back at the ramp inside the app. A violet
   edge on every card is how the accent stops meaning anything.
 - **Don't** let a generated palette bind `--brand-primary` or any chrome token;
   `--guest-*` is the only namespace an untrusted palette may write.
-- **Don't** put Signal Violet under words on the board — 4.21:1 is a control's
-  number, not a paragraph's.
+- **Don't** put Signal Violet under words — 4.77:1 is a control's number, not a
+  paragraph's.
 - **Don't** introduce a second accent hue. Status colours aside, emphasis borrows
   from the one ramp.
 - **Don't** set the mono face above weight 500; the browser will synthesise a

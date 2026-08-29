@@ -37,19 +37,22 @@ type Check = {
 const CHECKS: Check[] = [
   {
     route: '/en/login',
-    world: 'the board, daylight — the app with no stored preference',
+    world: 'the app, which has one theme and no switch',
     tokens: ['--brand-primary', '--brand-gradient', '--bg-base', '--text-primary', '--font-sans'],
-    ground: 'rgb(231, 227, 218)',
+    ground: 'rgb(239, 241, 244)',
   },
   {
-    route: '/en',
-    world: '.world-dark — marketing, which keeps the pinned dark',
+    /* `/pricing`, not `/en`: the landing page left the dark scope on 27 August
+       2026 and the other marketing pages kept it, so this is where the world
+       still lives. See PRODUCT.md's brand commitments. */
+    route: '/en/pricing',
+    world: '.world-dark — the marketing pages that keep the pinned dark',
     tokens: ['--brand-primary', '--brand-gradient', '--bg-base', '--text-primary', '--font-sans'],
     ground: 'rgb(5, 7, 15)',
   },
   {
-    route: '/ar',
-    world: 'marketing under RTL, where the Arabic face takes both roles',
+    route: '/ar/pricing',
+    world: 'the dark scope under RTL, where the Arabic face takes both roles',
     tokens: ['--brand-gradient', '--font-display', '--font-sans'],
   },
 ]

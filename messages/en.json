@@ -17,7 +17,6 @@
     "search": "Search",
     "somethingWentWrong": "Something went wrong. Please try again.",
     "language": "Language",
-    "theme": "Theme",
     "signOut": "Sign out",
     "copy": "Copy",
     "copied": "Copied",
@@ -243,7 +242,86 @@
       "Regenerate a single section at a time. Every earlier version stays where it was.",
       "The address a published site takes. The pages are chosen for the business, not from a template."
     ],
-    "planFootnote_studio": "Need more than 10 seats? Contact us."
+    "planFootnote_studio": "Need more than 10 seats? Contact us.",
+    "trustHeroLead": "This is everything one sentence produced.",
+    "trustHeroDeck": "Not a mock-up and not a promise — one real run, every file at full size, before you sign up. Names, two logo concepts, a palette, typography, a brand story, a live website and a social kit, all decided together so they agree with each other.",
+    "receiptTitle": "Here is the bill, before you buy anything.",
+    "receiptDeck": "Every line is a real file from the run above. A brand costs thirteen credits and about two minutes.",
+    "receiptTotal": "One complete brand",
+    "receiptTotalValue": "13 credits · about 2 minutes",
+    "receiptRun": "run #047 · 2:11 · 20 Aug 2026",
+    "receiptLines": [
+      {
+        "t": "Names, story and voice",
+        "s": "Name ideas, each with its reasoning",
+        "c": "1 credit"
+      },
+      {
+        "t": "Two logo concepts",
+        "s": "Four files — raster and traced SVG",
+        "c": "6 credits"
+      },
+      {
+        "t": "Palette and typography",
+        "s": "Four checked colours, two faces",
+        "c": "included"
+      },
+      {
+        "t": "A live website",
+        "s": "Five pages on your own subdomain",
+        "c": "1 credit"
+      },
+      {
+        "t": "Social kit",
+        "s": "Eight designed posts and captions",
+        "c": "5 credits"
+      }
+    ],
+    "gapTitle": "What free gives you, and what it does not.",
+    "gapDeck": "The website and the brand kit are the two things a subscription buys. They are shown here rather than listed, so the difference is a picture and not a row in a table.",
+    "gapFreeTitle": "Free",
+    "gapFreeMeta": "10 credits, once",
+    "gapPaidTitle": "Creator",
+    "gapPaidMeta": "200 credits a month · $19",
+    "gapHas": [
+      "Names",
+      "Story and voice",
+      "Two logo concepts",
+      "Palette",
+      "Typography",
+      "Social captions"
+    ],
+    "gapMissing": [
+      "A live website",
+      "Brand kit PDF and ZIP"
+    ],
+    "gapAdds": [
+      "A live 5-page website",
+      "Brand kit PDF, SVG and ZIP",
+      "Custom domain",
+      "Eight designed posts",
+      "Content Studio and Brand Assistant"
+    ],
+    "limitsTitle": "What it does not do.",
+    "limitsDeck": "Published here because a pricing page is read as a contract, and a short honest one beats a long one you discover is false.",
+    "limitsItems": [
+      {
+        "t": "Two logo concepts, not four.",
+        "s": "The four files you download are variants of the concept you choose — wordmark, icon, symbol and name."
+      },
+      {
+        "t": "One in two Arabic marks needs a human eye.",
+        "s": "Arabic letterforms are not reliably produced. A run yields a usable one often enough to rely on, and you should look before you ship it."
+      },
+      {
+        "t": "Renaming does not redraw.",
+        "s": "Change a brand's name and the logo, website copy and captions keep the old one until you generate again — which costs credits, so we say so rather than implying it follows."
+      },
+      {
+        "t": "No API, no white-label, no agency dashboard.",
+        "s": "They are not built, so they are not sold."
+      }
+    ]
   },
   "Auth": {
     "signIn": "Sign in",
@@ -279,7 +357,8 @@
     "resetLinkInvalid": "This link has expired or has already been used.",
     "requestNewLink": "Request a new link",
     "passwordHint": "At least 8 characters.",
-    "backHome": "Back to home"
+    "backHome": "Back to home",
+    "lastBrand": "Last brand"
   },
   "Nav": {
     "overview": "Overview",
@@ -295,7 +374,12 @@
     "sections": "Sections",
     "credits": "Credits",
     "account": "Account",
-    "studio": "Content Studio"
+    "studio": "Content Studio",
+    "creditsWorth": "Enough for {count, plural, =0 {no more brands} one {# more brand} other {# more brands}}",
+    "topUp": "Top up",
+    "accountGroup": "Account",
+    "creditsOf": "of {total}",
+    "creditsShort": "{credits} cr"
   },
   "Dashboard": {
     "welcome": "Welcome back, {name}",
@@ -357,7 +441,8 @@
       "name": "By name"
     },
     "noMatches": "No brand matches “{query}”.",
-    "clearSearch": "Clear search"
+    "clearSearch": "Clear search",
+    "newBrandCost": "{credits} credits · about 2 minutes"
   },
   "Studio": {
     "title": "Content Studio",
@@ -638,7 +723,7 @@
     "palette": "Colour palette",
     "paletteHint": "Click a colour to copy its hex code.",
     "pinCredits": "{credits, plural, one {# credit} other {# credits}}",
-    "pinHang": "Hang it here",
+    "generateIt": "Add it",
     "pinNotYet": "not generated",
     "regenerating": "Generating logos…",
     "renameBusy": "This brand is already generating — save the name and regenerate once it finishes.",
@@ -694,11 +779,15 @@
     "varsMarks": "Marks",
     "varsOther": "Other files",
     "voice": "Brand voice",
-    "wallBack": "Back to the wall",
-    "wallEmpty": "Nothing hangs here yet",
+    "backToBrand": "Back to the brand",
+    "nothingYet": "Nothing here yet",
     "website": "Website",
     "websiteHint": "A four-page site written from your brand — home, about, services and contact — published on its own address, with a contact form that emails you.",
-    "websiteLocked": "The website is on Creator and above."
+    "websiteLocked": "The website is on Creator and above.",
+    "pageCount": "{count, plural, one {# page} other {# pages}}",
+    "overview": "Overview",
+    "railLogos": "Logo",
+    "railContent": "Content"
   },
   "Social": {
     "bio": "Instagram bio",
@@ -1380,9 +1469,6 @@
     "ownerOnly": "Only the workspace owner can rename it.",
     "credits": "Credits remaining",
     "manageBilling": "Manage billing",
-    "appearance": "Appearance",
-    "appearanceHint": "Applies to this browser.",
-    "toggleTheme": "Switch theme",
     "resendVerification": "Send a new code",
     "codeLife": "Codes expire after {minutes} minutes. Send a new one if yours has.",
     "codeLabel": "Confirmation code",
@@ -1395,8 +1481,6 @@
     "verificationSent": "New code sent — check your inbox.",
     "verificationFailed": "Could not send it. Please try again shortly.",
     "unverifiedTitle": "Verify your email to keep generating",
-    "unverifiedBody": "We sent a 6-digit code to {email}. Your first run went ahead without it — generating again spends more credits, so it stays locked until the address is confirmed.",
-    "themeDark": "Dark",
-    "themeLight": "Light"
+    "unverifiedBody": "We sent a 6-digit code to {email}. Your first run went ahead without it — generating again spends more credits, so it stays locked until the address is confirmed."
   }
 }

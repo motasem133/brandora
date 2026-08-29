@@ -7,6 +7,7 @@ import {
   brandingAssets,
   generatedFiles,
   projects,
+  socialMediaAssets,
   websiteAssets,
 } from '@/server/db/schema'
 import type { BrandFonts, BrandPalette } from '@/lib/brand-theme'
@@ -142,3 +143,72 @@ export async function countProjects(organizationId: string) {
   return row?.value ?? 0
 }
 
+
+/**
+ * Exactly what the brand rail needs, and nothing the page already loads.
+ *
+ * The rail lives in a layout and the artefacts live in the page, so the two
+ * cannot share one fetch without hoisting the page's whole fan-out into the
+ * layout. This is the cheaper half of that trade: a handful of counts over
+ * indexed columns, deliberately not the assets themselves.
+ *
+ * The counts are what make a rail worth having. "Logo" tells you a section
+ * exists; "Logo · 4 files" tells you whether it is worth opening, which is the
+ * question someone returning to a brand a week later is actually asking.
+ */
+export async function getBrandRail(organizationId: string, projectId: string) {
+  const project = await getProject(organizationId, projectId)
+  if (!project) return null
+
+  const [files, branding, website, social] = await Promise.all([
+    db
+      .select({ id: generatedFiles.id, kind: generatedFiles.kind, r2Key: generatedFiles.r2Key })
+      .from(generatedFiles)
+      .where(eq(generatedFiles.projectId, project.id)),
+    db
+      .select({
+        palette: brandingAssets.colorPalette,
+        fonts: brandingAssets.fontRecommendations,
+        story: brandingAssets.brandStory,
+        primaryLogoId: brandingAssets.primaryLogoFileId,
+      })
+      .from(brandingAssets)
+      .where(eq(brandingAssets.projectId, project.id))
+      .limit(1),
+    db
+      .select({ pages: websiteAssets.pages, published: websiteAssets.isPublished })
+      .from(websiteAssets)
+      .where(eq(websiteAssets.projectId, project.id))
+      .limit(1),
+    db
+      .select({ bio: socialMediaAssets.instagramBio })
+      .from(socialMediaAssets)
+      .where(eq(socialMediaAssets.projectId, project.id))
+      .limit(1),
+  ])
+
+  const brand = branding[0]
+  const palette = brand?.palette as Record<string, string> | null | undefined
+  const fonts = brand?.fonts as Record<string, string> | null | undefined
+
+  const logoFiles = files.filter((file) => file.kind === 'logo_raster')
+  /* The chosen mark, or the first one generated while the choice is pending —
+     the same fallback the specimen list uses, so the rail and the card never
+     disagree about which mark represents a brand. */
+  const logo =
+    logoFiles.find((file) => file.id === brand?.primaryLogoId) ?? logoFiles[0] ?? null
+
+  return {
+    project,
+    palette: (brand?.palette ?? null) as BrandPalette,
+    logo,
+    logos: logoFiles.length,
+    kit: files.filter((file) => file.kind === 'social_post').length,
+    colours: palette ? Object.values(palette).filter(Boolean).length : 0,
+    fonts: fonts ? Object.values(fonts).filter(Boolean).length : 0,
+    hasStory: Boolean(brand?.story),
+    hasCopy: Boolean(social[0]?.bio),
+    sitePages: Object.keys((website[0]?.pages ?? {}) as Record<string, unknown>).length,
+    published: Boolean(website[0]?.published),
+  }
+}

@@ -14,7 +14,6 @@ import { notFound } from 'next/navigation'
 import { PostHogProvider } from '@/components/analytics/posthog-provider'
 import { isRtl, routing } from '@/i18n/routing'
 import { ogImage, ogLocale, siteUrl } from '@/lib/seo'
-import { themeInitScript } from '@/lib/theme'
 import '../globals.css'
 
 
@@ -179,14 +178,6 @@ export default async function LocaleLayout({
       suppressHydrationWarning
       className={`${familjen.variable} ${hanken.variable} ${splineMono.variable} ${readex.variable} ${bricolage.variable}`}
     >
-      <head>
-        {/*
-          Rendered by a Server Component so it ships in the initial HTML and runs
-          before first paint. A <script> created inside a client component would
-          never execute, which is what React 19 warns about.
-        */}
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
-      </head>
       <body>
         <NextIntlClientProvider>
           <PostHogProvider />

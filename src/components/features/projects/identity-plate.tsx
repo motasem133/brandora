@@ -2,7 +2,7 @@ import { Sparkles } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 
 import { brandTheme, fontStack } from '@/lib/brand-theme'
-import { formatDate } from '@/lib/utils'
+import { cn, formatDate } from '@/lib/utils'
 import type { BrandFonts, BrandPalette } from '@/lib/brand-theme'
 import type { GeneratedFile, Project } from '@/server/db/schema'
 import { publicUrl } from '@/server/storage/r2'
@@ -72,16 +72,36 @@ export async function IdentityPlate({
   return (
     <header
       style={theme.vars}
+      /*
+       * Flat, and flat on purpose: this is the brand's own paper.
+       *
+       * A wash mixed from the primary looked better on a plate with no mark on
+       * it and was wrong the moment one arrived. A generated logo is raster on
+       * its own background — that background *is* `palette.background`, which is
+       * what `--guest-paper` resolves to — so the instant the plate stops being
+       * that exact colour the mark shows as a rectangle sitting on a gradient.
+       * The brand supplies one ground and the mark was drawn on it; the plate's
+       * job is to be that ground, not to improve on it.
+       */
       className="overflow-hidden rounded-panel bg-[var(--guest-paper)] shadow-[var(--shadow-soft)] ring-1 ring-[var(--guest-line)]"
     >
-      <div className="flex flex-wrap items-center gap-x-10 gap-y-7 p-8 sm:p-12">
-        <div className="grid size-28 shrink-0 place-items-center sm:size-44">
+      <div className="flex flex-wrap items-center gap-x-9 gap-y-6 p-7 sm:p-9">
+        <div className="grid size-24 shrink-0 place-items-center sm:size-36">
           {logo ? (
             /* eslint-disable-next-line @next/next/no-img-element */
             <img
               src={publicUrl(logo.r2Key) ?? `/api/files/${logo.id}`}
               alt=""
-              className="size-full object-contain"
+              /*
+               * `multiply` only on a light paper.
+               *
+               * It exists for the mark whose own raster plate is pure white
+               * while the brand's paper is cream — that mismatch is a visible
+               * rectangle, and multiplying dissolves it. On a *dark* paper the
+               * same blend is destructive: it multiplies a light mark toward
+               * black and the artwork disappears into the ground.
+               */
+              className={cn('size-full object-contain', !theme.isDark && 'mix-blend-multiply')}
             />
           ) : (
             <Sparkles className="size-8" style={{ color: 'var(--guest-ink-faint)' }} />
@@ -99,7 +119,7 @@ export async function IdentityPlate({
             lang={project.language}
             dir="auto"
             style={{ fontFamily: fontStack(fonts?.heading), color: 'var(--guest-ink)' }}
-            className="text-balance text-3xl font-semibold leading-[1.05] tracking-[-0.035em] sm:text-5xl"
+            className="text-balance text-3xl font-semibold leading-[1.05] tracking-[-0.035em] sm:text-4xl"
           >
             {name}
           </Heading>
@@ -130,11 +150,22 @@ export async function IdentityPlate({
         </div>
       </div>
 
+      {/*
+        Inset rather than full-bleed.
+
+        As a bleeding band it met the panel's 24px radius at 12px tall, so its
+        ends were shaved into a shape that reads as a rendering fault rather
+        than as a swatch. Inside the padding with a radius of its own it is
+        unambiguously an element, and it matches how the brand cards in the
+        grid show the same four colours.
+      */}
       {swatches.length > 0 && (
-        <div aria-hidden className="flex h-3 w-full">
-          {swatches.map((hex, index) => (
-            <span key={`${hex}-${index}`} className="flex-1" style={{ backgroundColor: hex }} />
-          ))}
+        <div aria-hidden className="px-7 pb-7 sm:px-9 sm:pb-9">
+          <div className="flex h-2.5 overflow-hidden rounded-full shadow-[inset_0_0_0_1px_var(--guest-line)]">
+            {swatches.map((hex, index) => (
+              <span key={`${hex}-${index}`} className="flex-1" style={{ backgroundColor: hex }} />
+            ))}
+          </div>
         </div>
       )}
     </header>

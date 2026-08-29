@@ -5,17 +5,17 @@ import { notFound } from 'next/navigation'
 import { AssistantPanel } from '@/components/features/assistant/assistant-panel'
 import { BrandFonts } from '@/components/features/projects/brand-fonts'
 import { BrandingView } from '@/components/features/projects/branding-view'
-import { EmptyPin } from '@/components/features/projects/empty-pin'
 import {
   FactsSheet,
+  LockedTile,
   MarkSheet,
   PaletteSheet,
   TextSheet,
   ThumbsSheet,
+  Tile,
+  TileGrid,
   TypeSheet,
-  Wall,
-  WallFrame,
-} from '@/components/features/projects/brand-wall'
+} from '@/components/features/projects/brand-tiles'
 import { DeleteProjectButton } from '@/components/features/projects/delete-project-button'
 import { GenerationPanel } from '@/components/features/projects/generation-panel'
 import { IdentityPlate } from '@/components/features/projects/identity-plate'
@@ -331,22 +331,16 @@ export default async function ProjectDetailPage({
   )
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8">
+    <div className="space-y-7">
       {/*
         App actions live in app chrome, above the plate and never on it. A
         gradient chrome button dropped onto a generated ground is exactly the
         clash the plate exists to avoid, and a destructive control has no
         business borrowing a customer's brand colour.
       */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Link
-          href="/dashboard/projects"
-          className="inline-flex items-center gap-1.5 text-sm text-fg-muted transition-colors hover:text-fg"
-        >
-          <ArrowLeft className="size-4 rtl:-scale-x-100" />
-          {t('title')}
-        </Link>
-
+      {/* The rail carries the way back now, so this row is actions only and
+          sits to the end of the panel rather than straddling it. */}
+      <div className="flex flex-wrap items-center justify-end gap-3">
         <div className="flex items-center gap-1.5">
           {/*
             The assistant takes the whole stage, so it needs a door back to the
@@ -423,33 +417,33 @@ export default async function ProjectDetailPage({
       ) : (
         <>
           {brandingAsset && (
-            <Wall>
+            <TileGrid>
               {primaryLogo && (
-                <WallFrame
+                <Tile
                   href={sheet('identity')}
-                  caption={tb('logos')}
+                  title={tb('logos')}
                   meta={tb('fileCount', { count: logoFiles.length })}
                   active={opened === 'identity'}
                   guest
                   vars={theme.vars}
                 >
-                  <MarkSheet logo={primaryLogo} alt={brandName} />
-                </WallFrame>
+                  <MarkSheet logo={primaryLogo} alt={brandName} darkPaper={theme.isDark} />
+                </Tile>
               )}
 
-              <WallFrame
+              <Tile
                 href={sheet('identity')}
-                caption={tb('palette')}
+                title={tb('palette')}
                 active={opened === 'identity'}
                 guest
                 vars={theme.vars}
               >
                 <PaletteSheet swatches={brandSwatches} />
-              </WallFrame>
+              </Tile>
 
-              <WallFrame
+              <Tile
                 href={sheet('identity')}
-                caption={tb('fonts')}
+                title={tb('fonts')}
                 meta={brandingAsset.fontRecommendations?.heading}
                 active={opened === 'identity'}
                 guest
@@ -461,12 +455,12 @@ export default async function ProjectDetailPage({
                   heading={fontStack(brandingAsset.fontRecommendations?.heading)}
                   body={fontStack(brandingAsset.fontRecommendations?.body)}
                 />
-              </WallFrame>
+              </Tile>
 
               {brandingAsset.brandStory && (
-                <WallFrame
+                <Tile
                   href={sheet('identity')}
-                  caption={tb('story')}
+                  title={tb('story')}
                   active={opened === 'identity'}
                   guest
                   vars={theme.vars}
@@ -475,13 +469,13 @@ export default async function ProjectDetailPage({
                     body={brandingAsset.brandStory}
                     font={fontStack(brandingAsset.fontRecommendations?.body)}
                   />
-                </WallFrame>
+                </Tile>
               )}
 
               {socialAsset?.instagramBio && (
-                <WallFrame
+                <Tile
                   href={sheet('copy')}
-                  caption={tb('copy')}
+                  title={tb('copy')}
                   active={opened === 'copy'}
                   guest
                   vars={theme.vars}
@@ -490,7 +484,7 @@ export default async function ProjectDetailPage({
                     body={socialAsset.instagramBio}
                     font={fontStack(brandingAsset.fontRecommendations?.body)}
                   />
-                </WallFrame>
+                </Tile>
               )}
 
               {/*
@@ -501,33 +495,31 @@ export default async function ProjectDetailPage({
                 they already own.
               */}
               {kitPosts.length > 0 ? (
-                <WallFrame
+                <Tile
                   href={sheet('kit')}
-                  caption={tb('kit')}
+                  title={tb('kit')}
                   meta={tb('fileCount', { count: kitPosts.length + (kitPdf ? 1 : 0) })}
                   active={opened === 'kit'}
                 >
                   <ThumbsSheet files={kitPosts} alt={tb('kit')} />
-                </WallFrame>
+                </Tile>
               ) : !plan?.socialMediaKit ? (
-                <EmptyPin
-                  className="h-full max-w-none"
-                  title={tg('locked.kit.title')}
-                  benefit={tg('locked.kit.benefit')}
-                  action={tb('pinHang')}
-                  caption={tb('kit')}
+                <LockedTile
+                  title={tb('kit')}
                   meta={tb('pinCredits', { credits: CREDIT_COSTS.kit })}
+                  benefit={tg('locked.kit.benefit')}
+                  action={tb('generateIt')}
                   price={tb('kitLocked')}
                 />
               ) : (
-                <WallFrame
+                <Tile
                   href={sheet('kit')}
-                  caption={tb('kit')}
+                  title={tb('kit')}
                   meta={tb('pinCredits', { credits: CREDIT_COSTS.kit })}
                   active={opened === 'kit'}
                 >
                   <TextSheet body={tb('kitHint')} />
-                </WallFrame>
+                </Tile>
               )}
 
               {/*
@@ -538,9 +530,9 @@ export default async function ProjectDetailPage({
                 with a price attached.
               */}
               {websiteAsset ? (
-                <WallFrame
+                <Tile
                   href={sheet('website')}
-                  caption={tb('website')}
+                  title={tb('website')}
                   /* Where it is, or that it is nowhere — the one thing anyone
                      wants from a website at a glance. */
                   meta={
@@ -556,31 +548,29 @@ export default async function ProjectDetailPage({
                       tw('blockCount', { count: page.blocks }),
                     ])}
                   />
-                </WallFrame>
+                </Tile>
               ) : !plan?.websiteBuilder ? (
-                <EmptyPin
-                  className="h-full max-w-none"
-                  title={tg('locked.website.title')}
-                  benefit={tg('locked.website.benefit')}
-                  action={tb('pinHang')}
-                  caption={tb('website')}
+                <LockedTile
+                  title={tb('website')}
                   meta={tb('pinCredits', { credits: CREDIT_COSTS.website })}
+                  benefit={tg('locked.website.benefit')}
+                  action={tb('generateIt')}
                   price={tb('websiteLocked')}
                 />
               ) : null}
 
-              <WallFrame
+              <Tile
                 href={sheet('content')}
-                caption={t('contentTitle')}
+                title={t('contentTitle')}
                 active={opened === 'content'}
               >
                 <TextSheet body={tst('emptyBodyBrand')} />
-              </WallFrame>
+              </Tile>
 
-              <WallFrame href={sheet('brief')} caption={t('brief')} active={opened === 'brief'}>
+              <Tile href={sheet('brief')} title={t('brief')} active={opened === 'brief'}>
                 <TextSheet body={project.brandBrief} />
-              </WallFrame>
-            </Wall>
+              </Tile>
+            </TileGrid>
           )}
 
           {/*
@@ -598,7 +588,7 @@ export default async function ProjectDetailPage({
                 className="inline-flex items-center gap-1.5 text-sm text-fg-muted transition-colors hover:text-fg"
               >
                 <ArrowLeft className="size-4 rtl:-scale-x-100" />
-                {tb('wallBack')}
+                {tb('backToBrand')}
               </Link>
 
               {opened === 'identity' && brandingAsset && (

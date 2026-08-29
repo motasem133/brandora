@@ -35,6 +35,12 @@ export async function getOrgPlan(organizationId: string): Promise<Plan | null> {
 
 export type Entitlements = {
   planName: string
+  /**
+   * What the plan grants each month, which is the denominator the credit meter
+   * needs. Zero for an organization with no subscription — a meter with no
+   * ceiling shows the balance alone rather than inventing one.
+   */
+  monthlyCredits: number
   websiteBuilder: boolean
   socialMediaKit: boolean
   vectorExport: boolean
@@ -52,6 +58,7 @@ export async function getEntitlements(organizationId: string): Promise<Entitleme
   /* Fallbacks are the free plan's, for an organization with no subscription. */
   return {
     planName: plan?.name ?? 'Free',
+    monthlyCredits: plan?.monthlyCredits ?? 0,
     websiteBuilder: plan?.websiteBuilder ?? false,
     socialMediaKit: plan?.socialMediaKit ?? false,
     vectorExport: plan?.vectorExport ?? false,

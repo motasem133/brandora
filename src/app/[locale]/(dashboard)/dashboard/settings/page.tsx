@@ -1,6 +1,5 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
-import { AppearanceCard } from '@/components/features/settings/appearance-card'
 import { OrganizationCard } from '@/components/features/settings/organization-card'
 import { PasswordCard } from '@/components/features/settings/password-card'
 import { ProfileCard } from '@/components/features/settings/profile-card'
@@ -67,8 +66,6 @@ export default async function SettingsPage({ params }: { params: Promise<{ local
             isOwner={orgRole === 'owner'}
             credits={org.creditBalance}
           />
-
-          <AppearanceCard />
         </div>
       </div>
 
