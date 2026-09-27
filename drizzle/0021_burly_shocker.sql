@@ -1,0 +1,1 @@
+ALTER TYPE "public"."user_email_kind" ADD VALUE 'win_back';

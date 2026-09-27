@@ -48,6 +48,22 @@ export type EmailTemplate =
    */
   | { kind: 'feedback-request'; url: string; name: string; code: string; percent: number }
   /**
+   * One email to whoever used the product and has not been back.
+   *
+   * Its hook is the one specific, true thing the database knows about each
+   * dormant account: the credits still on it. They were granted once and do
+   * not expire, so the number is real and the page it links to can spend it.
+   */
+  | {
+      kind: 'win-back'
+      url: string
+      name: string
+      credits: number
+      hasBrand: boolean
+      code: string
+      percent: number
+    }
+  /**
    * A message somebody sent through a customer's own published site.
    *
    * The only email this product sends that is not about Brandora. It is a
@@ -162,6 +178,24 @@ const COPY = {
          product sends that nobody asked for. */
       footer: 'You are getting this because you have a Brandora account. Reply with "stop" and we will not ask again.',
     },
+    'win-back': {
+      subject: (credits: number) => `${credits} credits are waiting in your Brandora account`,
+      heading: 'Your credits are still here',
+      /*
+       * Two openings, because the two readers are not in the same place. One
+       * generated a brand and left it; the other signed up and built nothing.
+       * Neither is told how long they have been away — that number is not
+       * known well enough to print, and a wrong one reads as a form letter.
+       */
+      body: (name: string, credits: number, hasBrand: boolean) =>
+        hasBrand
+          ? `${name}, the brand you generated is still where you left it, and your account still has ${credits} credits to spend on it — captions, posts and pages written in its voice.`
+          : `${name}, your Brandora account still has ${credits} credits on it — enough for a complete brand: a name, a palette, logo concepts and the words to go with them.`,
+      button: (hasBrand: boolean) => (hasBrand ? 'See your brand' : 'Start your brand'),
+      note: 'Credits do not expire, and nothing on your account has changed while you were away.',
+      offer: (percent: number) => `And if you want more than the free credits cover, ${percent}% off your first payment:`,
+      footer: 'You are getting this because you have a Brandora account. Reply with "stop" and we will not email you again.',
+    },
     'site-message': {
       subject: (site: string) => `New message from your ${site} website`,
       heading: 'Someone contacted you',
@@ -231,6 +265,18 @@ const COPY = {
       /* "First payment" — see the English note on the code's duration. */
       offer: (percent: number) => `وشكراً لوقتك، خصم ${percent}% على أول دفعة:`,
       footer: 'وصلتك هذه الرسالة لأن لديك حساباً في براندورا. ردّ بكلمة «إيقاف» ولن نسألك مرة أخرى.',
+    },
+    'win-back': {
+      subject: (credits: number) => `لديك ${credits} أرصدة بانتظارك في حسابك على براندورا`,
+      heading: 'أرصدتك ما زالت هنا',
+      body: (name: string, credits: number, hasBrand: boolean) =>
+        hasBrand
+          ? `${name}، العلامة التي أنشأتها ما زالت حيث تركتها، وفي حسابك ${credits} أرصدة يمكنك إنفاقها عليها: تعليقات ومنشورات وصفحات مكتوبة بصوتها.`
+          : `${name}، في حسابك على براندورا ${credits} أرصدة ما زالت متاحة، وهي تكفي لعلامة كاملة: اسم ولوحة ألوان ومقترحات شعار والكلمات التي تناسبها.`,
+      button: (hasBrand: boolean) => (hasBrand ? 'شاهد علامتك' : 'ابدأ علامتك'),
+      note: 'الأرصدة لا تنتهي صلاحيتها، ولم يتغيّر شيء في حسابك أثناء غيابك.',
+      offer: (percent: number) => `وإن أردت أكثر مما تغطّيه الأرصدة المجانية، خصم ${percent}% على أول دفعة:`,
+      footer: 'وصلتك هذه الرسالة لأن لديك حساباً في براندورا. ردّ بكلمة «إيقاف» ولن نراسلك مرة أخرى.',
     },
     'site-message': {
       subject: (site: string) => `رسالة جديدة من موقع ${site}`,
@@ -574,6 +620,24 @@ export function renderEmail(template: EmailTemplate, locale: Locale = 'en') {
           heading: c.heading,
           body: c.body(template.name),
           button: c.button,
+          url: template.url,
+          note: c.note,
+          offer: c.offer(template.percent),
+          code: template.code,
+          footer: c.footer,
+        }),
+      }
+    }
+
+    case 'win-back': {
+      const c = copy['win-back']
+      return {
+        subject: c.subject(template.credits),
+        html: offerLayout({
+          locale,
+          heading: c.heading,
+          body: c.body(template.name, template.credits, template.hasBrand),
+          button: c.button(template.hasBrand),
           url: template.url,
           note: c.note,
           offer: c.offer(template.percent),
