@@ -791,6 +791,7 @@ export const projectEmails = pgTable(
 export const userEmailKindEnum = pgEnum('user_email_kind', [
   'verify_reminder',
   'feedback_request',
+  'win_back',
 ])
 
 export const userEmails = pgTable(

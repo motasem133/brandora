@@ -38,6 +38,8 @@
     "test:model-routing": "tsx scripts/model-routing-test.ts",
     "test:brand-nudge": "tsx scripts/brand-nudge-test.ts",
     "test:feedback": "tsx scripts/feedback-request-test.ts",
+    "test:win-back": "tsx scripts/win-back-test.ts",
+    "win-back:blast": "tsx scripts/win-back-blast.ts",
     "test:rendered": "tsx scripts/rendered-content-test.ts",
     "test:verification": "tsx --conditions react-server scripts/verification-gate-test.ts",
     "test:e2e": "playwright test",

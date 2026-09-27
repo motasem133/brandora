@@ -45,7 +45,7 @@ export const FEEDBACK_PERCENT = 10
  * `EMAIL_FROM` is a display-name form — `Brandora <hello@example.com>` — and
  * the button is a `mailto:`, which needs the bare address inside it.
  */
-function replyAddress() {
+export function replyAddress() {
   return env.EMAIL_FROM.match(/<([^>]+)>/)?.[1] ?? env.EMAIL_FROM
 }
 
